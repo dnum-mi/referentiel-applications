@@ -1,3 +1,16 @@
+/// Origine de la date de fin de vie d'une ligne de stack (#2454) :
+/// - `endoflife` : calculée automatiquement via endoflife.date, rafraîchie au-delà du TTL
+///   (lecture paresseuse d'une fiche, recalcul planifié) ;
+/// - `manual` : saisie à la main par un gestionnaire quand endoflife.date ne répond pas ou
+///   ne connaît pas le produit. L'automatique ne l'écrase jamais : seul l'effacement de la
+///   saisie rend la main au calcul.
+///
+/// @namespace Technology
+enum TechnologyEolSource {
+  endoflife
+  manual
+}
+
 /// Élément de la stack technique d'une application (technologie + version).
 /// Une application peut référencer 0 à N technologies, une par technologie.
 /// Les champs de fin de vie (eolDate / eolCheckedAt) sont prévus pour une
@@ -26,17 +39,20 @@ model TechnologyStack {
   /// Date de dernière vérification du statut de fin de vie
   eolCheckedAt  DateTime?
   /// Slug produit endoflife.date résolu (null + eolCheckedAt renseigné = produit non suivi)
-  eolProduct    String?   @db.VarChar(100)
+  eolProduct    String?             @db.VarChar(100)
   /// Date de fin de support actif de la version (renseignée via endoflife.date)
   eoasDate      DateTime?
   /// Dernière version publiée du cycle correspondant (renseignée via endoflife.date)
-  latestVersion String?   @db.VarChar(50)
+  latestVersion String?             @db.VarChar(50)
   /// Nom du cycle endoflife.date apparié à la version (ex. « 20 », « 3.11 ») ;
   /// null si le produit n'est pas suivi, si la version ne désigne aucun cycle,
   /// ou si la ligne n'a jamais été vérifiée. Permet de distinguer « version non
   /// reconnue » (produit suivi, aucun cycle) de « aucune échéance publiée »
   /// (cycle apparié, dates absentes), que des dates nulles seules confondent.
-  eolCycle      String?   @db.VarChar(50)
+  eolCycle      String?             @db.VarChar(50)
+  /// Origine de la fin de vie (#2454) : `manual` protège la ligne de tout recalcul automatique
+  /// (lecture paresseuse et cron l'ignorent) ; ses champs endoflife.date sont alors nuls.
+  eolSource     TechnologyEolSource @default(endoflife)
 
   metadatas Metadata[] @relation()
 

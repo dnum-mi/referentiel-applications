@@ -1,9 +1,12 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, OmitType } from "@nestjs/swagger";
+import { TechnologyEolSource } from "@prisma/client";
 import {
   IsDateString,
+  IsEnum,
   IsOptional,
   IsString,
   IsUrl,
+  Matches,
   MaxLength,
 } from "class-validator";
 
@@ -43,9 +46,33 @@ export class CreateTechnologyDto {
   @IsUrl()
   @MaxLength(2048)
   docUrl?: string | null;
+
+  // Chaîne AAAA-MM-JJ (pas de `format: date`, qui ferait typer le champ `Date` côté client
+  // généré alors que le formulaire envoie la valeur brute d'un `<input type="date">`).
+  @ApiProperty({
+    type: String,
+    example: "2027-06-30",
+    description:
+      "Date de fin de vie saisie à la main (AAAA-MM-JJ), réservée aux cas où endoflife.date ne peut pas répondre (produit non suivi, service injoignable). Elle prime sur le calcul automatique, qui ne l'écrase jamais. `null` efface la saisie et rend la main à l'automatique ; absent = fin de vie inchangée.",
+    required: false,
+    nullable: true,
+  })
+  // Le format annoncé est imposé : `IsDateString` seul accepte des formes ISO 8601
+  // (« 2027-W10 », « 2027-100 ») que `new Date()` ne lit pas, ce qui finirait en 500,
+  // et `strict` refuse les dates calendaires impossibles (« 2027-02-30 »).
+  @IsOptional()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, {
+    message: "manualEolDate doit être au format AAAA-MM-JJ",
+  })
+  @IsDateString({ strict: true })
+  manualEolDate?: string | null;
 }
 
-export class TechnologyDto extends CreateTechnologyDto {
+// `manualEolDate` est une commande d'écriture, pas une colonne : la lecture expose
+// `eolDate` et son origine `eolSource`.
+export class TechnologyDto extends OmitType(CreateTechnologyDto, [
+  "manualEolDate",
+] as const) {
   @ApiProperty({
     example: "12345678-1234-1234-1234-123456789012",
     description: "Identifiant unique de la technologie",
@@ -130,6 +157,16 @@ export class TechnologyDto extends CreateTechnologyDto {
   @IsOptional()
   @IsString()
   eolCycle?: string | null;
+
+  @ApiProperty({
+    enum: TechnologyEolSource,
+    enumName: "TechnologyEolSource",
+    example: TechnologyEolSource.endoflife,
+    description:
+      "Origine de la fin de vie : `endoflife` = calculée via endoflife.date (rafraîchie par TTL et par le cron), `manual` = saisie à la main, jamais recalculée automatiquement",
+  })
+  @IsEnum(TechnologyEolSource)
+  eolSource: TechnologyEolSource;
 }
 
 export class EolProductDto {

@@ -31,11 +31,19 @@ import {
 } from "./dto/technology.dto";
 import { TechnologyService } from "./technology.service";
 
+// Champs comparés avant/après par MetadatasService pour l'onglet Modifications. La fin de
+// vie et son origine en font partie (#2454) : une saisie ou un effacement manuel doit se
+// lire dans l'historique comme un changement de version. Les recalculs automatiques
+// (lecture paresseuse, cron) écrivent hors de ce circuit et n'y apparaissent donc pas ;
+// seul le recalcul déclenché par une modification humaine du produit ou de la version y
+// figure, à côté du champ qui l'a provoqué.
 const TECHNOLOGY_METADATA_FIELDS = {
   technology: "technologie",
   product: "produit",
   version: "version",
   docUrl: "lien documentaire",
+  eolDate: "fin de vie",
+  eolSource: "origine de la fin de vie",
 };
 
 @ApiTags("Technologies")

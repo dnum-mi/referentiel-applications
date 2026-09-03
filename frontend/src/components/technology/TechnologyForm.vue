@@ -14,16 +14,29 @@ const props = defineProps({
 
 const emit = defineEmits(["submit", "cancel"]);
 
+/** Valeur d'un `<input type="date">` (AAAA-MM-JJ) à partir d'une date ISO ou d'un `Date`. */
+function toDateInputValue(value?: string | Date | null): string {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 10);
+}
+
+const isManualRow = computed(() => props.initialData?.eolSource === "manual");
+
 const form = ref<{
   technology: string;
   product: string;
   version: string;
   docUrl: string;
+  manualEolDate: string;
 }>({
   technology: props.initialData?.technology ?? "",
   product: props.initialData?.product ?? "",
   version: props.initialData?.version ?? "",
   docUrl: props.initialData?.docUrl ?? "",
+  // Seule une saisie manuelle existante est reprise : une date calculée n'a rien à faire
+  // dans ce champ — l'y copier la ferait persister comme manuelle au premier enregistrement.
+  manualEolDate: isManualRow.value ? toDateInputValue(props.initialData?.eolDate) : "",
 });
 
 const isFormValid = computed(() => form.value.technology.trim() !== "" && form.value.product.trim() !== "");
@@ -58,6 +71,27 @@ const productUnknown = computed(() => {
   return key !== "" && knownProductKeys.value.size > 0 && !knownProductKeys.value.has(key);
 });
 
+// La saisie manuelle (#2454) n'est proposée que là où l'automatique ne peut pas répondre :
+// catalogue endoflife.date indisponible (liste vide : on ignore si le produit est suivi),
+// produit hors catalogue, ligne déjà manuelle, ou ligne existante sans échéance automatique
+// — vérifiée sans résultat (produit non suivi, version non reconnue, cycle sans date
+// publiée) ou jamais vérifiée (« Non vérifiée » : créée pendant une panne du service,
+// alors que le catalogue en cache est encore servi). Partout ailleurs, la date calculée
+// est seulement rappelée : la proposer à la saisie inviterait à écraser une donnée
+// vérifiée par une donnée qui ne le sera plus.
+const catalogUnavailable = computed(() => props.eolProducts.length === 0);
+const existingWithoutAutomaticDate = computed(() => Boolean(props.initialData) && !props.initialData?.eolDate);
+const showManualEol = computed(
+  () => catalogUnavailable.value || productUnknown.value || isManualRow.value || existingWithoutAutomaticDate.value,
+);
+// Date calendaire sans heure, stockée à minuit UTC : formatée en UTC, sinon un
+// navigateur à l'ouest de Greenwich afficherait la veille.
+const automaticEolDate = computed(() =>
+  !showManualEol.value && props.initialData?.eolDate
+    ? new Date(props.initialData.eolDate).toLocaleDateString("fr-FR", { timeZone: "UTC" })
+    : "",
+);
+
 function handleSubmit() {
   emit("submit", {
     id: props.initialData?.id,
@@ -65,6 +99,10 @@ function handleSubmit() {
     product: form.value.product.trim(),
     version: form.value.version?.trim() || null,
     docUrl: form.value.docUrl?.trim() || null,
+    // Champ non proposé → `undefined`, clé ignorée par l'onglet : le backend ne touche pas
+    // à la fin de vie. Champ proposé mais vide → `null` : la saisie est effacée et le
+    // calcul automatique reprend la main.
+    manualEolDate: showManualEol.value ? form.value.manualEolDate || null : undefined,
   });
 }
 </script>
@@ -107,6 +145,20 @@ function handleSubmit() {
       data-testid="technology-version-input"
       class="fr-mb-3w"
     />
+
+    <DsfrInput
+      v-if="showManualEol"
+      v-model="form.manualEolDate"
+      type="date"
+      label="Fin de vie (saisie manuelle)"
+      label-visible
+      hint="À renseigner seulement si endoflife.date ne suit pas ce produit ou est injoignable. Effacer la date rend la main au calcul automatique."
+      data-testid="technology-manual-eol-input"
+      class="fr-mb-3w"
+    />
+    <p v-else-if="automaticEolDate" class="fr-hint-text fr-mb-3w" data-testid="technology-automatic-eol-hint">
+      Fin de vie calculée automatiquement : {{ automaticEolDate }}
+    </p>
 
     <DsfrInput
       v-model="form.docUrl"

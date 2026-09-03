@@ -1,4 +1,4 @@
-import { RelationType, Status } from "@prisma/client";
+import { RelationType, Status, TechnologyEolSource } from "@prisma/client";
 import { RelationTypeLabelsBidirectional } from "./relation-type-labels";
 
 export const ReportStatusLabels: Record<string, string> = {
@@ -54,6 +54,12 @@ export const ApplicationStatusLabels = {
   deleted: "Supprimée",
 } satisfies Record<Status, string>;
 
+/// Origine de la fin de vie d'une technologie (#2454), telle que restituée dans l'historique.
+export const TechnologyEolSourceLabels = {
+  endoflife: "calculée via endoflife.date",
+  manual: "saisie manuelle",
+} satisfies Record<TechnologyEolSource, string>;
+
 export const ALL_ENUM_LABELS: Record<string, string> = {
   ...ReportStatusLabels,
   ...RelationTypeLabels,
@@ -61,4 +67,5 @@ export const ALL_ENUM_LABELS: Record<string, string> = {
   ...ExternalRessourceTypeLabels,
   ...NatureLabels,
   ...ApplicationStatusLabels,
+  ...TechnologyEolSourceLabels,
 };

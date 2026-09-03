@@ -1,3 +1,5 @@
+import type { TechnologyEolSource } from "@prisma/client";
+
 export class TechnologyStack {
   id: string;
   applicationId: string;
@@ -11,4 +13,6 @@ export class TechnologyStack {
   eoasDate?: Date;
   latestVersion?: string;
   eolCycle?: string;
+  /// Origine de la fin de vie (#2454) : `manual` = saisie à la main, jamais recalculée.
+  eolSource: TechnologyEolSource;
 }

@@ -157,6 +157,32 @@ export function lookupProductSlug(
   return index.get(normalizeProductKey(product)) ?? null;
 }
 
+/// Catalogue enrichi des alias internes, tel qu'il doit être servi au front : le
+/// formulaire juge un produit « connu » d'après ce catalogue, et doit donc voir les
+/// mêmes alias que la résolution backend (sinon « Java » y passe pour non suivi
+/// alors qu'il est résolu). Fonction pure ; les produits sont copiés, pas mutés.
+export function withInternalAliases(
+  products: EndoflifeProduct[],
+): EndoflifeProduct[] {
+  const extraAliases = new Map<string, string[]>();
+  for (const [alias, slug] of Object.entries(PRODUCT_ALIASES)) {
+    extraAliases.set(slug, [...(extraAliases.get(slug) ?? []), alias]);
+  }
+  return products.map((product) => {
+    const extras = extraAliases.get(product.name);
+    if (!extras) return product;
+    const known = new Set(
+      [product.name, product.label ?? "", ...product.aliases].map(
+        normalizeProductKey,
+      ),
+    );
+    const added = extras.filter((alias) => !known.has(alias));
+    return added.length
+      ? { ...product, aliases: [...product.aliases, ...added] }
+      : product;
+  });
+}
+
 /// Sélectionne le cycle de release correspondant à une version : correspondance
 /// exacte sur le nom de cycle, version préfixée par le cycle (« 20.11 » → « 20 »),
 /// major seul désignant un unique cycle (« 9 » → Tomcat « 9.0 »), puis repli sur

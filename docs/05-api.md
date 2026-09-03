@@ -140,6 +140,14 @@ Inventaire **par module / ressource** (résumé : verbes et chemins principaux, 
 | `technical-debt-info` | `POST`, `GET`                                                    |
 | `rgaa-compliances`    | `GET`, `POST`, `PATCH :id`, `DELETE :id`                         |
 | `reports`             | `POST`, `GET`, `GET :id`, `PATCH :id`, `DELETE :id`              |
+| `technologies`        | `POST`, `GET`, `GET eol-products`, `PATCH :id`, `DELETE :id`     |
+
+> `technologies` (#2454) : le corps de `POST` et de `PATCH :id` accepte `manualEolDate` (chaîne
+> `AAAA-MM-JJ`), fin de vie saisie à la main pour les cas où endoflife.date ne peut pas répondre.
+> Une date remplace la fin de vie de la ligne sans appel à endoflife.date ; `null` efface la saisie
+> et force le recalcul automatique ; absent = fin de vie inchangée (une ligne manuelle n'est jamais
+> recalculée implicitement, même si produit ou version changent). La réponse expose `eolSource`
+> (`endoflife` ou `manual`), comme `GET /technologies/end-of-life`.
 
 ### Acteurs & types d'acteurs
 

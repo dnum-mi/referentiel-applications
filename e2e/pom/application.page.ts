@@ -12,7 +12,8 @@ export type AppTab =
   | "tab-statuses"
   | "tab-reports"
   | "tab-modifications"
-  | "tab-quality";
+  | "tab-quality"
+  | "tab-technologies";
 
 /** Page Object — Fiche application (`/applications/:id/:tab?`). */
 export class ApplicationPage extends BasePage {
@@ -632,6 +633,84 @@ export class ApplicationPage extends BasePage {
     await expect(this.byTestId("delete-confirm-btn")).toBeVisible();
     await this.byTestId("delete-confirm-btn").click();
     await this.expectToaster(/succès|supprimé/i);
+  }
+
+  // --- FIC-23 : onglet Technologies, fin de vie saisie à la main (#2454) ---
+
+  private technologyTable = () =>
+    this.byTestId("technology-table").filter({ visible: true }).first();
+
+  private technologyRow = (product: string) =>
+    this.technologyTable().locator("tbody tr").filter({ hasText: product });
+
+  async expectTechnologiesTabLoaded(): Promise<void> {
+    await expect(
+      this.technologyTable()
+        .or(this.byTestId("technology-empty-state"))
+        .first(),
+    ).toBeVisible();
+  }
+
+  /**
+   * Ajoute une technologie dont le produit est inconnu d'endoflife.date, avec une fin de vie
+   * saisie à la main. Le champ de saisie n'est proposé que lorsque l'automatique ne peut pas
+   * répondre (produit hors catalogue, ou catalogue indisponible) : son apparition fait partie
+   * de ce qui est vérifié.
+   */
+  async addTechnologyWithManualEol(
+    technology: string,
+    product: string,
+    version: string,
+    eolDate: string,
+  ): Promise<void> {
+    await this.byTestId("technology-add-btn").click();
+    // Le data-testid parent (`technology-form-container`) écrase `technology-form` sur le
+    // <form> (fallthrough Vue), comme pour le formulaire acteur.
+    await expect(this.byTestId("technology-form-container")).toBeVisible();
+    await this.byTestId("technology-name-input").fill(technology);
+    await this.byTestId("technology-product-input").fill(product);
+    await this.byTestId("technology-version-input").fill(version);
+    const manualEol = this.byTestId("technology-manual-eol-input");
+    await expect(manualEol).toBeVisible();
+    await manualEol.fill(eolDate);
+    await expect(this.byTestId("technology-submit-btn")).toBeEnabled();
+    await this.byTestId("technology-submit-btn").click();
+    await this.expectToaster(/succès|sauvegard/i);
+    await expect(this.byTestId("technology-form-container")).toBeHidden();
+  }
+
+  /**
+   * La ligne du produit porte le badge de statut attendu ET la mention « saisie manuelle »,
+   * sans aucun des états d'erreur d'endoflife.date (« Produit non suivi », « Non vérifiée »,
+   * « Version non reconnue ») — une ligne manuelle a pourtant, en base, la même signature
+   * qu'un produit non suivi.
+   */
+  async expectTechnologyManualEol(
+    product: string,
+    badgeLabel: string | RegExp,
+  ): Promise<void> {
+    const row = this.technologyRow(product);
+    await expect(row).toHaveCount(1);
+    await expect(row).toContainText(badgeLabel);
+    const mention = row.locator('[data-testid^="technology-eol-manual-"]');
+    await expect(mention).toBeVisible();
+    await expect(mention).toContainText("saisie manuelle");
+    await expect(mention).toHaveAttribute("title", /renseignée à la main/);
+    for (const state of ["unknown", "unchecked", "unrecognized"]) {
+      await expect(
+        row.locator(`[data-testid^="technology-eol-${state}-"]`),
+      ).toHaveCount(0);
+    }
+  }
+
+  async deleteTechnology(product: string): Promise<void> {
+    await this.technologyRow(product)
+      .getByTestId("technology-delete-btn")
+      .click();
+    await expect(this.byTestId("delete-confirm-btn")).toBeVisible();
+    await this.byTestId("delete-confirm-btn").click();
+    await this.expectToaster(/succès|supprimé/i);
+    await expect(this.technologyRow(product)).toHaveCount(0);
   }
 
   // --- CRU: Label / nom alternatif CRUD (CRU-11) ---

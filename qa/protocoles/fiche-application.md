@@ -119,3 +119,18 @@
   bouton d'onglet est absent) alors que « Informations générales » reste visible ; en Lecteur,
   l'onglet réapparaît via la projection de rôle par application. Défait la « lecture pour tous »
   de #2027 — l'onglet suit désormais les droits comme les autres onglets (cf. #2088).
+
+### FIC-23 — Onglet Technologies : fin de vie saisie à la main (#2454) ✅
+
+- **Datafeature** : application de test jetable (supprimée en fin de test, ligne comprise) ;
+  utilisateur `admin` (porteur de `TechnologyWrite`).
+- **Action** : sur l'onglet `tab-technologies`, ajouter une technologie « Logiciel interne » avec
+  un produit inconnu d'endoflife.date (`Outil-E2E-<horodatage>`), version « 2 », et renseigner le
+  champ **Fin de vie (saisie manuelle)** à J+30 ; puis supprimer la ligne.
+- **Résultat attendu** : le champ de saisie manuelle apparaît parce que le produit est hors
+  catalogue (il n'est jamais proposé quand endoflife.date sait répondre : la date calculée est
+  alors rappelée en lecture seule) ; la ligne créée porte le badge **« Fin de vie proche »** et
+  la mention **« saisie manuelle »** (title + complément sr-only), sans « Produit non suivi »,
+  « Non vérifiée » ni « Version non reconnue » ; la suppression retire la ligne. La date saisie
+  est persistée avec son origine (`eolSource = manual`) : ni le rafraîchissement paresseux ni le
+  recalcul planifié ne l'écrasent ; effacer le champ rend la main au calcul automatique.

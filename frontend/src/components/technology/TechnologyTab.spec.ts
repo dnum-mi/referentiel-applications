@@ -50,8 +50,28 @@ function makeTechnology(overrides: Partial<TechnologyDto> & Pick<TechnologyDto, 
     eolProduct: null,
     latestVersion: null,
     eolCycle: null,
+    eolSource: "endoflife",
     ...overrides,
   };
+}
+
+const day = 24 * 60 * 60 * 1000;
+
+// Ligne dont la fin de vie a été saisie à la main (#2454), telle que le backend la persiste :
+// date + eolCheckedAt renseignés, tout ce qui vient d'endoflife.date à null.
+function makeManualTechnology(overrides: Partial<TechnologyDto> & Pick<TechnologyDto, "id">): TechnologyDto {
+  return makeTechnology({
+    technology: "Logiciel interne",
+    product: "Outil maison",
+    version: "2",
+    eolSource: "manual",
+    eolProduct: null,
+    eolCycle: null,
+    latestVersion: null,
+    eoasDate: null,
+    eolCheckedAt: new Date("2026-09-01T00:00:00Z"),
+    ...overrides,
+  });
 }
 
 // Ligne vérifiée et résolue sur endoflife.date, sans échéance. Le « — » de la colonne
@@ -189,6 +209,69 @@ describe("technologyTab — colonne « Fin de vie »", () => {
 
     expect(badge).toBeVisible();
     expect(screen.queryByTestId("technology-eol-unrecognized-t-legacy")).not.toBeInTheDocument();
+  });
+});
+
+// #2454 : une date saisie à la main porte eolProduct null et eolCheckedAt renseigné, comme un
+// produit non suivi. Elle doit garder son badge et sa date, signaler son origine, et n'afficher
+// aucun des trois états d'erreur d'endoflife.date.
+describe("technologyTab — fin de vie saisie à la main (#2454)", () => {
+  beforeEach(() => {
+    findAllMock.mockReset();
+    listEolProductsMock.mockReset();
+  });
+
+  it("garde le badge et ajoute la mention « saisie manuelle », sans aucun état d'erreur", async () => {
+    renderWithTechnologies([makeManualTechnology({ id: "t-manual", eolDate: new Date(Date.now() + 30 * day) })]);
+
+    const badge = await screen.findByTestId("technology-eol-soon-badge-t-manual");
+    expect(badge).toBeVisible();
+    expect(badge).toHaveTextContent("Fin de vie proche");
+
+    const mention = screen.getByTestId("technology-eol-manual-t-manual");
+    expect(mention).toBeVisible();
+    expect(mention).toHaveTextContent("saisie manuelle");
+    expect(mention).toHaveAttribute("title", expect.stringContaining("non vérifiée auprès d’endoflife.date"));
+    // Le complément est restitué hors title, pour le clavier et les lecteurs d'écran.
+    expect(mention).toHaveTextContent("renseignée à la main");
+
+    expect(screen.queryByTestId("technology-eol-unknown-t-manual")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("technology-eol-unchecked-t-manual")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("technology-eol-unrecognized-t-manual")).not.toBeInTheDocument();
+  });
+
+  it("affiche le badge « Fin de vie » d'une date manuelle dépassée", async () => {
+    renderWithTechnologies([makeManualTechnology({ id: "t-manual-eol", eolDate: new Date("2020-01-01T00:00:00Z") })]);
+
+    expect(await screen.findByTestId("technology-eol-badge-t-manual-eol")).toHaveTextContent("Fin de vie");
+    expect(screen.getByTestId("technology-eol-manual-t-manual-eol")).toBeVisible();
+  });
+
+  // Sans la garde sur eolSource, cette ligne (eolProduct null + eolCheckedAt renseigné)
+  // tomberait dans « Produit non suivi ».
+  it("ne prend jamais une ligne manuelle pour un produit non suivi, même sans date", async () => {
+    renderWithTechnologies([makeManualTechnology({ id: "t-manual-nodate", eolDate: null })]);
+
+    await screen.findByTestId("technology-table");
+
+    expect(screen.queryByTestId("technology-eol-unknown-t-manual-nodate")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("technology-eol-unchecked-t-manual-nodate")).not.toBeInTheDocument();
+    expect(screen.getByTestId("technology-eol-manual-t-manual-nodate")).toBeVisible();
+  });
+
+  it("ne mentionne pas « saisie manuelle » sur une ligne calculée", async () => {
+    renderWithTechnologies([
+      makeTechnology({
+        id: "t-auto",
+        eolCheckedAt: new Date("2026-09-01T00:00:00Z"),
+        eolProduct: "python",
+        eolDate: new Date(Date.now() + 30 * day),
+      }),
+    ]);
+
+    await screen.findByTestId("technology-eol-soon-badge-t-auto");
+
+    expect(screen.queryByTestId("technology-eol-manual-t-auto")).not.toBeInTheDocument();
   });
 });
 

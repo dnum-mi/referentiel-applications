@@ -69,6 +69,15 @@ describe("EolRefreshService", () => {
     expect(where.OR[1].eolCheckedAt.lt).toBeInstanceOf(Date);
   });
 
+  // #2454 : une date saisie à la main ne vient pas d'endoflife.date ; la recalculer
+  // l'écraserait par une résolution vouée à l'échec, ou par celle d'un homonyme.
+  it("exclut les saisies manuelles du recalcul", async () => {
+    const { service, findMany } = makeService([]);
+    await service.runRefreshSafely();
+    const { where } = findMany.mock.calls[0][0];
+    expect(where.eolSource).toEqual({ not: "manual" });
+  });
+
   /**
    * L'intérêt du lot n'est pas la base mais endoflife.date : cinquante
    * applications déclarant le même produit ne doivent valoir qu'un appel.

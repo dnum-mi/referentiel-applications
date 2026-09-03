@@ -1,8 +1,10 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+import { TechnologyEolSource } from "@prisma/client";
 import { BaseService } from "src/common/base.service";
 import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -13,6 +15,7 @@ import { ApplicationService } from "src/applications/application.service";
 import {
   fetchProductCatalog,
   isEndoflifeDisabled,
+  withInternalAliases,
   normalizeProductKey,
   parseEolInfo,
   resolveProductReleases,
@@ -22,6 +25,29 @@ import {
 import { EOL_REFRESH_TTL_MS } from "./utils/eol-status";
 
 // Au-delà de ce délai, on rafraîchit paresseusement la fin de vie au GET.
+
+/// Champs de fin de vie persistés sur une ligne de stack. Tous optionnels : un objet vide
+/// signifie « ne rien réécrire » (endoflife.date indisponible, ligne manuelle à préserver…).
+type EolFields = {
+  eolProduct?: string | null;
+  eolDate?: Date | null;
+  eoasDate?: Date | null;
+  latestVersion?: string | null;
+  eolCycle?: string | null;
+  eolCheckedAt?: Date | null;
+  eolSource?: TechnologyEolSource;
+};
+
+// Remise à zéro d'une fin de vie : la ligne redevient « jamais vérifiée » et sera résolue
+// au prochain GET de la fiche ou au prochain passage du cron.
+const NEVER_CHECKED_EOL: EolFields = {
+  eolProduct: null,
+  eolDate: null,
+  eoasDate: null,
+  latestVersion: null,
+  eolCycle: null,
+  eolCheckedAt: null,
+};
 
 @Injectable()
 export class TechnologyService extends BaseService<TechnologyStack> {
@@ -51,14 +77,7 @@ export class TechnologyService extends BaseService<TechnologyStack> {
   private eolFieldsFrom(
     resolution: EolResolution,
     version?: string | null,
-  ): {
-    eolProduct?: string | null;
-    eolDate?: Date | null;
-    eoasDate?: Date | null;
-    latestVersion?: string | null;
-    eolCycle?: string | null;
-    eolCheckedAt?: Date | null;
-  } {
+  ): EolFields {
     if (resolution.status === "unavailable") return {};
     const eolCheckedAt = new Date();
     if (resolution.status === "unknown-product") {
@@ -85,9 +104,65 @@ export class TechnologyService extends BaseService<TechnologyStack> {
   private async resolveEol(
     product: string,
     version?: string | null,
-  ): Promise<ReturnType<TechnologyService["eolFieldsFrom"]>> {
+  ): Promise<EolFields> {
     if (this.eolDisabled() || !product?.trim()) return {};
     return this.eolFieldsFrom(await resolveProductReleases(product), version);
+  }
+
+  // Champs persistés pour une fin de vie saisie à la main (#2454). La date fait foi et
+  // tout ce qu'endoflife.date aurait pu écrire est effacé : un slug ou un cycle résiduels
+  // feraient passer la ligne pour une résolution automatique. `eolCheckedAt` est daté pour
+  // que la fiche ne l'affiche pas « Non vérifiée » ; c'est `eolSource`, et non ce TTL, qui
+  // la soustrait ensuite au rafraîchissement paresseux comme au cron.
+  private manualEolFields(manualEolDate: string): EolFields {
+    const eolDate = new Date(manualEolDate);
+    // Ceinture après la validation du DTO : un `Date` invalide serait refusé par
+    // Prisma en 500, alors qu'il s'agit d'une saisie erronée.
+    if (Number.isNaN(eolDate.getTime())) {
+      throw new BadRequestException(
+        "manualEolDate doit être une date valide au format AAAA-MM-JJ",
+      );
+    }
+    return {
+      eolSource: TechnologyEolSource.manual,
+      eolDate,
+      eoasDate: null,
+      eolProduct: null,
+      eolCycle: null,
+      latestVersion: null,
+      eolCheckedAt: new Date(),
+    };
+  }
+
+  // Champs de fin de vie à écrire sur une ligne existante, selon la saisie manuelle reçue :
+  // - chaîne → la saisie humaine remplace tout, sans appel à endoflife.date ;
+  // - null → la saisie est effacée et l'automatique reprend la main : résolution forcée,
+  //   même si produit et version n'ont pas changé. Une ligne manuelle est d'abord remise
+  //   à « jamais vérifiée » : sinon, endoflife.date en échec laisserait la date manuelle
+  //   affichée comme si elle venait du calcul ;
+  // - absente → une ligne manuelle n'est JAMAIS touchée, même si produit ou version
+  //   changent (une saisie humaine ne se détruit pas implicitement) ; une ligne
+  //   automatique est recalculée quand le produit ou la version change.
+  private async eolFieldsForUpdate(
+    existing: { eolSource?: TechnologyEolSource },
+    manualEolDate: string | null | undefined,
+    product: string,
+    version: string | null,
+    eolInputChanged: boolean,
+  ): Promise<EolFields> {
+    if (typeof manualEolDate === "string") {
+      return this.manualEolFields(manualEolDate);
+    }
+    const wasManual = existing.eolSource === TechnologyEolSource.manual;
+    if (manualEolDate === null) {
+      return {
+        eolSource: TechnologyEolSource.endoflife,
+        ...(wasManual ? NEVER_CHECKED_EOL : {}),
+        ...(await this.resolveEol(product, version)),
+      };
+    }
+    if (wasManual || !eolInputChanged) return {};
+    return this.resolveEol(product, version);
   }
 
   // Catalogue des produits suivis par endoflife.date (autocomplétion côté front).
@@ -95,7 +170,10 @@ export class TechnologyService extends BaseService<TechnologyStack> {
   // retombe alors sur la saisie libre).
   async listEolProducts(): Promise<EndoflifeProduct[]> {
     if (this.eolDisabled()) return [];
-    return (await fetchProductCatalog()) ?? [];
+    // Les alias internes (« Java », « SQL Server »…) sont servis avec le catalogue :
+    // sans eux, le formulaire tiendrait pour inconnu un produit que le backend résout,
+    // et proposerait la saisie manuelle à la place d'une date calculée juste.
+    return withInternalAliases((await fetchProductCatalog()) ?? []);
   }
 
   async findAllByApplicationId(
@@ -125,6 +203,9 @@ export class TechnologyService extends BaseService<TechnologyStack> {
 
     return Promise.all(
       rows.map(async (row) => {
+        // Une saisie manuelle (#2454) n'est jamais recalculée : la date vient d'un humain,
+        // endoflife.date n'a rien à en dire — et l'écraserait par du vide.
+        if (row.eolSource === TechnologyEolSource.manual) return row;
         const stale =
           !row.eolCheckedAt ||
           now - new Date(row.eolCheckedAt).getTime() > EOL_REFRESH_TTL_MS;
@@ -178,26 +259,47 @@ export class TechnologyService extends BaseService<TechnologyStack> {
       );
     }
 
+    // `manualEolDate` n'est pas une colonne : il pilote les champs de fin de vie écrits
+    // ci-dessous et ne doit jamais atteindre Prisma tel quel.
+    const { manualEolDate, ...data } = dto;
+
     const existing = await this.findExistingEntry(
       applicationId,
-      dto.technology,
-      dto.product,
+      data.technology,
+      data.product,
     );
     if (existing) {
       // Le couple technologie/produit est déjà renseigné (à la casse près) :
       // on met à jour la ligne existante au lieu de créer un doublon. La
       // graphie déjà enregistrée est conservée ; le formulaire soumis fait
       // foi pour la version et le lien documentaire.
-      const eol = await this.resolveEol(existing.product, dto.version);
+      // Le formulaire d'AJOUT n'affiche jamais la date manuelle d'une ligne existante :
+      // son `null` (champ proposé mais laissé vide) ne peut pas valoir « effacer ».
+      // Seule l'édition, qui montre la date, peut la retirer.
+      const manualEolDateForMerge =
+        manualEolDate === null &&
+        existing.eolSource === TechnologyEolSource.manual
+          ? undefined
+          : manualEolDate;
+      const eol = await this.eolFieldsForUpdate(
+        existing,
+        manualEolDateForMerge,
+        existing.product,
+        data.version ?? null,
+        true,
+      );
       return super.update(
         existing.id,
-        { version: dto.version ?? null, docUrl: dto.docUrl ?? null, ...eol },
+        { version: data.version ?? null, docUrl: data.docUrl ?? null, ...eol },
         options,
       );
     }
 
-    const eol = await this.resolveEol(dto.product, dto.version);
-    return super.create({ ...dto, ...eol, applicationId }, options);
+    const eol =
+      typeof manualEolDate === "string"
+        ? this.manualEolFields(manualEolDate)
+        : await this.resolveEol(data.product, data.version);
+    return super.create({ ...data, ...eol, applicationId }, options);
   }
 
   async updateTechnology(
@@ -213,8 +315,10 @@ export class TechnologyService extends BaseService<TechnologyStack> {
       throw new NotFoundException("Technologie introuvable");
     }
 
-    const newTechnology = dto.technology ?? existing.technology;
-    const newProduct = dto.product ?? existing.product;
+    const { manualEolDate, ...data } = dto;
+
+    const newTechnology = data.technology ?? existing.technology;
+    const newProduct = data.product ?? existing.product;
     // Comparaison insensible à la casse : ne changer que la graphie
     // (« postgresql » → « PostgreSQL ») reste une mise à jour de la même ligne.
     const pairChanged =
@@ -235,18 +339,22 @@ export class TechnologyService extends BaseService<TechnologyStack> {
 
     // Recalcule la fin de vie si le produit ou la version change.
     const eolInputChanged =
-      dto.product !== undefined || dto.version !== undefined;
+      data.product !== undefined || data.version !== undefined;
     // #2379 : distinguer « version omise » (garder l'existante) de « version effacée » (null).
     // `dto.version ?? existing.version` traitait null comme absent → l'EOL était recalculée avec
     // l'ANCIENNE version pendant que la version était mise à null, laissant un badge « fin de vie »
     // erroné pendant tout le TTL.
     const newVersion =
-      dto.version === undefined ? existing.version : dto.version;
-    const eol = eolInputChanged
-      ? await this.resolveEol(newProduct, newVersion)
-      : {};
+      data.version === undefined ? existing.version : data.version;
+    const eol = await this.eolFieldsForUpdate(
+      existing,
+      manualEolDate,
+      newProduct,
+      newVersion,
+      eolInputChanged,
+    );
 
-    return super.update(id, { ...dto, ...eol }, options);
+    return super.update(id, { ...data, ...eol }, options);
   }
 
   async deleteTechnology(

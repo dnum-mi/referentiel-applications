@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Cron } from "@nestjs/schedule";
+import { TechnologyEolSource } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import {
   isEndoflifeSwitchedOff,
@@ -143,6 +144,10 @@ export class EolRefreshService {
     const threshold = new Date(Date.now() - EOL_REFRESH_TTL_MS);
     const stale = await this.prisma.technologyStack.findMany({
       where: {
+        // Les saisies manuelles (#2454) ne relèvent pas d'endoflife.date : les recalculer
+        // remplacerait la date d'un humain par une résolution vouée à l'échec (produit
+        // inconnu) ou, pire, par la date d'un autre produit homonyme.
+        eolSource: { not: TechnologyEolSource.manual },
         OR: [{ eolCheckedAt: null }, { eolCheckedAt: { lt: threshold } }],
       },
       select: { id: true, product: true, version: true },
