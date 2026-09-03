@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { Cron } from "@nestjs/schedule";
 import { PrismaService } from "src/prisma/prisma.service";
 import {
+  isEndoflifeSwitchedOff,
   normalizeProductKey,
   parseEolInfo,
   resolveProductReleases,
@@ -63,6 +64,14 @@ export class EolRefreshService {
     if (!this.cronEnabled) {
       this.logger.log(
         "Recalcul des fins de vie désactivé (TECHNOLOGY_EOL_CRON_ENABLED) : exécution planifiée ignorée.",
+      );
+      return;
+    }
+    // L'interrupteur général prime sur le cron : couper endoflife.date doit couper
+    // TOUS ses appels, pas seulement ceux des fiches.
+    if (isEndoflifeSwitchedOff()) {
+      this.logger.log(
+        "Appels à endoflife.date coupés (ENDOFLIFE_ENABLED=false) : exécution planifiée ignorée.",
       );
       return;
     }

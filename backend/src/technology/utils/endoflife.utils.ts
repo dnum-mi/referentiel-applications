@@ -9,7 +9,12 @@
 /// (statut `unavailable`, aucune écriture).
 
 import { Logger } from "@nestjs/common";
-import { EnvHttpProxyAgent, type Response, fetch } from "undici";
+import { type Response, fetch } from "undici";
+import {
+  createWarnThrottle,
+  describeFetchError,
+  getOutboundDispatcher,
+} from "src/common/http/outbound-dispatcher";
 
 const ENDOFLIFE_BASE_URL = "https://endoflife.date/api/v1/products";
 const FETCH_TIMEOUT_MS = 5000;
@@ -17,7 +22,22 @@ const CATALOG_TTL_MS = 24 * 60 * 60 * 1000; // 24 h
 /// Silence entre deux avertissements pour une même URL en échec.
 const FAILURE_WARN_WINDOW_MS = 60 * 1000;
 
-/// Contexte de log à chercher pour diagnostiquer les appels sortants.
+/// Interrupteur d'exploitation des appels à endoflife.date (ENDOFLIFE_ENABLED=false),
+/// partagé entre la résolution paresseuse des fiches et le recalcul planifié : un
+/// interrupteur qui ne coupait que les fiches laissait le cron appeler
+/// endoflife.date la nuit.
+export function isEndoflifeSwitchedOff(): boolean {
+  return process.env.ENDOFLIFE_ENABLED === "false";
+}
+
+/// Résolution depuis les fiches : coupée aussi en test (aucun appel non
+/// déterministe). Le cron, lui, n'est jamais planifié en test.
+export function isEndoflifeDisabled(): boolean {
+  return process.env.NODE_ENV === "test" || isEndoflifeSwitchedOff();
+}
+
+/// Contexte de log des échecs d'appel à endoflife.date (la configuration proxy
+/// retenue est annoncée sous « OutboundHttp », cf. src/common/http/outbound-dispatcher.ts).
 const logger = new Logger("Endoflife");
 
 export interface EndoflifeRelease {
@@ -218,85 +238,6 @@ type FetchResult =
   | { kind: "not-found" }
   | { kind: "error" };
 
-/// Masque une URL de proxy pour les logs : hôte et port seulement, sans les
-/// identifiants qu'elle peut embarquer (`http://user:secret@proxy:3128`).
-export function maskProxyUrl(proxyUrl: string): string {
-  try {
-    return new URL(proxyUrl).host || "(URL de proxy invalide)";
-  } catch {
-    return "(URL de proxy invalide)";
-  }
-}
-
-/// Résume la configuration proxy que suivra `EnvHttpProxyAgent`, avec la même
-/// précédence que lui : minuscules avant majuscules, variable vide = absente,
-/// HTTPS avant HTTP (endoflife.date est en HTTPS ; sans HTTPS_PROXY, undici
-/// retombe sur HTTP_PROXY). Fonction pure (testable sans réseau), identifiants masqués.
-export function describeProxyConfig(env: NodeJS.ProcessEnv): string {
-  const httpProxy = env.http_proxy ?? env.HTTP_PROXY;
-  const httpsProxy = env.https_proxy ?? env.HTTPS_PROXY;
-  const proxy = httpsProxy || httpProxy;
-  if (!proxy) {
-    return "Appels sortants vers endoflife.date en accès direct (aucune variable HTTPS_PROXY/HTTP_PROXY définie)";
-  }
-  const noProxy = env.no_proxy ?? env.NO_PROXY;
-  const exclusions = noProxy ? `, exclusions NO_PROXY « ${noProxy} »` : "";
-  return `Appels sortants vers endoflife.date via le proxy ${maskProxyUrl(proxy)}${exclusions}`;
-}
-
-/// Lecture tolérante d'une erreur : `fetch` peut rejeter avec une DOMException,
-/// une erreur Node porteuse d'un `code`, ou n'importe quelle valeur.
-interface ErrorLike {
-  name?: string;
-  message?: string;
-  code?: string;
-  cause?: unknown;
-}
-
-function asErrorLike(value: unknown): ErrorLike | null {
-  return typeof value === "object" && value !== null
-    ? (value as ErrorLike)
-    : null;
-}
-
-/// Décrit un échec d'appel pour le log : délai dépassé, erreur réseau (undici
-/// enveloppe la cause — ECONNREFUSED, ENOTFOUND, UND_ERR_CONNECT_TIMEOUT… — dans
-/// un `TypeError: fetch failed`) ou autre exception (corps JSON invalide…).
-/// Fonction pure (testable sans réseau).
-export function describeFetchError(error: unknown): string {
-  const failure = asErrorLike(error);
-  if (!failure) return `erreur inattendue (${String(error)})`;
-  if (failure.name === "TimeoutError") return "délai dépassé";
-  if (failure.name === "AbortError") return "appel interrompu";
-  const cause = asErrorLike(failure.cause);
-  if (cause) {
-    return `erreur réseau ${cause.code ?? cause.name ?? "inconnue"} (${cause.message ?? ""})`;
-  }
-  // Sans cause enveloppée, le code de l'erreur (ERR_INVALID_URL, UND_ERR_INVALID_ARG…)
-  // est plus parlant que son nom générique.
-  return `${failure.code ?? failure.name ?? "Error"} : ${failure.message ?? ""}`;
-}
-
-/// Fabrique un limiteur « au plus un avertissement par clé et par fenêtre » :
-/// les résolutions ont lieu à chaque consultation de fiche, un endoflife.date
-/// injoignable inonderait sinon les logs d'un warn par produit et par requête.
-/// Sans effet de bord hors de sa propre mémoire (testable sans réseau ni horloge).
-export function createWarnThrottle(
-  windowMs: number,
-): (key: string, now?: number) => boolean {
-  const lastWarnAt = new Map<string, number>();
-  return (key, now = Date.now()) => {
-    // Purge des entrées expirées : en mode dégradé (catalogue jamais récupéré),
-    // les URL dérivent de saisies libres et ne sont pas bornées.
-    for (const [seenKey, at] of lastWarnAt) {
-      if (now - at >= windowMs) lastWarnAt.delete(seenKey);
-    }
-    if (lastWarnAt.has(key)) return false;
-    lastWarnAt.set(key, now);
-    return true;
-  };
-}
-
 const shouldWarn = createWarnThrottle(FAILURE_WARN_WINDOW_MS);
 
 function warnFailure(url: string, reason: string, startedAt: number): void {
@@ -306,40 +247,9 @@ function warnFailure(url: string, reason: string, startedAt: number): void {
   );
 }
 
-// Pourquoi le `fetch` d'undici et non le `fetch` global de Node : ce dernier
-// ignore HTTP_PROXY/HTTPS_PROXY tant que NODE_USE_ENV_PROXY=1 n'est pas posé, et
-// le chart Helm de qualification (qualifr2) définit le proxy sans ce flag — le
-// catalogue n'a jamais pu être récupéré, toutes les résolutions finissaient
-// « unavailable » et rien ne l'expliquait. `EnvHttpProxyAgent` honore
-// HTTP_PROXY/HTTPS_PROXY/NO_PROXY (majuscules comme minuscules) et se comporte
-// en accès direct quand rien n'est défini (dev local).
-//
-// Pourquoi pas `setGlobalDispatcher` : les autres appels sortants du backend
-// (MAIA, JWKS Keycloak via jose) sont internes au SI et ne doivent pas être
-// routés vers le proxy ; le dispatcher est donc passé appel par appel, créé
-// paresseusement et une seule fois pour le processus (pool de connexions).
-let dispatcher: EnvHttpProxyAgent | null = null;
-let proxyAnnounced = false;
-
-function getDispatcher(): EnvHttpProxyAgent {
-  if (dispatcher) return dispatcher;
-  // Annonce AVANT la construction : une URL de proxy malformée (« proxy:3128 »
-  // sans schéma) fait lever le constructeur, et l'exploitant doit lire la
-  // configuration retenue plutôt qu'un échec imputé à endoflife.date.
-  if (!proxyAnnounced) {
-    proxyAnnounced = true;
-    logger.log(describeProxyConfig(process.env));
-  }
-  try {
-    dispatcher = new EnvHttpProxyAgent();
-  } catch (error) {
-    logger.error(
-      `Proxy sortant inutilisable (HTTPS_PROXY/HTTP_PROXY) : ${describeFetchError(error)}`,
-    );
-    throw error;
-  }
-  return dispatcher;
-}
+// `fetch` d'undici et dispatcher commun plutôt que le `fetch` global de Node,
+// sourd à HTTP_PROXY/HTTPS_PROXY sans NODE_USE_ENV_PROXY=1 : le POURQUOI complet
+// est dans src/common/http/outbound-dispatcher.ts.
 
 /// Libère la connexion d'une réponse dont le corps ne sera pas lu : undici ne
 /// rend le socket au pool qu'une fois le corps consommé ou annulé.
@@ -358,7 +268,7 @@ async function fetchJson(
   const startedAt = Date.now();
   try {
     const response = await fetch(url, {
-      dispatcher: getDispatcher(),
+      dispatcher: getOutboundDispatcher(),
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
     if (response.status === 404) {
