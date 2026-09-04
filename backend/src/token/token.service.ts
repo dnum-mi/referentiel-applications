@@ -239,9 +239,20 @@ export class TokenService {
         )
       : (token.role ?? Roles.VISITOR);
 
+    // #2504 : le rôle effectif est plafonné par celui du jeton ; les permissions déléguées du
+    // compte impersonné suivent la même règle — un jeton émis plus faible que son compte ne les
+    // porte pas, sinon le plafond était contournable (ex. DataExport via un jeton VISITOR).
+    const isCapped =
+      !!userImpersonate &&
+      roleOrder[effectiveRole] <
+        roleOrder[userImpersonate.role ?? Roles.VISITOR];
+
     return {
       ...userImpersonate,
       role: effectiveRole,
+      additionalPermissions: isCapped
+        ? []
+        : (userImpersonate?.additionalPermissions ?? []),
     };
   }
 
