@@ -61,8 +61,12 @@ export class CompliancesService extends BaseService<Compliance> {
     data: CreateComplianceDto | UpdateComplianceDto,
     options?: ServiceOptions<Compliance>,
   ): Promise<Compliance> {
+    // #2440 : `data` vient d'un PATCH (UpdateComplianceDto est un PartialType) — un champ
+    // absent du body vaut `undefined` ici, à ne pas confondre avec une URL explicitement vidée.
+    // Sans le `hasOwnProperty`, modifier n'importe quelle autre section (ex: homologation) sans
+    // toucher à l'URL EcoIndex réinitialisait silencieusement le score déjà calculé.
     const hasUpdatedUrl =
-      !!existing.eco_index_target_url &&
+      Object.prototype.hasOwnProperty.call(data, "eco_index_target_url") &&
       existing.eco_index_target_url !== data.eco_index_target_url;
     if (hasUpdatedUrl) {
       // if we update a new url, we need to reset eco-index score

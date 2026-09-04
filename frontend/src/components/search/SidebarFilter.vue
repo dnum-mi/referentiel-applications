@@ -114,7 +114,7 @@ const total = computed(() => {
           title="Portefeuille"
           data-testid="sidebar-accordion-portfolio"
           class="portfolio-accordion"
-          @click="toggle(1)"
+          @click="toggle(0)"
         >
           <BusinessDivisionSearch
             label="Direction métier"
@@ -129,7 +129,7 @@ const total = computed(() => {
           :selected="openAccordions.includes(1)"
           title="Informations génerales"
           data-testid="sidebar-accordion-general"
-          @click="toggle(0)"
+          @click="toggle(1)"
         >
           <ApplicationFilter />
           <PriorityRestartFilter />

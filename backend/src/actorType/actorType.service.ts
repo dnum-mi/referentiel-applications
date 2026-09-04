@@ -122,12 +122,17 @@ export class ActorTypeService extends BaseService<ActorType> {
     const actorTypes = await this.prisma.actorType.findMany();
     const actorTypeMap = new Map(actorTypes.map((at) => [at.id, at]));
 
-    for (const perm of matrix) {
-      await this.prisma.appPermissions.update({
-        where: { actorTypeId: perm.actorTypeId },
-        data: perm as AppPermissions,
-      });
-    }
+    // Écritures groupées dans une transaction (#2440) : appliquées une par une auparavant, un
+    // échec en cours de boucle (contrainte, timeout…) laissait la matrice des droits partiellement
+    // mise à jour sans rollback ni indication claire de ce qui avait réellement été écrit.
+    await this.prisma.$transaction(
+      matrix.map((perm) =>
+        this.prisma.appPermissions.update({
+          where: { actorTypeId: perm.actorTypeId },
+          data: perm as AppPermissions,
+        }),
+      ),
+    );
 
     const changeLines: string[] = [];
     for (const perm of matrix) {

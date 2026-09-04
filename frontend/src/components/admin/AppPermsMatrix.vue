@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, unref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import api from "@/api/index";
@@ -43,7 +43,17 @@ const permissionKeys = Object.keys(permissionSuffixes) as (keyof typeof permissi
 // l'ordre des onglets de la fiche (Signalements avant Modifications).
 const gridKeys = permissionKeys.filter((k) => k !== "Metadata");
 
-const updatedMatrix = ref<AppPermsDto[]>(unref(props.appPermsMatrix));
+// Clone la prop : c'est un brouillon local d'édition, il ne doit jamais muter l'état
+// du parent (`AdminPermsMatrixTab.vue`) tant que l'utilisateur n'a pas cliqué « Enregistrer ».
+const updatedMatrix = ref<AppPermsDto[]>(props.appPermsMatrix.map((perms) => ({ ...perms })));
+
+// Resynchronise le brouillon si la matrice source est rechargée par le parent.
+watch(
+  () => props.appPermsMatrix,
+  (newMatrix) => {
+    updatedMatrix.value = newMatrix.map((perms) => ({ ...perms }));
+  },
+);
 
 // Lignes triées par ordre alphabétique du type d'acteur, comme dans la modale create/edit acteur.
 const sortedMatrix = computed(() =>

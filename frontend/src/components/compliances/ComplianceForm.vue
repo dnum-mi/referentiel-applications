@@ -74,6 +74,7 @@ onMounted(() => {
     ...props.initialData,
     homologation_date_end: toDateInputValue(props.initialData.homologation_date_end),
     dima_last_test_date: toDateInputValue(props.initialData.dima_last_test_date),
+    pdma_last_test_date: toDateInputValue(props.initialData.pdma_last_test_date),
   };
 });
 

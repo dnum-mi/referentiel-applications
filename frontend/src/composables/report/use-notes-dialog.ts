@@ -1,4 +1,5 @@
 import { useReportStore } from "@/stores/reportStore";
+import { useToasterStore } from "@/stores/toasterStore";
 import { useToggle } from "@vueuse/core";
 
 const useEditedNotes = (notes: MaybeRefOrGetter<string>) => {
@@ -20,6 +21,7 @@ const useEditedNotes = (notes: MaybeRefOrGetter<string>) => {
 
 export const useNotesDialog = (initialNotes: MaybeRefOrGetter<string>, onRefresh: () => void) => {
   const reportStore = useReportStore();
+  const toaster = useToasterStore();
 
   const [isOpen, toggleDialog] = useToggle(false);
   const openDialog = () => toggleDialog(true);
@@ -32,6 +34,10 @@ export const useNotesDialog = (initialNotes: MaybeRefOrGetter<string>, onRefresh
       await reportStore.updateNotes(reportId, editedNotes.value);
     } catch (err) {
       console.error("Erreur lors de la mise à jour de la notes :", err);
+      // La modale reste ouverte et la note éditée n'est pas perdue : sans ça, l'utilisateur
+      // croyait sa note enregistrée alors que la sauvegarde avait échoué.
+      toaster.addErrorMessage("Erreur lors de l'enregistrement de la note.");
+      return;
     }
     hideDialog();
     onRefresh();
