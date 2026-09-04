@@ -9,6 +9,7 @@ import {
 import { roleToAppPermissions } from "src/permissions/role-to-permissions";
 import { QueryBuilderGroupActor } from "./prisma-query-builder.service";
 import { organizationWithinScope } from "src/common/utils/organization-scope.utils";
+import { emailEquals } from "src/common/utils/email.utils";
 
 @Injectable()
 export class CheckPermissions {
@@ -50,7 +51,12 @@ export class CheckPermissions {
 
     const [emailActors, groupActors] = await Promise.all([
       this.prisma.actor.findMany({
-        where: { applicationId, email: user.email, isGroup: false },
+        // #2501 : rapprochement insensible à la casse (acteur saisi à la main vs e-mail SSO).
+        where: {
+          applicationId,
+          email: emailEquals(user.email),
+          isGroup: false,
+        },
         include: { actorType: { include: { appPermissions: true } } },
         distinct: ["actorTypeId"],
       }),

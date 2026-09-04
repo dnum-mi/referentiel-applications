@@ -22,6 +22,7 @@ import { ScopedPermissionService } from "./scope-permission/scoped-permission.se
 import { UserPermissionLogService } from "./user-permission-log.service";
 import { LoggerService } from "src/logger/logger.service";
 import { EmailService } from "src/email/email.service";
+import { emailEquals, normalizeEmail } from "src/common/utils/email.utils";
 
 @Injectable()
 export class UserService {
@@ -35,19 +36,24 @@ export class UserService {
     private readonly notificationService: NotificationService,
   ) {}
 
+  // #2501 : l'e-mail du SSO est normalisé (minuscules) — sinon deux graphies du même compte
+  // créaient deux utilisateurs, et l'acteur saisi avec une majuscule ne donnait aucun droit.
   async findOrCreateByEmail(email: string): Promise<UserEntity | null> {
-    const existingUser = await this.findByEmailWithRelations(email);
+    const normalized = normalizeEmail(email);
+    const existingUser = await this.findByEmailWithRelations(normalized);
 
     if (existingUser) {
       return existingUser;
     }
 
-    return this.createUser(email);
+    return this.createUser(normalized);
   }
 
+  // Recherche insensible à la casse : les comptes créés avant la normalisation (ou injectés
+  // hors API) restent reconnus, sans doublon.
   findByEmailWithRelations(email: string): Promise<UserEntity | null> {
-    return this.prisma.user.findUnique({
-      where: { email },
+    return this.prisma.user.findFirst({
+      where: { email: emailEquals(email) },
       include: {
         organization: true,
         followedApplications: true,
@@ -56,7 +62,8 @@ export class UserService {
     });
   }
 
-  async createUser(email: string) {
+  async createUser(rawEmail: string) {
+    const email = normalizeEmail(rawEmail);
     const organizationPath = await getOrganizationPathFromMaia(email);
     const data: Prisma.UserCreateArgs["data"] = {
       email,

@@ -5,6 +5,7 @@ type ActorWithRelations = Prisma.ActorGetPayload<{
   include: { actorType: true; organization: true; application: true };
 }>;
 import { BaseService } from "src/common/base.service";
+import { emailEquals, normalizeEmail } from "src/common/utils/email.utils";
 import { EmailService } from "src/email/email.service";
 import { NotificationService } from "src/notification/notification.service";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -59,6 +60,9 @@ export class ActorService {
     const createdActor = await this.baseService.create(
       {
         ...rest,
+        // #2501 : e-mail stocké en minuscules, pour que le rapprochement avec le compte SSO
+        // ne dépende pas de la graphie saisie.
+        email: normalizeEmail(rest.email),
         organizationId: organizationId ?? null,
         applicationId,
         actorTypeId,
@@ -172,7 +176,7 @@ export class ActorService {
 
   public async findApplicationsByEmail(email: string) {
     const actors = await this.prisma.actor.findMany({
-      where: { email },
+      where: { email: emailEquals(email) },
       include: { application: true },
       distinct: ["applicationId"],
     });
@@ -190,7 +194,7 @@ export class ActorService {
     requestorId: string,
     applicationIds?: string[],
   ): Promise<{ count: number }> {
-    const where: Prisma.ActorWhereInput = { email };
+    const where: Prisma.ActorWhereInput = { email: emailEquals(email) };
     if (applicationIds?.length) {
       where.applicationId = { in: applicationIds };
     }
@@ -218,7 +222,7 @@ export class ActorService {
       data.lastname = "";
     }
 
-    const where: Prisma.ActorWhereInput = { email };
+    const where: Prisma.ActorWhereInput = { email: emailEquals(email) };
     if (applicationIds?.length) {
       where.applicationId = { in: applicationIds };
     }
@@ -262,6 +266,7 @@ export class ActorService {
       id,
       {
         ...rest,
+        ...(rest.email !== undefined && { email: normalizeEmail(rest.email) }),
         ...(organizationId !== undefined && {
           organizationId: organizationId || null,
         }),
