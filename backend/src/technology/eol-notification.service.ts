@@ -4,6 +4,7 @@ import { NotificationType } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { NotificationService } from "src/notification/notification.service";
 import {
+  ACTIVE_APPLICATION_WHERE,
   computeEolStatus,
   eolStatusWhere,
   type EolStatus,
@@ -66,7 +67,11 @@ export class EolNotificationService {
 
     const now = new Date();
     const rows = await this.prisma.technologyStack.findMany({
-      where: eolStatusWhere(undefined, now),
+      // #2515 : les gestionnaires d'une application supprimée ne reçoivent plus d'alerte.
+      where: {
+        ...eolStatusWhere(undefined, now),
+        application: ACTIVE_APPLICATION_WHERE,
+      },
       select: {
         id: true,
         applicationId: true,

@@ -500,3 +500,116 @@ describe("TechnologyService — fin de vie saisie à la main (#2454)", () => {
     });
   });
 });
+
+// #2516 : quand produit ou version changent pendant une panne d'endoflife.date, l'ancienne
+// fin de vie ne doit pas survivre au changement — la ligne repasse « jamais vérifiée ».
+describe("TechnologyService — changement de produit pendant une panne (#2516)", () => {
+  const row = {
+    id: "tech-1",
+    applicationId: "app-1",
+    technology: "Base de données",
+    product: "PostgreSQL",
+    version: "13",
+    docUrl: null,
+    eolSource: "endoflife",
+    eolProduct: "postgresql",
+    eolCycle: "13",
+    eolDate: new Date("2025-11-13"),
+    eoasDate: null,
+    latestVersion: "13.20",
+    eolCheckedAt: new Date(),
+  };
+  const neverChecked = {
+    eolProduct: null,
+    eolDate: null,
+    eoasDate: null,
+    latestVersion: null,
+    eolCycle: null,
+    eolCheckedAt: null,
+  };
+
+  type ResolveEol = { resolveEol: (...args: unknown[]) => Promise<unknown> };
+
+  const makeService = (resolution: Record<string, unknown>) => {
+    const technologyStack = {
+      findFirst: jest.fn().mockResolvedValue(null),
+      findMany: jest.fn().mockResolvedValue([]),
+      findUnique: jest.fn().mockResolvedValue(row),
+      create: jest.fn().mockResolvedValue(row),
+      update: jest.fn().mockResolvedValue(row),
+    };
+    const prisma = {
+      technologyStack,
+      application: {
+        findUnique: jest.fn().mockResolvedValue({ id: "app-1" }),
+      },
+    };
+    const service = new TechnologyService(
+      prisma as unknown as PrismaService,
+      {} as MetadatasService,
+      { updateApplicationQuality: jest.fn() } as unknown as ApplicationService,
+    );
+    jest
+      .spyOn(service as unknown as ResolveEol, "resolveEol")
+      .mockResolvedValue(resolution);
+    return { service, update: technologyStack.update };
+  };
+
+  it("PATCH produit pendant une panne : les champs de fin de vie repassent « jamais vérifiée »", async () => {
+    const { service, update } = makeService({});
+    await service.updateTechnology("tech-1", "app-1", { product: "MySQL" });
+    expect(update.mock.calls[0][0].data).toMatchObject({
+      product: "MySQL",
+      ...neverChecked,
+    });
+  });
+
+  it("PATCH version pendant une panne : même remise à zéro", async () => {
+    const { service, update } = makeService({});
+    await service.updateTechnology("tech-1", "app-1", { version: "16" });
+    expect(update.mock.calls[0][0].data).toMatchObject({
+      version: "16",
+      ...neverChecked,
+    });
+  });
+
+  it("PATCH sans changement de produit ni de version : la fin de vie existante est conservée", async () => {
+    const { service, update } = makeService({});
+    await service.updateTechnology("tech-1", "app-1", {
+      docUrl: "https://example.org",
+    });
+    expect(update.mock.calls[0][0].data).toEqual({
+      docUrl: "https://example.org",
+    });
+  });
+
+  it("PATCH produit avec une résolution réussie : les nouveaux champs écrasent la remise à zéro", async () => {
+    const resolved = {
+      eolProduct: "mysql",
+      eolCycle: "8.0",
+      eolDate: new Date("2026-04-30"),
+      eoasDate: null,
+      latestVersion: "8.0.40",
+      eolCheckedAt: new Date(),
+    };
+    const { service, update } = makeService(resolved);
+    await service.updateTechnology("tech-1", "app-1", { product: "MySQL" });
+    expect(update.mock.calls[0][0].data).toMatchObject({
+      product: "MySQL",
+      ...resolved,
+    });
+  });
+
+  it("PATCH qui efface la date manuelle ET change le produit pendant une panne : remise à zéro, retour à l'automatique", async () => {
+    const { service, update } = makeService({});
+    await service.updateTechnology("tech-1", "app-1", {
+      product: "MySQL",
+      manualEolDate: null,
+    });
+    expect(update.mock.calls[0][0].data).toMatchObject({
+      product: "MySQL",
+      eolSource: "endoflife",
+      ...neverChecked,
+    });
+  });
+});

@@ -1,5 +1,5 @@
 import Aura from "@primevue/themes/aura";
-import { cleanup, render, screen } from "@testing-library/vue";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/vue";
 import PrimeVue from "primevue/config";
 import type { TechnologyDto } from "@/client/types.gen";
 import type { ApplicationWithPerms } from "@/models/Application";
@@ -9,26 +9,42 @@ afterEach(() => cleanup());
 
 const findAllMock = vi.fn();
 const listEolProductsMock = vi.fn();
+const createMock = vi.fn();
+const updateMock = vi.fn();
+const deleteMock = vi.fn();
+
+const { addErrorMessage, addSuccessMessage, hasPermissions } = vi.hoisted(() => ({
+  addErrorMessage: vi.fn(),
+  addSuccessMessage: vi.fn(),
+  hasPermissions: vi.fn().mockReturnValue(false),
+}));
 
 vi.mock("@/api/index", () => ({
   default: {
     technologyControllerFindAll: (...args: unknown[]) => findAllMock(...args),
     technologyControllerListEolProducts: (...args: unknown[]) => listEolProductsMock(...args),
+    technologyControllerCreate: (...args: unknown[]) => createMock(...args),
+    technologyControllerUpdate: (...args: unknown[]) => updateMock(...args),
+    technologyControllerDelete: (...args: unknown[]) => deleteMock(...args),
   },
 }));
 
 vi.mock("@/stores/toasterStore", () => ({
-  useToasterStore: () => ({
-    addErrorMessage: vi.fn(),
-    addSuccessMessage: vi.fn(),
-  }),
+  useToasterStore: () => ({ addErrorMessage, addSuccessMessage }),
 }));
 
 vi.mock("@/stores/userStore", () => ({
-  useUserStore: () => ({
-    hasPermissions: vi.fn().mockReturnValue(false),
-  }),
+  useUserStore: () => ({ hasPermissions }),
 }));
+
+beforeEach(() => {
+  addErrorMessage.mockReset();
+  addSuccessMessage.mockReset();
+  hasPermissions.mockReset().mockReturnValue(false);
+  createMock.mockReset();
+  updateMock.mockReset();
+  deleteMock.mockReset();
+});
 
 const applicationFixture = {
   id: "app-1",
@@ -290,5 +306,93 @@ describe("technologyTab — titre", () => {
 
     expect(screen.getByRole("heading", { level: 3, name: "Technologies" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { level: 3, name: "Technologie" })).not.toBeInTheDocument();
+  });
+});
+
+// #2512 : le client généré ne lève pas sur un 4xx/5xx. Un 409 (doublon) ou un 403 doit se
+// solder par un toast d'erreur portant le message du backend, jamais par un succès.
+describe("technologyTab — erreurs HTTP de sauvegarde et de suppression (#2512)", () => {
+  const httpError = (status: number, message: string) => ({
+    response: { ok: false, status },
+    error: { statusCode: status, message },
+    data: undefined,
+  });
+
+  // Le focus-trap de DsfrModal ne trouve aucun nœud focalisable dans jsdom : la modale est
+  // remplacée par son contenu, ce qui suffit pour atteindre le formulaire et la confirmation.
+  const modalStub = { props: ["opened"], template: '<div v-if="opened"><slot /></div>' };
+
+  function renderEditable(technologies: TechnologyDto[]) {
+    findAllMock.mockResolvedValue({ response: { ok: true }, data: technologies });
+    listEolProductsMock.mockResolvedValue({ response: { ok: true }, data: [] });
+    return render(TechnologyTab, {
+      props: { application: { ...applicationFixture, myPerms: new Set(["TechnologyWrite"]) } as ApplicationWithPerms },
+      global: { plugins: [[PrimeVue, { theme: { preset: Aura } }]], stubs: { DsfrModal: modalStub } },
+    });
+  }
+
+  async function openCreateFormAndSubmit() {
+    await fireEvent.click(await screen.findByTestId("technology-add-btn"));
+    await fireEvent.update(await screen.findByTestId("technology-name-input"), "Base de données");
+    await fireEvent.update(screen.getByTestId("technology-product-input"), "PostgreSQL");
+    // L’attribut data-testid posé sur <TechnologyForm> par l’onglet remplace celui du <form>.
+    await fireEvent.submit(screen.getByTestId("technology-form-container"));
+  }
+
+  it("annonce l'erreur du backend quand la création répond 409, sans toast de succès ni rechargement", async () => {
+    hasPermissions.mockReturnValue(true);
+    createMock.mockResolvedValue(httpError(409, "Ce produit est déjà renseigné pour cette technologie et cette application"));
+    renderEditable([]);
+    await screen.findByTestId("technology-empty-state");
+    findAllMock.mockClear();
+
+    await openCreateFormAndSubmit();
+
+    await waitFor(() => expect(createMock).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(addErrorMessage).toHaveBeenCalledWith("Ce produit est déjà renseigné pour cette technologie et cette application"),
+    );
+    expect(addSuccessMessage).not.toHaveBeenCalled();
+    expect(findAllMock).not.toHaveBeenCalled();
+  });
+
+  it("retombe sur un message générique quand le backend n'en fournit pas", async () => {
+    hasPermissions.mockReturnValue(true);
+    createMock.mockResolvedValue({ response: { ok: false, status: 500 }, error: undefined, data: undefined });
+    renderEditable([]);
+    await screen.findByTestId("technology-empty-state");
+
+    await openCreateFormAndSubmit();
+
+    await waitFor(() => expect(addErrorMessage).toHaveBeenCalledWith("Erreur lors de la sauvegarde de la technologie."));
+    expect(addSuccessMessage).not.toHaveBeenCalled();
+  });
+
+  it("annonce le succès et recharge la liste quand la création répond 201", async () => {
+    hasPermissions.mockReturnValue(true);
+    createMock.mockResolvedValue({ response: { ok: true, status: 201 }, data: {} });
+    renderEditable([]);
+    await screen.findByTestId("technology-empty-state");
+    findAllMock.mockClear();
+
+    await openCreateFormAndSubmit();
+
+    await waitFor(() => expect(addSuccessMessage).toHaveBeenCalledWith("Technologie sauvegardée avec succès !"));
+    expect(addErrorMessage).not.toHaveBeenCalled();
+    expect(findAllMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("annonce l'erreur du backend quand la suppression répond 403", async () => {
+    hasPermissions.mockReturnValue(true);
+    deleteMock.mockResolvedValue(httpError(403, "Accès refusé"));
+    renderEditable([makeTechnology({ id: "t-1" })]);
+    await screen.findByTestId("technology-eol-unchecked-t-1");
+
+    await fireEvent.click(screen.getByTestId("technology-delete-btn"));
+    await fireEvent.click(await screen.findByTestId("delete-confirm-btn"));
+
+    await waitFor(() => expect(deleteMock).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(addErrorMessage).toHaveBeenCalledWith("Accès refusé"));
+    expect(addSuccessMessage).not.toHaveBeenCalled();
   });
 });

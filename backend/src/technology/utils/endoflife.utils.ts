@@ -82,7 +82,9 @@ export interface EolInfo {
 export type EolResolution =
   /// Produit reconnu : cycles de release récupérés
   | { status: "resolved"; slug: string; releases: EndoflifeRelease[] }
-  /// Produit absent du catalogue endoflife.date (ou 404 en mode dégradé)
+  /// Produit absent du catalogue endoflife.date. Jamais renvoyé en mode dégradé
+  /// (catalogue jamais récupéré) : sans catalogue le slug est deviné, un 404 ne
+  /// prouve rien (#2514).
   | { status: "unknown-product" }
   /// API/réseau indisponible : ne rien écraser, retenter plus tard
   | { status: "unavailable" };
@@ -297,6 +299,7 @@ async function fetchJson(
   url: string,
   { notFoundIsFailure = false }: { notFoundIsFailure?: boolean } = {},
 ): Promise<FetchResult> {
+  if (isEndoflifeOutageMemoized()) return { kind: "error" };
   const startedAt = Date.now();
   try {
     const response = await fetch(url, {
@@ -311,27 +314,64 @@ async function fetchJson(
           "statut HTTP 404 sur le catalogue (proxy ou filtrage d'URL qui répond à la place d'endoflife.date, ou API déplacée)",
           startedAt,
         );
+        rememberOutage();
+        return { kind: "error" };
       }
+      clearEndoflifeOutageMemo();
       return { kind: "not-found" };
     }
     if (!response.ok) {
       await discardBody(response);
       warnFailure(url, `statut HTTP ${response.status}`, startedAt);
+      rememberOutage();
       return { kind: "error" };
     }
-    return { kind: "ok", data: await response.json() };
+    const data: unknown = await response.json();
+    clearEndoflifeOutageMemo();
+    return { kind: "ok", data };
   } catch (error) {
     warnFailure(url, describeFetchError(error), startedAt);
+    rememberOutage();
     return { kind: "error" };
   }
+}
+
+// ── Disjoncteur (#2513) ────────────────────────────────────────────────────────
+// Après un échec réseau/HTTP (délai dépassé, connexion absorbée, 5xx, 404 sur le
+// catalogue), plus AUCUNE requête n'est tentée pendant OUTAGE_MEMO_MS : chaque appel
+// répond aussitôt « error » (→ `unavailable`, aucune écriture). Sans lui, un hôte qui
+// absorbe la connexion coûtait 2 × FETCH_TIMEOUT_MS à CHAQUE résolution (ouverture
+// d'onglet, POST/PATCH sans date manuelle) — 10 s mesurées — et l'échec n'était
+// jamais mémorisé. Une réponse (même 404 produit) referme le disjoncteur.
+const OUTAGE_MEMO_MS = 60_000;
+let outageUntil = 0;
+
+export function isEndoflifeOutageMemoized(now: number = Date.now()): boolean {
+  return now < outageUntil;
+}
+
+function rememberOutage(): void {
+  if (!isEndoflifeOutageMemoized()) {
+    logger.warn(
+      `endoflife.date injoignable : résolutions court-circuitées pendant ${OUTAGE_MEMO_MS / 1000} s (statut « non vérifiée », aucune écriture)`,
+    );
+  }
+  outageUntil = Date.now() + OUTAGE_MEMO_MS;
+}
+
+/// Réservé aux tests : referme le disjoncteur.
+export function clearEndoflifeOutageMemo(): void {
+  outageUntil = 0;
 }
 
 let catalogCache: { products: EndoflifeProduct[]; expiresAt: number } | null =
   null;
 
-/// Réservé aux tests : réinitialise le cache du catalogue.
+/// Réservé aux tests : réinitialise le cache du catalogue (et le disjoncteur, pour
+/// qu'un test en panne ne contamine pas le suivant).
 export function clearProductCatalogCache(): void {
   catalogCache = null;
+  clearEndoflifeOutageMemo();
 }
 
 /// Récupère le catalogue des produits suivis par endoflife.date (cache mémoire
@@ -420,17 +460,25 @@ export async function resolveProductReleases(
 ): Promise<EolResolution> {
   const catalog = await fetchProductCatalog();
 
-  let slug: string | null;
   if (catalog) {
-    slug = lookupProductSlug(productIndexFor(catalog), product);
+    const slug = lookupProductSlug(productIndexFor(catalog), product);
     if (!slug) return { status: "unknown-product" };
-  } else {
-    slug = toEndoflifeProduct(product);
-    if (!slug) return { status: "unknown-product" };
+    const releases = await fetchProductReleases(slug);
+    if (releases === "not-found") return { status: "unknown-product" };
+    if (releases === null) return { status: "unavailable" };
+    return { status: "resolved", slug, releases };
   }
 
-  const releases = await fetchProductReleases(slug);
-  if (releases === "not-found") return { status: "unknown-product" };
-  if (releases === null) return { status: "unavailable" };
-  return { status: "resolved", slug, releases };
+  // Mode dégradé (#2514) : le slug est DEVINÉ par la normalisation historique, qui
+  // supprime les tirets — près de la moitié des slugs réels en contiennent — et un
+  // proxy filtrant peut répondre 404 à tout. Un 404 ne prouve donc pas que le produit
+  // est inconnu : rien n'est persisté (« unavailable »), la ligne sera retentée dès
+  // que le catalogue sera de nouveau disponible. Seule une résolution POSITIVE compte.
+  const guessedSlug = toEndoflifeProduct(product);
+  if (!guessedSlug) return { status: "unavailable" };
+  const releases = await fetchProductReleases(guessedSlug);
+  if (releases === "not-found" || releases === null) {
+    return { status: "unavailable" };
+  }
+  return { status: "resolved", slug: guessedSlug, releases };
 }

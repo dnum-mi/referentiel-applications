@@ -47,6 +47,7 @@ const makeService = (
 
   return {
     service: new EolNotificationService(prisma, notifications, config),
+    findMany,
     createForUsers,
     findUsersToNotifyForTechnology,
     logCreateMany,
@@ -182,5 +183,18 @@ describe("EolNotificationService", () => {
     const { where } = logFindMany.mock.calls[0][0];
     expect(where.applicationId.in.sort()).toEqual(["app-1", "app-2"]);
     expect(where.type).toEqual({ startsWith: "technology_eol:" });
+  });
+});
+
+describe("EolNotificationService — applications supprimées (#2515)", () => {
+  it("ne sélectionne que les technologies d'applications non supprimées", async () => {
+    const { service, findMany } = makeService([]);
+    await service.notifyPendingEndOfLife();
+    const { where } = findMany.mock.calls[0][0];
+    expect(where.application).toEqual({
+      currentStatus: { status: { not: "deleted" } },
+    });
+    // Le filtre de statut de fin de vie reste appliqué.
+    expect(where.OR).toBeDefined();
   });
 });

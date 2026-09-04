@@ -11,7 +11,10 @@ import {
   type EndoflifeRelease,
   type EolResolution,
 } from "./utils/endoflife.utils";
-import { EOL_REFRESH_TTL_MS } from "./utils/eol-status";
+import {
+  ACTIVE_APPLICATION_WHERE,
+  EOL_REFRESH_TTL_MS,
+} from "./utils/eol-status";
 import { EolNotificationService } from "./eol-notification.service";
 
 /// Champs à écrire pour un produit résolu. Le cycle apparié est persisté sous
@@ -149,6 +152,9 @@ export class EolRefreshService {
         // inconnu) ou, pire, par la date d'un autre produit homonyme.
         eolSource: { not: TechnologyEolSource.manual },
         OR: [{ eolCheckedAt: null }, { eolCheckedAt: { lt: threshold } }],
+        // #2515 : inutile de rafraîchir (et d'appeler endoflife.date pour) une
+        // application supprimée.
+        application: ACTIVE_APPLICATION_WHERE,
       },
       select: { id: true, product: true, version: true },
       orderBy: { id: "asc" },
