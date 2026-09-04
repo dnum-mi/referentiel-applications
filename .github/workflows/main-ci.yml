@@ -191,3 +191,86 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
+
+  # #2517 : la suite `e2e/` (protocole QA — FIC, TRV, QAL, CSF, ACC…) ne tournait qu'à
+  # la release (qa-campaign.yml, qa-sync.yml). Le job « Run E2E tests » ci-dessus ne
+  # couvre que `frontend/tests` : des PR ont été mergées avec des e2e « verts » qui
+  # n'avaient pas joué les scénarios concernés. Chromium seul (Firefox et WebKit
+  # restent à la campagne de release) : de l'ordre de quinze minutes par exécution.
+  # Mêmes étapes que qa-campaign.yml, avec l'image backend construite par ce run.
+  test-e2e-qa:
+    name: Run QA E2E suite (e2e/)
+    needs: [build-backend, build-frontend]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start stack using docker compose
+        run: IMAGE_TAG=${{ needs.build-backend.outputs.image_tag }} docker compose -f docker-compose.yml -f docker-compose.ci.yml up backend postgres keycloak -d
+      - name: Wait for backend to be ready
+        run: |
+          IMG=${{ needs.build-backend.outputs.image_tag }}
+          for i in $(seq 1 60); do
+            if IMAGE_TAG=$IMG docker compose -f docker-compose.yml -f docker-compose.ci.yml exec -T backend \
+                 node -e "require('http').get('http://localhost:3500/api/v2/health-check', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))" 2>/dev/null; then
+              echo "✅ Backend ready after ~$((i * 3))s"
+              exit 0
+            fi
+            echo "⏳ Waiting for backend to be ready ($i/60)..."
+            sleep 3
+          done
+          echo "❌ Backend never became ready within 180s — diagnostics below:"
+          IMAGE_TAG=$IMG docker compose -f docker-compose.yml -f docker-compose.ci.yml ps
+          IMAGE_TAG=$IMG docker compose -f docker-compose.yml -f docker-compose.ci.yml logs backend
+          exit 1
+      - name: Wait for Keycloak
+        run: |
+          for i in {1..30}; do
+            if curl -sf http://localhost:8082/realms/referentiel-applications/.well-known/openid-configuration; then exit 0; fi
+            sleep 5
+          done
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml logs backend keycloak; exit 1
+      - name: Seed backend database (base + QA fixtures)
+        run: |
+          IMG=${{ needs.build-backend.outputs.image_tag }}
+          for i in {1..10}; do
+            if IMAGE_TAG=$IMG docker compose -f docker-compose.yml -f docker-compose.ci.yml exec -T backend pnpm db:seed; then
+              # Fixtures QA déterministes (périmètres & groupes d'acteurs), requises par scope-acteurs.spec.ts
+              IMAGE_TAG=$IMG docker compose -f docker-compose.yml -f docker-compose.ci.yml exec -T backend pnpm db:seed:qa
+              exit $?
+            fi
+            echo "Seed attempt $i failed, retrying in 5s..."
+            sleep 5
+          done
+          echo "Database seed failed after retries"
+          exit 1
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: pnpm install --frozen-lockfile
+      - name: Generate API client
+        working-directory: ./frontend
+        run: pnpm gen
+      - name: Install e2e dependencies
+        working-directory: ./e2e
+        run: pnpm install --frozen-lockfile
+      - name: Install Playwright (chromium)
+        working-directory: ./e2e
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Run QA Playwright suite
+        working-directory: ./e2e
+        env:
+          CI: "true"
+          API_BASE_URL: http://localhost:3500
+        run: pnpm exec playwright test --project=chromium --reporter=list
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report-e2e
+          path: e2e/playwright-report/
+          retention-days: 30

@@ -126,11 +126,12 @@ pnpm run build        # type-check + build de production
 
 ## 6. Tests
 
-| Périmètre               | Outil                | Emplacement                                                | Commande                            |
-| ----------------------- | -------------------- | ---------------------------------------------------------- | ----------------------------------- |
-| Backend                 | **Jest** (tests e2e) | `backend/tests/` (fichiers `*.e2e-spec.ts`)                | `pnpm test`, `pnpm test:cov`        |
-| Frontend — unitaires    | **Vitest**           | `frontend/` (config `vitest.config.ts`, `vitest-setup.ts`) | `pnpm test:unit`                    |
-| Frontend — bout en bout | **Playwright**       | `frontend/tests/` (fichiers `*.spec.ts`)                   | `pnpm test:e2e`, `pnpm test:e2e:ui` |
+| Périmètre                   | Outil                | Emplacement                                                                    | Commande                                               |
+| --------------------------- | -------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------ |
+| Backend                     | **Jest** (tests e2e) | `backend/tests/` (fichiers `*.e2e-spec.ts`)                                    | `pnpm test`, `pnpm test:cov`                           |
+| Frontend — unitaires        | **Vitest**           | `frontend/` (config `vitest.config.ts`, `vitest-setup.ts`)                     | `pnpm test:unit`                                       |
+| Frontend — bout en bout     | **Playwright**       | `frontend/tests/` (fichiers `*.spec.ts`)                                       | `pnpm test:e2e`, `pnpm test:e2e:ui`                    |
+| Bout en bout — protocole QA | **Playwright**       | `e2e/tests/` (scénarios FIC, TRV, QAL, CSF, ACC… du protocole `qa/protocoles`) | `pnpm test:e2e` (racine, ou `pnpm --dir e2e test:e2e`) |
 
 Le projet a migré ses tests bout en bout de **Cypress vers Playwright** ; un dossier `frontend/cypress/` peut subsister mais Playwright est l'outil de référence.
 
@@ -151,7 +152,7 @@ Les workflows GitHub Actions se trouvent dans `.github/workflows/`.
 | `release.yml`       | `push` sur `main`                                         | Exécute **release-please** pour préparer/publier les versions                                                                                               |
 | `release-build.yml` | `push` d'un tag `v*` ou manuel                            | Construit et pousse les images Docker de la version publiée                                                                                                 |
 
-Le pipeline e2e démarre la pile (`docker compose ... up backend postgres keycloak`), amorce la base (`pnpm db:seed`), installe les navigateurs Playwright, **régénère le client API** (`pnpm openapi-ts`) puis lance `pnpm test:e2e`.
+Le pipeline e2e démarre la pile (`docker compose ... up backend postgres keycloak`), amorce la base (`pnpm db:seed`), installe les navigateurs Playwright, **régénère le client API** (`pnpm openapi-ts`) puis lance `pnpm test:e2e`. Depuis #2517, un second job **« Run QA E2E suite (e2e/) »** joue sur chaque PR la suite `e2e/` (protocole QA), Chromium seul, après `pnpm db:seed` **et** `pnpm db:seed:qa` : auparavant elle ne tournait qu'à la release (`qa-campaign.yml`, `qa-sync.yml`) et des PR passaient en vert sans avoir exécuté les scénarios concernés. Firefox et WebKit restent réservés à la campagne de release.
 
 ## 8. Versionnage et release
 
