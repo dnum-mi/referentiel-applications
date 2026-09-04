@@ -5940,7 +5940,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateTechnologyDto"
+              $ref: "#/components/schemas/UpdateTechnologyDto"
       responses:
         "200":
           description: Technologie mise à jour avec succès
@@ -10374,10 +10374,14 @@ components:
       properties:
         technology:
           type: string
+          maxLength: 100
+          pattern: \S
           example: Base de données
           description: Famille / catégorie de technologie
         product:
           type: string
+          maxLength: 100
+          pattern: \S
           example: PostgreSQL
           description: Produit concret (sert à résoudre la fin de vie)
         version:
@@ -10445,6 +10449,17 @@ components:
             saisie à la main, jamais recalculée automatiquement"
           allOf:
             - $ref: "#/components/schemas/TechnologyEolSource"
+        eolStatus:
+          nullable: true
+          enum: &a49
+            - eol
+            - eol-soon
+            - eoas-passed
+          type: string
+          description: "Statut de fin de vie calculé par le backend à la lecture (#2527) :
+            « eol » dépassée, « eol-soon » dans moins de 6 mois, « eoas-passed »
+            hors support actif, null sinon. Source unique, le front ne le
+            recalcule pas."
       required:
         - technology
         - product
@@ -10483,10 +10498,14 @@ components:
       properties:
         technology:
           type: string
+          maxLength: 100
+          pattern: \S
           example: Base de données
           description: Famille / catégorie de technologie
         product:
           type: string
+          maxLength: 100
+          pattern: \S
           example: PostgreSQL
           description: Produit concret (sert à résoudre la fin de vie)
         version:
@@ -10515,6 +10534,44 @@ components:
       required:
         - technology
         - product
+    UpdateTechnologyDto:
+      type: object
+      properties:
+        technology:
+          type: string
+          maxLength: 100
+          pattern: \S
+          example: Base de données
+          description: Famille / catégorie de technologie
+        product:
+          type: string
+          maxLength: 100
+          pattern: \S
+          example: PostgreSQL
+          description: Produit concret (sert à résoudre la fin de vie)
+        version:
+          type: string
+          nullable: true
+          maxLength: 50
+          example: "20.11"
+          description: Version utilisée
+        docUrl:
+          type: string
+          nullable: true
+          maxLength: 2048
+          format: uri
+          example: https://www.postgresql.org/docs/
+          description: Lien documentaire (URL) associé au produit
+        manualEolDate:
+          type: string
+          nullable: true
+          pattern: ^\d{4}-\d{2}-\d{2}$
+          example: 2027-06-30
+          description: Date de fin de vie saisie à la main (AAAA-MM-JJ), réservée aux cas
+            où endoflife.date ne peut pas répondre (produit non suivi, service
+            injoignable). Elle prime sur le calcul automatique, qui ne l'écrase
+            jamais. `null` efface la saisie et rend la main à l'automatique ;
+            absent = fin de vie inchangée.
     EndOfLifeTechnologyDto:
       type: object
       properties:
@@ -10549,10 +10606,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/TechnologyEolSource"
         status:
-          enum: &a49
-            - eol
-            - eol-soon
-            - eoas-passed
+          enum: *a49
           type: string
           description: Statut calculé côté serveur, pour que la fiche et la vue transverse
             classent une technologie de la même façon.

@@ -4,6 +4,7 @@ import PrimeVue from "primevue/config";
 import type { TechnologyDto } from "@/client/types.gen";
 import type { ApplicationWithPerms } from "@/models/Application";
 import TechnologyTab from "./TechnologyTab.vue";
+import { computeEolStatus } from "@/utils/eol-status";
 
 afterEach(() => cleanup());
 
@@ -53,8 +54,10 @@ const applicationFixture = {
 } as unknown as ApplicationWithPerms;
 
 // Ligne « neutre » : aucune échéance, jamais vérifiée. Chaque cas surcharge ce qu'il teste.
+// `eolStatus` est calculé par le backend (#2527) : la fixture le dérive des dates comme lui.
 function makeTechnology(overrides: Partial<TechnologyDto> & Pick<TechnologyDto, "id">): TechnologyDto {
   return {
+    eolStatus: computeEolStatus(overrides) ?? undefined,
     applicationId: "app-1",
     technology: "Langage",
     product: "python",

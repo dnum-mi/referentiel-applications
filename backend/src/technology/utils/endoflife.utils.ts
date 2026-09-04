@@ -215,6 +215,16 @@ export function matchRelease(
   );
   if (byMajor.length === 1) return byMajor[0];
 
+  // #2527 : numérotations Java héritées. « 1.8 », « 1.8.0_392 » (ancien schéma 1.x) et
+  // « 8u392 » (numéro de mise à jour) désignent le cycle « 8 ». Repli seulement si aucun
+  // cycle ne porte la saisie telle quelle, et seulement vers un cycle qui existe.
+  const legacy =
+    /^1\.(\d+)(?:\.\d+(?:_\d+)?)?$/.exec(v) ?? /^(\d+)u\d+$/.exec(v);
+  if (legacy) {
+    const byLegacy = releases.find((release) => release.name === legacy[1]);
+    if (byLegacy) return byLegacy;
+  }
+
   return (
     releases.find((release) => {
       const label = release.label?.trim();

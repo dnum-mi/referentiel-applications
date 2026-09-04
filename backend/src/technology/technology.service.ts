@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { TechnologyEolSource } from "@prisma/client";
+import { Prisma, TechnologyEolSource } from "@prisma/client";
 import { BaseService } from "src/common/base.service";
 import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -22,7 +22,11 @@ import {
   type EndoflifeProduct,
   type EolResolution,
 } from "./utils/endoflife.utils";
-import { EOL_REFRESH_TTL_MS } from "./utils/eol-status";
+import {
+  EOL_REFRESH_TTL_MS,
+  computeEolStatus,
+  type EolStatus,
+} from "./utils/eol-status";
 
 // Au-delà de ce délai, on rafraîchit paresseusement la fin de vie au GET.
 
@@ -48,6 +52,34 @@ const NEVER_CHECKED_EOL: EolFields = {
   eolCycle: null,
   eolCheckedAt: null,
 };
+
+/** Statut de fin de vie calculé à la lecture (#2527) : source unique pour la fiche et la vue. */
+function withEolStatus<
+  T extends { eolDate?: Date | null; eoasDate?: Date | null },
+>(row: T): T & { eolStatus: EolStatus | null } {
+  return { ...row, eolStatus: computeEolStatus(row) };
+}
+
+/**
+ * #2527 : l'index unique (applicationId, technology, product) est sensible à la casse alors que
+ * le rapprochement ne l'est pas ; deux requêtes simultanées pouvaient donc passer le
+ * `findExistingEntry` puis heurter l'index — Prisma P2002, rendu en 500. C'est un conflit.
+ */
+async function conflictAsHttp<T>(promise: Promise<T>): Promise<T> {
+  try {
+    return await promise;
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      throw new ConflictException(
+        "Ce produit est déjà renseigné pour cette technologie et cette application",
+      );
+    }
+    throw error;
+  }
+}
 
 @Injectable()
 export class TechnologyService extends BaseService<TechnologyStack> {
@@ -191,7 +223,7 @@ export class TechnologyService extends BaseService<TechnologyStack> {
       orderBy: [{ technology: "asc" }, { product: "asc" }],
     })) as unknown as TechnologyStack[];
 
-    if (this.eolDisabled()) return rows;
+    if (this.eolDisabled()) return rows.map(withEolStatus);
 
     // Rafraîchissement paresseux best-effort des lignes dont la fin de vie n'a jamais
     // été calculée ou dépasse le TTL. La résolution d'un produit n'est faite qu'UNE
@@ -212,11 +244,13 @@ export class TechnologyService extends BaseService<TechnologyStack> {
       rows.map(async (row) => {
         // Une saisie manuelle (#2454) n'est jamais recalculée : la date vient d'un humain,
         // endoflife.date n'a rien à en dire — et l'écraserait par du vide.
-        if (row.eolSource === TechnologyEolSource.manual) return row;
+        if (row.eolSource === TechnologyEolSource.manual) {
+          return withEolStatus(row);
+        }
         const stale =
           !row.eolCheckedAt ||
           now - new Date(row.eolCheckedAt).getTime() > EOL_REFRESH_TTL_MS;
-        if (!stale) return row;
+        if (!stale) return withEolStatus(row);
 
         const fields = this.eolFieldsFrom(
           await getResolution(row.product),
@@ -225,12 +259,18 @@ export class TechnologyService extends BaseService<TechnologyStack> {
         // Échec réseau/HTTP : on NE réécrit PAS — sinon on écraserait une date valide par
         // null et on figerait la ligne pour tout le TTL. On la laisse « périmée » : elle
         // sera retentée au prochain GET dès qu'endoflife.date répond de nouveau.
-        if (!fields.eolCheckedAt) return row;
+        if (!fields.eolCheckedAt) return withEolStatus(row);
         // Persistance best-effort : un échec d'écriture ne doit pas casser la lecture.
-        await this.prisma.technologyStack
-          .update({ where: { id: row.id }, data: fields })
-          .catch(() => undefined);
-        return { ...row, ...fields };
+        // #2527 : conditionnée à l'origine — une date saisie à la main entre la lecture et
+        // l'écriture ne doit pas être écrasée par la résolution automatique.
+        const written = await this.prisma.technologyStack
+          .updateMany({
+            where: { id: row.id, eolSource: TechnologyEolSource.endoflife },
+            data: fields,
+          })
+          .then((result) => result.count > 0)
+          .catch(() => false);
+        return withEolStatus(written ? { ...row, ...fields } : row);
       }),
     );
   }
@@ -295,10 +335,16 @@ export class TechnologyService extends BaseService<TechnologyStack> {
         data.version ?? null,
         true,
       );
-      return super.update(
-        existing.id,
-        { version: data.version ?? null, docUrl: data.docUrl ?? null, ...eol },
-        options,
+      return withEolStatus(
+        await super.update(
+          existing.id,
+          {
+            version: data.version ?? null,
+            docUrl: data.docUrl ?? null,
+            ...eol,
+          },
+          options,
+        ),
       );
     }
 
@@ -306,7 +352,11 @@ export class TechnologyService extends BaseService<TechnologyStack> {
       typeof manualEolDate === "string"
         ? this.manualEolFields(manualEolDate)
         : await this.resolveEol(data.product, data.version);
-    return super.create({ ...data, ...eol, applicationId }, options);
+    return withEolStatus(
+      await conflictAsHttp(
+        super.create({ ...data, ...eol, applicationId }, options),
+      ),
+    );
   }
 
   async updateTechnology(
@@ -361,7 +411,9 @@ export class TechnologyService extends BaseService<TechnologyStack> {
       eolInputChanged,
     );
 
-    return super.update(id, { ...data, ...eol }, options);
+    return withEolStatus(
+      await conflictAsHttp(super.update(id, { ...data, ...eol }, options)),
+    );
   }
 
   async deleteTechnology(

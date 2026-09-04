@@ -144,10 +144,16 @@ Inventaire **par module / ressource** (résumé : verbes et chemins principaux, 
 
 > `technologies` (#2454) : le corps de `POST` et de `PATCH :id` accepte `manualEolDate` (chaîne
 > `AAAA-MM-JJ`), fin de vie saisie à la main pour les cas où endoflife.date ne peut pas répondre.
-> Une date remplace la fin de vie de la ligne sans appel à endoflife.date ; `null` efface la saisie
-> et force le recalcul automatique ; absent = fin de vie inchangée (une ligne manuelle n'est jamais
-> recalculée implicitement, même si produit ou version changent). La réponse expose `eolSource`
-> (`endoflife` ou `manual`), comme `GET /technologies/end-of-life`.
+> Une date remplace la fin de vie de la ligne sans appel à endoflife.date. `null` n'a pas le même
+> sens selon le verbe : sur `PATCH :id`, il efface la saisie et force le recalcul automatique ; sur
+> `POST` (formulaire d'ajout, qui ne montre jamais la date d'une ligne existante), il est ignoré
+> quand le couple technologie/produit existe déjà avec une date manuelle. Absent = fin de vie
+> inchangée (une ligne manuelle n'est jamais recalculée implicitement, même si produit ou version
+> changent). Depuis #2527, `PATCH :id` accepte un corps **partiel** (`UpdateTechnologyDto`) ;
+> `technology` et `product` sont limités à 100 caractères et ne peuvent pas être vides, `docUrl`
+> exige un schéma `http(s)`. La réponse expose `eolSource` (`endoflife` ou `manual`) et
+> `eolStatus` (`eol`, `eol-soon`, `eoas-passed` ou `null`, calculé à la lecture), comme
+> `GET /technologies/end-of-life`.
 
 ### Acteurs & types d'acteurs
 
@@ -222,7 +228,9 @@ Inventaire **par module / ressource** (résumé : verbes et chemins principaux, 
 
 Filtres : `status` (`eol`, `eol-soon`, `eoas-passed` — les trois partitionnent la liste),
 `organization` (chemin ou sigle d'un acteur, correspondance partielle), `search` (libellé
-d'application ou produit), plus la pagination et le tri usuels (`sortBy` : `label` ou `shortName`).
+d'application ou produit), plus la pagination usuelle (`page`, `pageSize`) et un tri limité à
+`sortBy=label` (défaut) ou `sortBy=shortName`, `order=asc|desc` — pas de tri par gravité, qui
+supposerait d'ordonner sur un agrégat de la relation.
 Seules les technologies retenues par le filtre sont restituées, triées par gravité décroissante.
 
 > Route accessible à tout utilisateur authentifié, comme `GET /metadatas` : `TechnologyRead`

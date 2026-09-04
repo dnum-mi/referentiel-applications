@@ -21,12 +21,19 @@ const releases = [
 
 const makeService = (
   rows: { id: string; product: string; version: string }[],
-  options: { cronEnabled?: boolean } = {},
+  options: { cronEnabled?: boolean; locked?: boolean } = {},
 ) => {
   const findMany = jest.fn().mockResolvedValue(rows);
-  const update = jest.fn().mockResolvedValue({});
+  // #2527 : l'écriture est un `updateMany` conditionné à l'origine (`eolSource`).
+  const update = jest.fn().mockResolvedValue({ count: 1 });
+  const queryRaw = jest
+    .fn()
+    .mockResolvedValue([{ locked: options.locked ?? true }]);
   const prisma = {
-    technologyStack: { findMany, update },
+    technologyStack: { findMany, updateMany: update },
+    // Le verrou consultatif (#2527) est pris dans une transaction interactive.
+    $transaction: (fn: (tx: unknown) => Promise<unknown>) =>
+      fn({ $queryRaw: queryRaw }),
   } as unknown as PrismaService;
   const config = {
     get: (key: string, fallback: unknown) => {
@@ -41,6 +48,7 @@ const makeService = (
     service: new EolRefreshService(prisma, config),
     findMany,
     update,
+    queryRaw,
   };
 };
 
@@ -214,6 +222,47 @@ describe("EolRefreshService — applications supprimées (#2515)", () => {
     const { where } = findMany.mock.calls[0][0];
     expect(where.application).toEqual({
       currentStatus: { status: { not: "deleted" } },
+    });
+  });
+});
+
+describe("EolRefreshService — verrou et origine (#2527)", () => {
+  it("n'exécute rien quand le verrou consultatif est tenu par une autre instance", async () => {
+    const { service, findMany } = makeService([], { locked: false });
+    expect(await service.runRefreshSafely()).toBeNull();
+    expect(findMany).not.toHaveBeenCalled();
+  });
+
+  it("ne réécrit qu'une ligne restée automatique (eolSource endoflife)", async () => {
+    const { service, update } = makeService([
+      { id: "t-1", product: "PostgreSQL", version: "13" },
+    ]);
+    await service.runRefreshSafely();
+    expect(update.mock.calls[0][0].where).toEqual({
+      id: "t-1",
+      eolSource: "endoflife",
+    });
+  });
+
+  it("ne compte pas une ligne devenue manuelle entre la sélection et l'écriture", async () => {
+    const { service, update } = makeService([
+      { id: "t-1", product: "PostgreSQL", version: "13" },
+    ]);
+    update.mockResolvedValueOnce({ count: 0 });
+    const result = await service.runRefreshSafely();
+    expect(result).toMatchObject({ stale: 1, updated: 0 });
+  });
+});
+
+describe("EolRefreshService — planification (#2526)", () => {
+  it("est planifié à 3 h, avant les alertes (3 h 30) et les corrélations (4 h)", () => {
+    const options = Reflect.getMetadata(
+      "SCHEDULE_CRON_OPTIONS",
+      EolRefreshService.prototype.handleScheduledRefresh,
+    );
+    expect(options).toMatchObject({
+      cronTime: "0 3 * * *",
+      timeZone: "Europe/Paris",
     });
   });
 });

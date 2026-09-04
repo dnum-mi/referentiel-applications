@@ -65,6 +65,8 @@ export class EolRefreshService {
   private readonly cronEnabled: boolean;
   private readonly batchSize: number;
   private isRunning = false;
+  /** Verrou consultatif Postgres (#2527) : deux réplicas ne doivent pas recalculer en même temps. */
+  private static readonly ADVISORY_LOCK_KEY = 20260236;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -103,7 +105,11 @@ export class EolRefreshService {
   /**
    * Lance le recalcul en garantissant qu'aucune exécution ne se chevauche : un
    * run peut durer, et deux runs concurrents doubleraient les appels sortants
-   * vers endoflife.date sans rien apporter.
+   * vers endoflife.date sans rien apporter. Deux gardes : le drapeau mémoire
+   * (même processus) et un verrou consultatif Postgres (#2527, plusieurs
+   * réplicas ou un déclenchement manuel pendant le cron) tenu par une
+   * transaction le temps du run — les écritures passent par le pool, la
+   * transaction ne fait que porter le verrou.
    */
   async runRefreshSafely(): Promise<EolRefreshResult | null> {
     if (this.isRunning) {
@@ -114,12 +120,25 @@ export class EolRefreshService {
     }
     this.isRunning = true;
     try {
-      const result = await this.runRefresh();
-      this.logger.log(
-        `Recalcul des fins de vie terminé : ${result.updated}/${result.stale} lignes mises à jour, ` +
-          `${result.products} produits résolus, ${result.unavailable} lignes laissées en l'état.`,
+      return await this.prisma.$transaction(
+        async (tx) => {
+          const [{ locked }] = await tx.$queryRaw<{ locked: boolean }[]>`
+            SELECT pg_try_advisory_xact_lock(${EolRefreshService.ADVISORY_LOCK_KEY}) AS locked`;
+          if (!locked) {
+            this.logger.warn(
+              "Recalcul des fins de vie déjà en cours sur une autre instance : nouvelle exécution ignorée.",
+            );
+            return null;
+          }
+          const result = await this.runRefresh();
+          this.logger.log(
+            `Recalcul des fins de vie terminé : ${result.updated}/${result.stale} lignes mises à jour, ` +
+              `${result.products} produits résolus, ${result.unavailable} lignes laissées en l'état.`,
+          );
+          return result;
+        },
+        { maxWait: 10_000, timeout: 2 * 60 * 60 * 1000 },
       );
-      return result;
     } catch (error) {
       this.logger.error(
         "Échec du recalcul des fins de vie",
@@ -193,10 +212,15 @@ export class EolRefreshService {
                   row.version,
                 );
           // Best-effort ligne à ligne : une écriture en échec — ligne supprimée
-          // entre-temps, par exemple — ne doit pas interrompre le run.
+          // entre-temps, par exemple — ne doit pas interrompre le run. #2527 :
+          // conditionnée à l'origine, pour ne jamais écraser une date saisie à la
+          // main entre la sélection des lignes et l'écriture.
           const written = await this.prisma.technologyStack
-            .update({ where: { id: row.id }, data })
-            .then(() => true)
+            .updateMany({
+              where: { id: row.id, eolSource: TechnologyEolSource.endoflife },
+              data,
+            })
+            .then((result) => result.count > 0)
             .catch(() => false);
           if (written) updated += 1;
         }),

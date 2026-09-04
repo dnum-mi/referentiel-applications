@@ -134,7 +134,7 @@ Point d'entrée : `backend/src/main.ts` → `backend/src/app.module.ts`. Modules
 
 - **Cœur applicatif** : `applications`, `relationship` (relations inter-applications), `statuses`, `metadatas` (audit transverse).
 - **Acteurs & organisations** : `actor`, `actorType`, `organizations`, `organization-maia-references`, `business-division`, `user`, `permissions`.
-- **Conformité & qualité** : `compliances`, `rgaa`, `technical-debt-info`, `stats`.
+- **Conformité & qualité** : `compliances`, `rgaa`, `technical-debt-info`, `stats`, `technology` (stack technique et fins de vie via endoflife.date : onglet de fiche, vue transverse `GET /technologies/end-of-life`, cron de recalcul et cron d'alertes).
 - **Hébergement & catalogue** : `hostings`, `hosting-option`, `data-catalog`.
 - **Métadonnées de fiche** : `labels`, `label-source`, `tag`, `links`, `product`.
 - **Signalements & notifications** : `report`, `email`.

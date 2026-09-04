@@ -240,6 +240,8 @@ Les contributeurs et administrateurs consultent l'ensemble des signalements, les
 
 **Permission.** Tous les utilisateurs connectés (notifications scopées à l'utilisateur courant).
 
+**Fins de vie (#2236, #2519).** Le centre reçoit aussi les alertes `technology_end_of_life` : un cron propre (3 h 30, `TECHNOLOGY_EOL_NOTIFY_ENABLED`) prévient les acteurs porteurs de `TechnologyWrite` de chaque application dont une technologie franchit un palier (fin de vie, proche, hors support actif), une fois par technologie, statut et échéance (`NotificationLog`, cf. §2.9).
+
 ## 6. Historique global des modifications
 
 **Ce que ça fait.** Journal d'audit transverse : chaque création, modification ou suppression d'information est tracée avec l'auteur, son organisation, la date et le type d'action. La page « Historique global » liste l'ensemble des événements, **filtrable par période** ; le détail d'une entrée est consultable.
@@ -353,28 +355,29 @@ Le panneau d'administration (`frontend/src/views/AdminPage.vue`) est organisé e
 
 ## 10. Récapitulatif des fonctionnalités et permissions
 
-| Fonctionnalité                   | Emplacement principal (code)                                                | Permission requise                                                                 |
-| :------------------------------- | :-------------------------------------------------------------------------- | :--------------------------------------------------------------------------------- |
-| Catalogue et recherche           | `ApplicationSearchPage.vue` · `GET /applications`                           | `AppList` + `AppRead`                                                              |
-| Filtres sauvegardés              | `SavedFiltersPanel.vue` · `backend/src/saved-filter`                        | utilisateur connecté                                                               |
-| Fiche – Informations générales   | `InformationsGenerales.vue`                                                 | Lecture `AppRead` · Écriture `AppWrite` / `AppWritePriority`                       |
-| Fiche – Acteurs                  | `actor/ActorTab.vue` · `backend/src/actor`                                  | `ActorRead` / `ActorWrite`                                                         |
-| Fiche – Statuts                  | `StatusTab.vue` · `backend/src/statuses`                                    | `AppRead` / `AppWrite`                                                             |
-| Fiche – Hébergement              | `hosting/` · `backend/src/hostings`                                         | `HostingRead` / `HostingWrite`                                                     |
-| Fiche – Conformités (6 axes)     | `compliances/` · `backend/src/compliances`                                  | `ComplianceRead` / `ComplianceWrite`                                               |
-| Fiche – RGAA                     | `compliances/RgaaComplianceSection.vue` · `backend/src/rgaa`                | voir [./10](./10-accessibilite-rgaa.md)                                            |
-| Fiche – Relations (graphe D3)    | `RelationshipsTab.vue` · `RelationShipGraph.vue`                            | `RelationRead` / `RelationWrite`                                                   |
-| Fiche – Liens externes           | `LinksTab.vue` · `backend/src/links`                                        | `LinkRead` / `LinkWrite`                                                           |
-| Fiche – Sources de données       | `data-application/DataApplicationTab.vue`                                   | `AppWrite` (Contributeur+)                                                         |
-| Indice de Qualité                | `quality.utils.ts` · `QualityTab.vue`                                       | Lecture `AppRead` · Recalcul global `AdminPanelManage`                             |
-| Campagnes de mise en qualité     | `backend/src/quality-campaign` · `AdminQualityCampaignsTab.vue`             | `AdminPanelManage`                                                                 |
-| Signalements                     | `ReportsPage.vue` · `backend/src/report`                                    | `ReportRead` / `ReportPost` · gestion `ReportManage` · global `CreateGlobalReport` |
-| Abonnements / notifications      | `UserProfilePage.vue` · `POST /users/me/subscribe/:appId`                   | utilisateur connecté                                                               |
-| Historique global                | `MetadataPage.vue` · `backend/src/metadatas`                                | `MetadataRead`                                                                     |
-| Tableau de bord Qualité          | `QualityPage.vue` · `GET /stats/iq-avg/period`                              | utilisateur connecté                                                               |
-| Diagramme Time (dette technique) | `TimePage.vue` · `backend/src/technical-debt-info`                          | `MDITList`                                                                         |
-| Export Excel                     | `GET /applications/export/excel`                                            | `DataExport` (admin)                                                               |
-| Administration                   | `AdminPage.vue` · `backend/src/user`, `organizations`, `tag`, `permissions` | `AdminPanelManage` (+ `OrganizationManage`, etc.)                                  |
+| Fonctionnalité                      | Emplacement principal (code)                                                    | Permission requise                                                                 |
+| :---------------------------------- | :------------------------------------------------------------------------------ | :--------------------------------------------------------------------------------- |
+| Catalogue et recherche              | `ApplicationSearchPage.vue` · `GET /applications`                               | `AppList` + `AppRead`                                                              |
+| Filtres sauvegardés                 | `SavedFiltersPanel.vue` · `backend/src/saved-filter`                            | utilisateur connecté                                                               |
+| Fiche – Informations générales      | `InformationsGenerales.vue`                                                     | Lecture `AppRead` · Écriture `AppWrite` / `AppWritePriority`                       |
+| Fiche – Acteurs                     | `actor/ActorTab.vue` · `backend/src/actor`                                      | `ActorRead` / `ActorWrite`                                                         |
+| Fiche – Statuts                     | `StatusTab.vue` · `backend/src/statuses`                                        | `AppRead` / `AppWrite`                                                             |
+| Fiche – Hébergement                 | `hosting/` · `backend/src/hostings`                                             | `HostingRead` / `HostingWrite`                                                     |
+| Fiche – Conformités (6 axes)        | `compliances/` · `backend/src/compliances`                                      | `ComplianceRead` / `ComplianceWrite`                                               |
+| Fiche – RGAA                        | `compliances/RgaaComplianceSection.vue` · `backend/src/rgaa`                    | voir [./10](./10-accessibilite-rgaa.md)                                            |
+| Fiche – Relations (graphe D3)       | `RelationshipsTab.vue` · `RelationShipGraph.vue`                                | `RelationRead` / `RelationWrite`                                                   |
+| Fiche – Liens externes              | `LinksTab.vue` · `backend/src/links`                                            | `LinkRead` / `LinkWrite`                                                           |
+| Fiche – Sources de données          | `data-application/DataApplicationTab.vue`                                       | `AppWrite` (Contributeur+)                                                         |
+| Fiche – Technologies et fins de vie | `technology/TechnologyTab.vue` · `EndOfLifePage.vue` · `backend/src/technology` | `TechnologyRead` / `TechnologyWrite` · vue transverse : utilisateur connecté       |
+| Indice de Qualité                   | `quality.utils.ts` · `QualityTab.vue`                                           | Lecture `AppRead` · Recalcul global `AdminPanelManage`                             |
+| Campagnes de mise en qualité        | `backend/src/quality-campaign` · `AdminQualityCampaignsTab.vue`                 | `AdminPanelManage`                                                                 |
+| Signalements                        | `ReportsPage.vue` · `backend/src/report`                                        | `ReportRead` / `ReportPost` · gestion `ReportManage` · global `CreateGlobalReport` |
+| Abonnements / notifications         | `UserProfilePage.vue` · `POST /users/me/subscribe/:appId`                       | utilisateur connecté                                                               |
+| Historique global                   | `MetadataPage.vue` · `backend/src/metadatas`                                    | `MetadataRead`                                                                     |
+| Tableau de bord Qualité             | `QualityPage.vue` · `GET /stats/iq-avg/period`                                  | utilisateur connecté                                                               |
+| Diagramme Time (dette technique)    | `TimePage.vue` · `backend/src/technical-debt-info`                              | `MDITList`                                                                         |
+| Export Excel                        | `GET /applications/export/excel`                                                | `DataExport` (admin)                                                               |
+| Administration                      | `AdminPage.vue` · `backend/src/user`, `organizations`, `tag`, `permissions`     | `AdminPanelManage` (+ `OrganizationManage`, etc.)                                  |
 
 ---
 

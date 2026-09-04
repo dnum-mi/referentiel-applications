@@ -56,6 +56,9 @@ model TechnologyStack {
 
   metadatas Metadata[] @relation()
 
+  // L'index unique ci-dessous commence par applicationId : un index séparé sur cette seule
+  // colonne était redondant (#2527, supprimé par la migration 20260904110000). Il est sensible
+  // à la casse alors que le rapprochement ne l'est pas : un doublon de casse en course est rendu
+  // 409 par le service (P2002), pas 500.
   @@unique([applicationId, technology, product])
-  @@index([applicationId])
 }
