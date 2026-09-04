@@ -1,3 +1,4 @@
+import { Roles } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Requestor } from "../entities/user.entity";
 import { ScopePermissionsException } from "../errors/scope-permissions.exception";
@@ -7,6 +8,7 @@ describe("ScopedPermissionService — assertCanAssignScopeToNewPrincipal", () =>
   function buildRequestor(scopePath?: string): Requestor {
     return {
       id: "requestor-1",
+      role: Roles.ADMIN,
       scopeOrganization: scopePath ? { path: scopePath } : null,
     } as unknown as Requestor;
   }
@@ -70,6 +72,7 @@ describe("ScopedPermissionService — assertCanImpersonate", () => {
   function buildRequestor(scopePath?: string): Requestor {
     return {
       id: "requestor-1",
+      role: Roles.ADMIN,
       scopeOrganization: scopePath ? { path: scopePath } : null,
     } as unknown as Requestor;
   }
