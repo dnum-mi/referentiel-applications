@@ -12,7 +12,6 @@ const config: ConfigType<typeof appConfig> = {
   writeYaml: false,
   version: "v1.86.0",
   footerLinks: [],
-  nonActorPermissions: [],
   maintenanceMode: false,
   maintenanceCacheTtlMs: 30_000,
 } satisfies AppConfig;

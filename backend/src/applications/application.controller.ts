@@ -168,8 +168,11 @@ Vous devez fournir les informations suivantes :
     required: true,
     type: String,
   })
-  getMyPerms(@User() user: Requestor): Promise<APP_PERMISSIONS[]> {
-    return this.applicationService.getMyPerms(user);
+  getMyPerms(
+    @Param("applicationId") applicationId: string,
+    @User() user: Requestor,
+  ): Promise<APP_PERMISSIONS[]> {
+    return this.applicationService.getMyPerms(applicationId, user);
   }
 
   @Get("export/excel")
@@ -336,7 +339,9 @@ Le paramètre **id** doit être fourni dans l'URL.
 
   @Delete(":applicationId")
   @UseGuards(PermissionGuard)
-  @RequiredPermissions([Permission.AdminPanelManage])
+  // #2506 : `DeleteApplication` (socle administrateur, non déléguable) protège enfin la route
+  // qu'elle nomme — le front conditionnait déjà le bouton sur cette permission.
+  @RequiredPermissions([Permission.DeleteApplication])
   @ApiOperation({
     summary: "Supprimer une application",
     description: "Supprime une application par son ID.",

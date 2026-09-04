@@ -1,6 +1,4 @@
-import type { APP_PERMISSIONS } from "src/common/utils/types";
 import { registerAs } from "@nestjs/config";
-import { AppPermissionsRecord } from "src/common/utils/types";
 import type { FooterLink } from "../domain/configs.entity";
 
 export interface AppConfig {
@@ -13,7 +11,6 @@ export interface AppConfig {
   writeYaml: boolean;
   version: string;
   footerLinks: FooterLink[];
-  nonActorPermissions: APP_PERMISSIONS[];
   maintenanceMode: boolean;
   maintenanceCacheTtlMs: number;
 }
@@ -24,9 +21,6 @@ export default registerAs("app", (): AppConfig => {
   } catch {
     footerLinks = [];
   }
-  const nonActorPermissions = (process.env.NON_ACTOR_PERMISSIONS ?? "")
-    .split(",")
-    .filter((perm) => perm in AppPermissionsRecord) as APP_PERMISSIONS[];
   const configuredMaintenanceCacheTtl = Number.parseInt(
     process.env.MAINTENANCE_CACHE_TTL_MS ?? "",
     10,
@@ -42,7 +36,6 @@ export default registerAs("app", (): AppConfig => {
     version: process.env.VERSION ?? "development",
     environmentLabel: process.env.ENV_LABEL,
     footerLinks,
-    nonActorPermissions,
     maintenanceMode: ["1", "true", "yes"].includes(
       (process.env.MAINTENANCE_MODE ?? "").toLowerCase(),
     ),

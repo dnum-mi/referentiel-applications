@@ -27,7 +27,7 @@ onMounted(async () => {
 // Colonnes dans l'ordre des onglets de la fiche application (#2083) — « Priorit. Redémarr. »
 // et « Héberg. » n'ont pas d'onglet propre et restent accolées à « Infos » dont elles relèvent.
 const permissionSuffixes = {
-  App: { label: "Infos", title: "Informations" },
+  App: { label: "Infos", title: "Informations (la lecture est acquise à tout utilisateur authentifié)" },
   PriorityRestart: { label: "Priorit. Redémarr.", title: "Prioritisation et redémarrage" },
   Hosting: { label: "Héberg.", title: "Hébergements" },
   Link: { label: "Liens", title: "Liens" },
@@ -35,7 +35,7 @@ const permissionSuffixes = {
   Actor: { label: "Acteurs", title: "Acteurs" },
   Technology: { label: "Techno.", title: "Technologie" },
   Relation: { label: "Relations", title: "Relations" },
-  Data: { label: "Données", title: "Données" },
+  Data: { label: "Données", title: "Données (la lecture est acquise à tout utilisateur authentifié)" },
   Metadata: { label: "Modifications", title: "Modifications" },
 } as const satisfies Record<string, { label: string; title: string }>;
 const permissionKeys = Object.keys(permissionSuffixes) as (keyof typeof permissionSuffixes)[];
@@ -174,7 +174,9 @@ async function createActorType() {
         <th v-for="key in gridKeys" :key="key" scope="col" style="min-width: 6rem" :title="permissionSuffixes[key].title">
           {{ permissionSuffixes[key].label }}
         </th>
-        <th scope="col">Signalements</th>
+        <th scope="col" title="Voir et créer un signalement sont acquis à tout utilisateur authentifié : seule « Gérer » a un effet">
+          Signalements
+        </th>
         <th scope="col" style="min-width: 6rem" title="Modifications">Modifications</th>
       </tr>
     </template>
@@ -191,8 +193,20 @@ async function createActorType() {
           :data-testid="`app-perms-select-${perms.actorTypeId}-${perm}`"
           @update:model-value="(value: PermissionValue) => updateMatrix(perms.actorTypeId, perm as keyof typeof permissionSuffixes, value)"
         />
+        <!-- Données : la lecture est acquise à tout utilisateur authentifié (socle Visiteur, #2510),
+             comme pour « Infos » — proposer « Aucun » laissait croire à une restriction sans effet. -->
         <PermissionSelect
-          v-else-if="perm === 'Data' || perm === 'Technology'"
+          v-else-if="perm === 'Data'"
+          :id="`${perms.actorTypeId}-${perm}`"
+          class="permission-select"
+          :read="perms[`${perm}Read`] || false"
+          :write="perms[`${perm}Write`] || false"
+          :perm-order="['Read', 'Write']"
+          :data-testid="`app-perms-select-${perms.actorTypeId}-${perm}`"
+          @update:model-value="(value: PermissionValue) => updateMatrix(perms.actorTypeId, perm as keyof typeof permissionSuffixes, value)"
+        />
+        <PermissionSelect
+          v-else-if="perm === 'Technology'"
           :id="`${perms.actorTypeId}-${perm}`"
           class="permission-select"
           :read="perms[`${perm}Read`] || false"

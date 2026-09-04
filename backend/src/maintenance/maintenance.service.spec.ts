@@ -13,7 +13,6 @@ const createConfig = (
   writeYaml: false,
   version: "test",
   footerLinks: [],
-  nonActorPermissions: [],
   maintenanceMode: false,
   maintenanceCacheTtlMs: 30_000,
   ...overrides,
