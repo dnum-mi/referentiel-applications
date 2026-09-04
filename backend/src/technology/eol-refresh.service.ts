@@ -15,7 +15,6 @@ import {
   ACTIVE_APPLICATION_WHERE,
   EOL_REFRESH_TTL_MS,
 } from "./utils/eol-status";
-import { EolNotificationService } from "./eol-notification.service";
 
 /// Champs à écrire pour un produit résolu. Le cycle apparié est persisté sous
 /// `eolCycle` (#2449) : avec des dates nulles seules, la fiche ne distinguerait
@@ -57,7 +56,8 @@ export interface EolRefreshResult {
  * dernière fois.
  *
  * Désactivé par défaut (`TECHNOLOGY_EOL_CRON_ENABLED`), comme les autres jobs
- * sortants du projet.
+ * sortants du projet. Les alertes aux gestionnaires ont leur propre cron
+ * (`EolNotificationService`, #2519) : elles ne dépendent plus de celui-ci.
  */
 @Injectable()
 export class EolRefreshService {
@@ -69,7 +69,6 @@ export class EolRefreshService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
-    private readonly eolNotificationService: EolNotificationService,
   ) {
     this.cronEnabled = this.configService.get<boolean>(
       "technology.eolCronEnabled",
@@ -99,17 +98,6 @@ export class EolRefreshService {
       return;
     }
     await this.runRefreshSafely();
-    // Les alertes viennent APRÈS le rafraîchissement, pour porter sur les dates du
-    // jour et non sur celles de la veille. Leur échec ne doit pas faire échouer le
-    // recalcul, qui est le cœur du job.
-    await this.eolNotificationService
-      .notifyPendingEndOfLife()
-      .catch((error) => {
-        this.logger.error(
-          "Échec des notifications de fin de vie",
-          error instanceof Error ? error.stack : String(error),
-        );
-      });
   }
 
   /**

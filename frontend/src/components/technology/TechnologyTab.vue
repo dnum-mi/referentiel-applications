@@ -95,7 +95,10 @@ const tableRows = computed(() =>
         !manualEol && Boolean(techno.eolCheckedAt) && Boolean(techno.eolProduct) && Boolean(techno.version) && !techno.eolCycle,
       latestVersion: techno.version && techno.latestVersion && techno.latestVersion !== techno.version ? techno.latestVersion : null,
       Actions: {
-        edit: () => technologyModal.openModal(techno),
+        edit: () => {
+          void ensureEolProducts(props.application.id);
+          technologyModal.openModal(techno);
+        },
         remove: () => askDelete(techno),
       },
     };
@@ -107,12 +110,16 @@ async function fetchTechnologies(applicationId: string) {
   technologies.value = response.data ?? [];
 }
 
-// Catalogue endoflife.date pour l'autocomplétion du produit (best-effort :
-// en cas d'échec, la saisie reste libre).
-async function fetchEolProducts(applicationId: string) {
+// Catalogue endoflife.date pour l'autocomplétion du produit (best-effort : en cas d'échec, la
+// saisie reste libre). Chargé à l'OUVERTURE du formulaire et une seule fois par onglet (#2520) :
+// le charger au montage coûtait ≈ 40 Ko à chaque visite, y compris sans droit d'édition.
+let eolProductsLoaded = false;
+async function ensureEolProducts(applicationId: string) {
+  if (eolProductsLoaded) return;
   try {
     const response = await api.technologyControllerListEolProducts({ path: { applicationId } });
-    eolProducts.value = response.data ?? [];
+    eolProducts.value = response.response.ok ? (response.data ?? []) : [];
+    eolProductsLoaded = response.response.ok;
   } catch {
     eolProducts.value = [];
   }
@@ -125,7 +132,7 @@ function rememberTrigger(event: Event) {
 onBeforeMount(async () => {
   loading.value = true;
   try {
-    await Promise.all([fetchTechnologies(props.application.id), fetchEolProducts(props.application.id)]);
+    await fetchTechnologies(props.application.id);
   } finally {
     loading.value = false;
   }
@@ -226,6 +233,7 @@ function cancelDelete() {
         @click="
           (e) => {
             rememberTrigger(e);
+            void ensureEolProducts(props.application.id);
             technologyModal.openCreateModal();
           }
         "

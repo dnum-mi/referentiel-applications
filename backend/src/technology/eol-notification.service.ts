@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { Cron } from "@nestjs/schedule";
 import { NotificationType } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { NotificationService } from "src/notification/notification.service";
@@ -35,11 +36,16 @@ export interface EolNotificationResult {
  * sans que la ligne soit périmée ni réécrite. Adosser l'alerte aux seules lignes rafraîchies
  * laisserait passer le cas le plus courant — une échéance connue de longue date qui arrive à terme.
  *
- * L'anti-répétition passe par `NotificationLog`, une entrée par technologie ET par statut : chaque
- * ligne de stack ne déclenche donc qu'une alerte par palier franchi, jamais une par exécution.
+ * L'anti-répétition passe par `NotificationLog`, une entrée par technologie, par statut ET par
+ * échéance (#2518) : chaque ligne de stack ne déclenche qu'une alerte par palier franchi, jamais
+ * une par exécution — mais une ligne montée de version, ou dont la date manuelle est ressaisie,
+ * porte une nouvelle échéance et sera de nouveau annoncée quand elle franchira un palier.
  *
  * Désactivé par défaut (`TECHNOLOGY_EOL_NOTIFY_ENABLED`) : le recalcul est une opération interne,
- * prévenir des utilisateurs est visible — les deux méritent des interrupteurs distincts.
+ * prévenir des utilisateurs est visible — les deux méritent des interrupteurs distincts. Les
+ * alertes ont leur propre planification (#2519) : elles ne dépendent ni du cron de recalcul ni
+ * d'`ENDOFLIFE_ENABLED`, sans quoi les saisies manuelles n'étaient jamais alertées dès que l'un
+ * des deux était coupé.
  */
 @Injectable()
 export class EolNotificationService {
@@ -55,6 +61,21 @@ export class EolNotificationService {
       "technology.eolNotifyEnabled",
       false,
     );
+  }
+
+  /**
+   * Après le recalcul planifié (3 h), pour porter sur les dates du jour ; avant la détection des
+   * corrélations (4 h). Un recalcul qui déborderait ferait porter les alertes sur les dates de la
+   * veille — un statut qui change par simple écoulement du temps est de toute façon détecté.
+   */
+  @Cron("30 3 * * *", { timeZone: "Europe/Paris" })
+  async handleScheduledNotifications(): Promise<void> {
+    await this.notifyPendingEndOfLife().catch((error) => {
+      this.logger.error(
+        "Échec des notifications de fin de vie",
+        error instanceof Error ? error.stack : String(error),
+      );
+    });
   }
 
   async notifyPendingEndOfLife(): Promise<EolNotificationResult | null> {
@@ -110,8 +131,12 @@ export class EolNotificationService {
       ).map((log) => log.type),
     );
 
+    // Les entrées antérieures à #2518 (clé sans échéance) restent reconnues : sans cela, tout le
+    // parc déjà annoncé serait réalerté d'un coup au déploiement.
     const fresh = concerned.filter(
-      (entry) => !alreadyLogged.has(this.logKey(entry.row.id, entry.status)),
+      (entry) =>
+        !alreadyLogged.has(this.logKey(entry.row, entry.status)) &&
+        !alreadyLogged.has(this.legacyLogKey(entry.row.id, entry.status)),
     );
     if (fresh.length === 0) {
       return { newlyConcerned: 0, applications: 0, notified: 0 };
@@ -127,41 +152,52 @@ export class EolNotificationService {
     }
 
     let notified = 0;
+    let newlyConcerned = 0;
+    let applications = 0;
     for (const [applicationId, entries] of byApplication) {
       const userIds =
         await this.notificationService.findUsersToNotifyForTechnology(
           applicationId,
         );
       if (userIds.length > 0) {
-        await this.notificationService.createForUsers(
-          userIds,
-          NotificationType.technology_end_of_life,
-          this.buildMessage(entries),
-          {
-            applicationId,
-            link: `/applications/${applicationId}/tab-technologies`,
-          },
-        );
+        try {
+          await this.notificationService.createForUsers(
+            userIds,
+            NotificationType.technology_end_of_life,
+            this.buildMessage(entries),
+            {
+              applicationId,
+              link: `/applications/${applicationId}/tab-technologies`,
+            },
+          );
+        } catch (error) {
+          // #2518 : pas de journal sans notification — la ligne sera retentée à la
+          // prochaine exécution au lieu d'être tenue pour annoncée.
+          this.logger.error(
+            `Échec de la création des notifications de fin de vie pour l'application ${applicationId} : réexaminée à la prochaine exécution`,
+            error instanceof Error ? error.stack : String(error),
+          );
+          continue;
+        }
         notified += userIds.length;
       }
 
-      // Journalisé même sans destinataire : sans cela, une application sans acteur
-      // porteur de `TechnologyWrite` serait réexaminée à chaque exécution, et
-      // deviendrait bruyante le jour où un acteur lui est enfin rattaché.
+      // Journalisé APRÈS le succès, et même sans destinataire : sans cela, une
+      // application sans acteur porteur de `TechnologyWrite` serait réexaminée à
+      // chaque exécution, et deviendrait bruyante le jour où un acteur lui est
+      // enfin rattaché.
       await this.prisma.notificationLog.createMany({
         data: entries.map((entry) => ({
           applicationId,
-          type: this.logKey(entry.row.id, entry.status),
+          type: this.logKey(entry.row, entry.status),
         })),
         skipDuplicates: true,
       });
+      newlyConcerned += entries.length;
+      applications += 1;
     }
 
-    const result = {
-      newlyConcerned: fresh.length,
-      applications: byApplication.size,
-      notified,
-    };
+    const result = { newlyConcerned, applications, notified };
     this.logger.log(
       `Fins de vie : ${result.newlyConcerned} technologie(s) nouvellement concernée(s) sur ` +
         `${result.applications} application(s), ${result.notified} notification(s) créée(s).`,
@@ -169,7 +205,21 @@ export class EolNotificationService {
     return result;
   }
 
-  private logKey(technologyStackId: string, status: EolStatus): string {
+  /**
+   * Clé d'anti-répétition : technologie + statut + échéance qui fonde ce statut (#2518). Une
+   * échéance différente (montée de version, date manuelle ressaisie) = une nouvelle alerte due.
+   */
+  private logKey(
+    row: { id: string; eolDate: Date | null; eoasDate: Date | null },
+    status: EolStatus,
+  ): string {
+    const deadline = status === "eoas-passed" ? row.eoasDate : row.eolDate;
+    const dateKey = deadline ? deadline.toISOString().slice(0, 10) : "none";
+    return `${this.legacyLogKey(row.id, status)}:${dateKey}`;
+  }
+
+  /** Forme des clés antérieures à #2518, sans échéance. */
+  private legacyLogKey(technologyStackId: string, status: EolStatus): string {
     return `${LOG_PREFIX}:${technologyStackId}:${status}`;
   }
 
