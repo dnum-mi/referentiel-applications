@@ -68,7 +68,7 @@ En développement, les variables nécessaires au backend sont **déjà fournies*
 - **Messagerie (SMTP)** : `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_FROM`, `SMTP_ENABLED` (pointés vers Mailpit en local) ; `EMAIL_CRON_ENABLED` active les envois automatiques (digest quotidien, relances de validation), désactivés par défaut.
 - **Détection des corrélations** : `CORRELATION_CRON_ENABLED` active le job planifié qui rapproche les applications proches (désactivé par défaut) ; `CORRELATION_SCORE_THRESHOLD` et les trois `CORRELATION_WEIGHT_*` règlent le seuil et la pondération des signaux.
 - **Maintenance** : `MAINTENANCE_MODE` force le mode lecture seule ; `MAINTENANCE_CACHE_TTL_MS` règle la durée de cache de la détection PostgreSQL.
-- **Divers** : `LOG_LEVEL`, `ENV_LABEL`, `FOOTER_LINKS`, `MOCK_MAIA_SERVICE`, `MOCK_MAIA_ORGANIZATION`, `NON_ACTOR_PERMISSIONS`.
+- **Divers** : `LOG_LEVEL`, `ENV_LABEL`, `FOOTER_LINKS`, `MOCK_MAIA_SERVICE`, `MOCK_MAIA_ORGANIZATION`.
 
 > Aucune valeur secrète n'est requise en développement (les identifiants par défaut sont ceux du `docker-compose.yml`). Le détail des variables, leur signification et leur gestion en environnement déployé (Vault/SOPS) relèvent de la page d'exploitation.
 

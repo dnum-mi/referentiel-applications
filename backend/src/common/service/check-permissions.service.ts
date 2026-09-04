@@ -24,15 +24,7 @@ export class CheckPermissions {
   ): Promise<boolean> {
     if (!permissions?.length) return true;
     if (applicationId) {
-      const actorPermissions = await this.getUserAppPermissions(
-        applicationId,
-        user,
-      );
-      const userRolePermissions = await this.getUserRolePermissions(
-        applicationId,
-        user,
-      );
-      user.appPerms = [...actorPermissions, ...userRolePermissions];
+      user.appPerms = await this.resolveAppPermissions(applicationId, user);
     }
     const userPermissions = new Set([
       ...user.permissions,
@@ -43,6 +35,22 @@ export class CheckPermissions {
       permissions.includes(userPermission),
     );
     return hasPermissions;
+  }
+
+  /**
+   * Permissions applicatives (couche 3) de l'utilisateur sur une application : types d'acteur
+   * par e-mail et par groupe (ou type par défaut), plus la projection du rôle si l'application
+   * relève de son périmètre. Point d'entrée unique pour la garde ET pour `my-perms` (#2510).
+   */
+  async resolveAppPermissions(
+    applicationId: string,
+    user: Requestor,
+  ): Promise<APP_PERMISSIONS[]> {
+    const [actorPermissions, userRolePermissions] = await Promise.all([
+      this.getUserAppPermissions(applicationId, user),
+      this.getUserRolePermissions(applicationId, user),
+    ]);
+    return [...actorPermissions, ...userRolePermissions];
   }
 
   private async getUserAppPermissions(applicationId: string, user: Requestor) {

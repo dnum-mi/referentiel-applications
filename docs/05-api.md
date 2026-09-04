@@ -298,7 +298,6 @@ Ces variables pilotent un OIDC **agnostique du fournisseur** : Keycloak local en
 | `MAINTENANCE_MODE`         | Force le mode maintenance lecture seule (`true`, `1` ou `yes`).                           |
 | `MAINTENANCE_CACHE_TTL_MS` | Durée de cache de la détection `pg_is_in_recovery()` en millisecondes (défaut : `30000`). |
 | `FOOTER_LINKS`             | Liens de pied de page (JSON).                                                             |
-| `NON_ACTOR_PERMISSIONS`    | Permissions accordées hors rôle d'acteur (liste CSV).                                     |
 | `WRITE_SWAGGER_YAML`       | Écrit `frontend/openapi/swagger.yaml` (sauf si `false`).                                  |
 | `ONLY_WRITE_SWAGGER`       | Génère le Swagger puis arrête le processus (build).                                       |
 

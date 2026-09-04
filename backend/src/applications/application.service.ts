@@ -345,8 +345,16 @@ export class ApplicationService {
       .sort((a, b) => b.iq - a.iq);
   }
 
-  public async getMyPerms(requestor: Requestor): Promise<ApplicationRights> {
-    return requestor.appPerms;
+  // #2510 : résolution EXPLICITE des permissions applicatives, au lieu de relire
+  // `requestor.appPerms`, effet de bord du passage dans PermissionGuard.
+  public async getMyPerms(
+    applicationId: string,
+    requestor: Requestor,
+  ): Promise<ApplicationRights> {
+    return this.checkPermissions.resolveAppPermissions(
+      applicationId,
+      requestor,
+    );
   }
 
   public async search(

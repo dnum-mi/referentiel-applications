@@ -164,31 +164,37 @@ L'énumération `Permission` (`backend/prisma/schema/permissions.prisma:59-105`)
 
 ### 4.1. Permissions globales
 
-| Permission           | Rôle                                                 |
-| :------------------- | :--------------------------------------------------- |
-| `CreateApplication`  | Créer de nouvelles applications                      |
-| `DeleteApplication`  | Supprimer une application                            |
-| `CreateGlobalReport` | Créer des signalements globaux                       |
-| `MDITList`           | Voir la liste des applications sur le TIME / MDIT    |
-| `AppList`            | Voir la liste des applications                       |
-| `DataExport`         | Exporter les données (export Excel)                  |
-| `AdminPanelManage`   | Gérer le panneau d'administration                    |
-| `ActorTypePost`      | Créer un type d'acteur                               |
-| `ActorTypeManage`    | Éditer un type d'acteur                              |
-| `ActorTypeDelete`    | Supprimer un type d'acteur                           |
-| `OrganizationManage` | Gérer les organisations (créer, modifier, supprimer) |
+| Permission              | Rôle                                                                      |
+| :---------------------- | :------------------------------------------------------------------------ |
+| `CreateApplication`     | Créer de nouvelles applications                                           |
+| `DeleteApplication`     | Supprimer une application                                                 |
+| `CreateGlobalReport`    | Créer des signalements globaux                                            |
+| `MDITList`              | Voir la liste des applications sur le TIME / MDIT                         |
+| `AppList`               | Voir la liste des applications                                            |
+| `DataExport`            | Exporter les données (export Excel)                                       |
+| `AdminPanelManage`      | Gérer le panneau d'administration                                         |
+| `ActorTypePost`         | Créer un type d'acteur                                                    |
+| `ActorTypeManage`       | Éditer un type d'acteur                                                   |
+| `ActorTypeDelete`       | Supprimer un type d'acteur                                                |
+| `OrganizationManage`    | Gérer les organisations (créer, modifier, supprimer)                      |
+| `ColumnRead`            | Voir les colonnes de synthèse (socle Lecteur)                             |
+| `QualityCampaignManage` | Gérer les campagnes de mise en qualité (socle Administrateur, déléguable) |
+
+Quatre valeurs sont à la fois **globales** (socle Visiteur, cf. §3) et **applicatives** (colonnes de la matrice §4.2) : `AppRead`, `DataRead`, `ReportRead`, `ReportPost`. Comme le socle les accorde à tout utilisateur authentifié, leur colonne dans la matrice des types d'acteur est **sans effet** — la matrice ne les propose plus en retrait (#2510). Depuis #2506, `DeleteApplication` protège bien la route `DELETE /applications/:id` (auparavant `AdminPanelManage`).
 
 ### 4.2. Permissions applicatives (par application)
 
-| Permission (lecture) | Permission (écriture) | Domaine                                                             |
-| :------------------- | :-------------------- | :------------------------------------------------------------------ |
-| `AppRead`            | `AppWrite`            | Informations de base de l'application                               |
-| `ActorRead`          | `ActorWrite`          | Acteurs                                                             |
-| `ComplianceRead`     | `ComplianceWrite`     | Conformités                                                         |
-| `HostingRead`        | `HostingWrite`        | Hébergement                                                         |
-| `RelationRead`       | `RelationWrite`       | Relations inter-applications                                        |
-| `LinkRead`           | `LinkWrite`           | Liens externes                                                      |
-| `MetadataRead`       | _(aucune)_            | Historique des métadonnées (généré automatiquement, pas d'écriture) |
+| Permission (lecture) | Permission (écriture) | Domaine                                                                                                                                                                             |
+| :------------------- | :-------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AppRead`            | `AppWrite`            | Informations de base de l'application                                                                                                                                               |
+| `ActorRead`          | `ActorWrite`          | Acteurs                                                                                                                                                                             |
+| `ComplianceRead`     | `ComplianceWrite`     | Conformités                                                                                                                                                                         |
+| `HostingRead`        | `HostingWrite`        | Hébergement                                                                                                                                                                         |
+| `RelationRead`       | `RelationWrite`       | Relations inter-applications                                                                                                                                                        |
+| `LinkRead`           | `LinkWrite`           | Liens externes                                                                                                                                                                      |
+| `MetadataRead`       | _(aucune)_            | Historique des métadonnées (généré automatiquement, pas d'écriture)                                                                                                                 |
+| `DataRead`           | `DataWrite`           | Données de l'application (onglet Données) ; `DataWrite` est aussi une permission **globale** du socle Contributeur pour le catalogue partagé (descriptions, familles, sensibilités) |
+| `TechnologyRead`     | `TechnologyWrite`     | Stack technique (onglet Technologies) ; `TechnologyRead` n'est **pas** au socle global (#2088)                                                                                      |
 
 Permissions applicatives **autonomes** (sans couple lecture/écriture) et signalements :
 
@@ -205,6 +211,10 @@ La permission `AppWritePriority` gouverne la **priorité de redémarrage** (R0�
 
 - Dans le schéma, `AppWritePriority` est un booléen propre de `AppPermissions`, avec `@default(false)` (`permissions.prisma:11-12`).
 - Au niveau d'un handler, les deux permissions sont acceptées en alternative (sémantique OU). Par exemple la mise à jour d'une application requiert `[Permission.AppWrite, Permission.AppWritePriority]` (`backend/src/applications/application.controller.ts:293`) : posséder l'une _ou_ l'autre suffit pour l'opération concernée.
+
+### 4.4. Politique de lecture globale (état des lieux)
+
+Certaines lectures ne sont conditionnées à **aucune** permission applicative, seulement à l'authentification : la liste des signalements d'une application, l'historique des modifications (`Metadata`) et la vue transverse des fins de vie (`GET /technologies/end-of-life`). C'est un choix historique (« tout utilisateur authentifié voit le catalogue »), pas une erreur d'implémentation ; sa remise à plat (restreindre, ou assumer et documenter) est tracée dans #2375 et #2509 et relève du métier. Tant qu'elle n'est pas tranchée, **ne pas** ajouter de nouvelle lecture globale sans la faire figurer ici.
 
 ## 5. Permissions par type d'acteur
 
@@ -227,21 +237,26 @@ Dans `getUserRolePermissions` (`check-permissions.service.ts:85-126`) :
 
 - **Sans scope** (`scopeOrganization.path` absent) → l'utilisateur est traité comme administrateur global et obtient toutes les permissions applicatives de son rôle.
 - **Avec scope** → les permissions de rôle ne sont projetées sur l'application que si celle-ci relève du périmètre, c'est-à-dire :
-  - s'il existe un acteur de l'application dont l'organisation contient le chemin de scope (`contains`, insensible à la casse), **ou**
-  - si l'application a une `businessDivision` dont l'une des organisations rattachées (`BusinessDivision.organizations`) a un `path` qui contient le chemin de scope (même logique `contains`, insensible à la casse, portée par `hasBusinessDivisionScope`).
+  - s'il existe un acteur de l'application dont l'organisation est **dans le périmètre**, **ou**
+  - si l'application a une `businessDivision` dont l'une des organisations rattachées (`BusinessDivision.organizations`) est dans le périmètre (`hasBusinessDivisionScope`).
   - Sinon, **aucune** permission de rôle applicative n'est accordée (`return []`).
+
+« Dans le périmètre » a une définition unique depuis #2370 (`organizationWithinScope`, `backend/src/common/utils/organization-scope.utils.ts`) : le `path` de l'organisation est **égal** au chemin de scope ou en est un **descendant à une frontière de segment** (`scope + "/"`), sans tenir compte de la casse. Un simple préfixe ne suffit pas (`/SG` ne couvre ni `/SGAMI` ni `/AUTRE/SG-BIS`), et un `contains` est proscrit.
 
 ### 6.2. Effet sur l'administration des utilisateurs
 
 `ScopedPermissionService` (`backend/src/user/scope-permission/scoped-permission.service.ts`) applique le périmètre lors de la modification d'un utilisateur :
 
-- Un requestor **sans scope** est considéré super-administrateur : aucun contrôle (`assertCanUpdate:27-29`).
-- Sinon, toute cible et toute organisation manipulée doivent être **dans le périmètre** : `targetPath.startsWith(requestorScopePath)` (`assertWithinScope:125-133`).
-- Règle dédiée : **seul un administrateur global peut supprimer le périmètre d'un utilisateur** (`assertScopeOrganizationAction`, action `REMOVE` → exception).
+- Toute action d'administration d'un utilisateur (édition des droits, blocage, impersonation, périmètre d'un compte de service) exige le **rôle** `ADMIN` (`assertIsAdministrator`, #2498) : la permission `AdminPanelManage`, si elle avait été déléguée en base, ne suffit pas — un contributeur délégué sans périmètre se comportait auparavant en super-administrateur.
+- Un requestor `ADMIN` **sans scope** est super-administrateur : aucun contrôle de périmètre.
+- Sinon, toute cible et toute organisation manipulée doivent être **dans le périmètre** au sens de §6.1 (`assertWithinScope` : égalité ou descendant à une frontière de segment). Une cible **sans organisation** n'est dans le périmètre de personne (#2371).
+- Un administrateur ne modifie pas ses **propres** rôle, périmètre ni permissions déléguées (`assertNotSelfPrivilegeChange`, #2498).
+- Les permissions déléguables (couche 2) forment une liste fermée (`DELEGABLE_PERMISSIONS`, #2498) : `CreateApplication`, `CreateGlobalReport`, `DataExport`, `MDITList`, `QualityCampaignManage`.
+- Règle dédiée : **seul un administrateur global peut supprimer le périmètre d'un utilisateur** (`assertScopeOrganizationAction`, action `REMOVE` → exception), et seul un administrateur global peut attribuer le rôle `ADMIN`.
 
 ### 6.3. Effet sur l'impersonation
 
-La même règle de périmètre s'applique à l'impersonation (#2217, `assertCanImpersonate`) : un admin scopé ne peut se faire passer que pour un utilisateur dont l'organisation est dans son périmètre (un utilisateur sans organisation reste impersonnable, comme pour l'édition). Le contrôle est appliqué à **deux niveaux** :
+La même règle de périmètre s'applique à l'impersonation (#2217, `assertCanImpersonate`) : un admin scopé ne peut se faire passer que pour un utilisateur dont l'organisation est dans son périmètre ; un utilisateur **sans organisation n'est pas impersonnable** par un admin scopé (#2371), comme pour l'édition. Le rôle `ADMIN` est exigé (#2505), et le contrôle est appliqué à **deux niveaux** :
 
 - `UserService.startImpersonation` (endpoint `POST /users/:id/impersonate`) ;
 - `AuthMiddleware.resolveImpersonatedUser` — indispensable car c'est le middleware qui applique l'identité à chaque requête via le header `x-impersonate-user-id`, qui peut être posé sans passer par l'endpoint.
@@ -268,7 +283,7 @@ La sémantique reste **OU** : la liste passée à `@RequiredPermissions` représ
 
 ### 7.2. Exposition au frontend — `my-perms`
 
-Le frontend connaît les droits de l'utilisateur **sur une application** via `GET /applications/:applicationId/my-perms` (`backend/src/applications/application.controller.ts:149-172`). L'endpoint est lui-même protégé par `@RequiredPermissions([Permission.AppRead])` ; son handler retourne `requestor.appPerms`, c'est-à-dire les permissions applicatives résolues (couche 3) lors du passage dans le guard (`application.service.ts:267-269`).
+Le frontend connaît les droits de l'utilisateur **sur une application** via `GET /applications/:applicationId/my-perms` (`backend/src/applications/application.controller.ts:149-172`). L'endpoint est lui-même protégé par `@RequiredPermissions([Permission.AppRead])` ; son handler résout **explicitement** les permissions applicatives (couche 3) via `CheckPermissions.resolveAppPermissions(applicationId, requestor)` (#2510) — le même point d'entrée que la garde, qui ne dépend plus d'un effet de bord (`requestor.appPerms`) du passage dans `PermissionGuard`.
 
 ### 7.3. Frontend — `userStore.hasPermissions`
 
