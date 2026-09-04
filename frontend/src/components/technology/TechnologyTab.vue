@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import api from "@/api/index";
+import { backendErrorMessage } from "@/utils/api-error";
 import { type EolProductDto, type TechnologyDto, Permission } from "@/client/types.gen";
 import useModal from "@/composables/use-modal";
 import type { APP_PERMISSIONS, Application } from "@/models/Application";
@@ -130,6 +131,8 @@ onBeforeMount(async () => {
   }
 });
 
+// Le client généré ne lève pas sur un 4xx/5xx (#2512) : c'est `response.response.ok` qui fait
+// foi — avant, un 409 se soldait par un toast vert et une liste rechargée « intacte ».
 async function handleSave(technology: {
   id?: string;
   technology: string;
@@ -150,16 +153,18 @@ async function handleSave(technology: {
     ...(technology.manualEolDate !== undefined ? { manualEolDate: technology.manualEolDate } : {}),
   };
   try {
-    if (technology.id) {
-      await api.technologyControllerUpdate({
-        path: { applicationId: props.application.id, id: technology.id },
-        body,
-      });
-    } else {
-      await api.technologyControllerCreate({
-        path: { applicationId: props.application.id },
-        body,
-      });
+    const response = technology.id
+      ? await api.technologyControllerUpdate({
+          path: { applicationId: props.application.id, id: technology.id },
+          body,
+        })
+      : await api.technologyControllerCreate({
+          path: { applicationId: props.application.id },
+          body,
+        });
+    if (!response.response.ok) {
+      toaster.addErrorMessage(backendErrorMessage(response.error) ?? "Erreur lors de la sauvegarde de la technologie.");
+      return;
     }
     await fetchTechnologies(props.application.id);
     statusMessage.value = "Technologie sauvegardée avec succès !";
@@ -181,9 +186,13 @@ function askDelete(technology: TechnologyDto) {
 async function confirmDelete() {
   if (!technologyToDelete.value) return;
   try {
-    await api.technologyControllerDelete({
+    const response = await api.technologyControllerDelete({
       path: { applicationId: props.application.id, id: technologyToDelete.value.id },
     });
+    if (!response.response.ok) {
+      toaster.addErrorMessage(backendErrorMessage(response.error) ?? "Erreur lors de la suppression de la technologie.");
+      return;
+    }
     await fetchTechnologies(props.application.id);
     toaster.addSuccessMessage("Technologie supprimée avec succès !");
   } catch {

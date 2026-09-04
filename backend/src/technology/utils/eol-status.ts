@@ -61,6 +61,17 @@ export function computeEolStatus(
  * Sans statut demandé, on retient toute ligne qui porte au moins un des trois —
  * `eolDate < soon` couvre à la fois `eol` et `eol-soon`.
  */
+/**
+ * #2515 — même exclusion que la recherche d'applications (`application.service.ts`) :
+ * une application marquée supprimée ne doit ni remonter dans la vue transverse (et son
+ * total), ni déclencher d'alertes, ni consommer le cron de rafraîchissement. Filtre à
+ * poser sur l'application (`where.currentStatus`) ou, depuis une technologie, sur sa
+ * relation `application`.
+ */
+export const ACTIVE_APPLICATION_WHERE = {
+  currentStatus: { status: { not: "deleted" } },
+} satisfies Prisma.ApplicationWhereInput;
+
 export function eolStatusWhere(
   status: EolStatus | undefined,
   now: Date = new Date(),

@@ -213,3 +213,14 @@ describe("EolRefreshService", () => {
     }
   });
 });
+
+describe("EolRefreshService — applications supprimées (#2515)", () => {
+  it("ne rafraîchit pas les technologies d'une application supprimée", async () => {
+    const { service, findMany } = makeService([]);
+    await service.runRefreshSafely();
+    const { where } = findMany.mock.calls[0][0];
+    expect(where.application).toEqual({
+      currentStatus: { status: { not: "deleted" } },
+    });
+  });
+});

@@ -157,12 +157,19 @@ export class TechnologyService extends BaseService<TechnologyStack> {
     if (manualEolDate === null) {
       return {
         eolSource: TechnologyEolSource.endoflife,
-        ...(wasManual ? NEVER_CHECKED_EOL : {}),
+        ...(wasManual || eolInputChanged ? NEVER_CHECKED_EOL : {}),
         ...(await this.resolveEol(product, version)),
       };
     }
     if (wasManual || !eolInputChanged) return {};
-    return this.resolveEol(product, version);
+    // #2516 : produit ou version changent → l'ancienne fin de vie ne vaut plus rien. Si
+    // endoflife.date est muet (« unavailable » → aucun champ), la ligne repasse « jamais
+    // vérifiée » (retentée au prochain GET) au lieu de garder le badge de l'ANCIEN produit,
+    // avec un `eolCheckedAt` frais qui l'aurait figé pendant tout le TTL.
+    return {
+      ...NEVER_CHECKED_EOL,
+      ...(await this.resolveEol(product, version)),
+    };
   }
 
   // Catalogue des produits suivis par endoflife.date (autocomplétion côté front).

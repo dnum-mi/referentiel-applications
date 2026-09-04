@@ -173,3 +173,13 @@ describe("EndOfLifeService — restitution", () => {
     expect(page.results[0].technologies[0].eoasDate).toBeNull();
   });
 });
+
+describe("EndOfLifeService — applications supprimées (#2515)", () => {
+  it("exclut les applications marquées supprimées de la vue transverse et de son total", async () => {
+    const { service, paginate } = makeService();
+    await service.findApplications({});
+    const { where } = paginate.mock.calls[0][0];
+    expect(where.currentStatus).toEqual({ status: { not: "deleted" } });
+    expect(where.technologies.some).toBeDefined();
+  });
+});

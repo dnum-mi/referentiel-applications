@@ -8,6 +8,7 @@ import {
   EndOfLifeTechnologyDto,
 } from "./dto/end-of-life.dto";
 import {
+  ACTIVE_APPLICATION_WHERE,
   computeEolStatus,
   eolStatusWhere,
   type EolStatus,
@@ -44,6 +45,8 @@ export class EndOfLifeService {
     const technologyWhere = eolStatusWhere(filters.status, now);
 
     const where: Prisma.ApplicationWhereInput = {
+      // #2515 : une application supprimée n'a plus de fin de vie à signaler.
+      ...ACTIVE_APPLICATION_WHERE,
       technologies: { some: technologyWhere },
     };
 
