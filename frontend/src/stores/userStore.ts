@@ -113,13 +113,16 @@ export const useUserStore = defineStore("userStore", () => {
     }
   }
 
-  // Un admin scopé n'agit que dans son périmètre : cible sans organisation, ou
-  // organisation dont le chemin est porté par celui du scope. Sans scope
-  // (admin global), tout est permis. Règle unique pour édition, impersonation…
+  // Un admin scopé n'agit que dans son périmètre : organisation cible égale au scope ou
+  // descendante à une frontière de segment (`scope + "/"`), jamais un simple préfixe (`/SG` ne
+  // couvre pas `/SGAMI`). Une cible SANS organisation n'est dans le périmètre de personne
+  // (#2508, même règle que le backend depuis #2371). Sans scope (admin global), tout est permis.
+  // Règle unique pour édition, blocage, impersonation…
   function isWithinScope(targetOrganizationPath?: string | null) {
     const scopePath = user.value?.scopeOrganization?.path;
     if (!scopePath) return true;
-    return !targetOrganizationPath || targetOrganizationPath.startsWith(scopePath);
+    if (!targetOrganizationPath) return false;
+    return targetOrganizationPath === scopePath || targetOrganizationPath.startsWith(`${scopePath}/`);
   }
 
   function hasPermissions(permissions: Permission[], userApplicationPerms?: APP_PERMISSIONS[]) {

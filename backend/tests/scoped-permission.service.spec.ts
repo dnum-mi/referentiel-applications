@@ -23,10 +23,14 @@ const orgMap: Record<string, typeof orgInScope> = {
 };
 
 const scopedAdmin = {
+  id: "scoped-admin-1",
+  role: Roles.ADMIN,
   scopeOrganization: { id: "admin-scope-org", path: ADMIN_SCOPE_PATH },
 } as unknown as Requestor;
 
 const superAdmin = {
+  id: "super-admin-1",
+  role: Roles.ADMIN,
   scopeOrganization: null,
 } as unknown as Requestor;
 
@@ -561,6 +565,135 @@ describe("ScopedPermissionService", () => {
           ).rejects.toThrow(ScopePermissionsException);
         });
       });
+    });
+  });
+});
+
+// ─── #2498 : rôle ADMIN obligatoire, pas d'auto-modification des droits ─────────
+
+describe("ScopedPermissionService — rôle administrateur requis (#2498)", () => {
+  let service: ScopedPermissionService;
+  const mockPrismaService = {
+    user: { findFirst: jest.fn() },
+    organization: { findUnique: jest.fn() },
+  };
+
+  // Contributeur à qui l'on a délégué AdminPanelManage, SANS périmètre : avant #2498 il
+  // passait tous les contrôles comme un super-administrateur.
+  const delegatedContributor = {
+    id: "delegated-1",
+    role: Roles.CONTRIBUTOR,
+    additionalPermissions: ["AdminPanelManage"],
+    scopeOrganization: null,
+  } as unknown as Requestor;
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        ScopedPermissionService,
+        { provide: PrismaService, useValue: mockPrismaService },
+      ],
+    }).compile();
+    service = module.get<ScopedPermissionService>(ScopedPermissionService);
+  });
+
+  it("refuse la mise à jour d'un utilisateur par un non-admin sans périmètre", async () => {
+    await expect(
+      service.assertCanUpdate(
+        "target-1",
+        { role: Roles.ADMIN } as UpdateUserDto,
+        delegatedContributor,
+      ),
+    ).rejects.toBeInstanceOf(ScopePermissionsException);
+    expect(mockPrismaService.user.findFirst).not.toHaveBeenCalled();
+  });
+
+  it("refuse l'impersonation, le blocage et l'assignation de périmètre par un non-admin", async () => {
+    await expect(
+      service.assertCanImpersonate("target-1", delegatedContributor),
+    ).rejects.toBeInstanceOf(ScopePermissionsException);
+    await expect(
+      service.assertCanBlock("target-1", delegatedContributor),
+    ).rejects.toBeInstanceOf(ScopePermissionsException);
+    await expect(
+      service.assertCanAssignScopeToNewPrincipal(null, delegatedContributor),
+    ).rejects.toBeInstanceOf(ScopePermissionsException);
+  });
+
+  it("refuse à un non-admin de se promouvoir lui-même", async () => {
+    await expect(
+      service.assertCanUpdate(
+        delegatedContributor.id,
+        { role: Roles.ADMIN } as UpdateUserDto,
+        delegatedContributor,
+      ),
+    ).rejects.toBeInstanceOf(ScopePermissionsException);
+  });
+
+  describe("auto-modification par un administrateur", () => {
+    const self = {
+      id: "super-admin-1",
+      role: Roles.ADMIN,
+      scopeOrganizationId: "admin-scope-org",
+      additionalPermissions: ["DataExport"],
+      scopeOrganization: { id: "admin-scope-org", path: ADMIN_SCOPE_PATH },
+    } as unknown as Requestor;
+
+    it("refuse de changer son propre rôle", async () => {
+      await expect(
+        service.assertCanUpdate(
+          self.id,
+          { role: Roles.CONTRIBUTOR } as UpdateUserDto,
+          self,
+        ),
+      ).rejects.toThrow("Vous ne pouvez pas modifier vos propres droits");
+    });
+
+    it("refuse de retirer son propre périmètre", async () => {
+      await expect(
+        service.assertCanUpdate(
+          self.id,
+          { scopeOrganizationId: null } as UpdateUserDto,
+          self,
+        ),
+      ).rejects.toBeInstanceOf(ScopePermissionsException);
+    });
+
+    it("refuse de changer ses propres permissions déléguées", async () => {
+      await expect(
+        service.assertCanUpdate(
+          self.id,
+          {
+            additionalPermissions: ["DataExport", "CreateApplication"],
+          } as UpdateUserDto,
+          self,
+        ),
+      ).rejects.toBeInstanceOf(ScopePermissionsException);
+    });
+
+    it("laisse passer une mise à jour de soi qui ne touche pas aux droits", async () => {
+      mockPrismaService.user.findFirst.mockResolvedValue({
+        ...makeUser(orgInScope.id, "admin-scope-org"),
+        id: self.id,
+        role: Roles.ADMIN,
+        additionalPermissions: ["DataExport"],
+      });
+      mockPrismaService.organization.findUnique.mockImplementation(
+        ({ where: { id } }: { where: { id: string } }) =>
+          Promise.resolve(orgMap[id] ?? null),
+      );
+      await expect(
+        service.assertCanUpdate(
+          self.id,
+          {
+            role: Roles.ADMIN,
+            organizationId: orgInScope2.id,
+            additionalPermissions: ["DataExport"],
+          } as UpdateUserDto,
+          self,
+        ),
+      ).resolves.toBeUndefined();
     });
   });
 });

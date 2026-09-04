@@ -433,6 +433,13 @@ export class UserService {
     if (admin.id === targetId) {
       throw new BadRequestException("Vous ne pouvez pas vous impersonner.");
     }
+    // #2505 : même verrou que le middleware `x-impersonate-user-id` — la permission
+    // AdminPanelManage (déléguable) ne suffit pas, il faut le rôle administrateur.
+    if (admin.role !== Roles.ADMIN) {
+      throw new ForbiddenException(
+        "Seul un administrateur peut impersonner un utilisateur.",
+      );
+    }
 
     const target = await this.findByIdWithRelations(targetId);
     if (!target) {

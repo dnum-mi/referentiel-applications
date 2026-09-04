@@ -159,13 +159,13 @@ Inventaire **par module / ressource** (résumé : verbes et chemins principaux, 
 
 ### Conformités, hébergements & dette technique
 
-| Verbe & chemin                                               | Rôle                              |
-| ------------------------------------------------------------ | --------------------------------- |
-| `GET /compliances/count`                                     | Comptage des conformités          |
-| `GET /hostings/count`                                        | Comptage des hébergements         |
-| `POST /hosting-options` · `GET` · `PATCH :id` · `DELETE :id` | Options d'hébergement             |
-| `GET /sites`                                                 | Sites d'hébergement               |
-| `GET /technical-debts`                                       | Dette technique (lecture globale) |
+| Verbe & chemin                                               | Rôle                                                              |
+| ------------------------------------------------------------ | ----------------------------------------------------------------- |
+| `GET /compliances/count`                                     | Comptage des conformités                                          |
+| `GET /hostings/count`                                        | Comptage des hébergements                                         |
+| `POST /hosting-options` · `GET` · `PATCH :id` · `DELETE :id` | Options d'hébergement                                             |
+| `GET /sites`                                                 | Sites d'hébergement                                               |
+| `GET /technical-debts` · `GET /technical-debts/millesimes`   | Dette technique (lecture globale, `MDITList` requis depuis #2502) |
 
 ### Référentiels & catalogue de données
 

@@ -4,10 +4,12 @@ import {
   IsArray,
   IsBoolean,
   IsEnum,
+  IsIn,
   IsOptional,
   IsString,
 } from "class-validator";
 import { OrganizationDto } from "src/organizations/dto/organizations.dto";
+import { DELEGABLE_PERMISSIONS } from "src/permissions/role-to-permissions";
 
 export class UpdateUserDto {
   @ApiProperty({
@@ -36,7 +38,15 @@ export class UpdateUserDto {
     isArray: true,
     description: "Liste des permissions supplémentaire accordé a un user",
   })
+  // #2498 : seules les permissions déléguables sont acceptées (liste fermée), jamais
+  // AdminPanelManage ni une permission applicative — sinon un contributeur délégué pourrait être
+  // promu super-administrateur de fait.
   @IsArray()
+  @IsEnum(Permission, { each: true })
+  @IsIn(DELEGABLE_PERMISSIONS, {
+    each: true,
+    message: `additionalPermissions ne peut contenir que des permissions déléguables (${DELEGABLE_PERMISSIONS.join(", ")})`,
+  })
   additionalPermissions?: (keyof typeof Permission)[];
 
   @IsString()
