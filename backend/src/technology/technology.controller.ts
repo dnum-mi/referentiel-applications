@@ -29,6 +29,7 @@ import {
   EolProductDto,
   TechnologyDto,
   TechnologyErrorResponseDto,
+  UpdateTechnologyDto,
 } from "./dto/technology.dto";
 import { TechnologyService } from "./technology.service";
 
@@ -135,14 +136,14 @@ export class TechnologyController {
     @Param("applicationId") applicationId: string,
     @UserId() userId: string,
     @Param("id") id: string,
-    @Body() dto: CreateTechnologyDto,
+    @Body() dto: UpdateTechnologyDto,
   ) {
     return this.technologyService.updateTechnology(id, applicationId, dto, {
       applicationId,
       metadata: {
         userId,
         gender: "de la technologie",
-        getColumn: () => dto.technology,
+        getColumn: (entity) => entity.technology,
         entity: "technologyStackId",
         fields: TECHNOLOGY_METADATA_FIELDS,
       },

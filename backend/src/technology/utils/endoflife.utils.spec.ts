@@ -274,3 +274,36 @@ describe("endoflife.utils", () => {
     });
   });
 });
+
+// #2527 : numérotations Java héritées.
+describe("matchRelease — numérotations Java (#2527)", () => {
+  const jdk = [
+    { name: "8", eolFrom: "2030-12-31" },
+    { name: "11", eolFrom: "2032-01-31" },
+    { name: "17", eolFrom: "2029-09-30" },
+    { name: "21", eolFrom: "2031-09-30" },
+  ];
+
+  it.each([
+    ["1.8", "8"],
+    ["1.8.0_392", "8"],
+    ["8u392", "8"],
+    ["17u45", "17"],
+    ["v1.8", "8"],
+  ])("apparie « %s » au cycle « %s »", (version, cycle) => {
+    expect(matchRelease(jdk, version)?.name).toBe(cycle);
+  });
+
+  it("ne bascule vers le schéma hérité que si le cycle existe", () => {
+    expect(matchRelease(jdk, "1.9")).toBeNull();
+    expect(matchRelease(jdk, "9u10")).toBeNull();
+  });
+
+  it("préfère toujours un cycle nommé exactement comme la saisie", () => {
+    const releases = [
+      { name: "1.8", eolFrom: "2027-01-01" },
+      { name: "8", eolFrom: "2030-12-31" },
+    ];
+    expect(matchRelease(releases, "1.8")?.name).toBe("1.8");
+  });
+});

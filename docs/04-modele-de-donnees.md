@@ -109,6 +109,7 @@ Contraintes : `@@unique([label, description])`, index sur `label`, `shortName` e
 - `ExternalRessource` — liens externes.
 - `Metadata` — entrées d'audit.
 - `TechnicalDebtInfo` — évaluations de dette technique.
+- `TechnologyStack` — stack technique (technologie, produit, version, lien documentaire) et fin de vie résolue via endoflife.date ou saisie à la main (`eolSource`, `eolDate`, `eoasDate`, `eolCycle`, `eolProduct`, `eolCheckedAt`) ; unique par (application, technologie, produit).
 - `ApplicationView` — consultations.
 - `NotificationLog` — journaux de notifications de validation.
 - `Report` — signalements.
@@ -127,6 +128,7 @@ erDiagram
     Application }o--o{ Tag : "tags (N:N)"
     Application ||--o{ ExternalRessource : "ressources externes"
     Application ||--o{ TechnicalDebtInfo : "dette technique"
+    Application ||--o{ TechnologyStack : "stack technique / fins de vie"
     Application ||--o{ ApplicationView : "consultations"
     Application ||--o{ NotificationLog : "notifications"
     Application ||--o{ Report : "signalements"
@@ -262,7 +264,7 @@ erDiagram
 
 `Metadata` (`backend/prisma/schema/metadata.prisma`) est le **journal d'audit transverse**. Chaque entrée enregistre `createdAt`, une `description` optionnelle et une `action` (`MetadataAction` : `add`, `update`, `delete`, `export`).
 
-Le modèle est **polymorphe** : il porte des clés étrangères **nullables** vers les entités auditées — `application`, `compliance`, `label`, `actor`, `externalRessource`, `hosting`, `technicalDebtInfo`, `rgaaCompliance`, `dataApplication`, `dataDescription`. Trois liens vers `User` complètent l'audit : `createdBy` (`createdById`, **obligatoire**, `onDelete: Restrict` — l'identité **effective** de la requête), `dataOwner` (`dataOwnerId`, optionnel) et `impersonator` (`impersonatorId`, optionnel, #2226 — l'**administrateur réel** quand le changement a été fait sous impersonation ; renseigné automatiquement par l'extension Prisma `metadata-impersonator` à partir du contexte de requête, sans intervention des services).
+Le modèle est **polymorphe** : il porte des clés étrangères **nullables** vers les entités auditées — `application`, `compliance`, `label`, `actor`, `externalRessource`, `hosting`, `technicalDebtInfo`, `technologyStack`, `rgaaCompliance`, `dataApplication`, `dataDescription`. Trois liens vers `User` complètent l'audit : `createdBy` (`createdById`, **obligatoire**, `onDelete: Restrict` — l'identité **effective** de la requête), `dataOwner` (`dataOwnerId`, optionnel) et `impersonator` (`impersonatorId`, optionnel, #2226 — l'**administrateur réel** quand le changement a été fait sous impersonation ; renseigné automatiquement par l'extension Prisma `metadata-impersonator` à partir du contexte de requête, sans intervention des services).
 
 ## 13. Organisations
 

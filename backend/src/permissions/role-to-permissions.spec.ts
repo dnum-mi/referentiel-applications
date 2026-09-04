@@ -1,7 +1,7 @@
 import { Permission, Roles } from "@prisma/client";
 import { roleToAppPermissions, roleToPermissions } from "./role-to-permissions";
 
-// #2088 — l'onglet Stack technique suit le schéma des autres onglets : pas de « lecture pour
+// #2088 — l'onglet Technologies suit le schéma des autres onglets : pas de « lecture pour
 // tous » globale (défait #2027). La lecture vient de la projection de rôle par application
 // (READER+) ou de la matrice du type d'acteur ; un VISITOR non-acteur ne voit pas l'onglet.
 describe("roleToPermissions / roleToAppPermissions — TechnologyRead", () => {

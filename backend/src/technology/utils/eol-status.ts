@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 /**
  * Fin de vie « proche » : dans moins de 6 mois (182 jours).
  *
- * Le même seuil qu'à l'affichage de l'onglet Stack technique — la vue transverse
+ * Le même seuil qu'à l'affichage de l'onglet Technologies — la vue transverse
  * et la fiche doivent classer une technologie de la même façon, sinon un badge
  * « fin de vie proche » sur une fiche correspondrait à une application absente de
  * la liste transverse.

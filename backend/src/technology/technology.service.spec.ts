@@ -14,6 +14,7 @@ jest.mock("./utils/endoflife.utils", () => ({
 }));
 
 import { BadRequestException, ConflictException } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import { ApplicationService } from "src/applications/application.service";
 import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -39,6 +40,7 @@ describe("TechnologyService — upsert de la stack technique", () => {
       findUnique: jest.fn().mockResolvedValue(existing),
       create: jest.fn().mockResolvedValue(existing),
       update: jest.fn().mockResolvedValue(existing),
+      updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     };
     const prisma = {
       technologyStack,
@@ -285,6 +287,7 @@ describe("TechnologyService — fin de vie saisie à la main (#2454)", () => {
       findUnique: jest.fn().mockResolvedValue(existing),
       create: jest.fn().mockResolvedValue(existing),
       update: jest.fn().mockResolvedValue(existing),
+      updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     };
     const prisma = {
       technologyStack,
@@ -489,9 +492,10 @@ describe("TechnologyService — fin de vie saisie à la main (#2454)", () => {
 
     expect(resolveProductReleases).toHaveBeenCalledTimes(1);
     expect(resolveProductReleases).toHaveBeenCalledWith("PostgreSQL");
-    expect(prisma.technologyStack.update).toHaveBeenCalledTimes(1);
-    expect(prisma.technologyStack.update.mock.calls[0][0].where).toEqual({
+    expect(prisma.technologyStack.updateMany).toHaveBeenCalledTimes(1);
+    expect(prisma.technologyStack.updateMany.mock.calls[0][0].where).toEqual({
       id: "tech-1",
+      eolSource: "endoflife",
     });
     expect(rows[0]).toMatchObject({
       id: "tech-2",
@@ -610,6 +614,103 @@ describe("TechnologyService — changement de produit pendant une panne (#2516)"
       product: "MySQL",
       eolSource: "endoflife",
       ...neverChecked,
+    });
+  });
+});
+
+// #2527 : hygiène — conflit d'index rendu 409, statut calculé côté backend, écriture paresseuse
+// conditionnée à l'origine.
+describe("TechnologyService — hygiène (#2527)", () => {
+  const row = {
+    id: "tech-1",
+    applicationId: "app-1",
+    technology: "Base de données",
+    product: "PostgreSQL",
+    version: "13",
+    docUrl: null,
+    eolSource: "endoflife",
+    eolProduct: "postgresql",
+    eolCycle: "13",
+    eolDate: new Date(Date.now() - 24 * 60 * 60 * 1000),
+    eoasDate: null,
+    latestVersion: null,
+    eolCheckedAt: new Date(),
+  };
+  const makeService = () => {
+    const technologyStack = {
+      findFirst: jest.fn().mockResolvedValue(null),
+      findMany: jest.fn().mockResolvedValue([row]),
+      findUnique: jest.fn().mockResolvedValue(row),
+      create: jest.fn().mockResolvedValue(row),
+      update: jest.fn().mockResolvedValue(row),
+      updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+    };
+    const prisma = {
+      technologyStack,
+      application: { findUnique: jest.fn().mockResolvedValue({ id: "app-1" }) },
+    };
+    const service = new TechnologyService(
+      prisma as unknown as PrismaService,
+      {} as MetadatasService,
+      { updateApplicationQuality: jest.fn() } as unknown as ApplicationService,
+    );
+    return { service, technologyStack };
+  };
+
+  it("rend 409 quand l'index unique refuse un doublon de casse en course (P2002)", async () => {
+    const { service, technologyStack } = makeService();
+    technologyStack.create.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+        code: "P2002",
+        clientVersion: "test",
+      }),
+    );
+    await expect(
+      service.createTechnology("app-1", {
+        technology: "Base de données",
+        product: "PostgreSQL",
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it("laisse remonter toute autre erreur Prisma", async () => {
+    const { service, technologyStack } = makeService();
+    technologyStack.create.mockRejectedValue(new Error("connexion perdue"));
+    await expect(
+      service.createTechnology("app-1", {
+        technology: "Base de données",
+        product: "PostgreSQL",
+      }),
+    ).rejects.toThrow("connexion perdue");
+  });
+
+  it("expose le statut de fin de vie calculé à la lecture", async () => {
+    const { service } = makeService();
+    const [first] = await service.findAllByApplicationId("app-1");
+    expect((first as unknown as { eolStatus: string }).eolStatus).toBe("eol");
+  });
+
+  it("conditionne l'écriture paresseuse à une origine automatique", async () => {
+    const { service, technologyStack } = makeService();
+    // Appels endoflife.date coupés en test : rétablis pour ce seul cas.
+    jest
+      .spyOn(
+        service as unknown as { eolDisabled: () => boolean },
+        "eolDisabled",
+      )
+      .mockReturnValue(false);
+    technologyStack.findMany.mockResolvedValue([
+      { ...row, eolCheckedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+    ]);
+    resolveProductReleases.mockResolvedValue({
+      status: "resolved",
+      slug: "postgresql",
+      releases: [{ name: "13", eolFrom: "2025-11-13" }],
+    });
+    await service.findAllByApplicationId("app-1");
+    expect(technologyStack.updateMany.mock.calls[0][0].where).toEqual({
+      id: "tech-1",
+      eolSource: "endoflife",
     });
   });
 });

@@ -131,6 +131,9 @@
   catalogue (il n'est jamais proposé quand endoflife.date sait répondre : la date calculée est
   alors rappelée en lecture seule) ; la ligne créée porte le badge **« Fin de vie proche »** et
   la mention **« saisie manuelle »** (title + complément sr-only), sans « Produit non suivi »,
-  « Non vérifiée » ni « Version non reconnue » ; la suppression retire la ligne. La date saisie
-  est persistée avec son origine (`eolSource = manual`) : ni le rafraîchissement paresseux ni le
-  recalcul planifié ne l'écrasent ; effacer le champ rend la main au calcul automatique.
+  « Non vérifiée » ni « Version non reconnue » ; la suppression retire la ligne.
+- **Couvert ailleurs (pas par ce scénario)** : la persistance de l'origine (`eolSource = manual`),
+  l'immunité au rafraîchissement paresseux et au recalcul planifié, et le retour au calcul
+  automatique quand le champ est effacé sont vérifiés par les tests unitaires du backend
+  (`technology.service.spec.ts`, `eol-refresh.service.spec.ts`) et le contrat HTTP
+  (`technologies-contract.e2e-spec.ts`), pas par cet e2e.

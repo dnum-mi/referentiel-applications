@@ -264,3 +264,16 @@ describe("EolNotificationService — applications supprimées (#2515)", () => {
     expect(where.OR).toBeDefined();
   });
 });
+
+describe("EolNotificationService — planification (#2519, #2526)", () => {
+  it("porte son propre cron, après le recalcul de 3 h", () => {
+    const options = Reflect.getMetadata(
+      "SCHEDULE_CRON_OPTIONS",
+      EolNotificationService.prototype.handleScheduledNotifications,
+    );
+    expect(options).toMatchObject({
+      cronTime: "30 3 * * *",
+      timeZone: "Europe/Paris",
+    });
+  });
+});

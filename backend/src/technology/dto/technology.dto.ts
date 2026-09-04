@@ -1,21 +1,30 @@
-import { ApiProperty, OmitType } from "@nestjs/swagger";
+import { ApiProperty, OmitType, PartialType } from "@nestjs/swagger";
 import { TechnologyEolSource } from "@prisma/client";
 import {
   IsDateString,
   IsEnum,
+  IsNotEmpty,
   IsOptional,
   IsString,
   IsUrl,
   Matches,
   MaxLength,
 } from "class-validator";
+import { EOL_STATUSES, type EolStatus } from "../utils/eol-status";
 
 export class CreateTechnologyDto {
   @ApiProperty({
     example: "Base de données",
     description: "Famille / catégorie de technologie",
   })
+  // #2527 : vide ou démesuré partait en 500 (colonne VarChar) ; 100 caractères suffisent à
+  // n'importe quel libellé de famille ou de produit.
   @IsString()
+  @IsNotEmpty()
+  @Matches(/\S/, {
+    message: "technology ne peut pas être composé uniquement d'espaces",
+  })
+  @MaxLength(100)
   technology: string;
 
   @ApiProperty({
@@ -23,6 +32,11 @@ export class CreateTechnologyDto {
     description: "Produit concret (sert à résoudre la fin de vie)",
   })
   @IsString()
+  @IsNotEmpty()
+  @Matches(/\S/, {
+    message: "product ne peut pas être composé uniquement d'espaces",
+  })
+  @MaxLength(100)
   product: string;
 
   @ApiProperty({
@@ -43,7 +57,8 @@ export class CreateTechnologyDto {
     nullable: true,
   })
   @IsOptional()
-  @IsUrl()
+  // #2527 : schéma obligatoire — « www.exemple.fr » passait puis donnait un lien relatif cassé.
+  @IsUrl({ require_protocol: true, protocols: ["http", "https"] })
   @MaxLength(2048)
   docUrl?: string | null;
 
@@ -70,6 +85,12 @@ export class CreateTechnologyDto {
 
 // `manualEolDate` est une commande d'écriture, pas une colonne : la lecture expose
 // `eolDate` et son origine `eolSource`.
+/**
+ * #2527 : `PATCH :id` acceptait le DTO de création, technologie et produit obligatoires — une
+ * mise à jour partielle (version seule, effacement de la date manuelle) était refusée en 400.
+ */
+export class UpdateTechnologyDto extends PartialType(CreateTechnologyDto) {}
+
 export class TechnologyDto extends OmitType(CreateTechnologyDto, [
   "manualEolDate",
 ] as const) {
@@ -167,6 +188,17 @@ export class TechnologyDto extends OmitType(CreateTechnologyDto, [
   })
   @IsEnum(TechnologyEolSource)
   eolSource: TechnologyEolSource;
+
+  @ApiProperty({
+    description:
+      "Statut de fin de vie calculé par le backend à la lecture (#2527) : « eol » dépassée, « eol-soon » dans moins de 6 mois, « eoas-passed » hors support actif, null sinon. Source unique, le front ne le recalcule pas.",
+    enum: EOL_STATUSES,
+    nullable: true,
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(EOL_STATUSES)
+  eolStatus?: EolStatus | null;
 }
 
 export class EolProductDto {

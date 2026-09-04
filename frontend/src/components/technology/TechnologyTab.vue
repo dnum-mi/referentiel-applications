@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import api from "@/api/index";
 import { backendErrorMessage } from "@/utils/api-error";
-import { EOL_STATUS_BADGE_TYPE, EOL_STATUS_LABELS, computeEolStatus, endoflifeProductUrl, type EolStatus } from "@/utils/eol-status";
+import { EOL_STATUS_BADGE_TYPE, EOL_STATUS_LABELS, endoflifeProductUrl, type EolStatus } from "@/utils/eol-status";
 import { type EolProductDto, type TechnologyDto, Permission } from "@/client/types.gen";
 import useModal from "@/composables/use-modal";
 import type { APP_PERMISSIONS, Application } from "@/models/Application";
@@ -68,7 +68,8 @@ const tableRows = computed(() =>
       FinDeVieLabel: formatEol(techno.eolDate),
       FinSupportLabel: formatEol(techno.eoasDate),
       eolLink: endoflifeProductUrl(techno.eolProduct),
-      eolStatus: computeEolStatus(techno),
+      // #2527 : statut calculé par le backend à la lecture, source unique (plus de recalcul front).
+      eolStatus: (techno.eolStatus ?? null) as EolStatus | null,
       manualEol,
       // eolCheckedAt renseigné + eolProduct null = produit non suivi par endoflife.date
       unknownProduct: !manualEol && Boolean(techno.eolCheckedAt) && !techno.eolProduct,

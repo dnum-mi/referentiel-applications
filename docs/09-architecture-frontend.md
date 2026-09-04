@@ -169,6 +169,7 @@ Stores présents dans `frontend/src/stores/` :
 | `metadataStore.ts`     | `"metadataStore"`     | Historique des modifications (métadonnées).                                             |
 | `reportStore.ts`       | `"reportStore"`       | Signalements.                                                                           |
 | `statisticsStore.ts`   | `"statisticsStore"`   | Statistiques / indices de qualité.                                                      |
+| `endOfLifeStore.ts`    | `"endOfLifeStore"`    | Vue transverse des fins de vie (`GET /technologies/end-of-life`, filtres, pagination).  |
 | `toasterStore.ts`      | `"toaster"`           | Messages de notification (voir §9).                                                     |
 
 **Permissions côté front.** La vérification se fait via
