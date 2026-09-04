@@ -96,6 +96,28 @@ describe("endoflife.utils — couche réseau", () => {
     });
   });
 
+  describe("catalogue (#2520)", () => {
+    it("des résolutions concurrentes ne téléchargent le catalogue qu'une fois", async () => {
+      const twoProducts = ok({
+        result: [
+          { name: "postgresql", label: "PostgreSQL" },
+          { name: "mysql", label: "MySQL" },
+        ],
+      });
+      fetchMock.mockImplementation(async (url: string) =>
+        url.endsWith("/products") ? twoProducts : releases,
+      );
+      const [a, b] = await Promise.all([
+        resolveProductReleases("PostgreSQL"),
+        resolveProductReleases("MySQL"),
+      ]);
+      expect(a).toMatchObject({ status: "resolved", slug: "postgresql" });
+      expect(b).toMatchObject({ status: "resolved", slug: "mysql" });
+      // 1 catalogue + 2 produits — et non 2 catalogues + 2 produits.
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+    });
+  });
+
   describe("mode dégradé sans catalogue (#2514)", () => {
     // Un catalogue en 200 mais sans `result` (proxy qui répond une page à la place de
     // l'API) laisse le cache vide SANS ouvrir le disjoncteur : c'est le seul chemin

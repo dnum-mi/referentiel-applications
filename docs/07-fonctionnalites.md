@@ -309,7 +309,7 @@ entrée de `NotificationLog` par technologie **et par statut** garantit une aler
 jamais une par exécution. La passe est séparée du rafraîchissement : un statut change aussi par
 simple **écoulement du temps**, sans que la ligne soit réécrite, et c'est le cas le plus courant —
 une échéance connue de longue date qui arrive à terme. Interrupteur dédié
-`TECHNOLOGY_EOL_NOTIFY_ENABLED`, distinct de celui du recalcul : recalculer est interne, prévenir des
+`TECHNOLOGY_EOL_NOTIFY_ENABLED`, distinct de celui du recalcul — et depuis #2519 planifié à part (`EolNotificationService`, 3 h 30, indépendant de `TECHNOLOGY_EOL_CRON_ENABLED` et d'`ENDOFLIFE_ENABLED` : les saisies manuelles sont alertées même sans appel à endoflife.date). L'anti-répétition (`NotificationLog`) porte sur technologie + statut + **échéance** (#2518) : une montée de version ou une date ressaisie redonne droit à une alerte, et rien n'est journalisé tant que les notifications n'ont pas été créées. Recalculer est interne, prévenir des
 utilisateurs est visible.
 
 **Pourquoi les fins de vie n'entrent PAS dans l'IQ ni dans la maturité technique.** La question était

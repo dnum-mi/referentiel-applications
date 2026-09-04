@@ -396,3 +396,30 @@ describe("technologyTab — erreurs HTTP de sauvegarde et de suppression (#2512)
     expect(addSuccessMessage).not.toHaveBeenCalled();
   });
 });
+
+// #2520 : le catalogue endoflife.date (≈ 40 Ko) n'est plus chargé au montage, mais à la première
+// ouverture du formulaire, une seule fois par onglet.
+describe("technologyTab — chargement du catalogue endoflife.date (#2520)", () => {
+  const modalStub = { props: ["opened"], template: '<div v-if="opened"><slot /></div>' };
+
+  it("ne charge le catalogue qu'à l'ouverture du formulaire, une seule fois", async () => {
+    hasPermissions.mockReturnValue(true);
+    findAllMock.mockResolvedValue({ response: { ok: true }, data: [] });
+    listEolProductsMock.mockReset().mockResolvedValue({ response: { ok: true }, data: [{ name: "postgresql", label: "PostgreSQL" }] });
+    render(TechnologyTab, {
+      props: { application: { ...applicationFixture, myPerms: new Set(["TechnologyWrite"]) } as ApplicationWithPerms },
+      global: { plugins: [[PrimeVue, { theme: { preset: Aura } }]], stubs: { DsfrModal: modalStub } },
+    });
+    await screen.findByTestId("technology-empty-state");
+    expect(listEolProductsMock).not.toHaveBeenCalled();
+
+    await fireEvent.click(screen.getByTestId("technology-add-btn"));
+    await screen.findByTestId("technology-name-input");
+    await waitFor(() => expect(listEolProductsMock).toHaveBeenCalledTimes(1));
+
+    await fireEvent.click(screen.getByTestId("technology-cancel-btn"));
+    await fireEvent.click(screen.getByTestId("technology-add-btn"));
+    await screen.findByTestId("technology-name-input");
+    expect(listEolProductsMock).toHaveBeenCalledTimes(1);
+  });
+});

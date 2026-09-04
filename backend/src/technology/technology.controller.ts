@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   HttpCode,
   Param,
   Patch,
@@ -69,6 +70,9 @@ export class TechnologyController {
 
   @Get("eol-products")
   @RequiredPermissions([Permission.TechnologyRead])
+  // #2520 : le catalogue (≈ 40 Ko) change au plus une fois par jour côté backend ; une heure de
+  // cache navigateur évite de le retélécharger à chaque ouverture de formulaire.
+  @Header("Cache-Control", "private, max-age=3600")
   @ApiOperation({
     summary:
       "Lister les produits suivis par endoflife.date (autocomplétion de la saisie produit)",

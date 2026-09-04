@@ -7,13 +7,15 @@ import { EOL_SOON_MS } from "./utils/eol-status";
 
 const day = 24 * 60 * 60 * 1000;
 const at = (offsetMs: number) => new Date(Date.now() + offsetMs);
+const dateKey = (date: Date) => date.toISOString().slice(0, 10);
+const EOL_DATE = at(-10 * day);
 
 const row = (overrides: Record<string, unknown> = {}) => ({
   id: "tech-1",
   applicationId: "app-1",
   product: "PostgreSQL",
   version: "13",
-  eolDate: at(-10 * day),
+  eolDate: EOL_DATE,
   eoasDate: null,
   ...overrides,
 });
@@ -89,7 +91,7 @@ describe("EolNotificationService", () => {
   it("n'alerte pas deux fois pour la même technologie au même statut", async () => {
     const { service, createForUsers } = makeService(
       [row()],
-      [{ type: "technology_eol:tech-1:eol" }],
+      [{ type: `technology_eol:tech-1:eol:${dateKey(EOL_DATE)}` }],
     );
     const result = await service.notifyPendingEndOfLife();
 
@@ -97,12 +99,71 @@ describe("EolNotificationService", () => {
     expect(createForUsers).not.toHaveBeenCalled();
   });
 
+  // #2518 : la clé porte l'échéance — une montée de version (nouvelle date) ou une date
+  // manuelle ressaisie doit être annoncée de nouveau quand elle franchit un palier.
+  it("alerte de nouveau quand l'échéance de la technologie a changé", async () => {
+    const { service, createForUsers } = makeService(
+      [row()],
+      [{ type: `technology_eol:tech-1:eol:${dateKey(at(-400 * day))}` }],
+    );
+    const result = await service.notifyPendingEndOfLife();
+
+    expect(result).toMatchObject({ newlyConcerned: 1 });
+    expect(createForUsers).toHaveBeenCalledTimes(1);
+  });
+
+  it("reconnaît les entrées de journal antérieures à #2518 (sans échéance)", async () => {
+    const { service, createForUsers } = makeService(
+      [row()],
+      [{ type: "technology_eol:tech-1:eol" }],
+    );
+    const result = await service.notifyPendingEndOfLife();
+
+    expect(result).toMatchObject({ newlyConcerned: 0 });
+    expect(createForUsers).not.toHaveBeenCalled();
+  });
+
+  it("ne journalise pas une application dont la création des notifications a échoué", async () => {
+    const { service, createForUsers, logCreateMany } = makeService([
+      row(),
+      row({ id: "tech-3", applicationId: "app-2" }),
+    ]);
+    createForUsers.mockImplementation(
+      (
+        _ids: string[],
+        _type: unknown,
+        _msg: string,
+        meta: { applicationId: string },
+      ) =>
+        meta.applicationId === "app-1"
+          ? Promise.reject(new Error("boom"))
+          : Promise.resolve(undefined),
+    );
+    const result = await service.notifyPendingEndOfLife();
+
+    expect(result).toMatchObject({
+      newlyConcerned: 1,
+      applications: 1,
+      notified: 1,
+    });
+    expect(logCreateMany).toHaveBeenCalledTimes(1);
+    expect(logCreateMany.mock.calls[0][0].data[0].applicationId).toBe("app-2");
+  });
+
+  it("planifie ses propres alertes et absorbe une erreur (#2519)", async () => {
+    const { service, findMany } = makeService([]);
+    findMany.mockRejectedValueOnce(new Error("db down"));
+    await expect(
+      service.handleScheduledNotifications(),
+    ).resolves.toBeUndefined();
+  });
+
   // Une échéance connue de longue date finit par arriver à terme : le passage de
   // « proche » à « dépassée » est justement ce qu'il faut annoncer.
   it("alerte de nouveau lorsque la technologie franchit un palier", async () => {
     const { service, createForUsers } = makeService(
       [row()],
-      [{ type: "technology_eol:tech-1:eol-soon" }],
+      [{ type: `technology_eol:tech-1:eol-soon:${dateKey(EOL_DATE)}` }],
     );
     const result = await service.notifyPendingEndOfLife();
 
@@ -158,7 +219,12 @@ describe("EolNotificationService", () => {
     expect(createForUsers).not.toHaveBeenCalled();
     expect(result).toMatchObject({ newlyConcerned: 1, notified: 0 });
     expect(logCreateMany).toHaveBeenCalledWith({
-      data: [{ applicationId: "app-1", type: "technology_eol:tech-1:eol" }],
+      data: [
+        {
+          applicationId: "app-1",
+          type: `technology_eol:tech-1:eol:${dateKey(EOL_DATE)}`,
+        },
+      ],
       skipDuplicates: true,
     });
   });

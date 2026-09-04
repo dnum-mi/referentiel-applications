@@ -366,11 +366,16 @@ export function clearEndoflifeOutageMemo(): void {
 
 let catalogCache: { products: EndoflifeProduct[]; expiresAt: number } | null =
   null;
+// #2520 : promesse de téléchargement en cours, partagée. Sans elle, à l'expiration du
+// cache, K produits distincts résolus en parallèle (ouverture d'un onglet, lot du cron)
+// déclenchaient K téléchargements simultanés du catalogue.
+let catalogInFlight: Promise<EndoflifeProduct[] | null> | null = null;
 
 /// Réservé aux tests : réinitialise le cache du catalogue (et le disjoncteur, pour
 /// qu'un test en panne ne contamine pas le suivant).
 export function clearProductCatalogCache(): void {
   catalogCache = null;
+  catalogInFlight = null;
   clearEndoflifeOutageMemo();
 }
 
@@ -384,7 +389,17 @@ export async function fetchProductCatalog(): Promise<
   if (catalogCache && catalogCache.expiresAt > now) {
     return catalogCache.products;
   }
+  if (!catalogInFlight) {
+    catalogInFlight = downloadProductCatalog(now).finally(() => {
+      catalogInFlight = null;
+    });
+  }
+  return catalogInFlight;
+}
 
+async function downloadProductCatalog(
+  now: number,
+): Promise<EndoflifeProduct[] | null> {
   const payload = await fetchJson(ENDOFLIFE_BASE_URL, {
     notFoundIsFailure: true,
   });
