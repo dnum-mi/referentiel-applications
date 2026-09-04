@@ -13,6 +13,7 @@ import {
   Roles,
 } from "@prisma/client";
 import type { Application } from "@prisma/client";
+import { emailIn } from "src/common/utils/email.utils";
 import { ApplicationSearchDto } from "src/applications/dto/search-application.dto";
 import { ApplicationService } from "src/applications/application.service";
 import { getQualityActionLabel } from "src/common/utils/quality-actions.utils";
@@ -342,7 +343,7 @@ export class QualityCampaignService {
     // séparé de l'email, best-effort — cf. notifyApplicationActors). Un seul email combiné ayant
     // été envoyé à tous les sponsors, ils partagent le même emailLogId.
     const sponsorUsers = await this.prisma.user.findMany({
-      where: { email: { in: campaign.sponsorEmails } },
+      where: emailIn(campaign.sponsorEmails),
       select: { id: true },
     });
     await this.notificationService.createForUsers(

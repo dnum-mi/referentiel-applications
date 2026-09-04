@@ -1,5 +1,6 @@
 import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { NotificationType, Permission, Roles } from "@prisma/client";
+import { emailIn } from "src/common/utils/email.utils";
 import { PrismaService } from "../prisma/prisma.service";
 import { NotificationFiltersDto } from "./dto/notification-filters.dto";
 
@@ -162,7 +163,8 @@ export class NotificationService {
       .filter((email): email is string => Boolean(email));
     if (emails.length === 0) return [];
     const users = await this.prisma.user.findMany({
-      where: { email: { in: emails } },
+      // #2501 : `in` est strict sur la casse.
+      where: emailIn(emails),
       select: { id: true },
     });
     return [...new Set(users.map((user) => user.id))];
@@ -196,13 +198,11 @@ export class NotificationService {
               })
               .then((actors) =>
                 this.prisma.user.findMany({
-                  where: {
-                    email: {
-                      in: actors
-                        .map((actor) => actor.email)
-                        .filter((email): email is string => Boolean(email)),
-                    },
-                  },
+                  where: emailIn(
+                    actors
+                      .map((actor) => actor.email)
+                      .filter((email): email is string => Boolean(email)),
+                  ),
                   select: { id: true },
                 }),
               )

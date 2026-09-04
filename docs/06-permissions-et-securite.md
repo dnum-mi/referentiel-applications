@@ -50,7 +50,7 @@ Le backend revérifie systématiquement le jeton dans `backend/src/middlewares/a
 - Le JWKS est chargé une fois au constructeur via `createRemoteJWKSet(new URL(this.oidc.jwksUrl))` (`auth.middleware.ts:37`).
 - Deux modes d'authentification (`auth.middleware.ts:42-56`) :
   - **Jeton API** (en-tête `API_KEY_HEADER`) → résolution via `TokenService.findUserByToken`.
-  - **Bearer JWT** → vérification `jwtVerify(authorization, this.jwks)`, puis `findOrCreateByEmail(payload.email)` (provisionnement à la volée de l'utilisateur sur la base de son email). L'**email est l'identifiant pivot** : le modèle `User` n'a plus de champ `keycloakId` (l'`id` UUID interne reste la clé de liaison).
+  - **Bearer JWT** → vérification `jwtVerify(authorization, this.jwks)`, puis `findOrCreateByEmail(payload.email)` (provisionnement à la volée de l'utilisateur sur la base de son email). L'e-mail est **normalisé en minuscules** avant recherche et création, et la recherche est insensible à la casse (#2501) : deux graphies du même compte ne créent plus deux utilisateurs. L'**email est l'identifiant pivot** : le modèle `User` n'a plus de champ `keycloakId` (l'`id` UUID interne reste la clé de liaison).
 - Échappatoire de développement : si `DISABLE_JWT_VALIDATION` est défini, le jeton est seulement **décodé** (`decodeJwt`) sans vérification de signature (`auth.middleware.ts:50-52`). À n'utiliser qu'en local.
 - En cas d'absence d'utilisateur, réponse **401**. Sur exception, `UnauthorizedException`.
 - Une fois l'utilisateur résolu, le middleware calcule ses permissions de rôle et les attache à la requête :
@@ -116,7 +116,7 @@ Depuis #2498, cette couche est **bornée** : `UpdateUserDto` n'accepte que les p
 
 Un utilisateur peut être déclaré **acteur** d'une application via son `ActorType` (MOA, MOE, RSSI, etc.). Il hérite alors de la matrice `AppPermissions` associée à ce type d'acteur, **uniquement pour l'application concernée**. La résolution se fait dans `getUserAppPermissions(applicationId, user)` (`check-permissions.service.ts:47-83`) selon **deux canaux** :
 
-- **Canal email** : un `Actor` de l'application avec `email = user.email` et `isGroup = false` (`check-permissions.service.ts:51-55`).
+- **Canal email** : un `Actor` de l'application dont l'`email` est celui de l'utilisateur **sans tenir compte de la casse** (#2501 : e-mails d'acteurs et d'utilisateurs stockés en minuscules, comparaison `mode: "insensitive"`, migration de rattrapage `20260904090000_lowercase_emails`) et `isGroup = false` (`check-permissions.service.ts:51-55`).
 - **Canal organisation de groupe** : si l'utilisateur a une organisation (`user.organization.path`), une requête SQL (`QueryBuilderGroupActor.buildByApplication`) retrouve les acteurs **de groupe** (`isGroup = true`) dont l'organisation est un **ancêtre** de celle de l'utilisateur, via une comparaison de chemins matérialisés : `lower('<path utilisateur>') LIKE lower(o.path) || '%'` (`backend/src/common/service/prisma-query-builder.service.ts`).
 
 Pour chaque type d'acteur retenu, la matrice `AppPermissions` est convertie en liste de permissions par `transformAppPermissionsObjectToArray` (`backend/src/common/utils/types.ts:38-47`), qui ne conserve que les champs booléens à `true` correspondant à une valeur de l'énumération `Permission`.
@@ -222,7 +222,7 @@ La matrice `AppPermissions` (`backend/prisma/schema/permissions.prisma:5-52`) es
 
 Ces permissions ne s'appliquent **qu'à l'application** dont l'utilisateur est acteur, via les deux canaux décrits en [couche 3](#couche-3--permissions-par-type-dacteur-sur-une-application) :
 
-- **Canal email** — l'utilisateur est directement nommé acteur de l'application (`Actor.email = user.email`, `isGroup = false`).
+- **Canal email** — l'utilisateur est directement nommé acteur de l'application (`Actor.email` égal à l'e-mail de l'utilisateur, insensible à la casse depuis #2501, `isGroup = false`).
 - **Canal organisation de groupe** — l'utilisateur appartient (par chemin organisationnel) à une organisation déclarée **acteur de groupe** de l'application (`isGroup = true`).
 
 > Pour la définition des entités `Actor`, `ActorType` et `Organization` (chemins matérialisés, codes d'acteur), se reporter au [Modèle de données](./04-modele-de-donnees.md).

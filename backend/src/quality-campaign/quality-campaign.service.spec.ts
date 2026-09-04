@@ -1,4 +1,5 @@
 import { NotificationType } from "@prisma/client";
+import { emailIn } from "src/common/utils/email.utils";
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 import type { ApplicationService } from "src/applications/application.service";
 import type { EmailService } from "src/email/email.service";
@@ -511,9 +512,7 @@ describe("QualityCampaignService", () => {
       }),
     );
     expect(userFindMany).toHaveBeenCalledWith({
-      where: {
-        email: { in: ["sponsor-a@example.com", "sponsor-b@example.com"] },
-      },
+      where: emailIn(["sponsor-a@example.com", "sponsor-b@example.com"]),
       select: { id: true },
     });
     expect(createForUsers).toHaveBeenCalledWith(
