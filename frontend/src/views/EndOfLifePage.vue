@@ -8,6 +8,7 @@ import RefAppTable from "@/components/RefAppTable.vue";
 import { routeNames } from "@/router/route-names";
 import type { TableColumn, TableSortEvent } from "@/types/table";
 import type { EndOfLifeApplicationDto, EndOfLifeTechnologyDto } from "@/client/types.gen";
+import { EOL_STATUS_BADGE_TYPE, EOL_STATUS_LABELS } from "@/utils/eol-status";
 
 type EolStatus = EndOfLifeTechnologyDto["status"];
 
@@ -30,14 +31,15 @@ const organizationFilter = ref("");
 const searchFilter = ref("");
 const pageSize = ref(15);
 const currentPage = ref(0);
-const sortField = ref<string>("label");
+// #2522 : l'état de tri porte le CHAMP DE COLONNE (« Application »), pour que l'en-tête reflète
+// le tri initial et que le premier clic l'inverse ; la traduction vers la clé backend se fait
+// à l'envoi.
+const sortField = ref<string>("Application");
+const SORT_KEYS: Record<string, "label" | "shortName"> = { Application: "label" };
 const sortOrder = ref<1 | -1>(1);
 
-const STATUS_LABELS: Record<EolStatus, string> = {
-  eol: "Fin de vie",
-  "eol-soon": "Fin de vie proche",
-  "eoas-passed": "Fin de support actif",
-};
+// Libellés partagés avec la fiche (#2528).
+const STATUS_LABELS = EOL_STATUS_LABELS;
 
 /** Le libellé du filtre dit ce que le statut recouvre, l'intitulé seul étant ambigu. */
 const statusOptions = [
@@ -68,7 +70,7 @@ function fetchApplications() {
   const query: EndOfLifeQuery = {
     page: currentPage.value,
     pageSize: pageSize.value,
-    sortBy: sortField.value,
+    sortBy: SORT_KEYS[sortField.value] ?? "label",
     order: sortOrder.value === 1 ? "asc" : "desc",
   };
   // Les filtres vides sont OMIS, jamais envoyés en chaîne vide : côté serveur
@@ -94,7 +96,7 @@ const debouncedFilterChange = useDebounceFn(onFilterChange, 300);
 watch([statusFilter, organizationFilter, searchFilter], debouncedFilterChange);
 
 function onSort(event: TableSortEvent) {
-  sortField.value = event.sortField ?? "label";
+  sortField.value = event.sortField ?? "Application";
   sortOrder.value = event.sortOrder === -1 ? -1 : 1;
   currentPage.value = 0;
   fetchApplications();
@@ -227,6 +229,15 @@ onMounted(fetchApplications);
             {{ row.Application.label }}
           </router-link>
           <span v-if="row.Application.shortName" class="fr-text--xs fr-ml-1w"> ({{ row.Application.shortName }}) </span>
+          <!-- #2528 : `worstStatus` était reçu mais jamais affiché. -->
+          <DsfrBadge
+            :type="EOL_STATUS_BADGE_TYPE[row.Application.worstStatus as EolStatus]"
+            :label="STATUS_LABELS[row.Application.worstStatus as EolStatus]"
+            small
+            class="fr-ml-1w"
+            :title="`Statut le plus grave de l'application : ${STATUS_LABELS[row.Application.worstStatus as EolStatus]}`"
+            :data-testid="`end-of-life-worst-${row.Application.id}`"
+          />
         </template>
 
         <template #body-Organisations="{ data: row }">
@@ -238,7 +249,7 @@ onMounted(fetchApplications);
           <ul class="fr-m-0 fr-p-0 eol-technologies">
             <li v-for="technology in row.Technologies" :key="technology.id" class="fr-mb-1v">
               <DsfrBadge
-                :type="technology.status === 'eol' ? 'error' : technology.status === 'eol-soon' ? 'warning' : 'info'"
+                :type="EOL_STATUS_BADGE_TYPE[technology.status as EolStatus]"
                 :label="STATUS_LABELS[technology.status as EolStatus]"
                 small
                 :data-testid="`end-of-life-badge-${technology.id}`"

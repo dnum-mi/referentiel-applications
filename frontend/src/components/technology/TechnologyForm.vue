@@ -125,7 +125,8 @@ function handleSubmit() {
       label-visible
       required
       placeholder="ex : PostgreSQL, Node.js"
-      hint="La fin de vie est vérifiée automatiquement via endoflife.date"
+      :hint="productUnknown ? undefined : 'La fin de vie est vérifiée automatiquement via endoflife.date'"
+      :description-id="productUnknown ? 'technology-product-unknown-hint' : undefined"
       list="technology-product-options"
       data-testid="technology-product-input"
       :class="productUnknown ? 'fr-mb-1w' : 'fr-mb-3w'"
@@ -133,7 +134,17 @@ function handleSubmit() {
     <datalist id="technology-product-options">
       <option v-for="option in productOptions" :key="option" :value="option"></option>
     </datalist>
-    <p v-if="productUnknown" class="fr-hint-text fr-mb-3w" data-testid="technology-product-unknown-hint">
+    <!--
+      #2521 : les messages sont reliés à leur champ. DsfrInput pose lui-même `aria-describedby`
+      à partir de `description-id` (un `aria-describedby` passé en attribut serait écrasé) : quand
+      le message remplace l'aide standard, c'est son id qui est transmis.
+    -->
+    <p
+      v-if="productUnknown"
+      id="technology-product-unknown-hint"
+      class="fr-hint-text fr-mb-3w"
+      data-testid="technology-product-unknown-hint"
+    >
       Produit non suivi par endoflife.date : la fin de vie ne pourra pas être vérifiée automatiquement.
     </p>
 
@@ -144,6 +155,7 @@ function handleSubmit() {
       placeholder="ex : 20.11"
       data-testid="technology-version-input"
       class="fr-mb-3w"
+      :description-id="!showManualEol && automaticEolDate ? 'technology-automatic-eol-hint' : undefined"
     />
 
     <DsfrInput
@@ -156,7 +168,12 @@ function handleSubmit() {
       data-testid="technology-manual-eol-input"
       class="fr-mb-3w"
     />
-    <p v-else-if="automaticEolDate" class="fr-hint-text fr-mb-3w" data-testid="technology-automatic-eol-hint">
+    <p
+      v-else-if="automaticEolDate"
+      id="technology-automatic-eol-hint"
+      class="fr-hint-text fr-mb-3w"
+      data-testid="technology-automatic-eol-hint"
+    >
       Fin de vie calculée automatiquement : {{ automaticEolDate }}
     </p>
 
