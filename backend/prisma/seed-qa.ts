@@ -276,9 +276,11 @@ async function seedQa() {
  * du temps — des dates en dur finiraient toutes « dépassées » et le cas « proche » ne serait plus
  * jamais couvert.
  *
- * `eolCheckedAt` est daté de maintenant à dessein : le rafraîchissement paresseux ne réécrit une
- * ligne qu'au-delà du TTL de 7 jours, ce qui protège ces valeurs d'un appel réel à endoflife.date
- * lors de la consultation de la fiche.
+ * `eolCheckedAt` est daté dans le FUTUR à dessein (#2528) : le rafraîchissement paresseux et le
+ * cron ne réécrivent une ligne qu'au-delà du TTL de 7 jours après sa vérification — dater de
+ * « maintenant » ne protégeait la fixture qu'une semaine, après quoi une base locale ou de
+ * qualification voyait ses valeurs remplacées par un appel réel à endoflife.date et TRV-08
+ * devenait faux. Une date à dix ans la met hors d'atteinte sans changer son affichage.
  */
 async function ensureEndOfLifeStack(applicationId: string) {
   const day = 24 * 60 * 60 * 1000;
@@ -343,7 +345,7 @@ async function ensureEndOfLifeStack(applicationId: string) {
       // idempotent et doit défaire une saisie manuelle faite à la main sur la fixture.
       eolSource: TechnologyEolSource.endoflife,
       ...entry,
-      eolCheckedAt: new Date(now),
+      eolCheckedAt: at(3650),
     };
     await prisma.technologyStack.upsert({
       where: {

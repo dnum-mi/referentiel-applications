@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { DsfrAccordionsGroup } from "@gouvminint/vue-dsfr";
 import type { APP_PERMISSIONS, ApplicationWithPerms } from "@/models/Application";
 import { routeNames } from "@/router/route-names";
 import { useMediaQuery } from "@vueuse/core";
@@ -225,22 +226,23 @@ watch(
     </template>
   </DsfrTabs>
 
-  <div v-else class="fr-accordions-group">
+  <div v-else>
     <h2 class="fr-h4 fr-mb-2w">Informations sur l'application</h2>
     <!--
-      Note: lazy mounting inside the DSFR accordion depends on the exact API of `DsfrAccordion`.
-      Here we keep behavior similar to your previous code (mounting the component inside the accordion).
-      If `DsfrAccordion` exposes an expanded state or events, we can mount the inner component only
-      when its accordion is opened to reduce initial render cost on mobile.
+      #2528 : sur mobile, l'accordéon ouvert suit `activeTab`, donc l'onglet demandé par l'URL
+      (`/applications/:id/tab-technologies` depuis la vue transverse) : auparavant le lien
+      arrivait sur une fiche entièrement repliée.
     -->
-    <DsfrAccordion v-for="tab in tabs" :key="tab.tabId" :title="tab.title" :id="`accordion-${tab.panelId}`">
-      <component
-        :is="tab.component"
-        :application="application"
-        :data-testid="`application-tab-component-${tab.tabId}`"
-        :is-mobile="isMobile"
-        @update:application="updateApplication"
-      />
-    </DsfrAccordion>
+    <DsfrAccordionsGroup v-model="activeTab" class="fr-accordions-group">
+      <DsfrAccordion v-for="tab in tabs" :key="tab.tabId" :title="tab.title" :id="`accordion-${tab.panelId}`">
+        <component
+          :is="tab.component"
+          :application="application"
+          :data-testid="`application-tab-component-${tab.tabId}`"
+          :is-mobile="isMobile"
+          @update:application="updateApplication"
+        />
+      </DsfrAccordion>
+    </DsfrAccordionsGroup>
   </div>
 </template>

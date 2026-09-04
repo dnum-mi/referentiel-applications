@@ -248,3 +248,34 @@ describe("EndOfLifePage", () => {
     expect(screen.getByTestId("end-of-life-badge-tech-2")).toHaveTextContent("Fin de support actif");
   });
 });
+
+describe("EndOfLifePage — pastille de synthèse et tri (#2528, #2522)", () => {
+  beforeEach(() => {
+    storeMock.applications.value = [];
+    storeMock.total.value = 0;
+    storeMock.isLoading.value = false;
+    storeMock.fetchApplications.mockReset().mockResolvedValue(undefined);
+  });
+  afterEach(cleanup);
+
+  it("affiche le statut le plus grave de l'application à côté de son libellé", async () => {
+    storeMock.applications.value = [applicationFixture({ worstStatus: "eol-soon" })];
+    storeMock.total.value = 1;
+    render_();
+    expect(await screen.findByTestId("end-of-life-worst-app-1")).toHaveTextContent("Fin de vie proche");
+  });
+
+  it("le premier clic sur « Application » inverse le tri initial par libellé", async () => {
+    storeMock.applications.value = [applicationFixture()];
+    storeMock.total.value = 1;
+    render_();
+    await screen.findByTestId("end-of-life-table");
+    // L'en-tête reflète le tri initial (par libellé, croissant) avant tout clic.
+    const sortButton = screen.getByRole("button", { name: "Application" });
+    expect(sortButton).toHaveAttribute("title", "Application - Tri ascendant");
+    await fireEvent.click(sortButton);
+    await waitFor(() =>
+      expect(storeMock.fetchApplications).toHaveBeenLastCalledWith(expect.objectContaining({ sortBy: "label", order: "desc" })),
+    );
+  });
+});

@@ -423,3 +423,71 @@ describe("technologyTab — chargement du catalogue endoflife.date (#2520)", () 
     expect(listEolProductsMock).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("technologyTab — chargement en erreur, dates et liens (#2521, #2522, #2528)", () => {
+  it("distingue une liste en erreur d'une liste vide et propose de réessayer", async () => {
+    findAllMock.mockReset().mockResolvedValueOnce({ response: { ok: false, status: 500 }, data: undefined });
+    listEolProductsMock.mockResolvedValue({ response: { ok: true }, data: [] });
+    render(TechnologyTab, {
+      props: { application: applicationFixture },
+      global: { plugins: [[PrimeVue, { theme: { preset: Aura } }]] },
+    });
+    await screen.findByTestId("technology-load-error");
+    expect(screen.queryByTestId("technology-empty-state")).toBeNull();
+    expect(screen.getByTestId("technology-status")).toHaveTextContent("Erreur lors du chargement des technologies.");
+
+    findAllMock.mockResolvedValueOnce({ response: { ok: true }, data: [makeTechnology({ id: "t-1" })] });
+    await fireEvent.click(screen.getByTestId("technology-reload-btn"));
+    await screen.findByTestId("technology-eol-unchecked-t-1");
+    expect(screen.queryByTestId("technology-load-error")).toBeNull();
+  });
+
+  it("affiche la fin de support actif et le lien endoflife.date d'une ligne résolue, pas d'une saisie manuelle", async () => {
+    renderWithTechnologies([
+      makeResolvedTechnology({
+        id: "t-1",
+        eolDate: new Date(Date.now() + 30 * day),
+        eoasDate: new Date(Date.now() - 10 * day),
+      }),
+      makeManualTechnology({ id: "t-2", eolDate: new Date(Date.now() - day) }),
+    ]);
+    await screen.findByTestId("technology-eol-soon-badge-t-1");
+    expect(screen.getByTestId("technology-eoas-date-t-1")).toHaveTextContent("support actif clos le");
+    expect(screen.getByTestId("technology-eol-link-t-1")).toHaveAttribute("href", "https://endoflife.date/mysql");
+    expect(screen.queryByTestId("technology-eol-link-t-2")).toBeNull();
+  });
+
+  it("résume les statuts au-dessus du tableau", async () => {
+    renderWithTechnologies([
+      makeResolvedTechnology({ id: "t-1", eolDate: new Date(Date.now() - day) }),
+      makeResolvedTechnology({ id: "t-2", eolDate: new Date(Date.now() - 2 * day) }),
+      makeResolvedTechnology({ id: "t-3", eolDate: new Date(Date.now() + 30 * day) }),
+    ]);
+    const summary = await screen.findByTestId("technology-summary");
+    expect(summary).toHaveTextContent("2 en fin de vie");
+    expect(summary).toHaveTextContent("1 en fin de vie proche");
+  });
+
+  it("nomme le tableau par son nombre de lignes", async () => {
+    renderWithTechnologies([makeTechnology({ id: "t-1" }), makeTechnology({ id: "t-2" })]);
+    await screen.findByTestId("technology-eol-unchecked-t-2");
+    expect(screen.getByLabelText("Tableau de 2 éléments")).toBeInTheDocument();
+  });
+
+  it("trie la colonne « Fin de vie » chronologiquement et non par jour du mois (#2522)", async () => {
+    renderWithTechnologies([
+      makeResolvedTechnology({ id: "late", product: "Late", eolDate: new Date("2027-01-15T00:00:00.000Z") }),
+      makeResolvedTechnology({ id: "early", product: "Early", eolDate: new Date("2026-12-01T00:00:00.000Z") }),
+    ]);
+    await screen.findByTestId("technology-eol-link-late");
+    await fireEvent.click(screen.getByRole("button", { name: /Fin de vie/ }));
+    await waitFor(() => {
+      const products = screen
+        .getAllByRole("row")
+        .slice(1)
+        .map((row) => row.textContent ?? "");
+      expect(products[0]).toContain("Early");
+      expect(products[1]).toContain("Late");
+    });
+  });
+});

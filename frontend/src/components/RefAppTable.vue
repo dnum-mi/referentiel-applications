@@ -65,6 +65,12 @@ watch([() => props.sortField, () => props.sortOrder], ([newField, newOrder]) => 
 
 function applySort(sortField: string, sortOrder: number) {
   const scrollPos = window?.scrollY || 0;
+  // #2522 : l'état de tri est tenu ici aussi. Sans cela, un tableau NON paresseux (tri client,
+  // sans gestionnaire `@sort` chez le parent) ne triait jamais depuis le bouton d'en-tête —
+  // PrimeVue ignore les clics dont la cible est cliquable, et seul le parent pouvait mettre
+  // à jour `sortField`/`sortOrder`. En mode paresseux, le parent renvoie les mêmes valeurs.
+  internalSortField.value = sortField;
+  internalSortOrder.value = sortOrder;
 
   if (props.lazy) {
     if (skeletonTimeout.value) clearTimeout(skeletonTimeout.value);

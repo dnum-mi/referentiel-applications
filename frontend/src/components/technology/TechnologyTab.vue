@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import api from "@/api/index";
 import { backendErrorMessage } from "@/utils/api-error";
+import { EOL_STATUS_BADGE_TYPE, EOL_STATUS_LABELS, computeEolStatus, endoflifeProductUrl, type EolStatus } from "@/utils/eol-status";
 import { type EolProductDto, type TechnologyDto, Permission } from "@/client/types.gen";
 import useModal from "@/composables/use-modal";
 import type { APP_PERMISSIONS, Application } from "@/models/Application";
@@ -48,21 +49,6 @@ function formatEol(value?: string | Date | null): string {
   return new Date(value).toLocaleDateString("fr-FR", { timeZone: "UTC" });
 }
 
-// Fin de vie « proche » : dans moins de 6 mois.
-const EOL_SOON_MS = 182 * 24 * 60 * 60 * 1000;
-
-type EolStatus = "eol" | "eol-soon" | "eoas-passed" | null;
-
-function computeEolStatus(techno: TechnologyDto): EolStatus {
-  const now = Date.now();
-  const eol = techno.eolDate ? new Date(techno.eolDate).getTime() : null;
-  const eoas = techno.eoasDate ? new Date(techno.eoasDate).getTime() : null;
-  if (eol !== null && eol < now) return "eol";
-  if (eol !== null && eol < now + EOL_SOON_MS) return "eol-soon";
-  if (eoas !== null && eoas < now) return "eoas-passed";
-  return null;
-}
-
 const tableRows = computed(() =>
   technologies.value.map((techno) => {
     // Date saisie à la main (#2454) : elle porte eolProduct null et eolCheckedAt renseigné,
@@ -76,7 +62,12 @@ const tableRows = computed(() =>
       Produit: techno.product,
       Version: techno.version || "—",
       Documentation: techno.docUrl || "",
-      FinDeVie: formatEol(techno.eolDate),
+      // #2522 : la valeur de colonne reste ISO pour que le tri soit chronologique ; le libellé
+      // formaté est porté à part.
+      FinDeVie: techno.eolDate ? new Date(techno.eolDate).toISOString() : "",
+      FinDeVieLabel: formatEol(techno.eolDate),
+      FinSupportLabel: formatEol(techno.eoasDate),
+      eolLink: endoflifeProductUrl(techno.eolProduct),
       eolStatus: computeEolStatus(techno),
       manualEol,
       // eolCheckedAt renseigné + eolProduct null = produit non suivi par endoflife.date
@@ -105,10 +96,35 @@ const tableRows = computed(() =>
   }),
 );
 
+// #2521 : une liste en erreur ne doit pas passer pour « aucune technologie renseignée ».
+const loadError = ref(false);
 async function fetchTechnologies(applicationId: string) {
-  const response = await api.technologyControllerFindAll({ path: { applicationId } });
-  technologies.value = response.data ?? [];
+  try {
+    const response = await api.technologyControllerFindAll({ path: { applicationId } });
+    if (!response.response.ok) throw new Error(response.response.statusText);
+    technologies.value = response.data ?? [];
+    loadError.value = false;
+  } catch {
+    loadError.value = true;
+    statusMessage.value = "Erreur lors du chargement des technologies.";
+  }
 }
+
+async function reload() {
+  loading.value = true;
+  try {
+    await fetchTechnologies(props.application.id);
+  } finally {
+    loading.value = false;
+  }
+}
+
+// Synthèse (#2528) : combien de lignes par statut, pour une lecture d'un coup d'œil.
+const summary = computed(() => {
+  const counts = { eol: 0, "eol-soon": 0, "eoas-passed": 0 };
+  for (const row of tableRows.value) if (row.eolStatus) counts[row.eolStatus] += 1;
+  return counts;
+});
 
 // Catalogue endoflife.date pour l'autocomplétion du produit (best-effort : en cas d'échec, la
 // saisie reste libre). Chargé à l'OUVERTURE du formulaire et une seule fois par onglet (#2520) :
@@ -170,18 +186,23 @@ async function handleSave(technology: {
           body,
         });
     if (!response.response.ok) {
-      toaster.addErrorMessage(backendErrorMessage(response.error) ?? "Erreur lors de la sauvegarde de la technologie.");
+      const message = backendErrorMessage(response.error) ?? "Erreur lors de la sauvegarde de la technologie.";
+      statusMessage.value = message;
+      toaster.addErrorMessage(message);
       return;
     }
     await fetchTechnologies(props.application.id);
     statusMessage.value = "Technologie sauvegardée avec succès !";
     toaster.addSuccessMessage("Technologie sauvegardée avec succès !");
-    await nextTick();
-    lastTrigger.value?.focus();
   } catch {
+    statusMessage.value = "Erreur lors de la sauvegarde de la technologie.";
     toaster.addErrorMessage("Erreur lors de la sauvegarde de la technologie.");
   } finally {
     loading.value = false;
+    // #2521 : le focus revient sur le bouton d'origine sur TOUS les chemins, pas seulement
+    // après un succès — un échec laissait le focus perdu à la fermeture de la modale.
+    await nextTick();
+    lastTrigger.value?.focus();
   }
 }
 
@@ -197,16 +218,22 @@ async function confirmDelete() {
       path: { applicationId: props.application.id, id: technologyToDelete.value.id },
     });
     if (!response.response.ok) {
-      toaster.addErrorMessage(backendErrorMessage(response.error) ?? "Erreur lors de la suppression de la technologie.");
+      const message = backendErrorMessage(response.error) ?? "Erreur lors de la suppression de la technologie.";
+      statusMessage.value = message;
+      toaster.addErrorMessage(message);
       return;
     }
     await fetchTechnologies(props.application.id);
+    statusMessage.value = "Technologie supprimée avec succès !";
     toaster.addSuccessMessage("Technologie supprimée avec succès !");
   } catch {
+    statusMessage.value = "Erreur lors de la suppression de la technologie.";
     toaster.addErrorMessage("Erreur lors de la suppression de la technologie.");
   } finally {
     showDeleteConfirmation.value = false;
     technologyToDelete.value = null;
+    await nextTick();
+    lastTrigger.value?.focus();
   }
 }
 
@@ -245,145 +272,175 @@ function cancelDelete() {
 
   <AppLoader v-if="loading" data-testid="technology-loader"></AppLoader>
 
+  <div v-else-if="loadError" class="fr-alert fr-alert--error fr-mb-3w" role="alert" data-testid="technology-load-error">
+    <p>Les technologies n'ont pas pu être chargées.</p>
+    <DsfrButton type="button" secondary size="sm" class="fr-mt-1w" data-testid="technology-reload-btn" @click="reload">
+      Réessayer
+    </DsfrButton>
+  </div>
+
   <div v-else-if="technologies.length === 0" class="text-center" data-testid="technology-empty-state">
     <p>Aucune technologie renseignée.</p>
   </div>
 
-  <RefAppTable v-else :items="tableRows" :columns="columns" data-test-id="technology-table" empty-message="Aucune technologie renseignée.">
-    <template #body-Documentation="{ data }">
-      <a
-        v-if="data.Documentation"
-        :href="data.Documentation"
-        target="_blank"
-        rel="noopener noreferrer"
-        :title="data.Documentation"
-        :data-testid="`technology-doc-link-${data.id}`"
-      >
-        Documentation
-      </a>
-      <template v-else>—</template>
-    </template>
+  <template v-else>
+    <!-- Synthèse (#2528) : la même information que la pastille de la vue transverse. -->
+    <p v-if="summary.eol || summary['eol-soon'] || summary['eoas-passed']" class="fr-mb-2w" data-testid="technology-summary">
+      <DsfrBadge v-if="summary.eol" type="error" small :label="`${summary.eol} en fin de vie`" class="fr-mr-1w" />
+      <DsfrBadge v-if="summary['eol-soon']" type="warning" small :label="`${summary['eol-soon']} en fin de vie proche`" class="fr-mr-1w" />
+      <DsfrBadge v-if="summary['eoas-passed']" type="info" small :label="`${summary['eoas-passed']} hors support actif`" />
+    </p>
 
-    <template #body-Version="{ data }">
-      <span>{{ data.Version }}</span>
-      <span v-if="data.latestVersion" class="fr-hint-text" :data-testid="`technology-latest-version-${data.id}`">
-        dernière du cycle : {{ data.latestVersion }}
-      </span>
-    </template>
+    <RefAppTable
+      :items="tableRows"
+      :columns="columns"
+      :total-records="tableRows.length"
+      data-test-id="technology-table"
+      empty-message="Aucune technologie renseignée."
+    >
+      <template #body-Documentation="{ data }">
+        <a
+          v-if="data.Documentation"
+          :href="data.Documentation"
+          target="_blank"
+          rel="noopener noreferrer"
+          :title="data.Documentation"
+          :data-testid="`technology-doc-link-${data.id}`"
+        >
+          Documentation
+        </a>
+        <template v-else>—</template>
+      </template>
 
-    <template #body-FinDeVie="{ data }">
-      <template v-if="data.eolStatus === 'eol'">
-        <DsfrBadge
-          type="error"
-          label="Fin de vie"
-          small
-          :title="data.FinDeVie ? `Fin de vie depuis le ${data.FinDeVie}` : undefined"
-          :data-testid="`technology-eol-badge-${data.id}`"
-        ></DsfrBadge>
+      <template #body-Version="{ data }">
+        <span>{{ data.Version }}</span>
+        <span v-if="data.latestVersion" class="fr-hint-text" :data-testid="`technology-latest-version-${data.id}`">
+          dernière du cycle : {{ data.latestVersion }}
+        </span>
       </template>
-      <template v-else-if="data.eolStatus === 'eol-soon'">
-        <DsfrBadge
-          type="warning"
-          label="Fin de vie proche"
-          small
-          :title="`Fin de vie prévue le ${data.FinDeVie}`"
-          :data-testid="`technology-eol-soon-badge-${data.id}`"
-        ></DsfrBadge>
-        <span class="fr-hint-text">{{ data.FinDeVie }}</span>
-      </template>
-      <template v-else-if="data.eolStatus === 'eoas-passed'">
-        <DsfrBadge
-          type="info"
-          label="Support actif terminé"
-          small
-          :title="data.FinDeVie ? `Fin de vie prévue le ${data.FinDeVie}` : undefined"
-          :data-testid="`technology-eoas-badge-${data.id}`"
-        ></DsfrBadge>
-        <span v-if="data.FinDeVie" class="fr-hint-text">{{ data.FinDeVie }}</span>
-      </template>
-      <span v-else-if="data.FinDeVie" :title="`Fin de support prévue le ${data.FinDeVie}`">{{ data.FinDeVie }}</span>
-      <!--
+
+      <template #body-FinDeVie="{ data }">
+        <template v-if="data.eolStatus">
+          <DsfrBadge
+            :type="EOL_STATUS_BADGE_TYPE[data.eolStatus as EolStatus]"
+            :label="EOL_STATUS_LABELS[data.eolStatus as EolStatus]"
+            small
+            :title="
+              data.FinDeVieLabel
+                ? data.eolStatus === 'eol'
+                  ? `Fin de vie depuis le ${data.FinDeVieLabel}`
+                  : `Fin de vie prévue le ${data.FinDeVieLabel}`
+                : undefined
+            "
+            :data-testid="`technology-${data.eolStatus === 'eol' ? 'eol' : data.eolStatus === 'eol-soon' ? 'eol-soon' : 'eoas'}-badge-${data.id}`"
+          ></DsfrBadge>
+          <span v-if="data.eolStatus !== 'eol' && data.FinDeVieLabel" class="fr-hint-text">{{ data.FinDeVieLabel }}</span>
+          <!-- #2528 : la fin de support actif était affichée dans la vue transverse mais jamais sur la fiche. -->
+          <span v-if="data.FinSupportLabel" class="fr-hint-text" :data-testid="`technology-eoas-date-${data.id}`">
+            support actif clos le {{ data.FinSupportLabel }}
+          </span>
+        </template>
+        <span v-else-if="data.FinDeVieLabel" :title="`Fin de support prévue le ${data.FinDeVieLabel}`">{{ data.FinDeVieLabel }}</span>
+        <!--
         Le complément d'explication est porté par un texte sr-only et non par le seul
         attribut title : un span n'est pas focusable, l'infobulle est donc inaccessible
         au clavier et ignorée par les lecteurs d'écran (RGAA). Le title reste pour la souris.
       -->
-      <span
-        v-else-if="data.unknownProduct"
-        class="fr-hint-text"
-        title="Produit non suivi par endoflife.date : la fin de vie ne peut pas être vérifiée automatiquement"
-        :data-testid="`technology-eol-unknown-${data.id}`"
-      >
-        Produit non suivi<span class="fr-sr-only"> par endoflife.date : la fin de vie ne peut pas être vérifiée automatiquement</span>
-      </span>
-      <span
-        v-else-if="data.unchecked"
-        class="fr-hint-text"
-        title="La fin de vie n’a pas encore pu être vérifiée auprès d’endoflife.date (service injoignable ou vérification désactivée). Elle sera retentée automatiquement dès que possible."
-        :data-testid="`technology-eol-unchecked-${data.id}`"
-      >
-        Non vérifiée<span class="fr-sr-only">
-          : la fin de vie n’a pas encore pu être vérifiée auprès d’endoflife.date (service injoignable ou vérification désactivée), elle
-          sera retentée automatiquement dès que possible</span
+        <span
+          v-else-if="data.unknownProduct"
+          class="fr-hint-text"
+          title="Produit non suivi par endoflife.date : la fin de vie ne peut pas être vérifiée automatiquement"
+          :data-testid="`technology-eol-unknown-${data.id}`"
         >
-      </span>
-      <span
-        v-else-if="data.unrecognizedVersion"
-        class="fr-hint-text"
-        title="La version saisie ne correspond à aucun cycle de release connu d’endoflife.date pour ce produit : précisez-la (par exemple « 8.0 » plutôt que « 8 »)."
-        :data-testid="`technology-eol-unrecognized-${data.id}`"
-      >
-        Version non reconnue<span class="fr-sr-only">
-          : la version saisie ne correspond à aucun cycle de release connu d’endoflife.date pour ce produit, précisez-la (par exemple « 8.0
-          » plutôt que « 8 »)</span
+          Produit non suivi<span class="fr-sr-only"> par endoflife.date : la fin de vie ne peut pas être vérifiée automatiquement</span>
+        </span>
+        <span
+          v-else-if="data.unchecked"
+          class="fr-hint-text"
+          title="La fin de vie n’a pas encore pu être vérifiée auprès d’endoflife.date (service injoignable ou vérification désactivée). Elle sera retentée automatiquement dès que possible."
+          :data-testid="`technology-eol-unchecked-${data.id}`"
         >
-      </span>
-      <span v-else :data-testid="`technology-eol-none-${data.id}`">—</span>
-      <!--
+          Non vérifiée<span class="fr-sr-only">
+            : la fin de vie n’a pas encore pu être vérifiée auprès d’endoflife.date (service injoignable ou vérification désactivée), elle
+            sera retentée automatiquement dès que possible</span
+          >
+        </span>
+        <span
+          v-else-if="data.unrecognizedVersion"
+          class="fr-hint-text"
+          title="La version saisie ne correspond à aucun cycle de release connu d’endoflife.date pour ce produit : précisez-la (par exemple « 8.0 » plutôt que « 8 »)."
+          :data-testid="`technology-eol-unrecognized-${data.id}`"
+        >
+          Version non reconnue<span class="fr-sr-only">
+            : la version saisie ne correspond à aucun cycle de release connu d’endoflife.date pour ce produit, précisez-la (par exemple «
+            8.0 » plutôt que « 8 »)</span
+          >
+        </span>
+        <span v-else :data-testid="`technology-eol-none-${data.id}`">—</span>
+        <!-- #2528 : le slug est persisté, autant mener à la page qui fait foi. -->
+        <a
+          v-if="data.eolLink && !data.manualEol"
+          :href="data.eolLink"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="fr-link fr-link--sm fr-ml-1w"
+          :title="`Voir ${data.Produit} sur endoflife.date (nouvelle fenêtre)`"
+          :data-testid="`technology-eol-link-${data.id}`"
+        >
+          endoflife.date<span class="fr-sr-only"> : {{ data.Produit }}, nouvelle fenêtre</span>
+        </a>
+        <!--
         Date saisie à la main (#2454) : la ligne garde son badge et sa date, seule l'origine
         est signalée — même complément sr-only que ci-dessus, le title n'étant pas restitué.
       -->
-      <span
-        v-if="data.manualEol"
-        class="fr-hint-text"
-        title="Date renseignée à la main, non vérifiée auprès d’endoflife.date"
-        :data-testid="`technology-eol-manual-${data.id}`"
-      >
-        saisie manuelle<span class="fr-sr-only"> : date renseignée à la main, non vérifiée auprès d’endoflife.date</span>
-      </span>
-    </template>
+        <span
+          v-if="data.manualEol"
+          class="fr-hint-text"
+          title="Date renseignée à la main, non vérifiée auprès d’endoflife.date"
+          :data-testid="`technology-eol-manual-${data.id}`"
+        >
+          saisie manuelle<span class="fr-sr-only"> : date renseignée à la main, non vérifiée auprès d’endoflife.date</span>
+        </span>
+      </template>
 
-    <template #body-Actions="{ data }">
-      <DsfrButton
-        title="Modifier la technologie"
-        aria-label="Modifier la technologie"
-        tertiary
-        size="sm"
-        icon="fr-icon-edit-line"
-        :disabled="!canEdit"
-        data-testid="technology-edit-btn"
-        @click="
-          (e) => {
-            rememberTrigger(e);
-            data.Actions.edit();
-          }
-        "
-      >
-        Modifier
-      </DsfrButton>
-      <DsfrButton
-        title="Supprimer la technologie"
-        aria-label="Supprimer la technologie"
-        tertiary
-        size="sm"
-        icon="fr-icon-delete-line"
-        :disabled="!canEdit"
-        data-testid="technology-delete-btn"
-        @click="data.Actions.remove()"
-      >
-        Supprimer
-      </DsfrButton>
-    </template>
-  </RefAppTable>
+      <template #body-Actions="{ data }">
+        <DsfrButton
+          title="Modifier la technologie"
+          aria-label="Modifier la technologie"
+          tertiary
+          size="sm"
+          icon="fr-icon-edit-line"
+          :disabled="!canEdit"
+          data-testid="technology-edit-btn"
+          @click="
+            (e) => {
+              rememberTrigger(e);
+              data.Actions.edit();
+            }
+          "
+        >
+          Modifier
+        </DsfrButton>
+        <DsfrButton
+          title="Supprimer la technologie"
+          aria-label="Supprimer la technologie"
+          tertiary
+          size="sm"
+          icon="fr-icon-delete-line"
+          :disabled="!canEdit"
+          data-testid="technology-delete-btn"
+          @click="
+            (e) => {
+              rememberTrigger(e);
+              data.Actions.remove();
+            }
+          "
+        >
+          Supprimer
+        </DsfrButton>
+      </template>
+    </RefAppTable>
+  </template>
 
   <DsfrModal
     :opened="technologyModal.isModalOpen.value || technologyModal.isCreateModalOpen.value"

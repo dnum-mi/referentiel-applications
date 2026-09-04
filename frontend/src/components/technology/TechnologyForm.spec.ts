@@ -144,3 +144,16 @@ describe("technologyForm — fin de vie saisie à la main (#2454)", () => {
     expect((await submit(emitted)).manualEolDate).toBeUndefined();
   });
 });
+
+// #2521 : les messages explicatifs sont reliés à leur champ.
+describe("technologyForm — accessibilité des messages", () => {
+  it("relie l'avertissement « produit non suivi » au champ Produit", async () => {
+    render(TechnologyForm, {
+      props: { eolProducts: [{ name: "postgresql", label: "PostgreSQL", category: null, aliases: [] }] },
+    });
+    await fireEvent.update(screen.getByTestId("technology-product-input"), "Outil maison");
+    const hint = await screen.findByTestId("technology-product-unknown-hint");
+    expect(hint).toHaveAttribute("id", "technology-product-unknown-hint");
+    expect(screen.getByTestId("technology-product-input")).toHaveAttribute("aria-describedby", "technology-product-unknown-hint");
+  });
+});
