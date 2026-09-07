@@ -4,9 +4,9 @@ import {
   Permission,
   Prisma,
   QualityCampaignStatus,
-  Status,
 } from "@prisma/client";
 import { PrismaQueryBuilder } from "src/applications/prisma-query-builder.service";
+import { isRetired } from "src/applications/constants/status-groups";
 import { CheckPermissions } from "src/common/service/check-permissions.service";
 import {
   isDimaFilled,
@@ -620,9 +620,7 @@ export class ApplicationService {
     });
 
     const currentStatus = application?.currentStatus?.status;
-    const isExcludedFromQuality =
-      currentStatus === Status.decommissioned ||
-      currentStatus === Status.deleted;
+    const isExcludedFromQuality = isRetired(currentStatus);
 
     const iq = isExcludedFromQuality
       ? null

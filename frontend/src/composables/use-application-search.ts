@@ -44,7 +44,7 @@ export const DEFAULT_FILTERS: Filters = {
   actorEmail: undefined,
   iqGte: 0,
   iqLte: 100,
-  iq__isNull: false,
+  iq__isNull: true,
   search: undefined,
   missingMoa: undefined,
   missingMoe: undefined,
