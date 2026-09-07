@@ -135,6 +135,10 @@ test.describe("Permissions & rôles", () => {
     }
   });
 
+  // #2529 a fermé `additionalPermissions` (permissions globales déléguables) à une liste FERMÉE
+  // qui exclut désormais `AppWrite`/`AppWritePriority` (permissions applicatives, couche 3) : le
+  // rôle global reste le bon levier pour PRM-10 (`roleToAppPermissions` donne les deux droits
+  // d'écriture applicatifs sans organisation de périmètre), cf. `role-to-permissions.ts`.
   test("PRM-10 - un Contributeur peut éditer une fiche", async ({
     browser,
     data,
@@ -144,14 +148,14 @@ test.describe("Permissions & rôles", () => {
 
     const ctx = await browser.newContext();
     try {
-      await data.setUserAdditionalPermissions(USER_EMAIL, ["AppWrite"]);
+      await data.setUserRole(USER_EMAIL, "CONTRIBUTOR");
       const userPage = await ctx.newPage();
       await loginAs(userPage, "user");
       const fiche = new ApplicationPage(userPage);
       // Les workers parallèles (PRM-04/05 sur un autre navigateur) peuvent appeler
       // resetUser au même moment → re-appliquer les permissions avant chaque tentative.
       await expect(async () => {
-        await data.setUserAdditionalPermissions(USER_EMAIL, ["AppWrite"]);
+        await data.setUserRole(USER_EMAIL, "CONTRIBUTOR");
         await fiche.open(app!.id, "tab-infos");
         await fiche.expectInfoEditAvailable();
       }).toPass({ timeout: 45000 });
@@ -161,13 +165,65 @@ test.describe("Permissions & rôles", () => {
     }
   });
 
-  test("PRM-11 - AppWritePriority dissociée de AppWrite", async ({ data }) => {
+  // `AppWrite`/`AppWritePriority` sont désormais uniquement accordables par acteur (couche 3, via
+  // le type d'acteur et sa matrice) : un rôle global donne toujours les deux ensemble
+  // (`WRITE_APP_PERMISSIONS`). On dissocie donc via un type d'acteur dédié dont on force la
+  // matrice à `AppWritePriority: true / AppWrite: false`, puis un acteur portant l'e-mail du
+  // compte de test sur l'application — restauré/supprimé en fin de test.
+  test("PRM-11 - AppWritePriority dissociée de AppWrite", async ({
+    browser,
+    data,
+  }) => {
+    const app = await data.firstApplication();
+    test.skip(!app, "Aucune application dans le jeu de données");
+
+    const actorTypes = await data.actorTypes();
+    const typeId = actorTypes?.[actorTypes.length - 1]?.id;
+    test.skip(!typeId, "Aucun type d'acteur disponible");
+
+    const matrix = await data.permsMatrix();
+    const original = matrix?.find((entry) => entry.actorTypeId === typeId);
+    test.skip(
+      !matrix || !original,
+      "Type d'acteur introuvable dans la matrice",
+    );
+
+    await data.resetUser(USER_EMAIL);
+    let actor: { id: string } | null = null;
+    const ctx = await browser.newContext();
     try {
-      await data.setUserAdditionalPermissions(USER_EMAIL, ["AppWritePriority"]);
-      const user = await data.getUser(USER_EMAIL);
-      expect(user?.additionalPermissions).toContain("AppWritePriority");
-      expect(user?.additionalPermissions).not.toContain("AppWrite");
+      await data.updatePermsMatrix(
+        matrix!.map((entry) =>
+          entry.actorTypeId === typeId
+            ? { ...entry, AppWrite: false, AppWritePriority: true }
+            : entry,
+        ),
+      );
+      actor = await data.createActor(app!.id, {
+        email: USER_EMAIL,
+        firstname: "E2E-PRM11",
+        lastname: "Priority",
+        actorTypeId: typeId,
+      });
+      test.skip(!actor, "Impossible de créer l'acteur de test");
+
+      const userPage = await ctx.newPage();
+      await loginAs(userPage, "user");
+      const fiche = new ApplicationPage(userPage);
+      await fiche.open(app!.id, "tab-infos");
+      await fiche.openInfoEdit();
+      await fiche.expectPriorityFieldEditable();
+      await fiche.expectBaseFieldsReadonly();
     } finally {
+      await ctx.close();
+      if (actor) await data.deleteActor(app!.id, actor.id).catch(() => {});
+      if (original) {
+        await data.updatePermsMatrix(
+          matrix!.map((entry) =>
+            entry.actorTypeId === typeId ? original : entry,
+          ),
+        );
+      }
       await data.resetUser(USER_EMAIL);
     }
   });
