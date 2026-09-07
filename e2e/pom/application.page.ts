@@ -574,6 +574,16 @@ export class ApplicationPage extends BasePage {
     await expect(this.byTestId("info-priority-badge")).toContainText(priority);
   }
 
+  /** Le champ « Priorité de redémarrage » du formulaire est éditable (AppWritePriority) — PRM-11. */
+  async expectPriorityFieldEditable(): Promise<void> {
+    await expect(this.byTestId("application-priority-restart")).toBeEnabled();
+  }
+
+  /** Les autres champs de la fiche restent en lecture seule (sans AppWrite) — PRM-11. */
+  async expectBaseFieldsReadonly(): Promise<void> {
+    await expect(this.byTestId("application-label")).toBeDisabled();
+  }
+
   async addPurpose(): Promise<void> {
     await this.byTestId("application-purpose-add").click();
   }
