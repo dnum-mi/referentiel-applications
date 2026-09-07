@@ -38,12 +38,14 @@ async function createUser(options: { email: string; role: string }) {
     process.exit(1);
   }
 
+  // #2501 : e-mails stockés en minuscules.
+  const email = options.email.trim().toLowerCase();
   await prisma.user
     .upsert({
-      where: { email: options.email },
+      where: { email },
       update: { role },
       create: {
-        email: options.email,
+        email,
         role,
       },
     })
