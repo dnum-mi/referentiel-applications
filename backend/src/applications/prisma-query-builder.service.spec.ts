@@ -221,3 +221,56 @@ describe("PrismaQueryBuilder — filtre « Mes applications » (#2416)", () => {
     expect(clause.OR).toHaveLength(1);
   });
 });
+
+describe("PrismaQueryBuilder — ordre des NULL au tri", () => {
+  const prisma = {
+    $queryRaw: jest.fn().mockResolvedValue([]),
+  } as unknown as PrismaService;
+  const groupActor = {
+    buildApplicationIds: jest.fn().mockReturnValue(""),
+  } as unknown as QueryBuilderGroupActor;
+
+  const builder = new PrismaQueryBuilder(prisma, groupActor);
+
+  // #2563 a passé l'IQ à null pour les applications décommissionnées ou supprimées.
+  // PostgreSQL classant les NULL en premier sur un ORDER BY … DESC, ces fiches
+  // remontaient en tête d'un tri par IQ décroissant.
+  it("classe les IQ absents en dernier, y compris en décroissant", () => {
+    expect(builder.buildOrderBy("quality", "desc")).toEqual({
+      quality: { sort: "desc", nulls: "last" },
+    });
+  });
+
+  it("garde la même convention en croissant", () => {
+    expect(builder.buildOrderBy("quality", "asc")).toEqual({
+      quality: { sort: "asc", nulls: "last" },
+    });
+  });
+
+  it("applique NULLS LAST au tri de repli sur le nom court", () => {
+    expect(builder.buildOrderBy(undefined, "desc")).toEqual({
+      shortName: { sort: "desc", nulls: "last" },
+    });
+    expect(builder.buildOrderBy("critere-inconnu", "asc")).toEqual({
+      shortName: { sort: "asc", nulls: "last" },
+    });
+  });
+
+  it("applique NULLS LAST aux colonnes nullables de la fiche conformité", () => {
+    expect(builder.buildOrderBy("dima", "desc")).toEqual({
+      compliance: { dima_duration_hours: { sort: "desc", nulls: "last" } },
+    });
+    expect(builder.buildOrderBy("homologationDateEnd", "desc")).toEqual({
+      compliance: { homologation_date_end: { sort: "desc", nulls: "last" } },
+    });
+  });
+
+  // Garde-fou de compilation : `label` est NOT NULL, Prisma refuse la forme
+  // `{ sort, nulls }` sur ce champ.
+  it("laisse les colonnes non nullables en forme simple", () => {
+    expect(builder.buildOrderBy("label", "desc")).toEqual({ label: "desc" });
+    expect(builder.buildOrderBy("applicationViews", "desc")).toEqual({
+      applicationViews: { _count: "desc" },
+    });
+  });
+});

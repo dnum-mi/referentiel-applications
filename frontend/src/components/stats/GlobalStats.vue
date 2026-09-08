@@ -15,7 +15,11 @@ const statisticStore = useStatisticsStore();
 const hostingStore = useHostingStore();
 
 const datasGroup = computed(() => [
-  `Nombre d'applications (hors applications supprimées): ${statisticStore.totalApplications}`,
+  // Ce total couvre désormais toutes les fiches, quel que soit leur statut : c'est
+  // le dénominateur de « X application(s) trouvée(s) sur Y » du catalogue, qui doit
+  // rester supérieur au nombre de résultats même quand l'utilisateur coche
+  // « Supprimée » dans les filtres.
+  `Nombre d'applications : ${statisticStore.totalApplications}`,
   `Nombre d'acteurs : ${actorsNb.value}`,
   `Nombre de conformités : ${compliancesNb.value}`,
   `Nombre d'hébergements : ${hostingsNb.value}`,
