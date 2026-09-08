@@ -4,14 +4,13 @@ name: QA — Campagne de non-régression (release)
 #  - PR release-please ouverte/mise à jour → ouvre une issue [QA][vX.Y.Z] par domaine, rejoue toute la
 #    non-régression, remplit les issues (cases + screenshots + verdict) et ÉCHOUE si qa:fail
 #    (faire de ce job un « required status check » sur main pour bloquer le merge).
-#  - Tag vX.Y.Z créé (PR release-please mergée) → ferme les issues de la version.
+#  - La FERMETURE des issues de la version se fait dans `release.yml` (job `qa-close`) : un tag
+#    poussé par release-please avec le `GITHUB_TOKEN` ne déclenche aucun workflow, donc un
+#    `on: push: tags` ne partirait jamais ici (issue #2364).
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-  push:
-    tags:
-      - "v*"
   workflow_dispatch: # déclenchement manuel (test / rejeu d'une campagne)
     inputs:
       version:
@@ -23,6 +22,14 @@ permissions:
   contents: write # push de la branche qa-screenshots
   issues: write
   pull-requests: write # commenter la PR release-please
+
+# Une même PR release-please reçoit plusieurs `synchronize` rapprochés. Sans ce garde-fou,
+# deux campagnes tournaient en parallèle : chacune listait les issues QA ouvertes avant que
+# l'autre n'ait créé les siennes, et le domaine était créé DEUX fois (38 issues au lieu de 19
+# pour la v1.90.0). Seule la campagne la plus récente a un sens : on annule la précédente.
+concurrency:
+  group: qa-campaign-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   # --- À l'ouverture/maj de la PR release-please : campagne complète + gate ---
@@ -164,17 +171,3 @@ jobs:
         run: |
           echo "Non-régression en échec → release bloquée. Voir les issues de campagne."
           exit 1
-
-  # --- Au merge de la PR release-please (tag vX.Y.Z) : fermer les issues de la version ---
-  close:
-    name: Fermer les issues de campagne
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Fermer les issues [QA][vX.Y.Z]
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          VERSION: ${{ github.ref_name }}
-        run: node qa/scripts/campaign.mjs close

@@ -102,8 +102,11 @@ Le cycle de campagne est **entièrement automatisé** autour de release-please :
    **remplit chaque issue** (cases + captures par étape + verdict `qa:pass`/`qa:fail`).
 2. **Gate** : si la non-régression échoue, le job **échoue** → à condition d'avoir ajouté ce check
    aux _required status checks_ de `main`, le **merge de la release est bloqué**.
-3. **PR release-please mergée** (tag `vX.Y.Z`) → `qa/scripts/campaign.mjs close` **ferme** les 4
-   issues de la version.
+3. **PR release-please mergée** (tag `vX.Y.Z`) → `qa/scripts/campaign.mjs close` **ferme** les
+   issues de la version. Ce job vit dans **`.github/workflows/release.yml`** (job `qa-close`), et
+   non ici : le tag est poussé par release-please avec le `GITHUB_TOKEN`, or un événement produit
+   par ce jeton ne déclenche aucun workflow. Un `on: push: tags` ne partirait jamais (issue #2364,
+   symptôme : 95 issues de campagne restées ouvertes de la v1.89.0 à la v1.90.2).
 
 > Prérequis (réglage GitHub, hors code) : marquer le check « Campagne de non-régression » comme
 > **required** sur la protection de branche `main` pour activer le blocage.

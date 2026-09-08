@@ -204,6 +204,18 @@ async function findOpenIssue(title) {
   return issues.find((i) => i.title === title) ?? null;
 }
 
+/**
+ * Toutes les issues QA ouvertes portant ce titre.
+ *
+ * Un titre devrait être unique, mais des campagnes concurrentes ont déjà produit
+ * des doublons (deux jeux complets pour la v1.90.0) : à la fermeture, on les prend
+ * tous, sinon la moitié resterait ouverte indéfiniment.
+ */
+async function findOpenIssues(title) {
+  const issues = await listOpenQaIssues();
+  return issues.filter((i) => i.title === title);
+}
+
 /** Extrait les étapes (id, titre, action, attendu) du protocole d'un domaine. */
 function stepsFromProtocol(domain) {
   const md = readFileSync(`qa/protocoles/${domain}.md`, "utf8");
@@ -352,15 +364,18 @@ async function upsertPrComment(prNumber, result) {
 }
 
 async function close() {
+  let fermees = 0;
   for (const d of DOMAINS) {
-    const issue = await findOpenIssue(titleFor(d.label));
-    if (!issue) continue;
-    await gh(`/repos/${owner}/${name}/issues/${issue.number}`, {
-      method: "PATCH",
-      body: JSON.stringify({ state: "closed", state_reason: "completed" }),
-    });
-    console.log(`Fermée : #${issue.number} ${issue.title}`);
+    for (const issue of await findOpenIssues(titleFor(d.label))) {
+      await gh(`/repos/${owner}/${name}/issues/${issue.number}`, {
+        method: "PATCH",
+        body: JSON.stringify({ state: "closed", state_reason: "completed" }),
+      });
+      console.log(`Fermée : #${issue.number} ${issue.title}`);
+      fermees += 1;
+    }
   }
+  console.log(`Campagne v${version} : ${fermees} issue(s) fermée(s).`);
 }
 
 const command = process.argv[2];

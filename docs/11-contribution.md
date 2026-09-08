@@ -148,8 +148,8 @@ Les workflows GitHub Actions se trouvent dans `.github/workflows/`.
 | `commitlint.yml`    | `pull_request` (ouverture, édition, synchro, réouverture) | Valide les **messages de commit** de la PR et le **titre** de la PR (conventional commits)                                                                  |
 | `tests-unit.yml`    | Appelé par `main-ci.yml` (ou manuel)                      | Démarre la pile Docker, applique les migrations Prisma, lance la couverture backend (seuil 70 %) puis le scan SonarQube (back + front)                      |
 | `build.yml`         | Workflow réutilisable (`workflow_call`)                   | Construit et pousse une image Docker (back ou front) vers `ghcr.io/dnum-mi/referentiel-applications`                                                        |
-| `release.yml`       | `push` sur `main`                                         | Exécute **release-please** pour préparer/publier les versions                                                                                               |
-| `release-build.yml` | `push` d'un tag `v*` ou manuel                            | Construit et pousse les images Docker de la version publiée                                                                                                 |
+| `release.yml`       | `push` sur `main`                                         | Exécute **release-please** ; à la publication d'une version, bascule le board `Main` → `Qualif` et ferme les issues de campagne QA                          |
+| `release-build.yml` | `push` d'un tag `v*` ou manuel                            | Construit et pousse les images Docker de la version publiée — **en pratique jamais déclenché par un tag** (voir l'encadré ci-dessous)                       |
 
 Le pipeline e2e démarre la pile (`docker compose ... up backend postgres keycloak`), amorce la base (`pnpm db:seed`), installe les navigateurs Playwright, **régénère le client API** (`pnpm openapi-ts`) puis lance `pnpm test:e2e`.
 
@@ -160,7 +160,38 @@ La gestion des versions est entièrement automatisée par **[release-please](htt
 - La **branche par défaut est `main`**.
 - À partir des _conventional commits_ fusionnés, release-please ouvre (puis fusionne) une **PR de release** qui met à jour la version, le `CHANGELOG.md` et le manifeste de version.
 - La configuration se trouve dans `release-please-config.json` (paquet unique à la racine, `package-name: referentiel-applications`) et la version courante dans `.release-please-manifest.json`.
-- La publication d'un tag de version déclenche `release-build.yml`, qui construit et pousse les images Docker correspondantes.
+
+> **Un tag créé par release-please ne déclenche aucun workflow.** release-please pousse le tag
+> avec le `GITHUB_TOKEN`, et GitHub Actions ignore par conception les événements produits par ce
+> jeton (garde-fou anti-boucle). Tout `on: push: tags: v*` est donc **mort-né** sur ce dépôt :
+> c'est le cas de `release-build.yml` (une seule exécution depuis sa création, manuelle) et
+> c'était celui de la fermeture des campagnes QA (issue #2364). Un traitement à déclencher à la
+> publication d'une version doit être **chaîné dans `release.yml`**, gardé par
+> `needs.release.outputs.release-created == 'true'`.
+
+### Effets de bord automatisés à la publication d'une version
+
+`release.yml` enchaîne deux jobs après release-please :
+
+- **`board`** — bascule les items du board de la colonne `Main` vers `Qualif`
+  (`.github/scripts/board-sync.mjs`). Sémantique : `Main` = mergé mais pas encore taggé,
+  `Qualif` = livré, en attente de recette, `Done` = recette validée (jamais posé automatiquement).
+  Le tag étant créé depuis `main`, tout ce qui est mergé est dans la release : la bascule est
+  globale, sans avoir à rattacher chaque ticket à son commit.
+  **Prérequis** : un secret de dépôt `PROJECT_TOKEN`, car le `GITHUB_TOKEN` d'Actions est limité
+  au dépôt et n'atteint pas les projets de l'organisation (aucune clé `permissions:` ne l'y
+  autorise). Utiliser une App GitHub installée sur l'organisation avec
+  _Organization permissions → Projects: Read and write_, ou un PAT classique avec les scopes
+  `project` et `repo`. Sans ce secret, le job n'échoue pas : il signale son abstention dans le
+  résumé de run.
+- **`qa-close`** — ferme les issues `[QA][vX.Y.Z]` de la version publiée.
+
+Le script du board est exécutable à la main (utile pour un rattrapage) :
+
+```bash
+GH_TOKEN=$(gh auth token) node .github/scripts/board-sync.mjs --dry-run   # simulation
+GH_TOKEN=$(gh auth token) node .github/scripts/board-sync.mjs             # application
+```
 
 L'équipe produit une release **à chaque déploiement en qualification** ; le flux type est : fusion de la release → qualification → validation métier → production.
 
