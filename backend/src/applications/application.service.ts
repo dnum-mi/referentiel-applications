@@ -423,41 +423,26 @@ export class ApplicationService {
     let paginatedResult: ApplicationSearchResultDto;
 
     if (useRelevance || useRawSort) {
-      // Une seule passe filtrée donne les ids retenus, le total et l'IQ moyen ;
-      // seules les fiches de la page demandée sont ensuite chargées.
-      const matching =
-        await this.applicationRepository.findMatchingApplications(where);
-      const total = matching.length;
-      const qualities = matching
-        .map((app) => app.quality)
-        .filter((quality): quality is number => quality !== null);
-      const averageIq = qualities.length
-        ? qualities.reduce((sum, quality) => sum + quality, 0) /
-          qualities.length
-        : 0;
-
-      let orderedIds: string[];
-      if (useRelevance) {
-        // Conserver l'ordre de pertinence renvoyé par le moteur de recherche.
-        const matchingSet = new Set(matching.map((app) => app.id));
-        orderedIds = (rankedIds ?? []).filter((id) => matchingSet.has(id));
-      } else {
-        orderedIds = await this.prismaQueryBuilder.sortApplicationIdsRaw(
-          matching.map((app) => app.id),
-          sortBy,
-          order,
+      // Ensemble filtré (id + IQ), total et page chargés dans une même
+      // transaction (cf. findMatchingApplicationsPage) pour que le total
+      // annoncé corresponde toujours au nombre de lignes réellement rendues.
+      paginatedResult =
+        await this.applicationRepository.findMatchingApplicationsPage(
+          searchParams,
+          where,
+          (matching) => {
+            if (useRelevance) {
+              // Conserver l'ordre de pertinence renvoyé par le moteur de recherche.
+              const matchingSet = new Set(matching.map((app) => app.id));
+              return (rankedIds ?? []).filter((id) => matchingSet.has(id));
+            }
+            return this.prismaQueryBuilder.sortApplicationIdsRaw(
+              matching.map((app) => app.id),
+              sortBy,
+              order,
+            );
+          },
         );
-      }
-
-      const results = await this.applicationRepository.findApplicationsPage(
-        searchParams,
-        orderedIds,
-      );
-      paginatedResult = {
-        results,
-        total,
-        averageIq,
-      } as ApplicationSearchResultDto;
     } else {
       paginatedResult = await this.applicationRepository.findApplications(
         searchParams,
