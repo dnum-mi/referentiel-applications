@@ -31,8 +31,14 @@ export const useStatisticsStore = defineStore("statisticsStore", () => {
     // Le total (non filtré) ne bouge pas au fil des recherches : on ne le
     // recharge pas s'il est déjà connu, et on ne demande qu'une ligne — seul
     // `total` nous intéresse, pas les fiches complètes.
+    //
+    // `iq__isNull` est indispensable : sans lui, le DTO de recherche applique ses
+    // valeurs par défaut `iqGte: 0` / `iqLte: 100` et écarte silencieusement les
+    // fiches sans IQ — depuis #2563, toutes les décommissionnées et supprimées.
+    // Ce total sert de dénominateur à « X application(s) trouvée(s) sur Y », dont
+    // le numérateur, lui, les compte : Y devenait plus petit que X (#2495).
     if (!force && totalApplications.value !== null) return;
-    const response = await api.applicationControllerSearch({ query: { pageSize: 1 } });
+    const response = await api.applicationControllerSearch({ query: { pageSize: 1, iq__isNull: true } });
     totalApplications.value = response.data?.total ?? 0;
   }
 

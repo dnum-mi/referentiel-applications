@@ -78,20 +78,20 @@ Le modèle `Application` (`backend/prisma/schema/applications.prisma`) est le pi
 
 ### Champs
 
-| Champ                | Type               | Notes                                             |
-| :------------------- | :----------------- | :------------------------------------------------ |
-| `id`                 | `String`           | identifiant `uuid`, clé primaire                  |
-| `label`              | `String`           | nom complet                                       |
-| `shortName`          | `String?`          | nom court / acronyme                              |
-| `logo`               | `String?`          | URL du logo                                       |
-| `description`        | `String`           | description détaillée                             |
-| `targetPopulations`  | `String[]`         | populations cibles                                |
-| `purposes`           | `String[]`         | finalités métier                                  |
-| `type`               | `ApplicationType?` | catégorie de l'application                        |
-| `currentStatusId`    | `String?`          | statut courant (FK vers `ApplicationStatus`)      |
-| `priorityRestart`    | `priorityRestart?` | priorité de redémarrage                           |
-| `quality`            | `Int`              | score de qualité de la fiche (non nullable)       |
-| `businessDivisionId` | `String?`          | direction métier MOA (FK vers `BusinessDivision`) |
+| Champ                | Type               | Notes                                                                                          |
+| :------------------- | :----------------- | :--------------------------------------------------------------------------------------------- |
+| `id`                 | `String`           | identifiant `uuid`, clé primaire                                                               |
+| `label`              | `String`           | nom complet                                                                                    |
+| `shortName`          | `String?`          | nom court / acronyme                                                                           |
+| `logo`               | `String?`          | URL du logo                                                                                    |
+| `description`        | `String`           | description détaillée                                                                          |
+| `targetPopulations`  | `String[]`         | populations cibles                                                                             |
+| `purposes`           | `String[]`         | finalités métier                                                                               |
+| `type`               | `ApplicationType?` | catégorie de l'application                                                                     |
+| `currentStatusId`    | `String?`          | statut courant (FK vers `ApplicationStatus`)                                                   |
+| `priorityRestart`    | `priorityRestart?` | priorité de redémarrage                                                                        |
+| `quality`            | `Int?`             | score de qualité de la fiche, `null` si l'application est décommissionnée ou supprimée (#2495) |
+| `businessDivisionId` | `String?`          | direction métier MOA (FK vers `BusinessDivision`)                                              |
 
 Contraintes : `@@unique([label, description])`, index sur `label`, `shortName` et `currentStatusId`.
 
