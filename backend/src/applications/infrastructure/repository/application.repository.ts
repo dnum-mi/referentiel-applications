@@ -116,22 +116,28 @@ export class ApplicationRepository implements IApplicationRepository {
       pageSize && pageSize > 0 ? Math.max(0, page) * pageSize : undefined;
     const take = pageSize && pageSize > 0 ? pageSize : undefined;
 
-    // Une seule requête d'agrégation (total + IQ moyen sur l'ensemble des
-    // résultats, toutes pages confondues), lancée en parallèle de la page.
-    const [results, aggregate] = await Promise.all([
-      this.prisma.application.findMany({
-        where,
-        orderBy,
-        skip,
-        take,
-        include: this.buildListInclude(),
-      }),
-      this.prisma.application.aggregate({
-        where,
-        _count: { _all: true },
-        _avg: { quality: true },
-      }),
-    ]);
+    // Total et page dans une seule transaction (isolation "repeatable read") :
+    // sans ça, `findMany` et `aggregate` sont deux requêtes indépendantes qui
+    // peuvent voir un état différent de la table si une écriture concurrente
+    // (recalcul de l'IQ, changement de statut...) survient entre les deux,
+    // désynchronisant le total affiché du nombre de lignes réellement rendues.
+    const [results, aggregate] = await this.prisma.$transaction(
+      [
+        this.prisma.application.findMany({
+          where,
+          orderBy,
+          skip,
+          take,
+          include: this.buildListInclude(),
+        }),
+        this.prisma.application.aggregate({
+          where,
+          _count: { _all: true },
+          _avg: { quality: true },
+        }),
+      ],
+      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+    );
 
     // Prisma decimal extension returns runtime numbers, so we cast to API DTOs.
     return {
@@ -142,52 +148,75 @@ export class ApplicationRepository implements IApplicationRepository {
   }
 
   /**
-   * Identifiants (et IQ) des applications passant les filtres structurels.
-   * Une seule passe filtrée qui donne à la fois l'ensemble des résultats,
-   * leur total et de quoi calculer l'IQ moyen — sans requête d'agrégation
-   * supplémentaire.
+   * Ensemble filtré + page demandée, dans une seule transaction (isolation
+   * "repeatable read") : le total (déduit de l'ensemble filtré) et les fiches
+   * de la page proviennent du même instantané DB. Sans ça, une écriture
+   * concurrente entre les deux requêtes peut faire disparaître un id compté
+   * dans le total mais absent de la page rechargée (silencieusement éliminé
+   * par le filtre sur les enregistrements introuvables), d'où un total affiché
+   * supérieur au nombre de lignes réellement rendues.
+   * `computeOrderedIds` reçoit l'ensemble filtré et rend l'ordre final
+   * (pertinence full-text ou tri SQL brut), appliqué avant pagination.
    */
-  public async findMatchingApplications(
-    where: Prisma.ApplicationWhereInput,
-  ): Promise<{ id: string; quality: number | null }[]> {
-    return this.prisma.application.findMany({
-      where,
-      select: { id: true, quality: true },
-    });
-  }
-
-  /**
-   * Charge les fiches complètes d'une page d'identifiants, dans l'ordre fourni
-   * (pertinence full-text ou tri SQL brut). `orderedIds` est déjà filtré ;
-   * la pagination est appliquée ici (pageSize <= 0 => pas de pagination).
-   */
-  public async findApplicationsPage(
+  public async findMatchingApplicationsPage(
     filters: ApplicationSearchFilters,
-    orderedIds: string[],
-  ): Promise<ApplicationSearchResultDto["results"]> {
+    where: Prisma.ApplicationWhereInput,
+    computeOrderedIds: (
+      matching: { id: string; quality: number | null }[],
+    ) => Promise<string[]> | string[],
+  ): Promise<ApplicationSearchResultDto> {
     const { page = 0, pageSize = 15 } = filters;
-
     const safePage = Math.max(0, page);
-    const pageIds =
-      pageSize > 0
-        ? orderedIds.slice(safePage * pageSize, safePage * pageSize + pageSize)
-        : orderedIds;
 
-    if (!pageIds.length) return [];
+    return this.prisma.$transaction(
+      async (tx) => {
+        const matching = await tx.application.findMany({
+          where,
+          select: { id: true, quality: true },
+        });
 
-    const records = await this.prisma.application.findMany({
-      where: { id: { in: pageIds } },
-      include: this.buildListInclude(),
-    });
-    const byId = new Map(records.map((record) => [record.id, record]));
+        const total = matching.length;
+        const qualities = matching
+          .map((app) => app.quality)
+          .filter((quality): quality is number => quality !== null);
+        const averageIq = qualities.length
+          ? qualities.reduce((sum, quality) => sum + quality, 0) /
+            qualities.length
+          : 0;
 
-    // Prisma decimal extension returns runtime numbers, so we cast to API DTOs.
-    return pageIds
-      .map((id) => byId.get(id))
-      .filter((record): record is NonNullable<typeof record> => Boolean(record))
-      .map((app) =>
-        this.flattenTechnicalDebt(app),
-      ) as unknown as ApplicationSearchResultDto["results"];
+        const orderedIds = await computeOrderedIds(matching);
+        const pageIds =
+          pageSize > 0
+            ? orderedIds.slice(
+                safePage * pageSize,
+                safePage * pageSize + pageSize,
+              )
+            : orderedIds;
+
+        const records = pageIds.length
+          ? await tx.application.findMany({
+              where: { id: { in: pageIds } },
+              include: this.buildListInclude(),
+            })
+          : [];
+        const byId = new Map(records.map((record) => [record.id, record]));
+
+        // Prisma decimal extension returns runtime numbers, so we cast to API DTOs.
+        const results = pageIds
+          .map((id) => byId.get(id))
+          .filter((record): record is NonNullable<typeof record> =>
+            Boolean(record),
+          )
+          .map((app) => this.flattenTechnicalDebt(app));
+
+        return {
+          results,
+          total,
+          averageIq,
+        } as unknown as ApplicationSearchResultDto;
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+    );
   }
 
   /**

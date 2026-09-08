@@ -28,10 +28,37 @@ describe("ApplicationService.search — recherche full-text (param q)", () => {
     fullTextIds: string[] = ["app-x"],
     matching: { id: string; quality: number | null }[] = [],
   ) => {
+    // Reproduit la logique réelle de ApplicationRepository.findMatchingApplicationsPage
+    // (total/IQ moyen dérivés de `matching`, ids ordonnés via le callback fourni par le
+    // service) sans passer par Prisma — on garde `orderedIds` dans le résultat pour que
+    // les tests puissent vérifier l'ordre choisi (pertinence ou tri SQL brut).
+    const buildMatchingPageResult = async (
+      computeOrderedIds: (m: typeof matching) => Promise<string[]> | string[],
+    ) => {
+      const orderedIds = await computeOrderedIds(matching);
+      const qualities = matching
+        .map((app) => app.quality)
+        .filter((quality): quality is number => quality !== null);
+      const averageIq = qualities.length
+        ? qualities.reduce((sum, quality) => sum + quality, 0) /
+          qualities.length
+        : 0;
+      return { results: [], total: matching.length, averageIq, orderedIds };
+    };
+
     const applicationRepository = {
       findApplications: jest.fn().mockResolvedValue(emptyResult),
-      findMatchingApplications: jest.fn().mockResolvedValue(matching),
-      findApplicationsPage: jest.fn().mockResolvedValue([]),
+      findMatchingApplicationsPage: jest
+        .fn()
+        .mockImplementation(
+          (
+            _filters: unknown,
+            _where: unknown,
+            computeOrderedIds: (
+              m: typeof matching,
+            ) => Promise<string[]> | string[],
+          ) => buildMatchingPageResult(computeOrderedIds),
+        ),
     };
     const prismaQueryBuilder = {
       // Un nouvel objet à chaque appel : le service y pousse le filtre `id IN`.
@@ -87,7 +114,7 @@ describe("ApplicationService.search — recherche full-text (param q)", () => {
     expect(applicationSearchService.fullTextSearch).not.toHaveBeenCalled();
     expect(applicationRepository.findApplications).toHaveBeenCalledTimes(1);
     expect(
-      applicationRepository.findMatchingApplications,
+      applicationRepository.findMatchingApplicationsPage,
     ).not.toHaveBeenCalled();
   });
 
@@ -108,20 +135,21 @@ describe("ApplicationService.search — recherche full-text (param q)", () => {
     expect(applicationSearchService.fullTextSearch).toHaveBeenCalledWith(
       "gestion factures",
     );
-    // Tri par pertinence => une passe filtrée + chargement de la page.
+    // Tri par pertinence => une passe filtrée + page chargées dans la même transaction.
     expect(
-      applicationRepository.findMatchingApplications,
+      applicationRepository.findMatchingApplicationsPage,
     ).toHaveBeenCalledTimes(1);
     expect(applicationRepository.findApplications).not.toHaveBeenCalled();
 
-    const [where] =
-      applicationRepository.findMatchingApplications.mock.calls[0];
+    const [, where] =
+      applicationRepository.findMatchingApplicationsPage.mock.calls[0];
     expect(where.AND).toContainEqual({ id: { in: ["app-x", "app-y"] } });
 
     // La page est chargée dans l'ordre de pertinence du moteur (app-x d'abord),
     // pas dans l'ordre de la passe filtrée.
-    const [, orderedIds] =
-      applicationRepository.findApplicationsPage.mock.calls[0];
+    const { orderedIds } =
+      await applicationRepository.findMatchingApplicationsPage.mock.results[0]
+        .value;
     expect(orderedIds).toEqual(["app-x", "app-y"]);
   });
 
@@ -159,7 +187,7 @@ describe("ApplicationService.search — recherche full-text (param q)", () => {
     );
     expect(applicationSearchService.fullTextSearch).not.toHaveBeenCalled();
     expect(
-      applicationRepository.findMatchingApplications,
+      applicationRepository.findMatchingApplicationsPage,
     ).toHaveBeenCalledTimes(1);
   });
 
@@ -182,7 +210,7 @@ describe("ApplicationService.search — recherche full-text (param q)", () => {
     // Tri explicite (quality) => findApplications classique, pas le tri pertinence.
     expect(applicationRepository.findApplications).toHaveBeenCalledTimes(1);
     expect(
-      applicationRepository.findMatchingApplications,
+      applicationRepository.findMatchingApplicationsPage,
     ).not.toHaveBeenCalled();
 
     const [, where] = applicationRepository.findApplications.mock.calls[0];
@@ -209,15 +237,16 @@ describe("ApplicationService.search — recherche full-text (param q)", () => {
     );
 
     expect(
-      applicationRepository.findMatchingApplications,
+      applicationRepository.findMatchingApplicationsPage,
     ).toHaveBeenCalledTimes(1);
     expect(prismaQueryBuilder.sortApplicationIdsRaw).toHaveBeenCalledWith(
       ["app-a", "app-b"],
       "moa",
       "asc",
     );
-    const [, orderedIds] =
-      applicationRepository.findApplicationsPage.mock.calls[0];
+    const { orderedIds } =
+      await applicationRepository.findMatchingApplicationsPage.mock.results[0]
+        .value;
     expect(orderedIds).toEqual(["app-b", "app-a"]);
     expect(result.total).toBe(2);
     expect(result.averageIq).toBe(40);
@@ -244,7 +273,7 @@ describe("ApplicationService.search — recherche full-text (param q)", () => {
     });
     expect(applicationRepository.findApplications).not.toHaveBeenCalled();
     expect(
-      applicationRepository.findMatchingApplications,
+      applicationRepository.findMatchingApplicationsPage,
     ).not.toHaveBeenCalled();
   });
 
