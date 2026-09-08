@@ -43,7 +43,7 @@ export class TokenController {
   constructor(private readonly tokenService: TokenService) {}
 
   @Get()
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({
     summary: "Récupère les tokens de manière paginée",
     description:
@@ -79,7 +79,7 @@ export class TokenController {
   }
 
   @Post()
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({
     summary: "Crée un nouveau token de service",
     description: "Cette méthode permet de créer un nouveau token de service.",
@@ -119,7 +119,7 @@ export class TokenController {
   }
 
   @Post(":id/regenerate")
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({
     summary: "Régénère un token de service",
     description: "Cette méthode permet de régénérer un token de service.",

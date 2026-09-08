@@ -22,3 +22,23 @@ export function organizationWithinScope(
     ],
   };
 }
+
+/**
+ * Même règle que `organizationWithinScope`, appliquée à un path déjà chargé (contrôle unitaire
+ * d'un objet, plutôt que filtrage d'une requête Prisma).
+ *
+ * Un path absent n'est dans le périmètre d'AUCUN administrateur scopé (#2371) : un objet sans
+ * organisation ne doit pas devenir modifiable par un administrateur de périmètre.
+ */
+export function isPathWithinScope(
+  targetPath: string | null | undefined,
+  scope: string,
+): boolean {
+  if (!targetPath) return false;
+  const normalizedTarget = targetPath.toLowerCase();
+  const normalizedScope = scope.toLowerCase();
+  return (
+    normalizedTarget === normalizedScope ||
+    normalizedTarget.startsWith(`${normalizedScope}/`)
+  );
+}

@@ -15,7 +15,7 @@ export interface NavItem {
  * qu'aucun filet ne s'en aperçoive — le reste du produit (h1, titre de route,
  * plan du site, onglet de fiche) disant toujours « Technologies ».
  */
-export function buildNavItems(canManageAdminPanel: boolean): NavItem[] {
+export function buildNavItems(canManageGlobalAdmin: boolean): NavItem[] {
   return [
     { to: { name: routeNames.ACCUEIL }, text: "Accueil" },
     { to: { name: routeNames.SEARCHAPP }, text: "Applications" },
@@ -26,8 +26,9 @@ export function buildNavItems(canManageAdminPanel: boolean): NavItem[] {
     { to: { name: routeNames.REPORTS }, text: "Signalements" },
     // #2440 : l'historique global expose les valeurs de champs (emails d'acteurs, dates de
     // conformité…) de toutes les applications, réservé aux administrateurs (cf. router meta
-    // `requiresGlobalAdmin`).
-    ...(canManageAdminPanel ? [{ to: { name: routeNames.HISTORY }, text: "Modifications" }] : []),
+    // `requiresGlobalAdmin`). #2446 : « globaux » au sens strict — un administrateur de
+    // périmètre ne voit pas l'historique des applications qu'il n'administre pas.
+    ...(canManageGlobalAdmin ? [{ to: { name: routeNames.HISTORY }, text: "Modifications" }] : []),
   ];
 }
 

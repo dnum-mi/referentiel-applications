@@ -7,7 +7,7 @@ import {
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { UserEntity, UserWithPermissions } from "./entities/user.entity";
-import { roleToPermissions } from "src/permissions/role-to-permissions";
+import { principalToPermissions } from "src/permissions/role-to-permissions";
 import { PaginatedResponseDto } from "src/common/dto";
 
 // TODO we should add verification
@@ -34,7 +34,7 @@ export class UserPermissionsInterceptor implements NestInterceptor {
   private addPermissionsFromRole(user: UserEntity): UserWithPermissions {
     return {
       ...user,
-      permissions: roleToPermissions(user.role),
+      permissions: principalToPermissions(user),
     };
   }
 
@@ -44,7 +44,7 @@ export class UserPermissionsInterceptor implements NestInterceptor {
     return {
       results: paginated.results.map((user) => ({
         ...user,
-        permissions: roleToPermissions(user.role),
+        permissions: principalToPermissions(user),
       })),
       total: paginated.total,
     };
