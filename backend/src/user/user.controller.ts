@@ -165,7 +165,9 @@ export class UserController {
   }
 
   @Post("sync-organizations-from-maia")
-  @RequiredPermissions([Permission.AdminPanelManage])
+  // #2446 : batch réécrivant potentiellement TOUS les utilisateurs — administration globale.
+  // Le service refait le contrôle (défense en profondeur, #2374).
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({
     summary: "Synchroniser les organisations depuis MAIA (batch)",
     description:

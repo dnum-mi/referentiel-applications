@@ -7193,6 +7193,7 @@ components:
         - AppList
         - DataExport
         - AdminPanelManage
+        - GlobalAdminManage
         - ActorTypePost
         - ActorTypeManage
         - ActorTypeDelete

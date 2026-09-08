@@ -35,15 +35,17 @@ import { RequiredPermissions } from "src/common/decorators/required-permissions.
 // routes). La lecture reste ouverte à tout utilisateur authentifié (le catalogue est consommé à la
 // saisie d'un hébergement sur une fiche), mais les écritures sont réservées aux administrateurs :
 // supprimer une option référencée met son `hostingOptionId` à NULL sur TOUS les hébergements de
-// TOUTES les applications (FK `SET NULL`). `AdminPanelManage` est une permission globale, donc
+// TOUTES les applications (FK `SET NULL`). `GlobalAdminManage` est une permission globale, donc
 // résoluble sur une route sans `:applicationId`, contrairement à `HostingWrite` (par application).
+// #2446 : ce catalogue étant transverse, il relève de l'administrateur global et non d'un
+// administrateur de périmètre.
 @UseGuards(PermissionGuard)
 @Controller("hosting-options")
 export class HostingOptionController {
   constructor(private readonly hostingOptionService: HostingOptionService) {}
 
   @Post()
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({ summary: "Create a new hosting option" })
   @HttpCode(201)
   @ApiCreatedResponse({
@@ -65,7 +67,7 @@ export class HostingOptionController {
   }
 
   @Patch(":id")
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({ summary: "Update hosting option by ID" })
   @ApiOkResponse({
     description: "Hosting option updated successfully",
@@ -80,7 +82,7 @@ export class HostingOptionController {
   }
 
   @Delete(":id")
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({ summary: "Delete hosting option by ID" })
   @HttpCode(204)
   @ApiNoContentResponse({

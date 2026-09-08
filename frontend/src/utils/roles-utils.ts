@@ -47,6 +47,7 @@ export const PERMISSIONS_LABELS: Record<Permission, string> = {
   MDITList: "Voir la liste des MDIT",
   DataExport: "Exporter les données",
   AdminPanelManage: "Gérer le panneau d'administration",
+  GlobalAdminManage: "Gérer l'administration globale",
   ActorTypePost: "Créer un type d'acteur",
   ActorTypeManage: "Modifier un type d'acteur",
   ActorTypeDelete: "Supprimer un type d'acteur",

@@ -28,7 +28,7 @@ export class ActionLogController {
     description: "Liste paginée du journal des actions",
     type: PaginatedResponseDto.of(ActionLogDto),
   })
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   findAll(@Query() filters: ActionLogFiltersDto) {
     return this.actionLogService.findAllPaginated(filters);
   }

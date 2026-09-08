@@ -33,6 +33,25 @@ export class AdminPage extends BasePage {
     await this.themeTile(id).click();
   }
 
+  /** #2446 — Un thème dont aucun onglet n'est accessible n'est pas proposé du tout. */
+  async expectThemeTileAbsent(id: string): Promise<void> {
+    await expect(this.themeTile(id)).toHaveCount(0);
+  }
+
+  async expectThemeTileVisible(id: string): Promise<void> {
+    await expect(this.themeTile(id)).toBeVisible();
+  }
+
+  /** Onglet visible dans la barre du thème actif. */
+  async expectTabVisible(name: RegExp): Promise<void> {
+    await expect(this.adminTabs().getByRole("tab", { name })).toBeVisible();
+  }
+
+  /** Onglet absent de la barre du thème actif (droits insuffisants). */
+  async expectTabAbsent(name: RegExp): Promise<void> {
+    await expect(this.adminTabs().getByRole("tab", { name })).toHaveCount(0);
+  }
+
   private editModal = () => this.byTestId("admin-edit-user-modal");
 
   async searchUser(value: string): Promise<void> {

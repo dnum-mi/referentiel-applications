@@ -33,7 +33,13 @@ interface DsfrTab {
   panelId: string;
   component: Component;
   themeId: AdminThemeId;
-  /** Permissions autorisant l'accès à l'onglet (OR) — par défaut `AdminPanelManage` seul. */
+  /**
+   * Permissions autorisant l'accès à l'onglet (OR) — par défaut `GlobalAdminManage` seul.
+   *
+   * #2446 : le défaut est l'administration GLOBALE. Un administrateur ayant un périmètre
+   * organisationnel ne conserve que les onglets explicitement ouverts à `AdminPanelManage`
+   * (utilisateurs, acteurs), les seuls dont le contenu se découpe par périmètre.
+   */
   permissions?: Permission[];
 }
 
@@ -67,6 +73,8 @@ const allTabs: DsfrTab[] = [
     panelId: "panel-users",
     component: markRaw(AdminUsersTab),
     themeId: "users-rights",
+    // #2446 : liste filtrée par le périmètre de l'administrateur côté API.
+    permissions: [Permission.ADMIN_PANEL_MANAGE],
   },
   {
     title: "Gestion des organisations",
@@ -83,6 +91,8 @@ const allTabs: DsfrTab[] = [
     panelId: "panel-actors",
     component: markRaw(AdminActorsTab),
     themeId: "users-rights",
+    // #2446 : liste filtrée par le périmètre de l'administrateur côté API.
+    permissions: [Permission.ADMIN_PANEL_MANAGE],
   },
   {
     title: "Directions métier",
@@ -115,8 +125,9 @@ const allTabs: DsfrTab[] = [
     panelId: "panel-quality-campaigns",
     component: markRaw(AdminQualityCampaignsTab),
     themeId: "campaigns",
-    // Délégable à un non-admin (#2282) : seul onglet accessible sans AdminPanelManage.
-    permissions: [Permission.ADMIN_PANEL_MANAGE, Permission.QUALITY_CAMPAIGN_MANAGE],
+    // Délégable à un non-admin (#2282). #2446 : la capacité dédiée est désormais la SEULE porte
+    // d'entrée — un administrateur de périmètre ne l'a que si elle lui a été déléguée.
+    permissions: [Permission.QUALITY_CAMPAIGN_MANAGE],
   },
   {
     title: "Revue datasteward",
@@ -125,7 +136,7 @@ const allTabs: DsfrTab[] = [
     panelId: "panel-correlations",
     component: markRaw(AdminCorrelationsTab),
     themeId: "campaigns",
-    // Pas de `permissions` : le défaut du filtre ci-dessous est AdminPanelManage,
+    // Pas de `permissions` : le défaut du filtre ci-dessous est GlobalAdminManage,
     // qui est exactement ce qu'exigent les endpoints de revue des corrélations.
   },
   {
@@ -176,17 +187,29 @@ const allTabs: DsfrTab[] = [
     component: markRaw(AdminActionLogsTab),
     themeId: "management",
     // Pas de `permissions` : couvre TOUTES les routes mutantes (acteurs, utilisateurs,
-    // permissions…), plus sensible que les autres onglets — réservé à AdminPanelManage.
+    // permissions…), plus sensible que les autres onglets — réservé à GlobalAdminManage.
   },
 ];
 
 // Un utilisateur délégué uniquement QualityCampaignManage atteint /administration (cf. router)
 // mais ne doit voir que l'onglet couvert par cette permission, pas le reste du panneau admin.
-const tabs = computed(() => allTabs.filter((tab) => userStore.hasPermissions(tab.permissions ?? [Permission.ADMIN_PANEL_MANAGE])));
+// Même mécanique pour l'administrateur de périmètre (#2446) : il n'a pas `GlobalAdminManage`,
+// donc le défaut ci-dessous ne lui laisse que les onglets Utilisateurs et Acteurs.
+const tabs = computed(() => allTabs.filter((tab) => userStore.hasPermissions(tab.permissions ?? [Permission.GLOBAL_ADMIN_MANAGE])));
 
 // Un thème n'est proposé que s'il contient au moins un onglet visible pour l'utilisateur
 // courant (ex. le délégué QualityCampaignManage ne doit voir que la tuile « Campagnes »).
 const visibleThemes = computed(() => themes.filter((theme) => tabs.value.some((tab) => tab.themeId === theme.id)));
+
+// #2446 : la description rédigée annonce le thème complet. Dès qu'un onglet est masqué (délégué
+// QualityCampaignManage, administrateur de périmètre), elle promettrait des écrans inaccessibles :
+// on énumère alors les seuls onglets réellement ouverts.
+function themeDescription(theme: AdminTheme): string {
+  const visible = tabs.value.filter((tab) => tab.themeId === theme.id);
+  const total = allTabs.filter((tab) => tab.themeId === theme.id).length;
+  if (visible.length === total) return theme.description;
+  return `${visible.map((tab) => tab.title).join(", ")}.`;
+}
 
 const selectedThemeId = ref<AdminThemeId>(themes[0].id);
 
@@ -222,7 +245,7 @@ const tabsStyle = ref({ "--tabs-height": "auto" });
           <div class="fr-tile__body">
             <div class="fr-tile__content">
               <h3 class="fr-tile__title">{{ theme.title }}</h3>
-              <p class="fr-tile__desc fr-text--sm">{{ theme.description }}</p>
+              <p class="fr-tile__desc fr-text--sm">{{ themeDescription(theme) }}</p>
             </div>
           </div>
         </button>

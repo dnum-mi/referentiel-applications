@@ -30,7 +30,7 @@ export class ImportController {
   constructor(private readonly excelImportService: ExcelImportService) {}
 
   @Post("excel")
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @UseInterceptors(FileInterceptor("file"))
   @ApiConsumes("multipart/form-data")
   @ApiOperation({

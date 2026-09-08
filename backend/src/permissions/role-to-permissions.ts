@@ -33,12 +33,31 @@ const WRITE_PERMISSIONS = new Set([
 const ADMIN_PERMISSIONS = new Set([
   ...Array.from(WRITE_PERMISSIONS),
   Permission.AdminPanelManage,
+  Permission.GlobalAdminManage,
   Permission.DataExport,
   Permission.DeleteApplication,
   Permission.ActorTypePost,
   // Par défaut pour les administrateurs, mais aussi accordable individuellement (couche 2,
   // additionalPermissions) à un utilisateur non-admin pour lui déléguer uniquement la gestion
   // des campagnes qualité (#2282).
+  Permission.QualityCampaignManage,
+]);
+
+/**
+ * #2446 — Capacités d'administration retirées à un administrateur ayant un PÉRIMÈTRE
+ * organisationnel : elles portent sur des objets transverses (tags, sources, tokens, batchs,
+ * matrice des permissions, directions métier, journal des actions, campagnes…) qui ne sont
+ * rattachés à aucune organisation, donc qu'aucun périmètre ne peut découper. L'administrateur
+ * de périmètre conserve `AdminPanelManage`, qui ne lui ouvre plus que l'administration des
+ * utilisateurs et des acteurs — déjà filtrée par son périmètre.
+ *
+ * `QualityCampaignManage` en fait partie : un administrateur de périmètre ne gère les campagnes
+ * que si un administrateur global la lui délègue explicitement (couche 2,
+ * `User.additionalPermissions`), conformément à « seuls les utilisateurs ayant accès à la
+ * capacité gestion des campagnes peuvent gérer les campagnes ».
+ */
+const SCOPED_ADMIN_EXCLUDED_PERMISSIONS: ReadonlySet<Permission> = new Set([
+  Permission.GlobalAdminManage,
   Permission.QualityCampaignManage,
 ]);
 
@@ -57,10 +76,23 @@ export const DELEGABLE_PERMISSIONS: readonly Permission[] = [
   Permission.QualityCampaignManage,
 ];
 
-export const roleToPermissions = (role: Roles) => {
+/**
+ * Permissions globales d'un principal. `scoped` indique qu'il porte un périmètre
+ * organisationnel : seul le socle ADMIN en dépend (cf. `SCOPED_ADMIN_EXCLUDED_PERMISSIONS`),
+ * les autres rôles n'ayant aucune capacité transverse à retirer.
+ */
+export const roleToPermissions = (
+  role: Roles,
+  { scoped = false }: { scoped?: boolean } = {},
+) => {
   switch (role) {
     case Roles.ADMIN:
-      return Array.from(ADMIN_PERMISSIONS).sort((a, b) => a.localeCompare(b));
+      return Array.from(ADMIN_PERMISSIONS)
+        .filter(
+          (permission) =>
+            !scoped || !SCOPED_ADMIN_EXCLUDED_PERMISSIONS.has(permission),
+        )
+        .sort((a, b) => a.localeCompare(b));
     case Roles.CONTRIBUTOR:
       return Array.from(WRITE_PERMISSIONS).sort((a, b) => a.localeCompare(b));
     case Roles.READER:
@@ -69,6 +101,19 @@ export const roleToPermissions = (role: Roles) => {
       return Array.from(NONE_PERMISSIONS).sort((a, b) => a.localeCompare(b));
   }
 };
+
+/**
+ * Point d'entrée canonique pour dériver les permissions globales d'un principal : il porte lui
+ * même son périmètre, ce qui évite d'oublier de le transmettre (#2446). Utiliser
+ * `roleToPermissions` directement seulement quand aucun principal n'existe (requestor système).
+ */
+export const principalToPermissions = (principal: {
+  role: Roles;
+  scopeOrganizationId?: string | null;
+}) =>
+  roleToPermissions(principal.role, {
+    scoped: !!principal.scopeOrganizationId,
+  });
 
 const READ_APP_PERMISSIONS = new Set([
   Permission.ActorRead,

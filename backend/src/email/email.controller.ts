@@ -39,7 +39,7 @@ export class EmailController {
     description: "Liste paginée de l'historique des e-mails envoyés",
     type: PaginatedResponseDto.of(EmailLogDto),
   })
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   async findLogs(
     @Query() filters: PaginationDto,
   ): Promise<PaginatedResponseDto<EmailLogDto>> {
@@ -51,7 +51,7 @@ export class EmailController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: "Exécute le digest email des abonnés (admin)" })
   @ApiNoContentResponse({ description: "Digest déclenché" })
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   async runDigest(@Query("day") day?: "today" | "yesterday"): Promise<void> {
     const target = day === "today" ? new Date() : undefined;
     await this.emailDigestCronService.sendDailyDigest(target);

@@ -285,7 +285,7 @@ Le paramètre **id** doit être fourni dans l'URL.
 
   @Get("data-quality/update")
   @UseGuards(PermissionGuard)
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({
     summary: "Mettre à jour l'indice de qualité de toutes les applications",
     description: ` Ce endpoint permet de mettre à jour l'indice de qualité des applications existantes.

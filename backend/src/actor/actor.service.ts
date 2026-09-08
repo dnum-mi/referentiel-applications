@@ -23,6 +23,11 @@ import {
   getFullNameFromMaia,
   getOrganizationPathFromMaia,
 } from "src/user/utils/maia.tools";
+import {
+  isPathWithinScope,
+  organizationWithinScope,
+} from "src/common/utils/organization-scope.utils";
+import { Requestor } from "src/user/entities/user.entity";
 
 @Injectable()
 export class ActorService {
@@ -118,8 +123,9 @@ export class ActorService {
 
   public async findAllGlobal(
     filters: AdminActorFiltersDto,
+    requestor: Requestor,
   ): Promise<PaginatedResponseDto<ActorWithRelations>> {
-    const where: Prisma.ActorWhereInput = {};
+    const where: Prisma.ActorWhereInput = this.scopeFilter(requestor);
 
     if (filters.search) {
       where.OR = [
@@ -161,22 +167,24 @@ export class ActorService {
   public async updateGlobal(
     id: string,
     data: UpdateActorDto,
-    requestorId: string,
+    requestor: Requestor,
   ): Promise<ActorWithRelations> {
     const actor = await this.baseService.findOne(id, this.actorInclude);
+    this.assertWithinScope(actor, requestor);
     const applicationId = actor.applicationId;
-    return this.update(id, data, applicationId, requestorId);
+    return this.update(id, data, applicationId, requestor.id);
   }
 
-  public async deleteGlobal(id: string, requestorId: string) {
+  public async deleteGlobal(id: string, requestor: Requestor) {
     const actor = await this.baseService.findOne(id, this.actorInclude);
+    this.assertWithinScope(actor, requestor);
     const applicationId = actor.applicationId;
-    return this.delete(id, applicationId, requestorId);
+    return this.delete(id, applicationId, requestor.id);
   }
 
-  public async findApplicationsByEmail(email: string) {
+  public async findApplicationsByEmail(email: string, requestor: Requestor) {
     const actors = await this.prisma.actor.findMany({
-      where: { email: emailEquals(email) },
+      where: { ...this.scopeFilter(requestor), email: emailEquals(email) },
       include: { application: true },
       distinct: ["applicationId"],
     });
@@ -191,10 +199,13 @@ export class ActorService {
 
   public async deleteAllByEmail(
     email: string,
-    requestorId: string,
+    requestor: Requestor,
     applicationIds?: string[],
   ): Promise<{ count: number }> {
-    const where: Prisma.ActorWhereInput = { email: emailEquals(email) };
+    const where: Prisma.ActorWhereInput = {
+      ...this.scopeFilter(requestor),
+      email: emailEquals(email),
+    };
     if (applicationIds?.length) {
       where.applicationId = { in: applicationIds };
     }
@@ -205,7 +216,7 @@ export class ActorService {
     });
 
     for (const actor of actors) {
-      await this.delete(actor.id, actor.applicationId, requestorId);
+      await this.delete(actor.id, actor.applicationId, requestor.id);
     }
 
     return { count: actors.length };
@@ -214,7 +225,7 @@ export class ActorService {
   public async updateAllByEmail(
     email: string,
     data: UpdateActorDto,
-    requestorId: string,
+    requestor: Requestor,
     applicationIds?: string[],
   ): Promise<{ count: number }> {
     if (data.isGroup) {
@@ -222,7 +233,10 @@ export class ActorService {
       data.lastname = "";
     }
 
-    const where: Prisma.ActorWhereInput = { email: emailEquals(email) };
+    const where: Prisma.ActorWhereInput = {
+      ...this.scopeFilter(requestor),
+      email: emailEquals(email),
+    };
     if (applicationIds?.length) {
       where.applicationId = { in: applicationIds };
     }
@@ -233,10 +247,36 @@ export class ActorService {
     });
 
     for (const actor of actors) {
-      await this.update(actor.id, data, actor.applicationId, requestorId);
+      await this.update(actor.id, data, actor.applicationId, requestor.id);
     }
 
     return { count: actors.length };
+  }
+
+  /**
+   * #2446 — Un administrateur ayant un périmètre organisationnel n'administre que les acteurs
+   * appartenant à ce périmètre. Sans périmètre (administrateur global), aucun filtre.
+   */
+  private scopeFilter(requestor: Requestor): Prisma.ActorWhereInput {
+    const scopePath = requestor.scopeOrganization?.path;
+    if (!scopePath) return {};
+    return { organization: organizationWithinScope(scopePath) };
+  }
+
+  /**
+   * #2446 — Contrôle unitaire du périmètre avant une écriture sur un acteur déjà chargé.
+   * `NotFoundException` et non `Forbidden` : un acteur hors périmètre n'existe pas pour cet
+   * administrateur, la réponse ne doit pas confirmer son existence.
+   */
+  private assertWithinScope(
+    actor: ActorWithRelations,
+    requestor: Requestor,
+  ): void {
+    const scopePath = requestor.scopeOrganization?.path;
+    if (!scopePath) return;
+    if (!isPathWithinScope(actor.organization?.path, scopePath)) {
+      throw new NotFoundException("Acteur introuvable");
+    }
   }
 
   public async update(

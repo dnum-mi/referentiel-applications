@@ -77,7 +77,7 @@ Vous devez fournir les informations suivantes :
   }
 
   @Get("/perms-matrix")
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({
     summary: "Récupérer la matrice des permissions",
     description:
@@ -93,7 +93,7 @@ Vous devez fournir les informations suivantes :
   }
 
   @Get("/perms-matrix/history")
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({
     summary:
       "Récupérer l'historique des modifications de la matrice des permissions",
@@ -132,7 +132,7 @@ Vous devez fournir les informations suivantes :
   }
 
   @Patch("/perms-matrix")
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({
     summary: "Mettre à jour la matrice des permissions",
     description:

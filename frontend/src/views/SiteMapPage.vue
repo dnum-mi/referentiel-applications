@@ -80,7 +80,11 @@ const protectedPages = computed(() => {
     const isNotAdminPage = currentRoute.name !== routeNames.ADMINPAGE;
     const hasManageAdminPanelPermissions = userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE]);
     const passesAdminCheck = isNotAdminPage || hasManageAdminPanelPermissions;
-    return passesBaseFilter && isProtectedRoute && passesAdminCheck;
+    // #2446 : le plan du site ne propose pas une page que le garde de route refuserait —
+    // l'historique global est réservé à l'administration globale.
+    const passesGlobalAdminCheck =
+      currentRoute.meta.requiresGlobalAdmin !== true || userStore.hasPermissions([Permission.GLOBAL_ADMIN_MANAGE]);
+    return passesBaseFilter && isProtectedRoute && passesAdminCheck && passesGlobalAdminCheck;
   });
 
   const formattedPages = filteredProtectedRoutes.map((routeDetails) => {

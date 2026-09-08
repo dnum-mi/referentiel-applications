@@ -141,9 +141,15 @@ Le tableau ci-dessous restitue les **permissions globales** attribuées à chaqu
 | `ActorTypeManage`    |         |        |      ✓      |   ✓   |
 | `ActorTypeDelete`    |         |        |      ✓      |   ✓   |
 | `AdminPanelManage`   |         |        |             |   ✓   |
+| `GlobalAdminManage`  |         |        |             |  ✓\*  |
 | `DataExport`         |         |        |             |   ✓   |
 | `DeleteApplication`  |         |        |             |   ✓   |
 | `ActorTypePost`      |         |        |             |   ✓   |
+
+\* `GlobalAdminManage` — et `QualityCampaignManage` — ne sont accordées qu'à un administrateur
+**sans périmètre organisationnel** (#2446, `SCOPED_ADMIN_EXCLUDED_PERMISSIONS`). Un administrateur
+de périmètre garde `AdminPanelManage`, qui ne lui ouvre plus que l'administration des utilisateurs
+et des acteurs de son périmètre (cf. [section 6.4](#64-effet-sur-les-onglets-dadministration)).
 
 Symétriquement, `roleToAppPermissions(role)` projette un rôle en **permissions applicatives** (utilisé par la couche 3 lorsqu'aucun scope ne restreint l'utilisateur) :
 
@@ -164,21 +170,22 @@ L'énumération `Permission` (`backend/prisma/schema/permissions.prisma:59-105`)
 
 ### 4.1. Permissions globales
 
-| Permission              | Rôle                                                                      |
-| :---------------------- | :------------------------------------------------------------------------ |
-| `CreateApplication`     | Créer de nouvelles applications                                           |
-| `DeleteApplication`     | Supprimer une application                                                 |
-| `CreateGlobalReport`    | Créer des signalements globaux                                            |
-| `MDITList`              | Voir la liste des applications sur le TIME / MDIT                         |
-| `AppList`               | Voir la liste des applications                                            |
-| `DataExport`            | Exporter les données (export Excel)                                       |
-| `AdminPanelManage`      | Gérer le panneau d'administration                                         |
-| `ActorTypePost`         | Créer un type d'acteur                                                    |
-| `ActorTypeManage`       | Éditer un type d'acteur                                                   |
-| `ActorTypeDelete`       | Supprimer un type d'acteur                                                |
-| `OrganizationManage`    | Gérer les organisations (créer, modifier, supprimer)                      |
-| `ColumnRead`            | Voir les colonnes de synthèse (socle Lecteur)                             |
-| `QualityCampaignManage` | Gérer les campagnes de mise en qualité (socle Administrateur, déléguable) |
+| Permission              | Rôle                                                                       |
+| :---------------------- | :------------------------------------------------------------------------- |
+| `CreateApplication`     | Créer de nouvelles applications                                            |
+| `DeleteApplication`     | Supprimer une application                                                  |
+| `CreateGlobalReport`    | Créer des signalements globaux                                             |
+| `MDITList`              | Voir la liste des applications sur le TIME / MDIT                          |
+| `AppList`               | Voir la liste des applications                                             |
+| `DataExport`            | Exporter les données (export Excel)                                        |
+| `AdminPanelManage`      | Administrer les utilisateurs et les acteurs (dans son périmètre s'il en a) |
+| `GlobalAdminManage`     | Administrer les réglages transverses — administrateur sans périmètre       |
+| `ActorTypePost`         | Créer un type d'acteur                                                     |
+| `ActorTypeManage`       | Éditer un type d'acteur                                                    |
+| `ActorTypeDelete`       | Supprimer un type d'acteur                                                 |
+| `OrganizationManage`    | Gérer les organisations (créer, modifier, supprimer)                       |
+| `ColumnRead`            | Voir les colonnes de synthèse (socle Lecteur)                              |
+| `QualityCampaignManage` | Gérer les campagnes de mise en qualité (socle Administrateur, déléguable)  |
 
 Quatre valeurs sont à la fois **globales** (socle Visiteur, cf. §3) et **applicatives** (colonnes de la matrice §4.2) : `AppRead`, `DataRead`, `ReportRead`, `ReportPost`. Comme le socle les accorde à tout utilisateur authentifié, leur colonne dans la matrice des types d'acteur est **sans effet** — la matrice ne les propose plus en retrait (#2510). Depuis #2506, `DeleteApplication` protège bien la route `DELETE /applications/:id` (auparavant `AdminPanelManage`).
 
@@ -262,6 +269,33 @@ La même règle de périmètre s'applique à l'impersonation (#2217, `assertCanI
 - `AuthMiddleware.resolveImpersonatedUser` — indispensable car c'est le middleware qui applique l'identité à chaque requête via le header `x-impersonate-user-id`, qui peut être posé sans passer par l'endpoint.
 
 Côté interface, le bouton « Se connecter en tant que » n'est pas proposé hors périmètre (`UserActions.vue`, `canImpersonate`, alignée sur `canEditUser`).
+
+### 6.4. Effet sur les onglets d'administration
+
+Depuis #2446, le panneau d'administration distingue deux familles d'objets :
+
+- ceux qui **se découpent par périmètre** — utilisateurs et acteurs — restent ouverts à
+  `AdminPanelManage`, la liste comme les écritures étant filtrées par le périmètre du requêteur
+  (`UserService.findAll` #2370, `ActorService.scopeFilter`/`assertWithinScope` #2446) ;
+- ceux qui sont **transverses** — tags, sources, tokens, batchs (import Excel, synchronisations
+  MAIA, recalcul de qualité), matrice des permissions, options d'hébergement, directions métier,
+  journal des actions, historique des e-mails, historique global des modifications, revue
+  datasteward, campagnes dette IT — exigent `GlobalAdminManage`, que seul un administrateur **sans
+  périmètre** possède. Aucune organisation ne les porte : aucun périmètre ne peut les découper.
+
+Les **campagnes de mise en qualité** suivent la même logique par leur capacité dédiée : un
+administrateur de périmètre n'obtient `QualityCampaignManage` que si un administrateur global la lui
+**délègue** explicitement (couche 2), conformément à « seuls les utilisateurs ayant accès à la
+capacité gestion des campagnes peuvent gérer les campagnes ».
+
+Côté interface, `AdminPage.vue` filtre chaque onglet sur ces mêmes permissions (défaut :
+`GlobalAdminManage`) et masque toute tuile thématique dont aucun onglet n'est accessible ; la
+description de la tuile n'énumère alors que les onglets réellement ouverts.
+
+> **Limite connue.** Les routes `/organizations` (POST/PATCH/DELETE) restent gouvernées par
+> `OrganizationManage`, portée par le socle **Contributeur** : l'onglet « Gestion des
+> organisations » disparaît pour un administrateur de périmètre, mais la capacité elle-même n'est
+> pas retirée — la revoir supposerait de la reprendre aussi pour les contributeurs.
 
 ## 7. Mise en œuvre côté code
 

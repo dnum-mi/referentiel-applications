@@ -11,7 +11,7 @@ import { Roles } from "@prisma/client";
 import { NextFunction, Request, Response } from "express";
 import { createRemoteJWKSet, decodeJwt, jwtVerify } from "jose";
 import { oidcConfig } from "src/config/configs";
-import { roleToPermissions } from "src/permissions/role-to-permissions";
+import { principalToPermissions } from "src/permissions/role-to-permissions";
 import { TokenService } from "src/token/token.service";
 import { Requestor, UserEntity, UserType } from "src/user/entities/user.entity";
 import { ScopePermissionsException } from "src/user/errors/scope-permissions.exception";
@@ -92,7 +92,7 @@ export class AuthMiddleware implements NestMiddleware {
       // L'utilisateur réellement authentifié (avant toute impersonation).
       const authenticatedUser: Requestor = {
         ...user,
-        permissions: roleToPermissions(user.role),
+        permissions: principalToPermissions(user),
       };
       req.user = authenticatedUser;
 
@@ -169,7 +169,7 @@ export class AuthMiddleware implements NestMiddleware {
 
     return {
       ...target,
-      permissions: roleToPermissions(target.role),
+      permissions: principalToPermissions(target),
     };
   }
 }

@@ -28,7 +28,7 @@ export class MetadatasController {
   constructor(private readonly metadataService: MetadatasService) {}
 
   @Get()
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({ summary: "Récupérer toutes les metadatas" })
   @ApiOkResponse({
     description: "Récupérer toutes les metadatas",
@@ -39,7 +39,7 @@ export class MetadatasController {
   }
 
   @Get(":id")
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({ summary: "Récupérer une metadata par son ID" })
   @ApiParam({ name: "id", description: "ID de la metadata" })
   @ApiOkResponse({
