@@ -120,7 +120,7 @@ async function tabUntilFocused(page: Page, locator: Locator, maxTabs = 120) {
 }
 
 async function focusFirstTabStop(page: Page) {
-  const firstSkipLink = page.locator('a[href="#header-search"]').first();
+  const firstSkipLink = page.locator('a[href="#app-search"]').first();
   await expect(firstSkipLink).toBeVisible();
   await firstSkipLink.focus();
 }

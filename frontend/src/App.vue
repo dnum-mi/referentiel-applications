@@ -218,7 +218,7 @@ useAppUpdate();
 
   <DsfrSkipLinks
     :links="[
-      { id: 'header-search', text: 'Aller à la recherche' },
+      { id: 'app-search', text: 'Aller à la recherche' },
       { id: 'header-nav', text: 'Aller à la navigation' },
       { id: 'main-content', text: 'Aller au contenu principal' },
       { id: 'footer', text: 'Aller au pied de page' },
@@ -234,7 +234,7 @@ useAppUpdate();
     :quick-links="quickLinks"
     data-testid="main-header"
   >
-    <div class="header-container" id="header-search">
+    <div class="header-container">
       <SearchHeader v-if="userStore.authenticated" />
     </div>
 
