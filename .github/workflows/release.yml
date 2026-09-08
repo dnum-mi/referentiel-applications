@@ -15,6 +15,7 @@ jobs:
       issues: write
     outputs:
       release-created: ${{ steps.release.outputs.release_created }}
+      tag-name: ${{ steps.release.outputs.tag_name }}
       major-tag: ${{ steps.release.outputs.major }}
       minor-tag: ${{ steps.release.outputs.minor }}
       patch-tag: ${{ steps.release.outputs.patch }}
@@ -37,3 +38,54 @@ jobs:
         with:
           target-branch: ${{ github.ref_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
+
+  # Les deux jobs ci-dessous sont chaînés ICI, et non déclenchés par `on: push: tags`
+  # ou `on: release`, parce que release-please crée le tag avec le `GITHUB_TOKEN` :
+  # un événement produit par ce jeton NE DÉCLENCHE AUCUN workflow (garde-fou anti-boucle
+  # de GitHub Actions). C'est la cause de l'issue #2364 — le job de fermeture des
+  # campagnes QA n'a jamais tourné depuis sa mise en place.
+
+  board:
+    name: Board — Main vers Qualif
+    needs: release
+    if: needs.release.outputs.release-created == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Basculer les items livrés
+        env:
+          # Le `GITHUB_TOKEN` d'Actions est limité au dépôt et n'atteint pas les
+          # projets de l'organisation : aucune clé `permissions:` ne l'y autorise.
+          # Il faut un jeton dédié (App installée sur l'organisation avec
+          # « Organization permissions → Projects: Read and write », ou PAT
+          # classique avec les scopes `project` et `repo`).
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "Secret PROJECT_TOKEN absent : bascule du board ignorée." \
+              >> "$GITHUB_STEP_SUMMARY"
+            echo "Renseigner ce secret pour automatiser Main → Qualif." \
+              >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          node .github/scripts/board-sync.mjs
+
+  qa-close:
+    name: Fermer les issues de campagne QA
+    needs: release
+    if: needs.release.outputs.release-created == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fermer les issues [QA][vX.Y.Z] de la version publiée
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          VERSION: ${{ needs.release.outputs.tag-name }}
+        run: node qa/scripts/campaign.mjs close
