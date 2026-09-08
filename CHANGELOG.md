@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.90.2](https://github.com/dnum-mi/referentiel-applications/compare/v1.90.1...v1.90.2) (2026-09-08)
+
+
+### Bug Fixes
+
+* null quality index sorting, catalogue total and the Technologies menu entry ([#2570](https://github.com/dnum-mi/referentiel-applications/issues/2570)) ([6ba7915](https://github.com/dnum-mi/referentiel-applications/commit/6ba7915cd8a191140e53d1f6fe7522a019c94970))
+
 ## [1.90.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.90.0...v1.90.1) (2026-09-07)
 
 
