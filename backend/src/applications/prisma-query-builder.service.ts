@@ -846,30 +846,42 @@ export class PrismaQueryBuilder {
   ): Prisma.ApplicationOrderByWithRelationInput {
     const safeOrder = order === "desc" ? "desc" : "asc";
 
+    // Colonnes nullables : les valeurs absentes vont toujours en fin de liste, quel que
+    // soit le sens du tri. PostgreSQL classe les NULL EN PREMIER sur un `ORDER BY … DESC`,
+    // si bien que depuis le passage de l'IQ à null pour les applications décommissionnées
+    // ou supprimées (#2563), un tri par IQ décroissant les faisait remonter en tête. Même
+    // convention que les tris SQL bruts de ce fichier, qui se terminent tous par NULLS LAST.
+    const nullsLast: Prisma.SortOrderInput = { sort: safeOrder, nulls: "last" };
+
     const sortOptions: Record<
       string,
       Prisma.ApplicationOrderByWithRelationInput
     > = {
-      shortName: { shortName: safeOrder },
-      priorityRestart: { priorityRestart: safeOrder },
-      quality: { quality: safeOrder },
+      shortName: { shortName: nullsLast },
+      priorityRestart: { priorityRestart: nullsLast },
+      quality: { quality: nullsLast },
+      // `label` est NOT NULL et `applicationViews` est un COUNT : Prisma n'y accepte pas
+      // la forme `{ sort, nulls }`.
       label: { label: safeOrder },
       applicationViews: { applicationViews: { _count: safeOrder } },
 
-      dima: { compliance: { dima_duration_hours: safeOrder } },
-      pdma: { compliance: { pdma_duration_hours: safeOrder } },
-      dsfr: { compliance: { dsfr_implemented: safeOrder } },
-      rgpd: { compliance: { rgpd_has_aipd: safeOrder } },
-      pra: { compliance: { dima_recovery_plan: safeOrder } },
-      homologation: { compliance: { homologation_status: safeOrder } },
-      homologationDateEnd: { compliance: { homologation_date_end: safeOrder } },
+      dima: { compliance: { dima_duration_hours: nullsLast } },
+      pdma: { compliance: { pdma_duration_hours: nullsLast } },
+      dsfr: { compliance: { dsfr_implemented: nullsLast } },
+      rgpd: { compliance: { rgpd_has_aipd: nullsLast } },
+      pra: { compliance: { dima_recovery_plan: nullsLast } },
+      homologation: { compliance: { homologation_status: nullsLast } },
+      homologationDateEnd: { compliance: { homologation_date_end: nullsLast } },
 
+      // `ApplicationStatus.status` est NOT NULL : Prisma n'expose pas `nulls` ici. Les
+      // fiches sans statut courant (relation optionnelle) remontent donc encore en tête
+      // en décroissant — il faudrait basculer ce tri en SQL brut, cf. ticket de suivi.
       status: { currentStatus: { status: safeOrder } },
     };
 
     const sortKey = sortBy ?? "shortName";
 
-    return sortOptions[sortKey] || { shortName: safeOrder };
+    return sortOptions[sortKey] || { shortName: nullsLast };
   }
 
   public buildTechnicalDebtInfo(millesime?: number) {

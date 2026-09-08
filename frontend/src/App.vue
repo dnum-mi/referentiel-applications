@@ -4,6 +4,7 @@ import { ref, computed, nextTick } from "vue";
 import { useAppUpdate } from "./composables/use-app-update";
 import { useToasterStore } from "./stores/toasterStore";
 import { routeNames } from "./router/route-names";
+import { buildNavItems, buildPublicNavItems } from "./router/nav-items";
 import { getConfig } from "./services/config";
 import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
@@ -124,22 +125,9 @@ const quickLinks = computed<QuickLink[]>(() => {
   return authenticatedQuickLinks.value;
 });
 
-const baseNavItems = computed(() => [
-  { to: { name: routeNames.ACCUEIL }, text: "Accueil" },
-  { to: { name: routeNames.SEARCHAPP }, text: "Applications" },
-  { to: { name: routeNames.TIMEPAGE }, text: "Time" },
-  { to: { name: routeNames.QUALITYPAGE }, text: "Qualité Générale" },
-  { to: { name: routeNames.ENDOFLIFE }, text: "Fin de vie" },
-  { to: { name: routeNames.REPORTS }, text: "Signalements" },
-  // #2440 : l'historique global expose les valeurs de champs (emails d'acteurs, dates de
-  // conformité…) de toutes les applications, réservé aux administrateurs (cf. router meta
-  // `requiresGlobalAdmin`).
-  ...(userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE]) ? [{ to: { name: routeNames.HISTORY }, text: "Modifications" }] : []),
-]);
+const baseNavItems = computed(() => buildNavItems(userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE])));
 
-const publicNavItems = computed(() => {
-  return [{ to: { name: routeNames.ACCUEIL }, text: "Accueil" }];
-});
+const publicNavItems = computed(() => buildPublicNavItems());
 
 const navItemsComputed = computed(() => {
   return userStore.authenticated ? baseNavItems.value : publicNavItems.value;
