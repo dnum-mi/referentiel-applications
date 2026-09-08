@@ -675,6 +675,8 @@ export interface UserAdmin {
   role: string;
   additionalPermissions: string[];
   organizationId?: string | null;
+  /** Périmètre organisationnel d'administration — `null` pour un administrateur global (#2446). */
+  scopeOrganizationId?: string | null;
 }
 
 /** Champs de conformité utiles aux tests (sous-ensemble du DTO backend). */

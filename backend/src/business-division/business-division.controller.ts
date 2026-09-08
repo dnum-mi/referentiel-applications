@@ -64,7 +64,7 @@ export class BusinessDivisionController {
   }
 
   @Post()
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({
     summary: "Créer une direction métier.",
     description: `
@@ -92,7 +92,7 @@ Information requise :
   }
 
   @Patch(":id")
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({ summary: "Modifier une direction métier" })
   @ApiOkResponse({
     description: "Direction métier mise à jour avec succès",
@@ -117,7 +117,7 @@ Information requise :
   }
 
   @Delete(":id")
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({ summary: "Supprimer une direction métier" })
   @HttpCode(204)
   @ApiNoContentResponse({

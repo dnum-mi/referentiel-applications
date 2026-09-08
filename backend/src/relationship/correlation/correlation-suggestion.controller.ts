@@ -29,8 +29,8 @@ import { CorrelationSuggestionService } from "./correlation-suggestion.service";
 
 /**
  * Revue des suggestions de corrélation produites par le moteur de détection
- * (#2281). Réservé à l'admin panel (permission AdminPanelManage — choix à
- * confirmer avec l'équipe, cf. question ouverte de l'épopée).
+ * (#2281). Réservé à l'administration globale (#2446) : la revue arbitre des corrélations
+ * entre applications de tout le référentiel, qu'aucun périmètre organisationnel ne découpe.
  */
 @ApiTags("correlation-suggestions")
 @UseGuards(PermissionGuard)
@@ -41,7 +41,7 @@ export class CorrelationSuggestionController {
   ) {}
 
   @Get()
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({
     summary: "Lister les suggestions de corrélation",
     description:
@@ -58,7 +58,7 @@ export class CorrelationSuggestionController {
   }
 
   @Post("run")
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @HttpCode(200)
   @ApiOperation({
     summary: "Lancer la détection des corrélations",
@@ -75,7 +75,7 @@ export class CorrelationSuggestionController {
   }
 
   @Post(":id/accept")
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @HttpCode(200)
   @ApiOperation({
     summary: "Accepter une suggestion de corrélation",
@@ -97,7 +97,7 @@ export class CorrelationSuggestionController {
   }
 
   @Post(":id/reject")
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @HttpCode(200)
   @ApiOperation({
     summary: "Rejeter une suggestion de corrélation",

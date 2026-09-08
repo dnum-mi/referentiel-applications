@@ -218,7 +218,7 @@ Inventaire **par module / ressource** (résumé : verbes et chemins principaux, 
 | `POST /correlation-suggestions/:id/accept` | Crée la relation `is_correlated_with` et clôt la suggestion         |
 | `POST /correlation-suggestions/:id/reject` | Écarte la paire, qui ne sera plus proposée                          |
 
-> Ces quatre routes exigent la permission `AdminPanelManage` et n'attendent aucun corps de requête.
+> Ces quatre routes exigent la permission `GlobalAdminManage` (#2446 — administration transverse, réservée aux administrateurs sans périmètre) et n'attendent aucun corps de requête.
 
 ### Suivi des fins de vie
 

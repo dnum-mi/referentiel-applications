@@ -39,7 +39,7 @@ export class MditCampaignController {
   constructor(private readonly mditCampaignService: MditCampaignService) {}
 
   @Post()
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({ summary: "Créer une campagne dette IT (millésime)" })
   @HttpCode(201)
   @ApiCreatedResponse({
@@ -70,7 +70,7 @@ export class MditCampaignController {
   }
 
   @Patch(":id")
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({ summary: "Modifier une campagne dette IT" })
   @ApiOkResponse({ description: "Campagne mise à jour", type: MditCampaignDto })
   @ApiConflictResponse({
@@ -85,7 +85,7 @@ export class MditCampaignController {
   }
 
   @Delete(":id")
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({ summary: "Supprimer une campagne dette IT" })
   @HttpCode(204)
   @ApiNoContentResponse({ description: "Campagne supprimée avec succès" })

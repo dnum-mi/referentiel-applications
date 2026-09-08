@@ -192,7 +192,9 @@ router.beforeEach(async (to) => {
     // #2440 : contrairement à `requiresAdmin`, pas de délégation possible via
     // QualityCampaignManage — l'historique global expose les valeurs de champs (emails
     // d'acteurs, dates de conformité…) de toutes les applications, réservé aux administrateurs.
-    if (to.meta.requiresGlobalAdmin && !userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE])) {
+    // #2446 : aux administrateurs GLOBAUX — un périmètre organisationnel ne découpe pas cet
+    // historique, dont les endpoints exigent désormais `GlobalAdminManage`.
+    if (to.meta.requiresGlobalAdmin && !userStore.hasPermissions([Permission.GLOBAL_ADMIN_MANAGE])) {
       return { path: "/" };
     }
   }

@@ -182,7 +182,7 @@ Chaque niveau dispose d'un barème dégressif selon le nombre de manques (par ex
 
 - Front : `frontend/src/components/QualityScoreBar.vue` (barre + phrase) et `frontend/src/components/QualityNextActions.vue` (checklist), logique pure partagée dans `frontend/src/utils/quality-next-actions.ts`, les deux intégrés à `QualityTab.vue`.
 
-**Permission.** Visible par tous (`AppRead`). Recalcul global : **administrateurs** (`AdminPanelManage`).
+**Permission.** Visible par tous (`AppRead`). Recalcul global : **administrateurs globaux** (`GlobalAdminManage`).
 
 ### 3.1 Campagnes de mise en qualité (#2282)
 
@@ -193,7 +193,7 @@ Chaque niveau dispose d'un barème dégressif selon le nombre de manques (par ex
 - Back : module `backend/src/quality-campaign/` (`quality-campaign.controller.ts`, `quality-campaign.service.ts` — résolution des cibles via `ApplicationService.search`, snapshot IQ, calcul d'impact), cron `cron/quality-campaign-cron.service.ts` (déclenchement quotidien à la date de début, gated par `EMAIL_CRON_ENABLED`). Schéma `quality-campaign.prisma` (`QualityCampaign.sponsorEmails: String[]`, `QualityCampaignTarget`). Emails : `EmailService.sendQualityCampaignReminderEmail` / `sendQualityCampaignSponsorReportEmail` (un seul email combiné, tous les sponsors en destinataires), templates `email/templates/quality-campaign-*.template.html`. Notifications in-app : `NotificationType.campaign_quality_reminder` (acteurs) et `NotificationType.campaign_quality_sponsor_report` (sponsors ayant un compte `User`).
 - Front : point d'entrée `frontend/src/components/modal/CreateQualityCampaignModal.vue` (bouton « Créer une campagne qualité » dans `ApplicationSearchActions.vue`, pré-rempli avec le filtre courant de la recherche) ; gestion `frontend/src/components/admin/AdminQualityCampaignsTab.vue` + `QualityCampaignActions.vue` (onglet admin « Campagnes de mise en qualité ») ; saisie de la liste de sponsors via `frontend/src/components/form/SponsorEmailsInput.vue` (partagé entre création et édition) ; store `frontend/src/stores/qualityCampaignStore.ts`.
 
-**Permission.** Création, gestion, déclenchement manuel : **administrateurs** (`AdminPanelManage`).
+**Permission.** Création, gestion, déclenchement manuel : `QualityCampaignManage` — capacité du socle administrateur **global**, déléguable individuellement à un non-administrateur (#2282, #2446).
 
 ## 4. Signalements
 
@@ -340,18 +340,18 @@ globales. Un constat, pas une note.
 
 ## 9. Administration
 
-Le panneau d'administration (`frontend/src/views/AdminPage.vue`) est organisé en onglets, réservés aux administrateurs (`AdminPanelManage`).
+Le panneau d'administration (`frontend/src/views/AdminPage.vue`) est organisé en onglets, réservés aux administrateurs. Depuis #2446, seuls **Gestion des utilisateurs** et **Gestion des acteurs** relèvent d'`AdminPanelManage` — et sont alors filtrés par le périmètre du requêteur ; tous les autres onglets exigent `GlobalAdminManage`, réservée aux administrateurs **sans** périmètre organisationnel.
 
 - **Gestion des utilisateurs** (`admin/AdminUsersTab.vue`) : liste des utilisateurs (humains et comptes techniques), modification du rôle (Visiteur, Lecteur, Contributeur, Administrateur), rattachement à une organisation, et attribution de **permissions individuelles** complémentaires (couche 2). Un utilisateur peut aussi être **bloqué** (ex : a quitté le ministère) via `POST /users/:id/block` / `POST /users/:id/unblock` : un utilisateur bloqué est rejeté par `AuthMiddleware` à l'authentification (JWT SSO ou token API), quel que soit son moyen d'accès ; un administrateur ne peut pas bloquer son propre compte, ni impersonner un utilisateur bloqué. Notification par email à chaque changement d'état. Module back `backend/src/user/`.
 - **Gestion des organisations** (`admin/AdminOrganizationsTab.vue`) : création/modification/suppression, rattachement d'une **direction métier** à l'organisation. Permission `OrganizationManage`. Modules `backend/src/organizations/`, `backend/src/organization-maia-references/`.
-- **Directions métier** (`admin/AdminBusinessDivisionsTab.vue`) : création/modification/suppression des directions métier (nom unique) rattachables aux organisations et aux applications. Écritures sous `AdminPanelManage`. Module `backend/src/business-division/`.
+- **Directions métier** (`admin/AdminBusinessDivisionsTab.vue`) : création/modification/suppression des directions métier (nom unique) rattachables aux organisations et aux applications. Écritures sous `GlobalAdminManage`. Module `backend/src/business-division/`.
 - **Gestion des tags** (`admin/AdminTagsTab.vue`) : tags libres attachables aux applications. Module `backend/src/tag/`.
 - **Gestion des sources** (`admin/AdminLabelSourcesTab.vue`) : sources contextualisant les noms alternatifs (labels). Modules `backend/src/labels/`, `backend/src/label-source/`.
 - **Indice de qualité** (`admin/AdminQualityTab.vue`) : recalcul global de l'IQ (voir [section 3](#3-indice-de-qualité-iq)).
-- **Revue des corrélations** (`admin/AdminCorrelationsTab.vue`) : suggestions de rapprochement entre applications proches (doublons potentiels), détectées automatiquement à partir de la similarité des noms, des données partagées et des acteurs communs. Chaque suggestion affiche la paire, le score et le détail des signaux ; l'administrateur accepte (la relation `is_correlated_with` apparaît alors sur les deux fiches) ou rejette (la paire n'est plus proposée). La détection peut aussi être lancée à la demande. Permission `AdminPanelManage`. Module `backend/src/relationship/correlation/`.
+- **Revue des corrélations** (`admin/AdminCorrelationsTab.vue`) : suggestions de rapprochement entre applications proches (doublons potentiels), détectées automatiquement à partir de la similarité des noms, des données partagées et des acteurs communs. Chaque suggestion affiche la paire, le score et le détail des signaux ; l'administrateur accepte (la relation `is_correlated_with` apparaît alors sur les deux fiches) ou rejette (la paire n'est plus proposée). La détection peut aussi être lancée à la demande. Permission `GlobalAdminManage`. Module `backend/src/relationship/correlation/`.
 - **Matrice des permissions** (`admin/AdminPermsMatrixTab.vue`) : pour chaque **type d'acteur** (MOA, MOE, TMA, RSSI, etc.), définition des droits de lecture/écriture conférés sur la fiche (informations générales, hébergements, conformités, acteurs, relations, liens, historique, priorité de redémarrage). C'est la **couche 3** du système de permissions ; voir [Permissions et sécurité](./06-permissions-et-securite.md).
 
-**Permission.** L'ensemble du panneau requiert `AdminPanelManage`. La suppression d'application (`DELETE /applications/:applicationId`) et certaines actions (création de type d'acteur) relèvent également de droits administrateurs.
+**Permission.** Le panneau requiert `AdminPanelManage` (utilisateurs, acteurs) ou `GlobalAdminManage` (tout le reste, #2446). La suppression d'application (`DELETE /applications/:applicationId`) et certaines actions (création de type d'acteur) relèvent également de droits administrateurs.
 
 ## 10. Récapitulatif des fonctionnalités et permissions
 
@@ -369,15 +369,15 @@ Le panneau d'administration (`frontend/src/views/AdminPage.vue`) est organisé e
 | Fiche – Liens externes              | `LinksTab.vue` · `backend/src/links`                                            | `LinkRead` / `LinkWrite`                                                           |
 | Fiche – Sources de données          | `data-application/DataApplicationTab.vue`                                       | `AppWrite` (Contributeur+)                                                         |
 | Fiche – Technologies et fins de vie | `technology/TechnologyTab.vue` · `EndOfLifePage.vue` · `backend/src/technology` | `TechnologyRead` / `TechnologyWrite` · vue transverse : utilisateur connecté       |
-| Indice de Qualité                   | `quality.utils.ts` · `QualityTab.vue`                                           | Lecture `AppRead` · Recalcul global `AdminPanelManage`                             |
-| Campagnes de mise en qualité        | `backend/src/quality-campaign` · `AdminQualityCampaignsTab.vue`                 | `AdminPanelManage`                                                                 |
+| Indice de Qualité                   | `quality.utils.ts` · `QualityTab.vue`                                           | Lecture `AppRead` · Recalcul global `GlobalAdminManage`                            |
+| Campagnes de mise en qualité        | `backend/src/quality-campaign` · `AdminQualityCampaignsTab.vue`                 | `QualityCampaignManage`                                                            |
 | Signalements                        | `ReportsPage.vue` · `backend/src/report`                                        | `ReportRead` / `ReportPost` · gestion `ReportManage` · global `CreateGlobalReport` |
 | Abonnements / notifications         | `UserProfilePage.vue` · `POST /users/me/subscribe/:appId`                       | utilisateur connecté                                                               |
 | Historique global                   | `MetadataPage.vue` · `backend/src/metadatas`                                    | `MetadataRead`                                                                     |
 | Tableau de bord Qualité             | `QualityPage.vue` · `GET /stats/iq-avg/period`                                  | utilisateur connecté                                                               |
 | Diagramme Time (dette technique)    | `TimePage.vue` · `backend/src/technical-debt-info`                              | `MDITList`                                                                         |
 | Export Excel                        | `GET /applications/export/excel`                                                | `DataExport` (admin)                                                               |
-| Administration                      | `AdminPage.vue` · `backend/src/user`, `organizations`, `tag`, `permissions`     | `AdminPanelManage` (+ `OrganizationManage`, etc.)                                  |
+| Administration                      | `AdminPage.vue` · `backend/src/user`, `organizations`, `tag`, `permissions`     | `AdminPanelManage` · `GlobalAdminManage` (+ `OrganizationManage`, etc.)            |
 
 ---
 

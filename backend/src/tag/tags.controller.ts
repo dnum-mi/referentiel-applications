@@ -39,7 +39,7 @@ export class TagsController {
   constructor(private readonly tagsService: TagsService) {}
 
   @Post()
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({
     summary: "Créer un nouveau tag.",
     description: `
@@ -96,7 +96,7 @@ Information requise :
   }
 
   @Patch(":id")
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({ summary: "Modifier un tag." })
   @ApiOkResponse({ description: "Tag mis à jour avec succès", type: TagDto })
   @ApiForbiddenResponse({
@@ -109,7 +109,7 @@ Information requise :
   }
 
   @Delete(":id")
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({ summary: "Supprimer un tag." })
   @HttpCode(204)
   @ApiNoContentResponse({ description: "Tag supprimé avec succès" })

@@ -23,6 +23,8 @@ import {
 import { Actor, Permission } from "@prisma/client";
 import { PaginatedResponseDto } from "src/common/dto/paginated-response.dto";
 import { UserId } from "../common/decorators/user-id.decorator";
+import { User } from "src/common/decorators/user.decorator";
+import { Requestor } from "src/user/entities/user.entity";
 import { ActorService } from "./actor.service";
 import {
   ActorDto,
@@ -55,8 +57,11 @@ export class ActorController {
     description: "Liste paginée des acteurs",
     type: PaginatedResponseDto.of(ActorDto),
   })
-  public async findAll(@Query() filters: AdminActorFiltersDto) {
-    return this.actorService.findAllGlobal(filters);
+  public async findAll(
+    @Query() filters: AdminActorFiltersDto,
+    @User() requestor: Requestor,
+  ) {
+    return this.actorService.findAllGlobal(filters, requestor);
   }
 
   @Get("applications-by-email")
@@ -70,8 +75,11 @@ export class ActorController {
     description: "Liste des applications",
     type: [ApplicationRefDto],
   })
-  public async findApplicationsByEmail(@Query("email") email: string) {
-    return this.actorService.findApplicationsByEmail(email);
+  public async findApplicationsByEmail(
+    @Query("email") email: string,
+    @User() requestor: Requestor,
+  ) {
+    return this.actorService.findApplicationsByEmail(email, requestor);
   }
 
   @Delete("by-email")
@@ -88,7 +96,7 @@ export class ActorController {
   })
   @ApiBody({ type: BulkActorByEmailDto })
   public async deleteAllByEmail(
-    @UserId() userId: string,
+    @User() requestor: Requestor,
     @Body() body: BulkActorByEmailDto,
   ) {
     Logger.log({
@@ -99,7 +107,7 @@ export class ActorController {
     });
     return this.actorService.deleteAllByEmail(
       body.email,
-      userId,
+      requestor,
       body.applicationIds,
     );
   }
@@ -117,7 +125,7 @@ export class ActorController {
   })
   @ApiBody({ type: BulkUpdateActorByEmailDto })
   public async updateAllByEmail(
-    @UserId() userId: string,
+    @User() requestor: Requestor,
     @Body() body: BulkUpdateActorByEmailDto,
   ) {
     const { targetEmail, applicationIds, ...updateData } = body;
@@ -130,7 +138,7 @@ export class ActorController {
     return this.actorService.updateAllByEmail(
       targetEmail,
       updateData,
-      userId,
+      requestor,
       applicationIds,
     );
   }
@@ -156,7 +164,7 @@ export class ActorController {
   })
   @ApiParam({ name: "id", description: "ID de l'acteur" })
   public async updateActor(
-    @UserId() userId: string,
+    @User() requestor: Requestor,
     @Param("id") id: string,
     @Body() actorToUpdate: UpdateActorDto,
   ) {
@@ -165,7 +173,7 @@ export class ActorController {
       actorToUpdate,
       action: "patch",
     });
-    return this.actorService.updateGlobal(id, actorToUpdate, userId);
+    return this.actorService.updateGlobal(id, actorToUpdate, requestor);
   }
 
   @Delete(":id")
@@ -174,17 +182,22 @@ export class ActorController {
   @ApiOperation({ summary: "Supprimer un acteur (admin)" })
   @ApiNoContentResponse({ description: "Acteur supprimé avec succès" })
   @ApiParam({ name: "id", description: "ID de l'acteur" })
-  public async deleteActor(@UserId() userId: string, @Param("id") id: string) {
+  public async deleteActor(
+    @User() requestor: Requestor,
+    @Param("id") id: string,
+  ) {
     Logger.log({
       message: "Suppression globale de l'acteur (admin)",
       actorId: id,
       action: "delete",
     });
-    return this.actorService.deleteGlobal(id, userId);
+    return this.actorService.deleteGlobal(id, requestor);
   }
 
   @Post("sync-maia")
-  @RequiredPermissions([Permission.AdminPanelManage])
+  // #2446 : batch transverse (tous les acteurs du référentiel), donc réservé à
+  // l'administrateur global — un périmètre organisationnel ne le découpe pas.
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({
     summary: "Synchroniser les acteurs depuis MAIA (batch)",
     description:

@@ -79,8 +79,14 @@ enum Permission {
   AppList
   /// Exporter les données
   DataExport
-  /// Manager l'admin panel
+  /// Manager l'admin panel : administration des utilisateurs et des acteurs. Un administrateur
+  /// avec un périmètre organisationnel la conserve, mais ne l'exerce que dans son périmètre.
   AdminPanelManage
+  /// Administrer les réglages transverses du référentiel (tags, sources, tokens, batchs, matrice
+  /// des permissions, directions métier, journal des actions, campagnes dette IT…). Réservée aux
+  /// administrateurs SANS périmètre organisationnel (#2446) : ces objets ne sont rattachés à
+  /// aucune organisation, donc un administrateur de périmètre n'a pas à les gérer.
+  GlobalAdminManage
   /// Crée un nouveau type d'acteur 
   ActorTypePost
   /// Editer un nouveau type d'acteur 

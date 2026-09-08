@@ -728,50 +728,40 @@ test.describe("Administration des référentiels", () => {
     }
   });
 
-  test("ADM-16 - import refusé hors périmètre pour un administrateur scopé (#1890)", async ({
+  test("ADM-16 - le panneau d'un administrateur scopé se limite à son périmètre (#2446)", async ({
     page,
     data,
   }) => {
-    // L'application QA-SCOPE-ABCD est hors du périmètre de `scope-admin` (scopé TOTO/).
-    // On résout son id avec la session admin (fixture `data`) avant de basculer sur l'admin scopé,
-    // pour que le test se skippe proprement si le seed QA est absent.
-    const app = await data.applicationByLabel("QA-SCOPE-ABCD");
-    test.skip(!app, "Fixture QA absente — `pnpm db:seed:qa` requis.");
-
-    const ts = Date.now();
-    const attemptedLabel = `E2E-ADM16-${ts}`;
-    const originalLabel = app!.label;
+    // Le seed QA porte le périmètre de `scope-admin` (TOTO/) ; sans lui, le compte n'est pas scopé
+    // et le test ne prouverait rien.
+    const scopedAdmin = await data.getUser("scope-admin@example.com");
+    test.skip(
+      !scopedAdmin?.scopeOrganizationId,
+      "Fixture QA absente — `pnpm db:seed:qa` requis.",
+    );
 
     // `switchTo` (pas `loginAs`) : la fixture `data` a déjà connecté `page` en `admin` ; sans
     // `logout()` préalable, `login()` détecte une session active et ne change pas d'utilisateur
     // (#1890 flaky — le test s'exécutait alors avec les droits `admin`).
     await switchTo(page, "scope-admin");
 
-    const workbook = await buildSheetWorkbook(
-      "Applications",
-      ["Identifiant", "Libellé", "Description"],
-      [[app!.id, attemptedLabel, "Tentative de mise à jour hors périmètre"]],
-    );
-
     const admin = new AdminPage(page);
     await admin.open();
-    await admin.openBatchDataTab();
-    await admin.importExcel({
-      name: `import-adm16-${ts}.xlsx`,
-      mimeType: XLSX_MIME,
-      buffer: workbook,
-    });
 
-    // La ligne est refusée (droits insuffisants) et consignée dans le rapport ; rien n'est modifié.
-    await admin.expectImportReportSummary(/1 en erreur/);
-    await admin.expectImportReportSummary(/0 mis à jour/);
-    await admin.expectImportReportContains(/Droits insuffisants/i);
+    // Seuls les objets qui se découpent par périmètre restent administrables.
+    await admin.expectThemeTileVisible("users-rights");
+    await admin.expectTabVisible(/gestion des utilisateurs/i);
+    await admin.expectTabVisible(/gestion des acteurs/i);
+    await admin.expectTabAbsent(/matrice des permissions/i);
+    await admin.expectTabAbsent(/gestion des organisations/i);
+    await admin.expectTabAbsent(/directions métier/i);
 
-    const rows = await dbQuery<{ label: string }>(
-      `SELECT label FROM "Application" WHERE id = $1`,
-      [app!.id],
-    );
-    expect(rows[0]?.label).toBe(originalLabel);
+    // Les réglages transverses (tags, sources, tokens, batchs, journal) et les campagnes
+    // disparaissent entièrement : leurs endpoints exigent `GlobalAdminManage`, que ce compte n'a
+    // pas. Le refus côté API est couvert par backend/tests/scoped-admin-perimeter.e2e-spec.ts —
+    // en particulier `POST /import/excel`, qui portait l'ancienne version de ce cas (#1890).
+    await admin.expectThemeTileAbsent("management");
+    await admin.expectThemeTileAbsent("campaigns");
   });
 
   test("ADM-22 - cycle de vie d'une direction métier", async ({

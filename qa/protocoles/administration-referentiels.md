@@ -135,14 +135,18 @@
 - **Résultat attendu** : le rapport indique « 1 créé(s) » et « 0 en erreur » ; l'application possède
   désormais un hébergement (l'option d'hébergement est résolue ou créée comme via l'API).
 
-### ADM-16 — Import refusé hors périmètre pour un administrateur scopé (#1890) ✅
+### ADM-16 — Panneau d'administration limité au périmètre d'un administrateur scopé (#2446) ✅
 
-- **Datafeature** : seed QA (`pnpm db:seed:qa`) — administrateur scopé `scope-admin` (périmètre TOTO/)
-  et application `QA-SCOPE-ABCD` hors de ce périmètre ; le test se skippe si la fixture est absente.
-- **Action** : se connecter en `scope-admin` → administration → onglet Batch de données → section
-  « Import Excel » → importer un onglet « Applications » mettant à jour `QA-SCOPE-ABCD`.
-- **Résultat attendu** : la ligne est **refusée** ; le rapport indique « 1 en erreur » / « 0 mis à
-  jour » avec le motif « Droits insuffisants » ; le libellé de l'application reste inchangé en base.
+- **Datafeature** : seed QA (`pnpm db:seed:qa`) — administrateur scopé `scope-admin` (périmètre
+  TOTO/) ; le test se skippe si la fixture est absente.
+- **Action** : se connecter en `scope-admin` → administration.
+- **Résultat attendu** : seule la tuile « Utilisateurs & droits » est proposée, avec les seuls
+  onglets « Gestion des utilisateurs » et « Gestion des acteurs » ; « Matrice des permissions »,
+  « Gestion des organisations » et « Directions métier » sont absents, et les tuiles « Campagnes »
+  et « Gestion » (tags, sources, tokens, batchs, journal) ne s'affichent pas.
+- **Remplace** l'ancien cas « Import refusé hors périmètre » (#1890) : depuis #2446, l'import Excel
+  relève de l'administration globale et n'est plus atteignable par un administrateur scopé — le
+  refus côté API est couvert par `backend/tests/scoped-admin-perimeter.e2e-spec.ts`.
 
 ### ADM-17 — Lister et rechercher les acteurs (admin) ✅
 

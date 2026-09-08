@@ -62,6 +62,34 @@ describe("adminPage (#2419, regroupement en tuiles thématiques)", () => {
     expect(within(tabs).queryAllByRole("tab")).toHaveLength(1);
   });
 
+  // #2446 : un administrateur de périmètre n'a plus GlobalAdminManage — il ne conserve que les
+  // deux onglets dont le contenu se découpe par périmètre.
+  it("un administrateur de périmètre ne voit que « Gestion des utilisateurs » et « Gestion des acteurs »", () => {
+    hasPermissionsMock.mockImplementation((permissions: string[]) => permissions.includes(Permission.ADMIN_PANEL_MANAGE));
+    render(AdminPage);
+
+    expect(screen.getByTestId("admin-theme-tile-users-rights")).toBeInTheDocument();
+    expect(screen.queryByTestId("admin-theme-tile-campaigns")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("admin-theme-tile-management")).not.toBeInTheDocument();
+
+    const tabs = screen.getByTestId("admin-tabs");
+    expect(within(tabs).getByRole("tab", { name: "Gestion des utilisateurs" })).toBeInTheDocument();
+    expect(within(tabs).getByRole("tab", { name: "Gestion des acteurs" })).toBeInTheDocument();
+    expect(within(tabs).queryByRole("tab", { name: "Matrice des permissions" })).not.toBeInTheDocument();
+    expect(within(tabs).queryByRole("tab", { name: "Gestion des organisations" })).not.toBeInTheDocument();
+    expect(within(tabs).queryByRole("tab", { name: "Directions métier" })).not.toBeInTheDocument();
+    expect(within(tabs).queryAllByRole("tab")).toHaveLength(2);
+  });
+
+  it("la description de la tuile n'annonce que les onglets réellement accessibles (#2446)", () => {
+    hasPermissionsMock.mockImplementation((permissions: string[]) => permissions.includes(Permission.ADMIN_PANEL_MANAGE));
+    render(AdminPage);
+
+    const tile = screen.getByTestId("admin-theme-tile-users-rights");
+    expect(tile).toHaveTextContent("Gestion des utilisateurs, Gestion des acteurs.");
+    expect(tile).not.toHaveTextContent("matrice des permissions");
+  });
+
   it("cliquer une tuile bascule les onglets affichés et réinitialise l'onglet actif", async () => {
     hasPermissionsMock.mockReturnValue(true);
     render(AdminPage);

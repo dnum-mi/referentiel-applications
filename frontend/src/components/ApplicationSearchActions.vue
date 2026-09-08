@@ -63,8 +63,10 @@ const hasCreateGlobalReport = computed(() => {
   return userStore.hasPermissions([Permission.CREATE_GLOBAL_REPORT]);
 });
 
+// #2446 : seule la capacité dédiée ouvre la gestion des campagnes. `AdminPanelManage` ne suffit
+// plus — un administrateur de périmètre ne l'obtient que par délégation explicite.
 const hasQualityCampaignPermissions = computed(() => {
-  return userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE, Permission.QUALITY_CAMPAIGN_MANAGE]);
+  return userStore.hasPermissions([Permission.QUALITY_CAMPAIGN_MANAGE]);
 });
 </script>
 

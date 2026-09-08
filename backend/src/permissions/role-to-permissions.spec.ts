@@ -1,5 +1,9 @@
 import { Permission, Roles } from "@prisma/client";
-import { roleToAppPermissions, roleToPermissions } from "./role-to-permissions";
+import {
+  principalToPermissions,
+  roleToAppPermissions,
+  roleToPermissions,
+} from "./role-to-permissions";
 
 // #2088 — l'onglet Technologies suit le schéma des autres onglets : pas de « lecture pour
 // tous » globale (défait #2027). La lecture vient de la projection de rôle par application
@@ -16,5 +20,45 @@ describe("roleToPermissions / roleToAppPermissions — TechnologyRead", () => {
     const appPerms = roleToAppPermissions(Roles.READER);
     expect(appPerms).toContain(Permission.TechnologyRead);
     expect(appPerms).toContain(Permission.ActorRead);
+  });
+});
+
+// #2446 — Un administrateur ayant un périmètre organisationnel n'administre que les utilisateurs
+// et les acteurs de ce périmètre : les capacités transverses ne lui sont pas accordées par son
+// rôle. `QualityCampaignManage` reste délégable individuellement (couche 2).
+describe("roleToPermissions — administrateur de périmètre", () => {
+  it("un ADMIN sans périmètre porte les capacités transverses", () => {
+    const permissions = roleToPermissions(Roles.ADMIN);
+    expect(permissions).toContain(Permission.AdminPanelManage);
+    expect(permissions).toContain(Permission.GlobalAdminManage);
+    expect(permissions).toContain(Permission.QualityCampaignManage);
+  });
+
+  it("un ADMIN scopé garde AdminPanelManage mais perd les capacités transverses", () => {
+    const permissions = roleToPermissions(Roles.ADMIN, { scoped: true });
+    expect(permissions).toContain(Permission.AdminPanelManage);
+    expect(permissions).not.toContain(Permission.GlobalAdminManage);
+    expect(permissions).not.toContain(Permission.QualityCampaignManage);
+  });
+
+  it("les autres rôles ne sont pas affectés par le périmètre", () => {
+    for (const role of [Roles.CONTRIBUTOR, Roles.READER, Roles.VISITOR]) {
+      expect(roleToPermissions(role, { scoped: true })).toEqual(
+        roleToPermissions(role),
+      );
+    }
+  });
+
+  it("principalToPermissions dérive le périmètre du principal", () => {
+    expect(
+      principalToPermissions({
+        role: Roles.ADMIN,
+        scopeOrganizationId: "org-1",
+      }),
+    ).not.toContain(Permission.GlobalAdminManage);
+
+    expect(
+      principalToPermissions({ role: Roles.ADMIN, scopeOrganizationId: null }),
+    ).toContain(Permission.GlobalAdminManage);
   });
 });

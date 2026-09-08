@@ -39,8 +39,8 @@ export class UpdateUserDto {
     description: "Liste des permissions supplémentaire accordé a un user",
   })
   // #2498 : seules les permissions déléguables sont acceptées (liste fermée), jamais
-  // AdminPanelManage ni une permission applicative — sinon un contributeur délégué pourrait être
-  // promu super-administrateur de fait.
+  // AdminPanelManage/GlobalAdminManage ni une permission applicative — sinon un contributeur
+  // délégué pourrait être promu super-administrateur de fait.
   @IsArray()
   @IsEnum(Permission, { each: true })
   @IsIn(DELEGABLE_PERMISSIONS, {
