@@ -18,6 +18,7 @@ describe("UpdateUserDto — additionalPermissions", () => {
       Permission.CreateApplication,
       Permission.DataExport,
       Permission.QualityCampaignManage,
+      Permission.MditCampaignManage,
     ]);
     expect(errors).toHaveLength(0);
   });

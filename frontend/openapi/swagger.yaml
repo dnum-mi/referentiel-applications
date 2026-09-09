@@ -4949,7 +4949,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/MditCampaignDto"
         "403":
-          description: Accès refusé - Privilège admin requis
+          description: Accès refusé - permission MditCampaignManage requise
         "409":
           description: Une campagne existe déjà pour ce millésime
       summary: Créer une campagne dette IT (millésime)
@@ -5033,7 +5033,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/MditCampaignDto"
         "403":
-          description: Accès refusé - Privilège admin requis
+          description: Accès refusé - permission MditCampaignManage requise
         "404":
           description: Campagne non trouvée
         "409":
@@ -5052,7 +5052,7 @@ paths:
         "204":
           description: Campagne supprimée avec succès
         "403":
-          description: Accès refusé - Privilège admin requis
+          description: Accès refusé - permission MditCampaignManage requise
         "404":
           description: Campagne non trouvée
       summary: Supprimer une campagne dette IT
@@ -7200,6 +7200,7 @@ components:
         - OrganizationManage
         - ColumnRead
         - QualityCampaignManage
+        - MditCampaignManage
         - AppRead
         - AppWrite
         - ActorRead

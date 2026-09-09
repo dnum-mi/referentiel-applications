@@ -569,7 +569,7 @@ describe("ScopedPermissionService", () => {
   });
 });
 
-// ─── #2498 : rôle ADMIN obligatoire, pas d'auto-modification des droits ─────────
+// ─── #2498 : rôle ADMIN obligatoire pour administrer les utilisateurs ─────────
 
 describe("ScopedPermissionService — rôle administrateur requis (#2498)", () => {
   let service: ScopedPermissionService;
@@ -640,27 +640,67 @@ describe("ScopedPermissionService — rôle administrateur requis (#2498)", () =
       scopeOrganization: { id: "admin-scope-org", path: ADMIN_SCOPE_PATH },
     } as unknown as Requestor;
 
-    it("refuse de changer son propre rôle", async () => {
+    it("un administrateur peut désormais changer son propre rôle (aucun verrou d'auto-privilège)", async () => {
+      mockPrismaService.user.findFirst.mockResolvedValue({
+        ...makeUser(orgInScope.id, "admin-scope-org"),
+        id: self.id,
+        role: Roles.ADMIN,
+        additionalPermissions: ["DataExport"],
+      });
+      mockPrismaService.organization.findUnique.mockImplementation(
+        ({ where: { id } }: { where: { id: string } }) =>
+          Promise.resolve(orgMap[id] ?? null),
+      );
+
       await expect(
         service.assertCanUpdate(
           self.id,
           { role: Roles.CONTRIBUTOR } as UpdateUserDto,
           self,
         ),
-      ).rejects.toThrow("Vous ne pouvez pas modifier vos propres droits");
+      ).resolves.toBeUndefined();
     });
 
-    it("refuse de retirer son propre périmètre", async () => {
+    it("le retrait de son propre périmètre reste réservé à un administrateur global, comme pour un tiers", async () => {
+      // Pas un verrou d'auto-privilège : assertScopeOrganizationAction interdit à TOUT admin
+      // scopé de retirer un périmètre, le sien comme celui d'un tiers.
+      mockPrismaService.user.findFirst.mockResolvedValue({
+        ...makeUser(orgInScope.id, "admin-scope-org"),
+        id: self.id,
+        role: Roles.ADMIN,
+        additionalPermissions: ["DataExport"],
+      });
+      mockPrismaService.organization.findUnique.mockImplementation(
+        ({ where: { id } }: { where: { id: string } }) =>
+          Promise.resolve(orgMap[id] ?? null),
+      );
+
       await expect(
         service.assertCanUpdate(
           self.id,
           { scopeOrganizationId: null } as UpdateUserDto,
           self,
         ),
-      ).rejects.toBeInstanceOf(ScopePermissionsException);
+      ).rejects.toThrow(
+        "Seul un administrateur global peut supprimer le périmètre d'un utilisateur",
+      );
     });
 
-    it("refuse de changer ses propres permissions déléguées", async () => {
+    it("un admin SCOPÉ ne peut pas changer ses propres permissions déléguées (réservé au global, pas au self)", async () => {
+      // #2608 : ce n'est plus assertNotSelfPrivilegeChange qui bloque ici (les permissions
+      // déléguées sont sorties de ce verrou), mais assertNoPrivilegeEscalation — un admin scopé
+      // ne peut modifier additionalPermissions pour PERSONNE, lui y compris.
+      mockPrismaService.user.findFirst.mockResolvedValue({
+        ...makeUser(orgInScope.id, "admin-scope-org"),
+        id: self.id,
+        role: Roles.ADMIN,
+        additionalPermissions: ["DataExport"],
+      });
+      mockPrismaService.organization.findUnique.mockImplementation(
+        ({ where: { id } }: { where: { id: string } }) =>
+          Promise.resolve(orgMap[id] ?? null),
+      );
+
       await expect(
         service.assertCanUpdate(
           self.id,
@@ -669,7 +709,30 @@ describe("ScopedPermissionService — rôle administrateur requis (#2498)", () =
           } as UpdateUserDto,
           self,
         ),
-      ).rejects.toBeInstanceOf(ScopePermissionsException);
+      ).rejects.toThrow(
+        "Seul un administrateur global peut modifier les permissions additionnelles",
+      );
+    });
+
+    it("un admin GLOBAL peut s'accorder/se retirer lui-même une permission déléguée (#2608)", async () => {
+      // additionalPermissions est déjà borné en amont à DELEGABLE_PERMISSIONS (liste fermée sans
+      // risque d'escalade) : un admin global n'a donc pas besoin d'un autre admin pour se
+      // l'accorder, comme il pourrait le faire pour un tiers. Un admin SCOPÉ, lui, ne peut
+      // toucher additionalPermissions pour personne (cf. test ci-dessus) — self ou tiers.
+      await expect(
+        service.assertCanUpdate(
+          superAdmin.id,
+          {
+            additionalPermissions: [
+              "QualityCampaignManage",
+              "MditCampaignManage",
+            ],
+          } as UpdateUserDto,
+          { ...superAdmin, additionalPermissions: [] } as unknown as Requestor,
+        ),
+      ).resolves.toBeUndefined();
+      // Admin global : sort avant tout appel base de données (comme pour les autres actions).
+      expect(mockPrismaService.user.findFirst).not.toHaveBeenCalled();
     });
 
     it("laisse passer une mise à jour de soi qui ne touche pas aux droits", async () => {

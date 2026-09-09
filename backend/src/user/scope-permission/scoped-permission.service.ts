@@ -26,7 +26,6 @@ export class ScopedPermissionService {
     requestor: Requestor,
   ): Promise<void> {
     this.assertIsAdministrator(requestor);
-    this.assertNotSelfPrivilegeChange(targetUserId, dto, requestor);
     const requestorScopePath = requestor?.scopeOrganization?.path;
     // Si le requestor n'a pas de scope, c'est qu'il est super admin et peut tout faire → PAS DE CHECK
     if (!requestorScopePath) return;
@@ -242,37 +241,6 @@ export class ScopedPermissionService {
     if (requestor?.role !== Roles.ADMIN) {
       throw new ScopePermissionsException(
         "Cette action est réservée aux administrateurs",
-      );
-    }
-  }
-
-  /**
-   * #2498 : un administrateur ne modifie pas ses propres droits (rôle, périmètre, permissions
-   * déléguées) — un admin scopé ne doit pas pouvoir se retirer son périmètre pour devenir global.
-   * Les autres champs (organisation de rattachement) restent modifiables.
-   */
-  private assertNotSelfPrivilegeChange(
-    targetUserId: string,
-    dto: UpdateUserDto,
-    requestor: Requestor,
-  ): void {
-    if (targetUserId !== requestor?.id) return;
-
-    const roleChanged = dto.role !== undefined && dto.role !== requestor.role;
-    const scopeChanged =
-      dto.scopeOrganizationId !== undefined &&
-      (dto.scopeOrganizationId ?? null) !==
-        (requestor.scopeOrganizationId ?? null);
-    const currentPermissions = new Set(requestor.additionalPermissions ?? []);
-    const nextPermissions = new Set(dto.additionalPermissions ?? []);
-    const permissionsChanged =
-      dto.additionalPermissions !== undefined &&
-      (currentPermissions.size !== nextPermissions.size ||
-        [...nextPermissions].some((p) => !currentPermissions.has(p)));
-
-    if (roleChanged || scopeChanged || permissionsChanged) {
-      throw new ScopePermissionsException(
-        "Vous ne pouvez pas modifier vos propres droits",
       );
     }
   }

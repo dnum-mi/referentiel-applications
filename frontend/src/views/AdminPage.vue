@@ -38,7 +38,8 @@ interface DsfrTab {
    *
    * #2446 : le défaut est l'administration GLOBALE. Un administrateur ayant un périmètre
    * organisationnel ne conserve que les onglets explicitement ouverts à `AdminPanelManage`
-   * (utilisateurs, acteurs), les seuls dont le contenu se découpe par périmètre.
+   * (utilisateurs, acteurs) ou à une capacité de campagne qui lui a été déléguée (#2608) — les
+   * seuls dont le contenu se découpe par périmètre ou peut être délégué indépendamment.
    */
   permissions?: Permission[];
 }
@@ -117,6 +118,9 @@ const allTabs: DsfrTab[] = [
     panelId: "panel-mdit-campaigns",
     component: markRaw(AdminMditCampaignsTab),
     themeId: "campaigns",
+    // #2608 : MditCampaignManage n'est pas incluse dans le socle ADMIN — accordée explicitement,
+    // délégable à un non-admin comme QualityCampaignManage.
+    permissions: [Permission.MDIT_CAMPAIGN_MANAGE],
   },
   {
     title: "Campagnes de mise en qualité",
@@ -125,8 +129,9 @@ const allTabs: DsfrTab[] = [
     panelId: "panel-quality-campaigns",
     component: markRaw(AdminQualityCampaignsTab),
     themeId: "campaigns",
-    // Délégable à un non-admin (#2282). #2446 : la capacité dédiée est désormais la SEULE porte
-    // d'entrée — un administrateur de périmètre ne l'a que si elle lui a été déléguée.
+    // Délégable à un non-admin (#2282). #2446/#2608 : la capacité dédiée est désormais la SEULE
+    // porte d'entrée — jamais via AdminPanelManage ni GlobalAdminManage — un administrateur de
+    // périmètre comme global ne l'a que si elle lui a été déléguée explicitement (couche 2).
     permissions: [Permission.QUALITY_CAMPAIGN_MANAGE],
   },
   {
@@ -136,8 +141,10 @@ const allTabs: DsfrTab[] = [
     panelId: "panel-correlations",
     component: markRaw(AdminCorrelationsTab),
     themeId: "campaigns",
-    // Pas de `permissions` : le défaut du filtre ci-dessous est GlobalAdminManage,
-    // qui est exactement ce qu'exigent les endpoints de revue des corrélations.
+    // Pas de `permissions` : le défaut du filtre ci-dessous est GlobalAdminManage, qui est
+    // exactement ce qu'exigent les endpoints de revue des corrélations — réservé aux admins
+    // GLOBAUX, un admin de périmètre n'a pas de vision transverse pertinente pour arbitrer des
+    // suggestions de corrélation, qui peuvent porter sur des applications hors de son périmètre.
   },
   {
     title: "Gestions des tags",
@@ -191,14 +198,17 @@ const allTabs: DsfrTab[] = [
   },
 ];
 
-// Un utilisateur délégué uniquement QualityCampaignManage atteint /administration (cf. router)
-// mais ne doit voir que l'onglet couvert par cette permission, pas le reste du panneau admin.
-// Même mécanique pour l'administrateur de périmètre (#2446) : il n'a pas `GlobalAdminManage`,
-// donc le défaut ci-dessous ne lui laisse que les onglets Utilisateurs et Acteurs.
+// Un utilisateur délégué uniquement QualityCampaignManage/MditCampaignManage atteint
+// /administration (cf. router) mais ne doit voir que l'onglet couvert par cette permission, pas
+// le reste du panneau admin. Même mécanique pour l'administrateur de périmètre (#2446) : il n'a
+// pas `GlobalAdminManage`, donc le défaut ci-dessous ne lui laisse que les onglets explicitement
+// ouverts (Utilisateurs, Acteurs) et ceux couverts par une capacité qui lui a été déléguée.
 const tabs = computed(() => allTabs.filter((tab) => userStore.hasPermissions(tab.permissions ?? [Permission.GLOBAL_ADMIN_MANAGE])));
 
 // Un thème n'est proposé que s'il contient au moins un onglet visible pour l'utilisateur
-// courant (ex. le délégué QualityCampaignManage ne doit voir que la tuile « Campagnes »).
+// courant — même règle pour les 3 thèmes (ex. le délégué QualityCampaignManage ne doit voir que
+// la tuile « Campagnes » ; un admin de périmètre sans capacité de campagne ne voit pas la tuile
+// « Campagnes », comme il ne voit déjà pas la tuile « Gestion »).
 const visibleThemes = computed(() => themes.filter((theme) => tabs.value.some((tab) => tab.themeId === theme.id)));
 
 // #2446 : la description rédigée annonce le thème complet. Dès qu'un onglet est masqué (délégué

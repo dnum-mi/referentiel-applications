@@ -12,8 +12,10 @@ import { setupTestSuite } from "./setup";
 /**
  * #2446 — Un administrateur ayant un périmètre organisationnel administre les utilisateurs et
  * les acteurs de son périmètre, et rien d'autre : les réglages transverses (tags, sources,
- * tokens, batchs, matrice des permissions, directions métier, journal des actions, campagnes…)
- * relèvent de l'administrateur global, seul porteur de `GlobalAdminManage`.
+ * tokens, batchs, matrice des permissions, directions métier, journal des actions…) relèvent de
+ * l'administrateur global, seul porteur de `GlobalAdminManage`. Les campagnes (qualité et dette
+ * IT) suivent une logique à part (#2608) : leur capacité dédiée n'est jamais accordée par
+ * défaut, ni à un administrateur scopé ni à un administrateur global.
  */
 describe("Périmètre d'un administrateur scopé (#2446)", () => {
   const app = setupTestSuite();
@@ -87,14 +89,14 @@ describe("Périmètre d'un administrateur scopé (#2446)", () => {
   });
 
   describe("Permissions dérivées du rôle", () => {
-    it("un administrateur global porte GlobalAdminManage et QualityCampaignManage", async () => {
+    it("un administrateur global porte GlobalAdminManage, mais pas QualityCampaignManage (#2608, jamais par défaut)", async () => {
       const response = await request(app().getHttpServer())
         .get("/users/me")
         .set("Authorization", `Bearer ${GLOBAL_ADMIN_TOKEN}`)
         .expect(200);
 
       expect(response.body.permissions).toContain(Permission.GlobalAdminManage);
-      expect(response.body.permissions).toContain(
+      expect(response.body.permissions).not.toContain(
         Permission.QualityCampaignManage,
       );
     });
@@ -124,7 +126,6 @@ describe("Périmètre d'un administrateur scopé (#2446)", () => {
       ["historique des e-mails", "/email/logs"],
       ["historique global des modifications", "/metadatas"],
       ["revue datasteward", "/correlation-suggestions"],
-      ["campagnes de mise en qualité", "/quality-campaigns"],
     ];
 
     it.each(forbiddenReads)(
@@ -183,6 +184,16 @@ describe("Périmètre d'un administrateur scopé (#2446)", () => {
           .expect(403);
       },
     );
+
+    // #2608 : QualityCampaignManage n'est jamais accordée par défaut, y compris à un
+    // administrateur GLOBAL — contrairement aux autres réglages transverses ci-dessus, qui lui
+    // reviennent tous via GlobalAdminManage. Elle doit systématiquement être déléguée (couche 2).
+    it("même un administrateur global n'accède pas aux campagnes de mise en qualité sans délégation explicite", async () => {
+      await request(app().getHttpServer())
+        .get("/quality-campaigns")
+        .set("Authorization", `Bearer ${GLOBAL_ADMIN_TOKEN}`)
+        .expect(403);
+    });
   });
 
   describe("GET /actors — liste filtrée par périmètre", () => {

@@ -261,8 +261,12 @@ test.describe("ApplicationsView", () => {
     expect((new URL(page.url()).searchParams.get("currentStatus__in") ?? "").split(",")).not.toContain("to_validate");
 
     await page.goto(`${BASE_URL}/`);
-    await page.goBack({ waitUntil: "domcontentloaded" });
-    await page.waitForURL(/\/recherche-application/);
+    // #2608 : `waitUntil: "domcontentloaded"` + un `waitForURL` séparé peut rester bloqué en
+    // WebKit/Firefox — une navigation arrière restaurée depuis le bfcache ne redéclenche pas
+    // toujours ces évènements de cycle de vie. On se contente du commit de la navigation, puis on
+    // sonde l'URL réelle au lieu d'attendre un évènement qui peut ne jamais arriver.
+    await page.goBack({ waitUntil: "commit" });
+    await expect.poll(() => page.url(), { timeout: 15000 }).toMatch(/\/recherche-application/);
     await expect(page.getByTestId(APPLICATION_SEARCH_TITLE_TEST_ID)).toBeVisible();
 
     const params = new URL(page.url()).searchParams;

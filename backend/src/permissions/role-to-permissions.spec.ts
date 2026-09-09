@@ -1,5 +1,6 @@
 import { Permission, Roles } from "@prisma/client";
 import {
+  DELEGABLE_PERMISSIONS,
   principalToPermissions,
   roleToAppPermissions,
   roleToPermissions,
@@ -24,21 +25,19 @@ describe("roleToPermissions / roleToAppPermissions — TechnologyRead", () => {
 });
 
 // #2446 — Un administrateur ayant un périmètre organisationnel n'administre que les utilisateurs
-// et les acteurs de ce périmètre : les capacités transverses ne lui sont pas accordées par son
-// rôle. `QualityCampaignManage` reste délégable individuellement (couche 2).
+// et les acteurs de ce périmètre : les capacités transverses (`GlobalAdminManage`) ne lui sont
+// pas accordées par son rôle.
 describe("roleToPermissions — administrateur de périmètre", () => {
   it("un ADMIN sans périmètre porte les capacités transverses", () => {
     const permissions = roleToPermissions(Roles.ADMIN);
     expect(permissions).toContain(Permission.AdminPanelManage);
     expect(permissions).toContain(Permission.GlobalAdminManage);
-    expect(permissions).toContain(Permission.QualityCampaignManage);
   });
 
   it("un ADMIN scopé garde AdminPanelManage mais perd les capacités transverses", () => {
     const permissions = roleToPermissions(Roles.ADMIN, { scoped: true });
     expect(permissions).toContain(Permission.AdminPanelManage);
     expect(permissions).not.toContain(Permission.GlobalAdminManage);
-    expect(permissions).not.toContain(Permission.QualityCampaignManage);
   });
 
   it("les autres rôles ne sont pas affectés par le périmètre", () => {
@@ -60,5 +59,24 @@ describe("roleToPermissions — administrateur de périmètre", () => {
     expect(
       principalToPermissions({ role: Roles.ADMIN, scopeOrganizationId: null }),
     ).toContain(Permission.GlobalAdminManage);
+  });
+});
+
+// #2608 — QualityCampaignManage et MditCampaignManage ne sont jamais accordées par défaut au
+// rôle ADMIN, scopé ou non : contrairement aux autres permissions du socle Administrateur
+// (dont `GlobalAdminManage`, cf. ci-dessus), elles doivent systématiquement être indiquées
+// explicitement via additionalPermissions, y compris pour un administrateur global.
+describe("roleToPermissions — gestion des campagnes non accordée par défaut à ADMIN", () => {
+  it("ADMIN n'a ni QualityCampaignManage ni MditCampaignManage par défaut, scopé ou non", () => {
+    for (const scoped of [false, true]) {
+      const adminPermissions = roleToPermissions(Roles.ADMIN, { scoped });
+      expect(adminPermissions).not.toContain(Permission.QualityCampaignManage);
+      expect(adminPermissions).not.toContain(Permission.MditCampaignManage);
+    }
+  });
+
+  it("les deux permissions restent déléguables explicitement (additionalPermissions)", () => {
+    expect(DELEGABLE_PERMISSIONS).toContain(Permission.QualityCampaignManage);
+    expect(DELEGABLE_PERMISSIONS).toContain(Permission.MditCampaignManage);
   });
 });

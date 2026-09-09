@@ -37,28 +37,29 @@ const ADMIN_PERMISSIONS = new Set([
   Permission.DataExport,
   Permission.DeleteApplication,
   Permission.ActorTypePost,
-  // Par défaut pour les administrateurs, mais aussi accordable individuellement (couche 2,
-  // additionalPermissions) à un utilisateur non-admin pour lui déléguer uniquement la gestion
-  // des campagnes qualité (#2282).
-  Permission.QualityCampaignManage,
+  // QualityCampaignManage et MditCampaignManage ne sont PAS incluses ici (#2608) : contrairement
+  // aux autres permissions de ce socle, la gestion des campagnes (qualité ou dette IT) n'est
+  // jamais accordée par défaut à un administrateur, y compris global. Elle doit être indiquée
+  // explicitement via la couche 2 (additionalPermissions), pour lui comme pour un utilisateur
+  // délégué non-admin — cf. DELEGABLE_PERMISSIONS ci-dessous.
 ]);
 
 /**
  * #2446 — Capacités d'administration retirées à un administrateur ayant un PÉRIMÈTRE
  * organisationnel : elles portent sur des objets transverses (tags, sources, tokens, batchs,
- * matrice des permissions, directions métier, journal des actions, campagnes…) qui ne sont
- * rattachés à aucune organisation, donc qu'aucun périmètre ne peut découper. L'administrateur
- * de périmètre conserve `AdminPanelManage`, qui ne lui ouvre plus que l'administration des
- * utilisateurs et des acteurs — déjà filtrée par son périmètre.
+ * matrice des permissions, directions métier, journal des actions…) qui ne sont rattachés à
+ * aucune organisation, donc qu'aucun périmètre ne peut découper. L'administrateur de périmètre
+ * conserve `AdminPanelManage`, qui ne lui ouvre plus que l'administration des utilisateurs et des
+ * acteurs — déjà filtrée par son périmètre.
  *
- * `QualityCampaignManage` en fait partie : un administrateur de périmètre ne gère les campagnes
- * que si un administrateur global la lui délègue explicitement (couche 2,
- * `User.additionalPermissions`), conformément à « seuls les utilisateurs ayant accès à la
- * capacité gestion des campagnes peuvent gérer les campagnes ».
+ * `QualityCampaignManage` et `MditCampaignManage` n'ont pas besoin d'y figurer (#2608) : elles ne
+ * sont de toute façon JAMAIS incluses dans `ADMIN_PERMISSIONS`, scopé ou non — un administrateur
+ * ne gère les campagnes (qualité ou dette IT) que si elles lui sont explicitement déléguées
+ * (couche 2, `User.additionalPermissions`), conformément à « seuls les utilisateurs ayant accès à
+ * la capacité gestion des campagnes peuvent gérer les campagnes ».
  */
 const SCOPED_ADMIN_EXCLUDED_PERMISSIONS: ReadonlySet<Permission> = new Set([
   Permission.GlobalAdminManage,
-  Permission.QualityCampaignManage,
 ]);
 
 /**
@@ -67,6 +68,10 @@ const SCOPED_ADMIN_EXCLUDED_PERMISSIONS: ReadonlySet<Permission> = new Set([
  * DeleteApplication, permissions applicatives…) est refusé par le DTO de mise à jour (#2498),
  * pour qu'une délégation ne puisse jamais fabriquer un super-administrateur.
  * Miroir de la liste proposée par le panneau d'administration (UserActions.vue).
+ *
+ * QualityCampaignManage et MditCampaignManage y figurent aussi pour un ADMIN (#2608) : ces deux
+ * permissions ne sont jamais accordées par le rôle (cf. ADMIN_PERMISSIONS) et doivent donc
+ * toujours être ajoutées explicitement ici, même pour un administrateur.
  */
 export const DELEGABLE_PERMISSIONS: readonly Permission[] = [
   Permission.CreateApplication,
@@ -74,6 +79,7 @@ export const DELEGABLE_PERMISSIONS: readonly Permission[] = [
   Permission.DataExport,
   Permission.MDITList,
   Permission.QualityCampaignManage,
+  Permission.MditCampaignManage,
 ];
 
 /**
