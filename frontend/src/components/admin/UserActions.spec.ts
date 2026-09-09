@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/vu
 import { Permission, Roles, type OrganizationDto, type UserEntity } from "@/client/types.gen";
 import UserActions from "./UserActions.vue";
 
-const { currentUserMock, hasPermissionsMock, syncOrganizationMock } = vi.hoisted(() => ({
+const { currentUserMock, hasPermissionsMock, syncOrganizationMock, fetchUserMock } = vi.hoisted(() => ({
   currentUserMock: {
     user: {
       id: "current-user",
@@ -11,18 +11,20 @@ const { currentUserMock, hasPermissionsMock, syncOrganizationMock } = vi.hoisted
   },
   hasPermissionsMock: vi.fn(),
   syncOrganizationMock: vi.fn(),
+  fetchUserMock: vi.fn(),
 }));
 
-const { blockMock, unblockMock } = vi.hoisted(() => ({
+const { blockMock, unblockMock, updateUserMock } = vi.hoisted(() => ({
   blockMock: vi.fn(),
   unblockMock: vi.fn(),
+  updateUserMock: vi.fn(),
 }));
 
 vi.mock("@/api/index", () => ({
   default: {
     userControllerSyncOrganizationFromMaiaByEmail: (...args: unknown[]) => syncOrganizationMock(...args),
     userControllerSyncOrganizationFromMaia: vi.fn(),
-    userControllerUpdate: vi.fn(),
+    userControllerUpdate: (...args: unknown[]) => updateUserMock(...args),
     userControllerBlock: (...args: unknown[]) => blockMock(...args),
     userControllerUnblock: (...args: unknown[]) => unblockMock(...args),
   },
@@ -48,6 +50,7 @@ vi.mock("@/stores/userStore", () => ({
       return !targetOrganizationPath || targetOrganizationPath.startsWith(scopePath);
     },
     startImpersonation: vi.fn(),
+    fetchUser: fetchUserMock,
   }),
 }));
 
@@ -116,7 +119,10 @@ describe("UserActions", () => {
   beforeEach(() => {
     hasPermissionsMock.mockReset();
     syncOrganizationMock.mockReset();
+    updateUserMock.mockReset();
+    fetchUserMock.mockReset();
     currentUserMock.user.scopeOrganization = null;
+    currentUserMock.user.id = "current-user";
     syncOrganizationMock.mockResolvedValue({
       response: { ok: true },
       data: null,
@@ -228,6 +234,49 @@ describe("UserActions", () => {
 
     expect(screen.queryByTestId("admin-user-block-btn")).not.toBeInTheDocument();
     currentUserMock.user.id = "current-user";
+  });
+
+  it("refreshes the current user's session after editing one's own account (#2608)", async () => {
+    hasPermissionsMock.mockReturnValue(true);
+    currentUserMock.user.id = targetUser.id;
+    updateUserMock.mockResolvedValue({
+      error: undefined,
+      data: { ...targetUser, additionalPermissions: [Permission.QUALITY_CAMPAIGN_MANAGE] },
+    });
+
+    render(UserActions, {
+      props: { user: targetUser },
+      global,
+    });
+
+    await fireEvent.click(screen.getByTestId("admin-user-edit-btn"));
+    await waitFor(() => expect(screen.getByTestId("admin-edit-user-modal")).toBeInTheDocument());
+
+    await fireEvent.click(screen.getByTestId("admin-save-perms-btn"));
+
+    await waitFor(() => expect(updateUserMock).toHaveBeenCalled());
+    expect(fetchUserMock).toHaveBeenCalled();
+  });
+
+  it("does not refresh the session when editing a different user", async () => {
+    hasPermissionsMock.mockReturnValue(true);
+    updateUserMock.mockResolvedValue({
+      error: undefined,
+      data: targetUser,
+    });
+
+    render(UserActions, {
+      props: { user: targetUser },
+      global,
+    });
+
+    await fireEvent.click(screen.getByTestId("admin-user-edit-btn"));
+    await waitFor(() => expect(screen.getByTestId("admin-edit-user-modal")).toBeInTheDocument());
+
+    await fireEvent.click(screen.getByTestId("admin-save-perms-btn"));
+
+    await waitFor(() => expect(updateUserMock).toHaveBeenCalled());
+    expect(fetchUserMock).not.toHaveBeenCalled();
   });
 
   it("shows the impersonate button to a global administrator for any user", () => {

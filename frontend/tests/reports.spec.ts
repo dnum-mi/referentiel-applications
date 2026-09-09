@@ -17,8 +17,11 @@ async function openSearchAndOpenGlobalReportModal(page: Page) {
 
 async function submitGlobalReport(page: Page, description: string) {
   await page.getByTestId("report-description").fill(description);
+  // Timeout explicite au-delà des 15s par défaut (actionTimeout) : sous charge CI, WebKit peut
+  // mettre plus de temps à déclencher la requête après le clic, sans que ce soit un vrai échec.
   const createReport = page.waitForResponse(
     (response) => response.url().includes("/api/v2/reports") && response.request().method() === "POST",
+    { timeout: 30000 },
   );
   await page.getByTestId("report-submit-btn").click();
   return createReport;

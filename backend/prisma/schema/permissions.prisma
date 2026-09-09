@@ -83,9 +83,11 @@ enum Permission {
   /// avec un périmètre organisationnel la conserve, mais ne l'exerce que dans son périmètre.
   AdminPanelManage
   /// Administrer les réglages transverses du référentiel (tags, sources, tokens, batchs, matrice
-  /// des permissions, directions métier, journal des actions, campagnes dette IT…). Réservée aux
-  /// administrateurs SANS périmètre organisationnel (#2446) : ces objets ne sont rattachés à
-  /// aucune organisation, donc un administrateur de périmètre n'a pas à les gérer.
+  /// des permissions, directions métier, journal des actions…). Réservée aux administrateurs SANS
+  /// périmètre organisationnel (#2446) : ces objets ne sont rattachés à aucune organisation, donc
+  /// un administrateur de périmètre n'a pas à les gérer. Les campagnes (qualité comme dette IT)
+  /// n'en font PAS partie : elles ont chacune leur propre capacité dédiée, déléguable
+  /// indépendamment de GlobalAdminManage (cf. QualityCampaignManage, MditCampaignManage).
   GlobalAdminManage
   /// Crée un nouveau type d'acteur 
   ActorTypePost
@@ -99,6 +101,8 @@ enum Permission {
   ColumnRead
   /// Gérer les campagnes de mise en qualité (créer, modifier, supprimer, envoyer) (#2282)
   QualityCampaignManage
+  /// Gérer les campagnes de dette IT / millésimes (créer, modifier, supprimer) (#2608)
+  MditCampaignManage
 
   // --- Permissions applicatives (par app) ---
   // Couple read/write classique

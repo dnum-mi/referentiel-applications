@@ -62,13 +62,29 @@ describe("adminPage (#2419, regroupement en tuiles thématiques)", () => {
     expect(within(tabs).queryAllByRole("tab")).toHaveLength(1);
   });
 
-  // #2446 : un administrateur de périmètre n'a plus GlobalAdminManage — il ne conserve que les
-  // deux onglets dont le contenu se découpe par périmètre.
+  it("un utilisateur délégué MditCampaignManage seul ne voit que la tuile « Campagnes » et son unique onglet (#2608)", () => {
+    hasPermissionsMock.mockImplementation((permissions: string[]) => permissions.includes(Permission.MDIT_CAMPAIGN_MANAGE));
+    render(AdminPage);
+
+    expect(screen.queryByTestId("admin-theme-tile-users-rights")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("admin-theme-tile-management")).not.toBeInTheDocument();
+    expect(screen.getByTestId("admin-theme-tile-campaigns")).toBeInTheDocument();
+
+    const tabs = screen.getByTestId("admin-tabs");
+    expect(within(tabs).getByRole("tab", { name: "Campagnes dette IT" })).toBeInTheDocument();
+    expect(within(tabs).queryAllByRole("tab")).toHaveLength(1);
+  });
+
+  // #2446 : un administrateur de périmètre n'a pas GlobalAdminManage — il ne conserve que les
+  // deux onglets dont le contenu se découpe par périmètre (Utilisateurs, Acteurs).
   it("un administrateur de périmètre ne voit que « Gestion des utilisateurs » et « Gestion des acteurs »", () => {
     hasPermissionsMock.mockImplementation((permissions: string[]) => permissions.includes(Permission.ADMIN_PANEL_MANAGE));
     render(AdminPage);
 
     expect(screen.getByTestId("admin-theme-tile-users-rights")).toBeInTheDocument();
+    // Sans capacité de campagne déléguée ni GlobalAdminManage, les tuiles « Campagnes » et
+    // « Gestion » n'ont plus aucun onglet accessible : elles disparaissent, comme n'importe
+    // quel thème vide (même règle pour les trois tuiles, pas de cas particulier).
     expect(screen.queryByTestId("admin-theme-tile-campaigns")).not.toBeInTheDocument();
     expect(screen.queryByTestId("admin-theme-tile-management")).not.toBeInTheDocument();
 
@@ -88,6 +104,63 @@ describe("adminPage (#2419, regroupement en tuiles thématiques)", () => {
     const tile = screen.getByTestId("admin-theme-tile-users-rights");
     expect(tile).toHaveTextContent("Gestion des utilisateurs, Gestion des acteurs.");
     expect(tile).not.toHaveTextContent("matrice des permissions");
+  });
+
+  it("un ADMIN global sans MditCampaignManage ni QualityCampaignManage explicites voit Revue datasteward mais aucun onglet de campagne dédié (#2608)", async () => {
+    // AdminPanelManage + GlobalAdminManage : un admin global « nu », sans capacité de campagne.
+    hasPermissionsMock.mockImplementation(
+      (permissions: string[]) =>
+        permissions.includes(Permission.ADMIN_PANEL_MANAGE) || permissions.includes(Permission.GLOBAL_ADMIN_MANAGE),
+    );
+    render(AdminPage);
+
+    await fireEvent.click(screen.getByTestId("admin-theme-tile-campaigns"));
+
+    // La tuile « Campagnes » reste visible grâce à l'onglet « Revue datasteward » (GlobalAdminManage,
+    // sans lien avec les deux capacités de campagne), mais aucun des deux onglets de campagne
+    // dédiés ne doit apparaître.
+    const tabs = screen.getByTestId("admin-tabs");
+    expect(within(tabs).getByRole("tab", { name: "Revue datasteward" })).toBeInTheDocument();
+    expect(within(tabs).queryByRole("tab", { name: "Campagnes dette IT" })).not.toBeInTheDocument();
+    expect(within(tabs).queryByRole("tab", { name: "Campagnes de mise en qualité" })).not.toBeInTheDocument();
+  });
+
+  it("un admin SCOPÉ ne voit jamais l'onglet « Revue datasteward », même avec les deux capacités de campagne", async () => {
+    // Ni AdminPanelManage seul ni les deux capacités de campagne n'incluent GlobalAdminManage :
+    // exactement la situation d'un admin de périmètre auquel on a délégué les deux campagnes.
+    hasPermissionsMock.mockImplementation(
+      (permissions: string[]) =>
+        permissions.includes(Permission.ADMIN_PANEL_MANAGE) ||
+        permissions.includes(Permission.QUALITY_CAMPAIGN_MANAGE) ||
+        permissions.includes(Permission.MDIT_CAMPAIGN_MANAGE),
+    );
+    render(AdminPage);
+
+    await fireEvent.click(screen.getByTestId("admin-theme-tile-campaigns"));
+
+    const tabs = screen.getByTestId("admin-tabs");
+    expect(within(tabs).queryByRole("tab", { name: "Revue datasteward" })).not.toBeInTheDocument();
+    // Les deux onglets de campagne restent bien accessibles, seule Revue datasteward est retirée.
+    expect(within(tabs).getByRole("tab", { name: "Campagnes dette IT" })).toBeInTheDocument();
+    expect(within(tabs).getByRole("tab", { name: "Campagnes de mise en qualité" })).toBeInTheDocument();
+  });
+
+  it("un admin SCOPÉ sans QualityCampaignManage ni MditCampaignManage ne voit pas la tuile « Campagnes »", () => {
+    // AdminPanelManage seul : ni capacité de campagne, ni GlobalAdminManage (donc pas global).
+    hasPermissionsMock.mockImplementation((permissions: string[]) => permissions.includes(Permission.ADMIN_PANEL_MANAGE));
+    render(AdminPage);
+
+    expect(screen.queryByTestId("admin-theme-tile-campaigns")).not.toBeInTheDocument();
+  });
+
+  it("un admin SCOPÉ avec au moins une capacité de campagne voit la tuile « Campagnes »", () => {
+    hasPermissionsMock.mockImplementation(
+      (permissions: string[]) =>
+        permissions.includes(Permission.ADMIN_PANEL_MANAGE) || permissions.includes(Permission.QUALITY_CAMPAIGN_MANAGE),
+    );
+    render(AdminPage);
+
+    expect(screen.getByTestId("admin-theme-tile-campaigns")).toBeInTheDocument();
   });
 
   it("cliquer une tuile bascule les onglets affichés et réinitialise l'onglet actif", async () => {

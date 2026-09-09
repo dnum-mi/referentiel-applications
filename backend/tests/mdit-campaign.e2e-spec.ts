@@ -1,5 +1,5 @@
 import type { UserFakerReturnType } from "./fakers/user.faker";
-import { Roles } from "@prisma/client";
+import { Permission, Roles } from "@prisma/client";
 import request from "supertest";
 import { UserFaker } from "./fakers/user.faker";
 import { getToken } from "./getToken";
@@ -17,7 +17,12 @@ describe("MditCampaign", () => {
   const createdIds: string[] = [];
 
   beforeAll(async () => {
-    admin = await UserFaker.create({ role: Roles.ADMIN });
+    // #2608 : MditCampaignManage n'est plus accordée par défaut au rôle ADMIN, il faut
+    // l'indiquer explicitement (comme pour un utilisateur délégué non-admin).
+    admin = await UserFaker.create({
+      role: Roles.ADMIN,
+      additionalPermissions: [Permission.MditCampaignManage],
+    });
     contributor = await UserFaker.create({ role: Roles.CONTRIBUTOR });
     ADMIN_TOKEN = await getToken(admin);
     CONTRIBUTOR_TOKEN = await getToken(contributor);
@@ -36,6 +41,18 @@ describe("MditCampaign", () => {
       .post("/mdit-campaigns")
       .send({ year: YEAR_A })
       .set("Authorization", `Bearer ${CONTRIBUTOR_TOKEN}`)
+      .expect(403);
+  });
+
+  it("/POST mdit-campaigns - should reject an admin without the explicit MditCampaignManage capability (#2608)", async () => {
+    const adminWithoutCapability = await UserFaker.create({
+      role: Roles.ADMIN,
+    });
+    const token = await getToken(adminWithoutCapability);
+    await request(app().getHttpServer())
+      .post("/mdit-campaigns")
+      .send({ year: YEAR_A })
+      .set("Authorization", `Bearer ${token}`)
       .expect(403);
   });
 

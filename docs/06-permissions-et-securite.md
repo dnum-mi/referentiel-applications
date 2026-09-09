@@ -110,7 +110,7 @@ Le mapping rôle → permissions est défini dans `backend/src/permissions/role-
 
 Le champ `User.additionalPermissions` (`backend/prisma/schema/users.prisma:41`, type `Permission[]`) permet d'accorder des permissions **supplémentaires** à un utilisateur précis, indépendamment de son rôle (anciennement nommé _capabilities_). Toute modification est **auditée** via `UserPermissionLog` (`backend/prisma/schema/user-log.prisma:2-10`), qui conserve `userId`, `changedById`, le `role` et les `additionalPermissions` au moment du changement, ainsi que `createdAt`.
 
-Depuis #2498, cette couche est **bornée** : `UpdateUserDto` n'accepte que les permissions **déléguables** (`DELEGABLE_PERMISSIONS` dans `backend/src/permissions/role-to-permissions.ts` : `CreateApplication`, `CreateGlobalReport`, `DataExport`, `MDITList`, `QualityCampaignManage`, soit la liste proposée par le panneau d'administration) — `AdminPanelManage`, `DeleteApplication` ou une permission applicative sont refusées (400). En complément, l'**administration des utilisateurs** (édition des droits, blocage, impersonation, périmètre d'un compte de service) exige le **rôle** `ADMIN` et pas seulement la permission `AdminPanelManage` (`ScopedPermissionService.assertIsAdministrator`, `UserService.startImpersonation` #2505), et un administrateur ne peut pas modifier ses **propres** rôle, périmètre ou permissions déléguées. Côté jetons API, le plafonnement du rôle par le jeton s'applique aussi aux `additionalPermissions` du compte impersonné (#2504) : un jeton émis plus faible que son compte ne les porte pas.
+Depuis #2498, cette couche est **bornée** : `UpdateUserDto` n'accepte que les permissions **déléguables** (`DELEGABLE_PERMISSIONS` dans `backend/src/permissions/role-to-permissions.ts` : `CreateApplication`, `CreateGlobalReport`, `DataExport`, `MDITList`, `QualityCampaignManage`, `MditCampaignManage`, soit la liste proposée par le panneau d'administration) — `AdminPanelManage`, `DeleteApplication` ou une permission applicative sont refusées (400). Depuis #2608, `QualityCampaignManage` et `MditCampaignManage` font exception au reste du socle Administrateur (`ADMIN_PERMISSIONS`) : elles **ne sont jamais accordées par le rôle**, y compris à un `ADMIN` global — elles doivent systématiquement transiter par cette couche 2, exactement comme pour un utilisateur délégué non-admin. En complément, l'**administration des utilisateurs** (édition des droits, blocage, impersonation, périmètre d'un compte de service) exige le **rôle** `ADMIN` et pas seulement la permission `AdminPanelManage` (`ScopedPermissionService.assertIsAdministrator`, `UserService.startImpersonation` #2505), et un administrateur ne peut pas modifier ses **propres** rôle, périmètre ou permissions déléguées. Côté jetons API, le plafonnement du rôle par le jeton s'applique aussi aux `additionalPermissions` du compte impersonné (#2504) : un jeton émis plus faible que son compte ne les porte pas.
 
 ### Couche 3 — Permissions par type d'acteur sur une application
 
@@ -170,22 +170,23 @@ L'énumération `Permission` (`backend/prisma/schema/permissions.prisma:59-105`)
 
 ### 4.1. Permissions globales
 
-| Permission              | Rôle                                                                       |
-| :---------------------- | :------------------------------------------------------------------------- |
-| `CreateApplication`     | Créer de nouvelles applications                                            |
-| `DeleteApplication`     | Supprimer une application                                                  |
-| `CreateGlobalReport`    | Créer des signalements globaux                                             |
-| `MDITList`              | Voir la liste des applications sur le TIME / MDIT                          |
-| `AppList`               | Voir la liste des applications                                             |
-| `DataExport`            | Exporter les données (export Excel)                                        |
-| `AdminPanelManage`      | Administrer les utilisateurs et les acteurs (dans son périmètre s'il en a) |
-| `GlobalAdminManage`     | Administrer les réglages transverses — administrateur sans périmètre       |
-| `ActorTypePost`         | Créer un type d'acteur                                                     |
-| `ActorTypeManage`       | Éditer un type d'acteur                                                    |
-| `ActorTypeDelete`       | Supprimer un type d'acteur                                                 |
-| `OrganizationManage`    | Gérer les organisations (créer, modifier, supprimer)                       |
-| `ColumnRead`            | Voir les colonnes de synthèse (socle Lecteur)                              |
-| `QualityCampaignManage` | Gérer les campagnes de mise en qualité (socle Administrateur, déléguable)  |
+| Permission              | Rôle                                                                                                            |
+| :---------------------- | :-------------------------------------------------------------------------------------------------------------- |
+| `CreateApplication`     | Créer de nouvelles applications                                                                                 |
+| `DeleteApplication`     | Supprimer une application                                                                                       |
+| `CreateGlobalReport`    | Créer des signalements globaux                                                                                  |
+| `MDITList`              | Voir la liste des applications sur le TIME / MDIT                                                               |
+| `AppList`               | Voir la liste des applications                                                                                  |
+| `DataExport`            | Exporter les données (export Excel)                                                                             |
+| `AdminPanelManage`      | Administrer les utilisateurs et les acteurs (dans son périmètre s'il en a)                                      |
+| `GlobalAdminManage`     | Administrer les réglages transverses — administrateur sans périmètre uniquement                                 |
+| `ActorTypePost`         | Créer un type d'acteur                                                                                          |
+| `ActorTypeManage`       | Éditer un type d'acteur                                                                                         |
+| `ActorTypeDelete`       | Supprimer un type d'acteur                                                                                      |
+| `OrganizationManage`    | Gérer les organisations (créer, modifier, supprimer)                                                            |
+| `ColumnRead`            | Voir les colonnes de synthèse (socle Lecteur)                                                                   |
+| `QualityCampaignManage` | Gérer les campagnes de mise en qualité (jamais par défaut, même pour un ADMIN global — déléguable, #2608)       |
+| `MditCampaignManage`    | Gérer les campagnes de dette IT / millésimes (jamais par défaut, même pour un ADMIN global — déléguable, #2608) |
 
 Quatre valeurs sont à la fois **globales** (socle Visiteur, cf. §3) et **applicatives** (colonnes de la matrice §4.2) : `AppRead`, `DataRead`, `ReportRead`, `ReportPost`. Comme le socle les accorde à tout utilisateur authentifié, leur colonne dans la matrice des types d'acteur est **sans effet** — la matrice ne les propose plus en retrait (#2510). Depuis #2506, `DeleteApplication` protège bien la route `DELETE /applications/:id` (auparavant `AdminPanelManage`).
 
@@ -257,8 +258,8 @@ Dans `getUserRolePermissions` (`check-permissions.service.ts:85-126`) :
 - Toute action d'administration d'un utilisateur (édition des droits, blocage, impersonation, périmètre d'un compte de service) exige le **rôle** `ADMIN` (`assertIsAdministrator`, #2498) : la permission `AdminPanelManage`, si elle avait été déléguée en base, ne suffit pas — un contributeur délégué sans périmètre se comportait auparavant en super-administrateur.
 - Un requestor `ADMIN` **sans scope** est super-administrateur : aucun contrôle de périmètre.
 - Sinon, toute cible et toute organisation manipulée doivent être **dans le périmètre** au sens de §6.1 (`assertWithinScope` : égalité ou descendant à une frontière de segment). Une cible **sans organisation** n'est dans le périmètre de personne (#2371).
-- Un administrateur ne modifie pas ses **propres** rôle, périmètre ni permissions déléguées (`assertNotSelfPrivilegeChange`, #2498).
-- Les permissions déléguables (couche 2) forment une liste fermée (`DELEGABLE_PERMISSIONS`, #2498) : `CreateApplication`, `CreateGlobalReport`, `DataExport`, `MDITList`, `QualityCampaignManage`.
+- Aucun verrou dédié n'interdit à un administrateur de modifier son **propre** rôle ou son **propre** périmètre : ces champs suivent exactement les mêmes règles que pour un tiers. Un admin global peut donc changer son propre rôle librement (`assertNoPrivilegeEscalation` ne bloque que la **promotion** vers `ADMIN` d'une cible qui ne l'est pas déjà). Un admin **scopé** qui retire son propre périmètre reste bloqué, mais pour la même raison que pour un tiers : `assertScopeOrganizationAction` réserve toute suppression de périmètre à un administrateur global. Pour `additionalPermissions` (#2608), bornées à la liste fermée `DELEGABLE_PERMISSIONS` et donc sans risque d'escalade, un **admin global** peut se les accorder ou se les retirer lui-même ; un admin **scopé** reste bloqué sur ce champ pour lui comme pour un tiers, `assertNoPrivilegeEscalation` réservant toute modification d'`additionalPermissions` à un administrateur global (#2371).
+- Les permissions déléguables (couche 2) forment une liste fermée (`DELEGABLE_PERMISSIONS`, #2498) : `CreateApplication`, `CreateGlobalReport`, `DataExport`, `MDITList`, `QualityCampaignManage`, `MditCampaignManage`.
 - Règle dédiée : **seul un administrateur global peut supprimer le périmètre d'un utilisateur** (`assertScopeOrganizationAction`, action `REMOVE` → exception), et seul un administrateur global peut attribuer le rôle `ADMIN`.
 
 ### 6.3. Effet sur l'impersonation
@@ -280,17 +281,22 @@ Depuis #2446, le panneau d'administration distingue deux familles d'objets :
 - ceux qui sont **transverses** — tags, sources, tokens, batchs (import Excel, synchronisations
   MAIA, recalcul de qualité), matrice des permissions, options d'hébergement, directions métier,
   journal des actions, historique des e-mails, historique global des modifications, revue
-  datasteward, campagnes dette IT — exigent `GlobalAdminManage`, que seul un administrateur **sans
-  périmètre** possède. Aucune organisation ne les porte : aucun périmètre ne peut les découper.
+  datasteward — exigent `GlobalAdminManage`, que seul un administrateur **sans périmètre** possède.
+  Aucune organisation ne les porte : aucun périmètre ne peut les découper.
 
-Les **campagnes de mise en qualité** suivent la même logique par leur capacité dédiée : un
-administrateur de périmètre n'obtient `QualityCampaignManage` que si un administrateur global la lui
-**délègue** explicitement (couche 2), conformément à « seuls les utilisateurs ayant accès à la
-capacité gestion des campagnes peuvent gérer les campagnes ».
+Les **campagnes** (mise en qualité comme dette IT) suivent une logique à part, PAS via
+`GlobalAdminManage` : chacune a sa propre capacité dédiée (`QualityCampaignManage`,
+`MditCampaignManage`, #2608), délégable indépendamment (couche 2) à n'importe quel utilisateur —
+administrateur de périmètre, administrateur global ou non-admin. Ni l'une ni l'autre n'est jamais
+accordée par défaut, y compris à un administrateur global : « seuls les utilisateurs ayant accès à
+la capacité gestion des campagnes peuvent gérer les campagnes ».
 
 Côté interface, `AdminPage.vue` filtre chaque onglet sur ces mêmes permissions (défaut :
-`GlobalAdminManage`) et masque toute tuile thématique dont aucun onglet n'est accessible ; la
-description de la tuile n'énumère alors que les onglets réellement ouverts.
+`GlobalAdminManage`) et masque toute tuile thématique dont aucun onglet n'est accessible — même
+règle pour les trois tuiles, sans cas particulier : un administrateur de périmètre qui n'a ni
+`QualityCampaignManage` ni `MditCampaignManage` ne voit pas la tuile « Campagnes », comme il ne
+voit déjà pas la tuile « Gestion ». La description de la tuile n'énumère, sinon, que les onglets
+réellement ouverts.
 
 > **Limite connue.** Les routes `/organizations` (POST/PATCH/DELETE) restent gouvernées par
 > `OrganizationManage`, portée par le socle **Contributeur** : l'onglet « Gestion des

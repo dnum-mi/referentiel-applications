@@ -39,7 +39,7 @@ export class MditCampaignController {
   constructor(private readonly mditCampaignService: MditCampaignService) {}
 
   @Post()
-  @RequiredPermissions([Permission.GlobalAdminManage])
+  @RequiredPermissions([Permission.MditCampaignManage])
   @ApiOperation({ summary: "Créer une campagne dette IT (millésime)" })
   @HttpCode(201)
   @ApiCreatedResponse({
@@ -50,7 +50,7 @@ export class MditCampaignController {
     description: "Une campagne existe déjà pour ce millésime",
   })
   @ApiForbiddenResponse({
-    description: "Accès refusé - Privilège admin requis",
+    description: "Accès refusé - permission MditCampaignManage requise",
   })
   create(@Body() createDto: CreateMditCampaignDto) {
     return this.mditCampaignService.createCampaign(createDto);
@@ -70,14 +70,14 @@ export class MditCampaignController {
   }
 
   @Patch(":id")
-  @RequiredPermissions([Permission.GlobalAdminManage])
+  @RequiredPermissions([Permission.MditCampaignManage])
   @ApiOperation({ summary: "Modifier une campagne dette IT" })
   @ApiOkResponse({ description: "Campagne mise à jour", type: MditCampaignDto })
   @ApiConflictResponse({
     description: "Une campagne existe déjà pour ce millésime",
   })
   @ApiForbiddenResponse({
-    description: "Accès refusé - Privilège admin requis",
+    description: "Accès refusé - permission MditCampaignManage requise",
   })
   @ApiNotFoundResponse({ description: "Campagne non trouvée" })
   update(@Param("id") id: string, @Body() updateDto: UpdateMditCampaignDto) {
@@ -85,12 +85,12 @@ export class MditCampaignController {
   }
 
   @Delete(":id")
-  @RequiredPermissions([Permission.GlobalAdminManage])
+  @RequiredPermissions([Permission.MditCampaignManage])
   @ApiOperation({ summary: "Supprimer une campagne dette IT" })
   @HttpCode(204)
   @ApiNoContentResponse({ description: "Campagne supprimée avec succès" })
   @ApiForbiddenResponse({
-    description: "Accès refusé - Privilège admin requis",
+    description: "Accès refusé - permission MditCampaignManage requise",
   })
   @ApiNotFoundResponse({ description: "Campagne non trouvée" })
   remove(@Param("id") id: string) {

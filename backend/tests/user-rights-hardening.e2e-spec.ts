@@ -70,16 +70,20 @@ describe("Durcissement des droits d'administration (#2498, #2502, #2504, #2505)"
         .expect(403);
     });
 
-    it("un administrateur ne peut pas changer son propre rôle", async () => {
+    it("un administrateur peut désormais changer son propre rôle (aucun verrou d'auto-privilège)", async () => {
+      // Fixture dédiée, isolée du `admin` partagé par le reste de la suite : ce test change
+      // réellement le rôle en base, il ne doit pas affecter les tests qui suivent.
+      const soloAdmin = await UserFaker.create({ role: Roles.ADMIN });
+      const token = getToken(soloAdmin);
       await request(app().getHttpServer())
-        .patch(`/users/${admin.id}`)
-        .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+        .patch(`/users/${soloAdmin.id}`)
+        .set("Authorization", `Bearer ${token}`)
         .send({ role: Roles.CONTRIBUTOR, additionalPermissions: [] })
-        .expect(403);
-      const unchanged = await prisma.user.findUnique({
-        where: { id: admin.id },
+        .expect(200);
+      const updated = await prisma.user.findUnique({
+        where: { id: soloAdmin.id },
       });
-      expect(unchanged?.role).toBe(Roles.ADMIN);
+      expect(updated?.role).toBe(Roles.CONTRIBUTOR);
     });
 
     it("un administrateur peut toujours modifier un autre utilisateur", async () => {

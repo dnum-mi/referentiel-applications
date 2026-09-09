@@ -169,6 +169,13 @@ async function saveUser() {
       toaster.addSuccessMessage("Utilisateur mis à jour avec succès");
       closeEditModal();
       emit("userUpdated", response.data);
+      // On vient de modifier notre propre compte (ex. #2608 : un admin global peut désormais
+      // s'accorder/se retirer une permission déléguée) : userStore.user reste sinon périmé
+      // jusqu'au prochain rechargement complet, et hasPermissions() continuerait de refléter
+      // les anciens droits partout dans l'app.
+      if (target.id === userStore.user?.id) {
+        await userStore.fetchUser();
+      }
       focusOpener();
     } else {
       const errorMessage =
@@ -228,6 +235,11 @@ const additionalPermissionsOptions: Omit<DsfrCheckboxProps, "modelValue">[] = [
     label: "Gérer les campagnes de mise en qualité",
     value: Permission.QUALITY_CAMPAIGN_MANAGE,
     name: "capability-quality-campaign-manage",
+  },
+  {
+    label: "Gérer les campagnes dette IT",
+    value: Permission.MDIT_CAMPAIGN_MANAGE,
+    name: "capability-mdit-campaign-manage",
   },
 ];
 

@@ -63,8 +63,12 @@ const hasCreateGlobalReport = computed(() => {
   return userStore.hasPermissions([Permission.CREATE_GLOBAL_REPORT]);
 });
 
-// #2446 : seule la capacité dédiée ouvre la gestion des campagnes. `AdminPanelManage` ne suffit
-// plus — un administrateur de périmètre ne l'obtient que par délégation explicite.
+// #2446/#2608 : seule la capacité dédiée QualityCampaignManage ouvre la gestion des campagnes —
+// ni AdminPanelManage ni GlobalAdminManage ne l'accordent. Elle n'est jamais accordée par défaut,
+// même à un administrateur global : un administrateur de périmètre comme global ne l'obtient que
+// par délégation explicite (couche 2). Sans ce garde-fou, un bouton actif pourrait déclencher une
+// action rejetée (403) par le backend, qui n'exige que QualityCampaignManage
+// (quality-campaign.controller.ts).
 const hasQualityCampaignPermissions = computed(() => {
   return userStore.hasPermissions([Permission.QUALITY_CAMPAIGN_MANAGE]);
 });
@@ -130,10 +134,10 @@ const hasQualityCampaignPermissions = computed(() => {
       ></DsfrButton>
 
       <DsfrButton
-        v-if="hasQualityCampaignPermissions"
         label="Créer une campagne qualité"
         icon="ri-mail-send-line"
         secondary
+        :disabled="!hasQualityCampaignPermissions"
         data-testid="create-quality-campaign-btn"
         class="action-btn icon-left"
         @click="openCreateCampaign"
