@@ -91,7 +91,7 @@ const ACTIONS: readonly QualityActionDefinition[] = [
   },
   {
     key: "snapvisu",
-    label: "Ajouter un lien de supervision Snapvisu",
+    label: "Ajouter un lien de supervision",
     tabId: "tab-links",
     impact: "low",
     isDone: (s) => s.hasSnapvisu,
