@@ -156,12 +156,25 @@ test.describe("Administration des référentiels", () => {
     // Idempotence : repartir d'un état propre si un run précédent a laissé la campagne.
     await data.removeCampaignYear(year);
 
-    const admin = new AdminPage(page);
-    await admin.open();
-    await admin.openCampaignsTab();
-    await admin.createCampaign(year, "Campagne E2E ADM-07");
-    await admin.expectCampaignRow(year);
-    await admin.deleteCampaign(year);
+    // #2608 : `MditCampaignManage` n'est plus accordée par défaut à un ADMIN, même global —
+    // elle doit être déléguée explicitement (couche 2) pour que l'onglet « Campagnes dette IT »
+    // apparaisse dans le panneau admin.
+    await data.setUserAdditionalPermissionsKeepRole("admin@example.com", [
+      "MditCampaignManage",
+    ]);
+
+    try {
+      const admin = new AdminPage(page);
+      await admin.open();
+      await admin.openCampaignsTab();
+      await admin.createCampaign(year, "Campagne E2E ADM-07");
+      await admin.expectCampaignRow(year);
+      await admin.deleteCampaign(year);
+    } finally {
+      await data
+        .setUserAdditionalPermissionsKeepRole("admin@example.com", [])
+        .catch(() => {});
+    }
   });
 
   test("ADM-08 - importer un acteur via un fichier Excel (création)", async ({
