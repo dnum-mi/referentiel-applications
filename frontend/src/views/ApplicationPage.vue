@@ -200,6 +200,7 @@ function formatMetadataAuthor(metadata: MetadataDto): string {
       </DsfrHighlight>
       <DsfrButton
         ref="subscribeBtn"
+        data-testid="application-subscribe-btn"
         class="fr-btn--tertiary-no-outline fr-btn--icon-left"
         :class="isSubscribed ? 'fr-icon-notification-3-fill' : 'fr-icon-notification-3-line'"
         :disabled="isSubscriptionLoading"

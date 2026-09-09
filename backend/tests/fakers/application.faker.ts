@@ -7,16 +7,24 @@ import { getPrismaClient } from "./prisma";
 
 const restartPriorities = Object.values(priorityRestart);
 const applicationTypes = Object.values(ApplicationType);
+interface ApplicationFakerOverrides {
+  label?: string;
+  shortName?: string;
+}
+
 export class ApplicationFaker {
-  static async create(user: AsyncReturnType<typeof UserFaker.create>) {
+  static async create(
+    user: AsyncReturnType<typeof UserFaker.create>,
+    { label, shortName }: ApplicationFakerOverrides = {},
+  ) {
     const prisma = getPrismaClient();
 
     // Create application first
     const initialStatus: Status = "under_construction";
     const application = await prisma.application.create({
       data: {
-        label: faker.company.name(),
-        shortName: faker.company.name(),
+        label: label ?? faker.company.name(),
+        shortName: shortName ?? faker.company.name(),
         description: faker.company.catchPhrase(),
         priorityRestart: faker.helpers.arrayElement(restartPriorities),
         type: faker.helpers.maybe(

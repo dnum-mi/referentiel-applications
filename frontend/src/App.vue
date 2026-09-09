@@ -21,6 +21,7 @@ import { useRgaaGlobalA11y } from "./composables/use-rgaa-a11y";
 import { accessibilityDeclaration } from "./constants/accessibility-declaration";
 import MaintenanceBanner from "./components/MaintenanceBanner.vue";
 import { useMaintenanceMode } from "./composables/use-maintenance-mode";
+import OnboardingDebugPanel from "./components/OnboardingDebugPanel.vue";
 import BlockedAccessScreen from "./components/BlockedAccessScreen.vue";
 import { blockedAccessState } from "./composables/use-blocked-access";
 
@@ -209,9 +210,13 @@ const afterMandatoryLinks = computed(() => [
 useRgaaGlobalA11y();
 
 useAppUpdate();
+
+const isDev = import.meta.env.DEV;
 </script>
 
 <template>
+  <OnboardingDebugPanel v-if="isDev" />
+
   <h1 ref="pageTitleAnnouncer" class="fr-sr-only" tabindex="-1" data-testid="page-title-announcer">
     {{ currentPageTitle }}
   </h1>

@@ -274,6 +274,15 @@ async function seed({
     adminUser,
     regularUser,
   );
+
+  // Application dédiée à la démo de l'onboarding tour : garantit un résultat
+  // trouvable quand le tour fait taper "refapp" dans la recherche.
+  const refApp = await ApplicationFaker.create(adminUser, {
+    label: "RefApp",
+    shortName: "RefApp",
+  });
+  applications.push(refApp);
+
   const app1 = applications[0];
   const app2 = applications[1];
 
@@ -323,6 +332,14 @@ async function seed({
   console.log("🔗 Linking business divisions to applications...");
   await linkBusinessDivisionsToApplications(applications, businessDivisions);
 
+  // RefApp est exclue par la règle "1 application sur 5 sans direction métier" ci-dessus
+  // (son index tombe pile sur ce cas) : on la rattache explicitement, le chapitre 3 de
+  // l'onboarding tour montrant l'organisation porteuse sur sa fiche.
+  await prisma.application.update({
+    where: { id: refApp.id },
+    data: { businessDivisions: { connect: [{ id: businessDivisions[0].id }] } },
+  });
+
   // Add compliance data to existing applications (several apps per category)
   console.log("✅ Adding compliance data to existing applications...");
   for (const app of applications) {
@@ -342,6 +359,19 @@ async function seed({
     userEmail: adminUser.email,
     actorTypeId: actorTypeMoe.id,
     applicationId: app2.id,
+  });
+
+  // RefApp a besoin de ses propres acteurs pour le chapitre 3 de l'onboarding tour
+  // (onglet Acteurs) : sans ça sa fiche afficherait un onglet vide.
+  await ActorFaker.link({
+    userEmail: adminUser.email,
+    actorTypeId: actorTypeMoa.id,
+    applicationId: refApp.id,
+  });
+  await ActorFaker.link({
+    userEmail: adminUser.email,
+    actorTypeId: actorTypeMoe.id,
+    applicationId: refApp.id,
   });
 
   console.log("� Creating quality stats...");

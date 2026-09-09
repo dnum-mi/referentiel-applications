@@ -292,20 +292,22 @@ watch(
                 {{ application.id }}
               </p>
 
-              <h4>Directions métier</h4>
-              <ul v-if="application.businessDivisions?.length" class="fr-tags-group" data-testid="info-business-divisions">
-                <li v-for="businessDivision in application.businessDivisions" :key="businessDivision.id">
-                  <DsfrTag
-                    :label="businessDivision.label"
-                    :small="small"
-                    :link="businessDivisionSearchLink(businessDivision.id)"
-                    :title="`Voir les applications de la direction métier ${businessDivision.label}`"
-                    :aria-label="`Voir les applications de la direction métier ${businessDivision.label}`"
-                    data-testid="info-business-division-link"
-                  />
-                </li>
-              </ul>
-              <p v-else data-testid="info-business-divisions">Aucune</p>
+              <span data-testid="info-business-divisions-container">
+                <h4>Directions métier</h4>
+                <ul v-if="application.businessDivisions?.length" class="fr-tags-group" data-testid="info-business-divisions">
+                  <li v-for="businessDivision in application.businessDivisions" :key="businessDivision.id">
+                    <DsfrTag
+                      :label="businessDivision.label"
+                      :small="small"
+                      :link="businessDivisionSearchLink(businessDivision.id)"
+                      :title="`Voir les applications de la direction métier ${businessDivision.label}`"
+                      :aria-label="`Voir les applications de la direction métier ${businessDivision.label}`"
+                      data-testid="info-business-division-link"
+                    />
+                  </li>
+                </ul>
+                <p v-else data-testid="info-business-divisions">Aucune</p>
+              </span>
 
               <div v-if="application.shortName">
                 <h4>Nom court</h4>
@@ -520,6 +522,14 @@ watch(
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+/* `<span>` (inline) ne contenant que des enfants block (`h4`, `ul`/`p`) : sans ça, le
+   navigateur éclate la boîte du span autour de ses enfants ("block-in-inline"), et
+   `getBoundingClientRect()` sur ce testid ne recouvre pas le contenu réel — le scroll
+   automatique du tour d'onboarding vise alors un point qui ne correspond à rien de visible. */
+[data-testid="info-business-divisions-container"] {
+  display: block;
 }
 
 .responsive-layout {
