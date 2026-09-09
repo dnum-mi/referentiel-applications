@@ -425,6 +425,24 @@ export class DataFeature {
     });
   }
 
+  /**
+   * Remplace les permissions additionnelles d'un utilisateur SANS toucher à son rôle (#2608 :
+   * `QualityCampaignManage`/`MditCampaignManage` ne sont plus accordées par défaut, y compris à
+   * un ADMIN — il faut les déléguer explicitement en couche 2, cf. `setUserAdditionalPermissions`
+   * qui force au contraire le rôle à READER pour isoler l'effet des tests de permission).
+   */
+  async setUserAdditionalPermissionsKeepRole(
+    email: string,
+    permissions: string[],
+  ): Promise<void> {
+    const user = await this.api.userByEmail(email);
+    if (!user) throw new Error(`Utilisateur introuvable: ${email}`);
+    await this.api.setUser(user.id, {
+      role: user.role,
+      additionalPermissions: permissions,
+    });
+  }
+
   // --- Impersonation (#1764) ---
 
   /** Tente de démarrer une impersonation et renvoie le code HTTP (autorisations). */
