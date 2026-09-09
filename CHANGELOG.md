@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.90.3](https://github.com/dnum-mi/referentiel-applications/compare/v1.90.2...v1.90.3) (2026-09-09)
+
+
+### Bug Fixes
+
+* **a11y:** point search skip link to #app-search instead of #header-search ([#2566](https://github.com/dnum-mi/referentiel-applications/issues/2566)) ([a7f71cb](https://github.com/dnum-mi/referentiel-applications/commit/a7f71cb1db56813c3ca0fe2df2fc63571767676c))
+* need capabilities for campagne admin ([#2619](https://github.com/dnum-mi/referentiel-applications/issues/2619)) ([54963ea](https://github.com/dnum-mi/referentiel-applications/commit/54963ea1193f4e5fe010a639ba31b1cc17fef74a))
+* number of application show was wrong ([#2616](https://github.com/dnum-mi/referentiel-applications/issues/2616)) ([104f3ed](https://github.com/dnum-mi/referentiel-applications/commit/104f3ed242716160178d0705721fe3221e2c6469))
+* number of application show was wrong ([#2616](https://github.com/dnum-mi/referentiel-applications/issues/2616)) ([5946ac0](https://github.com/dnum-mi/referentiel-applications/commit/5946ac041b04139e393df83fcdabf05bbbe8d775))
+* replace label for snapvisu ([#2620](https://github.com/dnum-mi/referentiel-applications/issues/2620)) ([e4c1900](https://github.com/dnum-mi/referentiel-applications/commit/e4c190031c2494660cb09e5d23ee4ca0f3fa1ccc))
+* restrict scoped admins to users and actors of their perimeter ([#2615](https://github.com/dnum-mi/referentiel-applications/issues/2615)) ([da03953](https://github.com/dnum-mi/referentiel-applications/commit/da03953f80e4f92fd5f965bf5cfe714b08b936cd))
+
 ## [1.90.2](https://github.com/dnum-mi/referentiel-applications/compare/v1.90.1...v1.90.2) (2026-09-08)
 
 
