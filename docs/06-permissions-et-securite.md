@@ -356,6 +356,8 @@ return Array.from(userPermissions).some((p) => permissions.includes(p));
 
 Les composants passent en second argument les permissions applicatives obtenues via `my-perms` pour affiner l'affichage par application. Ce contrôle frontend est purement ergonomique : l'autorisation **réelle** est toujours appliquée côté backend par le `PermissionGuard`.
 
+**Niveau d'authentification (#1985).** `GET /users/me` renvoie les permissions **effectives** de la session : `hasPermissions` n'a rien à savoir de la rétrogradation, le lien Admin, les gardes de route et les boutons suivent d'eux-mêmes. Le store expose en plus `authLevel` et `isAuthDowngraded` (calculé sur `downgraded`, jamais sur `level` — en mode `observe` le niveau peut être faible sans effet). Le bandeau `WeakAuthBanner.vue` (non sticky, non fermable, `role="status"`), la ligne « Niveau d'authentification » du profil, le badge « Droits limités » et l'onglet Tokens s'appuient dessus ; le bouton « Se reconnecter » appelle `signinStrong()` (`frontend/src/services/authentication.ts`) qui force `prompt=login` (et `acr_values` / `max_age` s'ils sont servis par `/config`). **Le front n'est jamais source de vérité** : il ne lit ni `acr`, ni `amr`, ni le claim de mode dans le jeton (`user.profile` est un id token non validé par le backend), et les 403 typés `stepDown` sont traités par l'intercepteur (`init-clients.ts` : purge de l'impersonation et rechargement, ou message dédié).
+
 > Pour le détail de l'architecture backend (modules, middleware, services), se reporter à [Architecture backend](./08-architecture-backend.md).
 
 ## 8. Bonnes pratiques de sécurité

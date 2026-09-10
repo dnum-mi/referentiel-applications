@@ -24,6 +24,19 @@ export class UserProfilePage extends BasePage {
     await expect(this.followPanel()).toBeVisible();
   }
 
+  // --- Niveau d'authentification (#1985) ---
+  private authLevelCell = () => this.byTestId("user-profile-auth-level");
+  private tokensPanel = () => this.byTestId("user-profile-tab-tokens");
+
+  async expectAuthLevelLimited(): Promise<void> {
+    await expect(this.authLevelCell()).toContainText("Limitée");
+  }
+
+  async expectTokenCreationDisabled(): Promise<void> {
+    await expect(this.byTestId("token-weak-auth-alert")).toBeVisible();
+    await expect(this.byTestId("token-create-btn")).toBeDisabled();
+  }
+
   async hasSubscription(): Promise<boolean> {
     return (await this.unsubscribeButtons().count()) > 0;
   }
@@ -95,6 +108,7 @@ export class UserProfilePage extends BasePage {
     await this.tabs()
       .getByRole("tab", { name: /tokens/i })
       .click();
+    await expect(this.tokensPanel()).toBeVisible();
   }
 
   async expectTokensTabLoaded(): Promise<void> {

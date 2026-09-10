@@ -192,6 +192,31 @@ export class ChromePage extends BasePage {
     await this.page.waitForURL(/recherche-application/);
   }
 
+  // --- Bandeau « niveau d'authentification » (#1985) ---
+  private weakAuthBanner = () => this.byTestId("weak-auth-banner");
+  private reauthButton = () => this.byTestId("weak-auth-reauth-btn");
+
+  async expectWeakAuthBanner(text?: string | RegExp): Promise<void> {
+    await expect(this.weakAuthBanner()).toBeVisible();
+    if (text) await expect(this.weakAuthBanner()).toContainText(text);
+  }
+  /** À appeler après une preuve que `/users/me` est chargé (ex. lien Admin visible). */
+  async expectNoWeakAuthBanner(): Promise<void> {
+    await expect(this.weakAuthBanner()).toHaveCount(0);
+  }
+  async expectNoReauthButton(): Promise<void> {
+    await expect(this.weakAuthBanner()).toBeVisible();
+    await expect(this.reauthButton()).toHaveCount(0);
+  }
+  /**
+   * Le compte de test porte un mode statique : une vraie reconnexion forte n'est pas
+   * simulable. On prouve seulement la redirection vers le fournisseur avec `prompt=login`.
+   */
+  async clickReauth(): Promise<void> {
+    await this.reauthButton().click();
+    await this.page.waitForURL(/protocol\/openid-connect\/auth.*prompt=login/);
+  }
+
   /**
    * RGA-03 (RGAA 12.8) : le `page-title-announcer` (h1 hors-écran, `tabindex="-1"`) doit recevoir
    * le focus après une navigation SPA. On attend l'état DOM avant l'assertion Playwright pour

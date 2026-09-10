@@ -1,10 +1,18 @@
 import client from "@/api/index";
 import { Roles, type Permission, type UserEntity, type UserFollowedApplicationDto, type UserWithPermissions } from "@/client/types.gen";
+import {
+  REAUTH_SUCCESS_MESSAGE,
+  STEP_DOWN_MESSAGES,
+  consumeReauthAttempt,
+  consumeStepDownNotice,
+  setReauthLoopDetected,
+} from "@/composables/use-auth-level";
 import type { APP_PERMISSIONS } from "@/models/Application";
 import { USER_MANAGER } from "@/services/authentication";
 import { clearImpersonationState, getImpersonationState, setImpersonationState, type ImpersonationState } from "@/services/impersonation";
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
+import { useToasterStore } from "./toasterStore";
 
 export const useUserStore = defineStore("userStore", () => {
   const user = ref<UserWithPermissions>();
@@ -12,6 +20,11 @@ export const useUserStore = defineStore("userStore", () => {
   // État d'impersonation restauré depuis le localStorage (survit au rechargement).
   const impersonation = ref<ImpersonationState | null>(getImpersonationState());
   const isImpersonating = computed(() => impersonation.value !== null);
+  // #1985 : niveau d'authentification décidé par le backend (`/users/me`). Toujours conditionner
+  // l'affichage sur `downgraded`, jamais sur `level` : en mode observation le niveau peut être
+  // faible sans aucun effet sur les droits.
+  const authLevel = computed(() => user.value?.authLevel);
+  const isAuthDowngraded = computed(() => user.value?.authLevel?.downgraded === true);
 
   // Écoute les événements OIDC pour maintenir l'état d'authentification à jour
   USER_MANAGER.events.addUserLoaded(() => {
@@ -35,11 +48,49 @@ export const useUserStore = defineStore("userStore", () => {
     return user.value ? user.value.role : Roles.VISITOR;
   });
 
+  // #1985 : deux `/users/me` peuvent se croiser au retour du callback OIDC (utilisateur chargé
+  // au démarrage puis `userLoaded`). Seule la réponse la plus récente compte : une réponse
+  // périmée ne doit ni écraser l'état, ni consommer le drapeau de reconnexion.
+  let fetchSequence = 0;
+
   async function fetchUser() {
+    const sequence = ++fetchSequence;
     const response = await client.userControllerFindMe();
+    if (sequence !== fetchSequence) return;
     if (response.data && response.response.ok) {
       user.value = response.data;
+      settleReauthAttempt();
+      notifyStepDown();
+      return;
     }
+    // #1985 : filet — une impersonation persistée refusée (session rétrogradée) rejoue le header à
+    // chaque requête ; si le payload `stepDown` n'est pas parvenu à l'intercepteur (proxy, ancien
+    // backend pendant un déploiement), on purge et on repart d'un état propre.
+    if (response.response.status === 403 && getImpersonationState()) {
+      clearImpersonationState();
+      impersonation.value = null;
+      globalThis.location.assign("/");
+    }
+  }
+
+  // Après un rechargement forcé par un 403 `stepDown` (impersonation refusée), explique ce qui
+  // vient de se passer : la session d'impersonation a disparu.
+  function notifyStepDown() {
+    const reason = consumeStepDownNotice();
+    if (reason) useToasterStore().addErrorMessage(STEP_DOWN_MESSAGES[reason]);
+  }
+
+  // Au retour d'une reconnexion forte (#1985) : succès si la session n'est plus rétrogradée,
+  // boucle sinon (le fournisseur a renvoyé la même session faible) — le bandeau l'explique.
+  // Consommé uniquement sur une réponse réussie : un échec réseau laisse le drapeau au suivant.
+  function settleReauthAttempt() {
+    if (!consumeReauthAttempt()) return;
+    if (user.value?.authLevel?.downgraded) {
+      setReauthLoopDetected(true);
+      return;
+    }
+    setReauthLoopDetected(false);
+    useToasterStore().addSuccessMessage(REAUTH_SUCCESS_MESSAGE);
   }
 
   async function updateEmailPreferences(emailNotificationsEnabled: boolean) {
@@ -151,5 +202,7 @@ export const useUserStore = defineStore("userStore", () => {
     isImpersonating,
     startImpersonation,
     stopImpersonation,
+    authLevel,
+    isAuthDowngraded,
   };
 });

@@ -4,6 +4,12 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import api from "@/api";
 import { TokenKindWording } from "@/utils/token-utils";
+import { useUserStore } from "@/stores/userStore";
+
+// #1985 : en session sans authentification forte, le backend refuse la création d'un jeton
+// personnel (403 `stepDown`) — on l'explique avant plutôt que d'échouer après.
+const userStore = useUserStore();
+const weakAuth = computed(() => userStore.isAuthDowngraded);
 
 const tokens = ref<TokenDto[]>([]);
 const isLoading = ref(false);
@@ -229,8 +235,23 @@ onMounted(() => {
       </DsfrAlert>
     </div>
 
+    <DsfrAlert
+      v-if="weakAuth"
+      type="warning"
+      title="Authentification forte requise"
+      description="La création d'un jeton personnel nécessite une connexion avec votre carte agent ou la double authentification. Vos jetons existants restent consultables et révocables."
+      class="fr-mb-2w"
+      data-testid="token-weak-auth-alert"
+    />
+
     <div class="fr-mb-3w">
-      <DsfrButton v-if="!showCreateForm" icon="ri-add-line" :disabled="maxTokensReached" @click="toggleCreateForm">
+      <DsfrButton
+        v-if="!showCreateForm"
+        icon="ri-add-line"
+        :disabled="maxTokensReached || weakAuth"
+        data-testid="token-create-btn"
+        @click="toggleCreateForm"
+      >
         Créer un nouveau token
       </DsfrButton>
       <span v-if="maxTokensReached" class="fr-ml-2w fr-text--sm fr-text--bold"> Limite de 5 tokens atteinte </span>

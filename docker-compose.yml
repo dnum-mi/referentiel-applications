@@ -64,7 +64,7 @@ services:
       - AUTH_LEVEL_STRONG_VALUES=CARD
       - AUTH_LEVEL_IDP_CLAIM=auth_idp
       # - AUTH_LEVEL_TRUSTED_IDPS=partenaire
-      - AUTH_LEVEL_HELP_URL=#
+      # - AUTH_LEVEL_HELP_URL=https://intranet.example/aide-carte-agent
       - ENV_LABEL=developpement
       - MAINTENANCE_MODE=${MAINTENANCE_MODE:-false}
       - MAINTENANCE_CACHE_TTL_MS=${MAINTENANCE_CACHE_TTL_MS:-30000}

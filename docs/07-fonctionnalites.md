@@ -29,7 +29,8 @@ Le présent document a été rédigé en confrontant la vue produit aux sources 
   - [7.3 Suivi des fins de vie](#73-suivi-des-fins-de-vie)
 - [8. Export Excel](#8-export-excel)
 - [9. Administration](#9-administration)
-- [10. Récapitulatif des fonctionnalités et permissions](#10-récapitulatif-des-fonctionnalités-et-permissions)
+- [10. Niveau d'authentification : carte agent ou double authentification](#10-niveau-dauthentification--carte-agent-ou-double-authentification)
+- [11. Récapitulatif des fonctionnalités et permissions](#11-récapitulatif-des-fonctionnalités-et-permissions)
 
 ## 1. Catalogue et recherche d'applications
 
@@ -353,7 +354,20 @@ Le panneau d'administration (`frontend/src/views/AdminPage.vue`) est organisé e
 
 **Permission.** Le panneau requiert `AdminPanelManage` (utilisateurs, acteurs) ou `GlobalAdminManage` (tout le reste, #2446). La suppression d'application (`DELETE /applications/:applicationId`) et certaines actions (création de type d'acteur) relèvent également de droits administrateurs.
 
-## 10. Récapitulatif des fonctionnalités et permissions
+## 10. Niveau d'authentification : carte agent ou double authentification
+
+Le SSO admet plusieurs modes de connexion. Lorsque le contrôle est activé (`AUTH_LEVEL_MODE=enforce`, #1985, voir [Permissions et sécurité](./06-permissions-et-securite.md) et le runbook d'[Exploitation](./12-exploitation-deploiement.md)), un agent connecté **sans carte agent ni double authentification** ne dispose que des droits d'un **utilisateur standard** pour la durée de sa session : consultation du référentiel, signalements, abonnements et préférences, révocation de ses jetons — mais ni administration, ni écriture sur les fiches (même en tant qu'acteur), ni impersonation, ni création de jeton personnel.
+
+**Ce que voit l'agent.**
+
+- Un **bandeau** en haut de chaque page (`WeakAuthBanner.vue`) explique la limitation. Son texte dépend du motif : connexion sans carte agent ni double authentification ; mode d'authentification non transmis par le fournisseur (« si vous vous êtes connecté avec votre carte agent, reconnectez-vous ; si le problème persiste, contactez le support ») ; fournisseur d'identité externe (aucune reconnexion proposée, elle ne changerait rien). Un lien « En savoir plus » pointe vers la page d'aide configurée.
+- Le bouton **« Se reconnecter »** renvoie vers le fournisseur d'identité en forçant une nouvelle authentification, puis ramène sur la page en cours. Si la session revient forte, un message le confirme et les droits complets sont rétablis ; si elle reste faible, le bandeau l'indique (« votre reconnexion n'a pas été reconnue comme forte ») et invite à utiliser la carte agent ou à activer la double authentification sur son compte.
+- Le **profil** affiche une ligne « Niveau d'authentification » (badge « Limitée » et motif ; en mode observation, le niveau évalué « sans effet sur vos droits ») et un badge « Droits limités (authentification faible) » à côté du rôle effectif. L'onglet **Mes tokens** explique pourquoi la création est indisponible ; les jetons existants restent visibles et révocables.
+- Une action refusée pour ce motif affiche un message dédié plutôt que le « Permission refusée » générique. Une impersonation en cours est interrompue et la page rechargée.
+
+**Mini-FAQ support.** « Pourquoi mes droits sont-ils limités ? » — la session a été ouverte sans carte agent ni double authentification, ou le fournisseur d'identité n'a pas transmis le mode. « Je me suis reconnecté et rien ne change » — la nouvelle session a été ouverte avec le même mode ; utiliser la carte agent ou activer la double authentification sur le compte SSO. « Le bandeau dit que le mode n'a pas été transmis » — vérifier le mode de connexion utilisé ; si l'agent s'est bien connecté avec sa carte, le signaler au support (déclaration des claims côté fournisseur). Un jeton API (`x-refapp-token`) n'est jamais concerné.
+
+## 11. Récapitulatif des fonctionnalités et permissions
 
 | Fonctionnalité                      | Emplacement principal (code)                                                    | Permission requise                                                                 |
 | :---------------------------------- | :------------------------------------------------------------------------------ | :--------------------------------------------------------------------------------- |
@@ -378,6 +392,7 @@ Le panneau d'administration (`frontend/src/views/AdminPage.vue`) est organisé e
 | Diagramme Time (dette technique)    | `TimePage.vue` · `backend/src/technical-debt-info`                              | `MDITList`                                                                         |
 | Export Excel                        | `GET /applications/export/excel`                                                | `DataExport` (admin)                                                               |
 | Administration                      | `AdminPage.vue` · `backend/src/user`, `organizations`, `tag`, `permissions`     | `AdminPanelManage` · `GlobalAdminManage` (+ `OrganizationManage`, etc.)            |
+| Niveau d'authentification (#1985)   | `WeakAuthBanner.vue` · `backend/src/auth-level`                                 | en mode `enforce`, tout droit au-delà du socle Visiteur exige une session forte    |
 
 ---
 

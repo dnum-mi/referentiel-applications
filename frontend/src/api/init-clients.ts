@@ -1,9 +1,10 @@
 import axios from "axios";
 import { client } from "@/client/client.gen";
 import { USER_MANAGER } from "@/services/authentication";
-import { IMPERSONATE_HEADER, getImpersonatedUserId } from "@/services/impersonation";
+import { IMPERSONATE_HEADER, clearImpersonationState, getImpersonatedUserId } from "@/services/impersonation";
 import { isMaintenanceResponse, setMaintenanceMode } from "@/composables/use-maintenance-mode";
 import { isBlockedAccessResponse, setBlockedAccess } from "@/composables/use-blocked-access";
+import { STEP_DOWN_MESSAGES, WEAK_AUTH_PERMISSION_MESSAGE, isStepDownResponse, markStepDownNotice } from "@/composables/use-auth-level";
 
 axios.defaults.baseURL = "/api/v2";
 axios.defaults.withCredentials = true;
@@ -31,7 +32,12 @@ type ResInterceptor = Parameters<typeof client.interceptors.response.use>[0];
 // plusieurs appels renvoient 401 simultanément.
 let isReauthenticating = false;
 
-export function configureClients(toaster: { addErrorMessage: (message: string) => void }) {
+export interface ConfigureClientsOptions {
+  /** #1985 : vrai quand la session courante est rétrogradée (message de refus enrichi). */
+  isAuthDowngraded?: () => boolean;
+}
+
+export function configureClients(toaster: { addErrorMessage: (message: string) => void }, options: ConfigureClientsOptions = {}) {
   const responseInterceptor: ResInterceptor = async (response) => {
     if (response.ok) {
       return response;
@@ -77,7 +83,24 @@ export function configureClients(toaster: { addErrorMessage: (message: string) =
         setBlockedAccess(true);
         return response;
       }
-      toaster.addErrorMessage("Permission refusée : Vous n'avez pas la permission d'effectuer cette action.");
+      // #1985 : refus propre au niveau d'authentification. Une impersonation refusée est
+      // rejouée à chaque requête depuis le localStorage : on la purge et on recharge une fois,
+      // plutôt qu'un toast par appel. Les autres motifs ont leur message dédié.
+      if (isStepDownResponse(payload)) {
+        if (payload.reason === "impersonation") {
+          clearImpersonationState();
+          markStepDownNotice("impersonation"); // expliqué après le rechargement (userStore)
+          globalThis.location.assign("/");
+          return response;
+        }
+        toaster.addErrorMessage(STEP_DOWN_MESSAGES[payload.reason]);
+        return response;
+      }
+      toaster.addErrorMessage(
+        options.isAuthDowngraded?.()
+          ? WEAK_AUTH_PERMISSION_MESSAGE
+          : "Permission refusée : Vous n'avez pas la permission d'effectuer cette action.",
+      );
       return response;
     }
 
