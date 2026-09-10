@@ -1383,6 +1383,9 @@ erDiagram
   String userId FK
   DateTime authTime
   DateTime createdAt
+  AuthLevel authLevel
+  String authMethod "nullable"
+  String authIdp "nullable"
 }
 "ImpersonationLog" {
   String id PK
@@ -1447,7 +1450,8 @@ Properties as follows:
 
 ### `UserConnexionLog`
 
-Ce modèle enregistre les connexions des utilisateurs, avec une entrée par utilisateur par jour.
+Ce modèle enregistre les connexions des utilisateurs, avec une entrée par utilisateur, par jour
+et par niveau d'authentification (#1985).
 
 Properties as follows:
 
@@ -1455,6 +1459,11 @@ Properties as follows:
 - `userId`:
 - `authTime`:
 - `createdAt`:
+- `authLevel`
+  > Niveau d'authentification de la session. Un agent passé de faible à fort dans la journée
+  > laisse deux lignes : rien n'est perdu, et la mesure en mode `observe` reste exacte.
+- `authMethod`: Valeur brute du claim de mode d'authentification (ex. CARD), pour la phase d'observation.
+- `authIdp`: Fournisseur d'identité d'origine (claim IdP), si transmis.
 
 ### `ImpersonationLog`
 

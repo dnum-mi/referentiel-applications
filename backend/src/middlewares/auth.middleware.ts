@@ -10,7 +10,14 @@ import { ConfigType } from "@nestjs/config";
 import { Roles } from "@prisma/client";
 import { NextFunction, Request, Response } from "express";
 import { createRemoteJWKSet, decodeJwt, jwtVerify } from "jose";
-import { oidcConfig } from "src/config/configs";
+import {
+  AuthLevelEvaluation,
+  evaluateAuthLevel,
+  isDowngraded,
+  stepDownPrincipal,
+} from "src/auth-level/auth-level";
+import { stepDownBody } from "src/auth-level/step-down.exception";
+import { authLevelConfig, oidcConfig } from "src/config/configs";
 import { principalToPermissions } from "src/permissions/role-to-permissions";
 import { TokenService } from "src/token/token.service";
 import { Requestor, UserEntity, UserType } from "src/user/entities/user.entity";
@@ -43,6 +50,8 @@ export class AuthMiddleware implements NestMiddleware {
     private readonly userConnexionLogService: UserConnexionLogService,
     private readonly logger: LoggerService,
     private readonly maintenanceService: MaintenanceService,
+    @Inject(authLevelConfig.KEY)
+    private readonly authLevel: ConfigType<typeof authLevelConfig>,
   ) {
     this.jwks = createRemoteJWKSet(new URL(this.oidc.jwksUrl));
   }
@@ -54,7 +63,18 @@ export class AuthMiddleware implements NestMiddleware {
       const authorization = req.headers.authorization?.split(" ")[1];
       const token = req.headers[API_KEY_HEADER] as string | undefined;
 
+      // #2372 : on retient la MÉTHODE d'authentification réellement employée
+      // (`!token`), et non la simple présence du header `Authorization`. Un
+      // porteur de token API pouvait sinon ajouter un `Authorization` bidon
+      // (jamais décodé, car la branche token gagne l'authentification) pour
+      // satisfaire la condition d'impersonation malgré l'interdiction.
+      const authenticatedByJwt = !token && !!authorization;
+
       let user: UserEntity | null = null;
+      // Niveau d'authentification de la session (#1985), évalué sur la seule
+      // branche JWT : un jeton API est une authentification machine, sans
+      // contexte de connexion — il n'est jamais rétrogradé.
+      let evaluation: AuthLevelEvaluation | undefined;
 
       if (token) {
         user = await this.tokenService.findUserByToken(token, {
@@ -64,6 +84,7 @@ export class AuthMiddleware implements NestMiddleware {
         const payload = process.env.DISABLE_JWT_VALIDATION
           ? decodeJwt(authorization)
           : (await jwtVerify(authorization, this.jwks)).payload;
+        evaluation = evaluateAuthLevel(payload, this.authLevel);
         const email = payload.email as string;
         user = maintenanceMode
           ? await this.userService.findByEmailWithRelations(email)
@@ -89,27 +110,52 @@ export class AuthMiddleware implements NestMiddleware {
         return;
       }
 
+      // #1985 : en mode `enforce`, une session sans authentification forte (carte
+      // agent ou double authentification) ne porte que les droits d'un utilisateur
+      // standard. La réécriture est faite EN MÉMOIRE, avant `principalToPermissions`,
+      // avant l'impersonation et avant le journal : tout ce qui suit lit ce
+      // principal, jamais la ligne en base.
+      const downgraded =
+        evaluation !== undefined && isDowngraded(evaluation, this.authLevel);
+      const principal = downgraded ? stepDownPrincipal(user) : user;
+
       // L'utilisateur réellement authentifié (avant toute impersonation).
       const authenticatedUser: Requestor = {
-        ...user,
-        permissions: principalToPermissions(user),
+        ...principal,
+        permissions: principalToPermissions(principal),
+        authLevel:
+          evaluation && this.authLevel.mode !== "off"
+            ? { level: evaluation.level, downgraded, reason: evaluation.reason }
+            : undefined,
       };
       req.user = authenticatedUser;
 
       // Impersonation : un administrateur peut se faire passer pour un autre
       // utilisateur en fournissant son identifiant via un header dédié. Seule
       // l'authentification humaine (JWT) y donne droit, pas les tokens API.
-      //
-      // #2372 : on teste la MÉTHODE d'authentification réellement employée
-      // (`!token`), et non la simple présence du header `Authorization`. Un
-      // porteur de token API pouvait sinon ajouter un `Authorization` bidon
-      // (jamais décodé, car la branche token gagne l'authentification) pour
-      // satisfaire la condition et impersonner malgré l'interdiction.
-      const authenticatedByJwt = !token && !!authorization;
       const impersonateUserId = req.headers[IMPERSONATE_HEADER] as
         | string
         | undefined;
       if (impersonateUserId && authenticatedByJwt) {
+        if (downgraded) {
+          // Refus explicite plutôt que le refus générique « pas administrateur » :
+          // le front rejoue le header depuis le localStorage à chaque requête et
+          // doit reconnaître le payload `stepDown` pour purger l'impersonation. La
+          // tentative n'atteint pas ActionLogMiddleware (réponse avant `next()`) :
+          // ce warn est la seule trace.
+          this.logger.warn(
+            `[AuthLevel] Impersonation refusée en session faible : ${user.email} → ${impersonateUserId} (${evaluation?.reason})`,
+          );
+          if (!maintenanceMode) {
+            await this.userService.stopImpersonation(
+              user.id,
+              impersonateUserId,
+            );
+          }
+          res.status(403);
+          res.json(stepDownBody("impersonation"));
+          return;
+        }
         req.user = await this.resolveImpersonatedUser(
           authenticatedUser,
           impersonateUserId,
@@ -120,7 +166,13 @@ export class AuthMiddleware implements NestMiddleware {
       // On journalise toujours la connexion de l'utilisateur réellement
       // authentifié, jamais celle de la cible impersonnée.
       if (!maintenanceMode) {
-        await this.userConnexionLogService.log(authenticatedUser.id);
+        const logged = await this.userConnexionLogService.log(
+          authenticatedUser.id,
+          evaluation,
+        );
+        if (logged?.created) {
+          this.logFirstConnexionOfTheDay(user, evaluation, downgraded);
+        }
       }
 
       next();
@@ -136,6 +188,32 @@ export class AuthMiddleware implements NestMiddleware {
       }
 
       throw new UnauthorizedException("L'authentification a échoué");
+    }
+  }
+
+  /**
+   * Une ligne de log applicatif par utilisateur, par jour et par niveau (jamais par
+   * requête) : en `observe`, c'est le canal de mesure qui dit ce que le fournisseur
+   * d'identité transmet réellement ; en `enforce`, seule une rétrogradation qui retire
+   * effectivement quelque chose mérite un avertissement.
+   */
+  private logFirstConnexionOfTheDay(
+    user: UserEntity,
+    evaluation: AuthLevelEvaluation | undefined,
+    downgraded: boolean,
+  ) {
+    if (!evaluation || this.authLevel.mode === "off") return;
+    const details = `user=${user.email} level=${evaluation.level} reason=${evaluation.reason} method=${evaluation.claimValue ?? "-"} idp=${evaluation.idp ?? "-"} role=${user.role}`;
+    if (this.authLevel.mode === "observe") {
+      this.logger.log(`[AuthLevel] ${details}`);
+      return;
+    }
+    const losesSomething =
+      user.role !== Roles.VISITOR ||
+      (user.additionalPermissions?.length ?? 0) > 0 ||
+      !!user.scopeOrganizationId;
+    if (downgraded && losesSomething) {
+      this.logger.warn(`[AuthLevel] Session rétrogradée : ${details}`);
     }
   }
 

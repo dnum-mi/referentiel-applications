@@ -1,5 +1,6 @@
 import { Injectable, HttpException, HttpStatus } from "@nestjs/common";
 import { Roles } from "@prisma/client";
+import { StepDownException } from "src/auth-level/step-down.exception";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UpdateUserDto } from "../dto/update-user.dto";
 import { Requestor } from "../entities/user.entity";
@@ -238,6 +239,12 @@ export class ScopedPermissionService {
    * super-administrateur et pouvait se promouvoir ADMIN.
    */
   private assertIsAdministrator(requestor: Requestor): void {
+    // #1985 : défense en profondeur — le principal rétrogradé est déjà VISITOR et la garde de
+    // permissions (AdminPanelManage) refuse en amont ; ce second rideau tient même si un refactor
+    // reconstruisait le rôle depuis la base ou ouvrait une route sans garde.
+    if (requestor?.authLevel?.downgraded) {
+      throw new StepDownException("admin-action");
+    }
     if (requestor?.role !== Roles.ADMIN) {
       throw new ScopePermissionsException(
         "Cette action est réservée aux administrateurs",

@@ -6,6 +6,7 @@ import {
 } from "@nestjs/common";
 import { Permission, Prisma, Roles, UserType } from "@prisma/client";
 import { createHash } from "node:crypto";
+import { StepDownException } from "src/auth-level/step-down.exception";
 import { CheckPermissions } from "src/common/service/check-permissions.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Requestor, UserEntity } from "src/user/entities/user.entity";
@@ -104,6 +105,13 @@ export class TokenService {
       throw new ForbiddenException(
         "Requestor must be defined to create a token",
       );
+    }
+    // #1985 : `createPersonal` fige `Token.role = requestor.role`. En session faible, le rôle
+    // rétrogradé serait figé VISITOR à vie (jeton silencieusement inutile) — et un jeton est un
+    // secret durable qui contourne ensuite tout contrôle de niveau d'authentification (canal
+    // `x-refapp-token`, jamais évalué). On refuse donc explicitement, avant tout accès Prisma.
+    if (personal && requestor.authLevel?.downgraded) {
+      throw new StepDownException("personal-token");
     }
     const hasPermission = await this.checkPermissions.can(
       [Permission.GlobalAdminManage],

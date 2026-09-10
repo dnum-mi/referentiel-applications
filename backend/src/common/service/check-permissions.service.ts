@@ -6,10 +6,16 @@ import {
   APP_PERMISSIONS,
   transformAppPermissionsObjectToArray,
 } from "../utils/types";
-import { roleToAppPermissions } from "src/permissions/role-to-permissions";
+import {
+  READ_APP_PERMISSIONS,
+  roleToAppPermissions,
+} from "src/permissions/role-to-permissions";
 import { QueryBuilderGroupActor } from "./prisma-query-builder.service";
 import { organizationWithinScope } from "src/common/utils/organization-scope.utils";
 import { emailEquals } from "src/common/utils/email.utils";
+
+/** Permissions applicatives conservées par une session rétrogradée (#1985) : lectures seules. */
+const STEP_DOWN_APP_PERMISSIONS: ReadonlySet<string> = READ_APP_PERMISSIONS;
 
 @Injectable()
 export class CheckPermissions {
@@ -51,7 +57,18 @@ export class CheckPermissions {
       this.getUserAppPermissions(applicationId, user),
       this.getUserRolePermissions(applicationId, user),
     ]);
-    return [...actorPermissions, ...userRolePermissions];
+    const permissions = [...actorPermissions, ...userRolePermissions];
+    // #1985 : la couche 3 ne dépend ni du rôle ni du périmètre (acteur par e-mail ou par
+    // groupe, type par défaut) : elle survit à la réécriture du principal. Sous session
+    // faible, un « utilisateur standard » ne conserve que les LECTURES sur ses applications —
+    // sans ce point de coupe unique, le mot de passe seul d'un acteur suffirait à écrire sur
+    // ses fiches et à s'ajouter comme acteur. AppRead / ReportRead / ReportPost, absents de
+    // READ_APP_PERMISSIONS, restent couverts par le socle global du rôle VISITOR.
+    return user.authLevel?.downgraded
+      ? permissions.filter((permission) =>
+          STEP_DOWN_APP_PERMISSIONS.has(permission),
+        )
+      : permissions;
   }
 
   private async getUserAppPermissions(applicationId: string, user: Requestor) {

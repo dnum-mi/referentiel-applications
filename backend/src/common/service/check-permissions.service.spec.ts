@@ -1,6 +1,7 @@
 import { Permission, Roles } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Requestor } from "src/user/entities/user.entity";
+import { READ_APP_PERMISSIONS } from "src/permissions/role-to-permissions";
 import { CheckPermissions } from "./check-permissions.service";
 import { QueryBuilderGroupActor } from "./prisma-query-builder.service";
 
@@ -221,5 +222,66 @@ describe("CheckPermissions.getUserRolePermissions (scope administratif)", () => 
 
     expect(await service.can([Permission.AppWrite], user, "app-1")).toBe(false);
     expect(await service.can([Permission.AppRead], user, "app-1")).toBe(false);
+  });
+});
+
+// #1985 : la couche 3 ne dépend ni du rôle ni du périmètre — sous session faible, un acteur ne
+// conserve que les LECTURES sur ses applications, via le seul point de coupe `resolveAppPermissions`.
+describe("CheckPermissions.resolveAppPermissions — session rétrogradée (#1985)", () => {
+  const WRITE_MATRIX = {
+    ...READ_ONLY_MATRIX,
+    AppWrite: true,
+    ActorWrite: true,
+    ReportManage: true,
+  };
+  const writingActor = () => ({
+    actorType: { appPermissions: [WRITE_MATRIX] },
+  });
+  const downgraded = (): Requestor =>
+    ({
+      ...baseUser(),
+      authLevel: { level: "weak", downgraded: true, reason: "weak-method" },
+    }) as unknown as Requestor;
+
+  it("acteur en écriture, session rétrogradée : lectures conservées, écritures retirées", async () => {
+    const { service } = makeService({ emailActors: [writingActor()] });
+    const user = downgraded();
+
+    const perms = await service.resolveAppPermissions("app-1", user);
+    expect(perms).toEqual(expect.arrayContaining(["ActorRead", "DataRead"]));
+    for (const write of ["AppWrite", "ActorWrite", "ReportManage"]) {
+      expect(perms).not.toContain(write);
+    }
+    const readOnly: ReadonlySet<string> = READ_APP_PERMISSIONS;
+    expect(perms.every((permission) => readOnly.has(permission))).toBe(true);
+    expect(await service.can([Permission.ActorRead], user, "app-1")).toBe(true);
+    expect(await service.can([Permission.AppWrite], user, "app-1")).toBe(false);
+    expect(await service.can([Permission.ActorWrite], user, "app-1")).toBe(
+      false,
+    );
+  });
+
+  it("même acteur, session forte : la matrice s'applique intégralement", async () => {
+    const { service } = makeService({ emailActors: [writingActor()] });
+    const user = {
+      ...baseUser(),
+      authLevel: {
+        level: "strong",
+        downgraded: false,
+        reason: "strong-method",
+      },
+    } as unknown as Requestor;
+
+    expect(await service.can([Permission.AppWrite], user, "app-1")).toBe(true);
+  });
+
+  it("mode observe (downgraded=false, niveau faible) : aucune coupe", async () => {
+    const { service } = makeService({ emailActors: [writingActor()] });
+    const user = {
+      ...baseUser(),
+      authLevel: { level: "weak", downgraded: false, reason: "weak-method" },
+    } as unknown as Requestor;
+
+    expect(await service.can([Permission.AppWrite], user, "app-1")).toBe(true);
   });
 });

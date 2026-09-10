@@ -12,7 +12,11 @@ describe("Config", () => {
     expect(response.body).toMatchObject({
       oidcClientId: expect.any(String),
       oidcConfigUrl: expect.any(String),
+      oidcScope: "openid profile email",
       version: expect.any(String),
     });
+    // #1985 : hors mode enforce (jest.setup force `off`), rien sur le niveau d'authentification
+    // ne sort de cette route publique.
+    expect(response.body.authLevel).toBeUndefined();
   });
 });

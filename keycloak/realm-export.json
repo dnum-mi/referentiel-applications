@@ -124,6 +124,36 @@
             "included.client.audience": "referentiel-applications",
             "access.token.claim": "true"
           }
+        },
+        {
+          "name": "auth_mode",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "auth_mode",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "auth_mode",
+            "jsonType.label": "String",
+            "multivalued": "false"
+          }
+        },
+        {
+          "name": "auth_idp",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "auth_idp",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "auth_idp",
+            "jsonType.label": "String",
+            "multivalued": "false"
+          }
         }
       ],
       "authorizationServicesEnabled": false,
@@ -191,7 +221,11 @@
           "temporary": false
         }
       ],
-      "groups": ["/admin"]
+      "groups": ["/admin"],
+      "attributes": {
+        "auth_mode": ["CARD"],
+        "auth_idp": ["principal"]
+      }
     },
     {
       "id": "f15d1c13-8198-4ca5-a180-94656e20d567",
@@ -213,7 +247,11 @@
           "value": "pass",
           "temporary": false
         }
-      ]
+      ],
+      "attributes": {
+        "auth_mode": ["CARD"],
+        "auth_idp": ["principal"]
+      }
     },
     {
       "id": "f15d1c13-8198-4ca5-a180-94656e20d568",
@@ -235,7 +273,11 @@
           "value": "pass",
           "temporary": false
         }
-      ]
+      ],
+      "attributes": {
+        "auth_mode": ["CARD"],
+        "auth_idp": ["principal"]
+      }
     },
     {
       "id": "f15d1c13-8198-4ca5-a180-94656e20d570",
@@ -257,7 +299,11 @@
           "value": "pass",
           "temporary": false
         }
-      ]
+      ],
+      "attributes": {
+        "auth_mode": ["CARD"],
+        "auth_idp": ["principal"]
+      }
     },
     {
       "id": "f15d1c13-8198-4ca5-a180-94656e20d571",
@@ -279,7 +325,11 @@
           "value": "pass",
           "temporary": false
         }
-      ]
+      ],
+      "attributes": {
+        "auth_mode": ["CARD"],
+        "auth_idp": ["principal"]
+      }
     },
     {
       "id": "f15d1c13-8198-4ca5-a180-94656e20d572",
@@ -301,7 +351,75 @@
           "value": "pass",
           "temporary": false
         }
-      ]
+      ],
+      "attributes": {
+        "auth_mode": ["CARD"],
+        "auth_idp": ["principal"]
+      }
+    },
+    {
+      "id": "f15d1c13-8198-4ca5-a180-94656e20d573",
+      "username": "admin-weak",
+      "email": "admin-weak@example.com",
+      "firstName": "Wendy",
+      "lastName": "Weak",
+      "emailVerified": true,
+      "enabled": true,
+      "totp": false,
+      "realmRoles": ["user"],
+      "clientRoles": {
+        "referentiel-applications": ["USER"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "pass",
+          "temporary": false
+        }
+      ],
+      "createdTimestamp": 1728673414000,
+      "attributes": {
+        "auth_mode": ["PASSWORD"],
+        "auth_idp": ["principal"]
+      }
+    },
+    {
+      "id": "f15d1c13-8198-4ca5-a180-94656e20d574",
+      "username": "user-federated",
+      "email": "user-federated@example.com",
+      "firstName": "Fred",
+      "lastName": "Federated",
+      "emailVerified": true,
+      "enabled": true,
+      "totp": false,
+      "realmRoles": ["user"],
+      "clientRoles": {
+        "referentiel-applications": ["USER"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "pass",
+          "temporary": false
+        }
+      ],
+      "createdTimestamp": 1728673414000,
+      "attributes": {
+        "auth_idp": ["partenaire"]
+      }
     }
-  ]
+  ],
+  "components": {
+    "org.keycloak.userprofile.UserProfileProvider": [
+      {
+        "providerId": "declarative-user-profile",
+        "subComponents": {},
+        "config": {
+          "kc.user.profile.config": [
+            "{\"attributes\":[{\"name\":\"username\",\"displayName\":\"${username}\",\"validations\":{\"length\":{\"min\":3,\"max\":255},\"username-prohibited-characters\":{},\"up-username-not-idn-homograph\":{}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"email\",\"displayName\":\"${email}\",\"validations\":{\"email\":{},\"length\":{\"max\":255}},\"required\":{\"roles\":[\"user\"]},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"firstName\",\"displayName\":\"${firstName}\",\"validations\":{\"length\":{\"max\":255},\"person-name-prohibited-characters\":{}},\"required\":{\"roles\":[\"user\"]},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"lastName\",\"displayName\":\"${lastName}\",\"validations\":{\"length\":{\"max\":255},\"person-name-prohibited-characters\":{}},\"required\":{\"roles\":[\"user\"]},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"auth_mode\",\"displayName\":\"Mode d'authentification simulé (claim auth_mode, #1985)\",\"validations\":{\"options\":{\"options\":[\"CARD\",\"PASSWORD\"]}},\"permissions\":{\"view\":[\"admin\"],\"edit\":[\"admin\"]},\"multivalued\":false},{\"name\":\"auth_idp\",\"displayName\":\"Fournisseur d'identité simulé (claim auth_idp, #1985)\",\"validations\":{\"length\":{\"max\":64}},\"permissions\":{\"view\":[\"admin\"],\"edit\":[\"admin\"]},\"multivalued\":false}],\"groups\":[{\"name\":\"user-metadata\",\"displayHeader\":\"User metadata\",\"displayDescription\":\"Attributes, which refer to user metadata\"}]}"
+          ]
+        }
+      }
+    ]
+  }
 }

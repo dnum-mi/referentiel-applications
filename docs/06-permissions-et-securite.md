@@ -59,6 +59,20 @@ Le backend revérifie systématiquement le jeton dans `backend/src/middlewares/a
 
 La configuration OIDC backend est centralisée dans `backend/src/config/configs/oidc.config.ts` : `OIDC_JWKS_URL`, `OIDC_CONFIG_URL` et `OIDC_CLIENT_ID` sont **obligatoires** (le service lève une erreur au démarrage s'ils manquent). Cette configuration étant générique, le même code fonctionne avec le **Keycloak local** (dev) comme avec le **fournisseur d'identité (SSO) de l'organisation** (prod) : aucun fournisseur n'est codé en dur.
 
+### 1.4. Niveau d'authentification : carte agent ou double authentification (#1985)
+
+Le SSO de l'organisation admet plusieurs modes de connexion (carte agent, mot de passe avec double authentification, mot de passe seul). RefApp lit, sur l'**access token** uniquement (jamais l'id token, cf. ADR-0005), un claim de mode d'authentification déclaré côté fournisseur — nom et valeurs fortes entièrement configurables (`AUTH_LEVEL_*`, voir [API](./05-api.md)) — et en déduit un niveau `strong`, `weak` ou `unknown` (module pur `backend/src/auth-level/auth-level.ts`). Un claim absent vaut toujours **faible** ; une liste explicite de fournisseurs fédérés de confiance (`AUTH_LEVEL_TRUSTED_IDPS`, vide par défaut) ne comble que l'absence de claim, jamais un mode faible transmis. Trois modes (`AUTH_LEVEL_MODE`) : `off` (défaut, aucune évaluation), `observe` (niveau journalisé et exposé, droits intacts — l'étape de mesure avant toute activation, cf. le runbook d'[Exploitation](./12-exploitation-deploiement.md)) et `enforce`.
+
+En `enforce`, une session non forte ne porte que les **droits d'un utilisateur standard**, en cinq points de coupe :
+
+- **Réécriture du principal** dans `AuthMiddleware` (`stepDownPrincipal`) : rôle `VISITOR`, `additionalPermissions` vides, périmètre annulé (identifiant **et** relation `scopeOrganization`), **en mémoire uniquement**, avant `principalToPermissions`, avant l'impersonation et avant le journal. L'e-mail et l'organisation sont conservés (couche 3, traçabilité). Le jeton API (`x-refapp-token`) n'est **jamais** évalué.
+- **Couche 3 ramenée aux lectures** dans `CheckPermissions.resolveAppPermissions` (point d'entrée unique de la garde et de `my-perms`) : un acteur en écriture sur ses applications ne conserve que les permissions applicatives de lecture.
+- **Impersonation refusée** par le middleware avec un 403 `{ stepDown: true, reason: "impersonation" }` (jamais 401, qui déclencherait la ré-authentification du front) et clôture de la session `ImpersonationLog` ouverte.
+- **Création de jeton personnel refusée** (`TokenService.create`, 403 `stepDown` / `personal-token`) : un jeton est un secret durable qui contournerait ensuite tout contrôle de niveau.
+- **Second rideau** dans `ScopedPermissionService.assertIsAdministrator` (403 `stepDown` / `admin-action`), derrière la garde `AdminPanelManage` qui refuse déjà.
+
+`GET /users/me` expose `authLevel { level, downgraded, reason }` — jamais le rôle, les permissions ou le périmètre d'origine — et les routes qui décrivent l'utilisateur courant (`PATCH /users/me`, abonnements) répondent depuis le Requestor de la requête, pas d'une relecture Prisma. `UserConnexionLog` enregistre une ligne par utilisateur, jour et niveau avec la valeur brute du claim et le fournisseur.
+
 ## 2. Modèle d'autorisation à trois couches
 
 L'autorisation combine **trois sources de permissions cumulatives**. La fusion et la décision sont centralisées dans `backend/src/common/service/check-permissions.service.ts`, méthode `can()`.
@@ -255,7 +269,7 @@ Dans `getUserRolePermissions` (`check-permissions.service.ts:85-126`) :
 
 `ScopedPermissionService` (`backend/src/user/scope-permission/scoped-permission.service.ts`) applique le périmètre lors de la modification d'un utilisateur :
 
-- Toute action d'administration d'un utilisateur (édition des droits, blocage, impersonation, périmètre d'un compte de service) exige le **rôle** `ADMIN` (`assertIsAdministrator`, #2498) : la permission `AdminPanelManage`, si elle avait été déléguée en base, ne suffit pas — un contributeur délégué sans périmètre se comportait auparavant en super-administrateur.
+- Toute action d'administration d'un utilisateur (édition des droits, blocage, impersonation, périmètre d'un compte de service) exige le **rôle** `ADMIN` (`assertIsAdministrator`, #2498) : la permission `AdminPanelManage`, si elle avait été déléguée en base, ne suffit pas — un contributeur délégué sans périmètre se comportait auparavant en super-administrateur. Depuis #1985, ce même verrou refuse d'abord toute session **rétrogradée** (`authLevel.downgraded`, 403 `stepDown`), cf. [§1.4](#14-niveau-dauthentification--carte-agent-ou-double-authentification-1985).
 - Un requestor `ADMIN` **sans scope** est super-administrateur : aucun contrôle de périmètre.
 - Sinon, toute cible et toute organisation manipulée doivent être **dans le périmètre** au sens de §6.1 (`assertWithinScope` : égalité ou descendant à une frontière de segment). Une cible **sans organisation** n'est dans le périmètre de personne (#2371).
 - Aucun verrou dédié n'interdit à un administrateur de modifier son **propre** rôle ou son **propre** périmètre : ces champs suivent exactement les mêmes règles que pour un tiers. Un admin global peut donc changer son propre rôle librement (`assertNoPrivilegeEscalation` ne bloque que la **promotion** vers `ADMIN` d'une cible qui ne l'est pas déjà). Un admin **scopé** qui retire son propre périmètre reste bloqué, mais pour la même raison que pour un tiers : `assertScopeOrganizationAction` réserve toute suppression de périmètre à un administrateur global. Pour `additionalPermissions` (#2608), bornées à la liste fermée `DELEGABLE_PERMISSIONS` et donc sans risque d'escalade, un **admin global** peut se les accorder ou se les retirer lui-même ; un admin **scopé** reste bloqué sur ce champ pour lui comme pour un tiers, `assertNoPrivilegeEscalation` réservant toute modification d'`additionalPermissions` à un administrateur global (#2371).
@@ -270,6 +284,8 @@ La même règle de périmètre s'applique à l'impersonation (#2217, `assertCanI
 - `AuthMiddleware.resolveImpersonatedUser` — indispensable car c'est le middleware qui applique l'identité à chaque requête via le header `x-impersonate-user-id`, qui peut être posé sans passer par l'endpoint.
 
 Côté interface, le bouton « Se connecter en tant que » n'est pas proposé hors périmètre (`UserActions.vue`, `canImpersonate`, alignée sur `canEditUser`).
+
+En mode `enforce` du niveau d'authentification (#1985, [§1.4](#14-niveau-dauthentification--carte-agent-ou-double-authentification-1985)), l'impersonation exige en outre une **session forte** : le middleware refuse le header `x-impersonate-user-id` d'une session rétrogradée par un 403 `stepDown` et clôt la session `ImpersonationLog` ouverte.
 
 ### 6.4. Effet sur les onglets d'administration
 
@@ -356,24 +372,27 @@ Les composants passent en second argument les permissions applicatives obtenues 
 
 ### Récapitulatif des mécanismes confirmés
 
-| Mécanisme                                                        | Emplacement vérifié                                                                                 |
-| :--------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------- |
-| Fusion des 3 couches + décision OU (`Set` + `.some()`)           | `backend/src/common/service/check-permissions.service.ts:36-44`                                     |
-| Calcul couche 3 conditionné à `applicationId`                    | `check-permissions.service.ts:25-35`                                                                |
-| Canaux email / organisation de groupe                            | `check-permissions.service.ts:47-83` + `backend/src/common/service/prisma-query-builder.service.ts` |
-| Rôle projeté + effet du scope sur l'app                          | `check-permissions.service.ts:85-126`                                                               |
-| Mapping rôle → permissions (cumulatif)                           | `backend/src/permissions/role-to-permissions.ts`                                                    |
-| Enum `Roles` (VISITOR<READER<CONTRIBUTOR<ADMIN)                  | `backend/prisma/schema/users.prisma:46-52`                                                          |
-| `User.additionalPermissions` + scope                             | `backend/prisma/schema/users.prisma:16-18,41`                                                       |
-| Audit permissions / connexions                                   | `backend/prisma/schema/user-log.prisma:2-21`                                                        |
-| Enum `Permission` (globales + applicatives)                      | `backend/prisma/schema/permissions.prisma:59-105`                                                   |
-| Matrice `AppPermissions` (1:1 ActorType)                         | `backend/prisma/schema/permissions.prisma:5-52`                                                     |
-| `AppWritePriority` dissociée (`@default(false)`, OU sur handler) | `permissions.prisma:11-12` + `application.controller.ts:293`                                        |
-| Transformation matrice → permissions                             | `backend/src/common/utils/types.ts:38-47`                                                           |
-| Garde + décorateur, param `applicationId`                        | `backend/src/common/guards/permission.guard.ts:28-29` + `required-permissions.decorator.ts`         |
-| Endpoint `my-perms`                                              | `backend/src/applications/application.controller.ts:149-172` + `application.service.ts:267-269`     |
-| Front `userStore.hasPermissions`                                 | `frontend/src/stores/userStore.ts:79-87`                                                            |
-| Auth backend (JWKS, modes token/JWT, pivot email)                | `backend/src/middlewares/auth.middleware.ts:37-68`                                                  |
-| Config OIDC obligatoire (générique, sans fournisseur en dur)     | `backend/src/config/configs/oidc.config.ts`                                                         |
-| Front OIDC (oidc-client-ts, config dynamique)                    | `frontend/src/services/authentication.ts`                                                           |
-| Scope administratif utilisateurs                                 | `backend/src/user/scope-permission/scoped-permission.service.ts`                                    |
+| Mécanisme                                                        | Emplacement vérifié                                                                                      |
+| :--------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------- |
+| Fusion des 3 couches + décision OU (`Set` + `.some()`)           | `backend/src/common/service/check-permissions.service.ts:36-44`                                          |
+| Calcul couche 3 conditionné à `applicationId`                    | `check-permissions.service.ts:25-35`                                                                     |
+| Canaux email / organisation de groupe                            | `check-permissions.service.ts:47-83` + `backend/src/common/service/prisma-query-builder.service.ts`      |
+| Rôle projeté + effet du scope sur l'app                          | `check-permissions.service.ts:85-126`                                                                    |
+| Mapping rôle → permissions (cumulatif)                           | `backend/src/permissions/role-to-permissions.ts`                                                         |
+| Enum `Roles` (VISITOR<READER<CONTRIBUTOR<ADMIN)                  | `backend/prisma/schema/users.prisma:46-52`                                                               |
+| `User.additionalPermissions` + scope                             | `backend/prisma/schema/users.prisma:16-18,41`                                                            |
+| Audit permissions / connexions                                   | `backend/prisma/schema/user-log.prisma:2-21`                                                             |
+| Enum `Permission` (globales + applicatives)                      | `backend/prisma/schema/permissions.prisma:59-105`                                                        |
+| Matrice `AppPermissions` (1:1 ActorType)                         | `backend/prisma/schema/permissions.prisma:5-52`                                                          |
+| `AppWritePriority` dissociée (`@default(false)`, OU sur handler) | `permissions.prisma:11-12` + `application.controller.ts:293`                                             |
+| Transformation matrice → permissions                             | `backend/src/common/utils/types.ts:38-47`                                                                |
+| Garde + décorateur, param `applicationId`                        | `backend/src/common/guards/permission.guard.ts:28-29` + `required-permissions.decorator.ts`              |
+| Endpoint `my-perms`                                              | `backend/src/applications/application.controller.ts:149-172` + `application.service.ts:267-269`          |
+| Front `userStore.hasPermissions`                                 | `frontend/src/stores/userStore.ts:79-87`                                                                 |
+| Auth backend (JWKS, modes token/JWT, pivot email)                | `backend/src/middlewares/auth.middleware.ts:37-68`                                                       |
+| Niveau d'authentification : évaluation, rétrogradation, journal  | `backend/src/auth-level/`, `auth.middleware.ts`, `user-connexion-log.service.ts`, `auth-level.config.ts` |
+| Couche 3 en lecture seule sous session faible                    | `check-permissions.service.ts` (`resolveAppPermissions`)                                                 |
+| Refus typés `stepDown` (impersonation, jeton personnel, admin)   | `auth.middleware.ts`, `token.service.ts`, `scoped-permission.service.ts`, `step-down.exception.ts`       |
+| Config OIDC obligatoire (générique, sans fournisseur en dur)     | `backend/src/config/configs/oidc.config.ts`                                                              |
+| Front OIDC (oidc-client-ts, config dynamique)                    | `frontend/src/services/authentication.ts`                                                                |
+| Scope administratif utilisateurs                                 | `backend/src/user/scope-permission/scoped-permission.service.ts`                                         |

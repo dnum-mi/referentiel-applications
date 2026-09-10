@@ -92,7 +92,7 @@ Lorsque l'option `writeYaml` est active (variable `WRITE_SWAGGER_YAML`, voir plu
 
 L'API ne possède **pas de route d'authentification dédiée** : l'authentification est déléguée à un fournisseur **OIDC standard (Authorization Code Flow), agnostique du fournisseur** (configuré via `OIDC_JWKS_URL` / `OIDC_CONFIG_URL` / `OIDC_CLIENT_ID`, voir `backend/src/config/configs/oidc.config.ts`) et appliquée par un middleware (`backend/src/middlewares/auth.middleware.ts`). En **développement**, le fournisseur OIDC est un **Keycloak local** ; en **production**, l'application s'interface avec le **fournisseur d'identité (SSO) de l'organisation** via ces mêmes variables. Deux schémas de sécurité sont déclarés globalement dans Swagger (`oauth2` puis `api_key`) :
 
-- **JWT OIDC (Bearer)** — en-tête `Authorization: Bearer <JWT>` (flux C2B, utilisateur humain). Le jeton est vérifié **par le backend** contre le JWKS du fournisseur via `jose` (`createRemoteJWKSet` + `jwtVerify`), l'**email** servant d'identifiant pivot. En développement, `DISABLE_JWT_VALIDATION` décode le jeton **sans vérifier la signature** (à ne jamais activer en production).
+- **JWT OIDC (Bearer)** — en-tête `Authorization: Bearer <JWT>` (flux C2B, utilisateur humain). Le jeton est vérifié **par le backend** contre le JWKS du fournisseur via `jose` (`createRemoteJWKSet` + `jwtVerify`), l'**email** servant d'identifiant pivot. En développement, `DISABLE_JWT_VALIDATION` décode le jeton **sans vérifier la signature** (à ne jamais activer en production). Le même jeton porte, s'il est déclaré côté fournisseur, le **claim de niveau d'authentification** (#1985, variables `AUTH_LEVEL_*` ci-dessous) : en mode `enforce`, une session sans carte agent ni double authentification ne reçoit que les droits d'un utilisateur standard, et `GET /users/me` expose un objet `authLevel` (`level`, `downgraded`, `reason` — jamais le rôle ni les droits d'origine). Les refus propres à ce contrôle (impersonation, création de jeton personnel) répondent **403** avec `{ statusCode: 403, stepDown: true, reason, message }` — jamais 401, pour ne pas déclencher la ré-authentification du front. Un jeton API n'est jamais évalué.
 - **Clé d'API / token de service ou personnel** — en-tête `x-refapp-token` (constante `API_KEY_HEADER`, `backend/src/utils/constants.util.ts`), utilisée pour les échanges **B2B** (machine à machine). Le jeton est résolu en utilisateur par le `TokenService`. Ce mécanisme couvre les jetons de service, les jetons personnels et l'impersonation (module `token`).
 
 La matrice des permissions et le détail du contrôle d'accès sont décrits dans [Permissions & sécurité](./06-permissions-et-securite.md). On notera l'endpoint contextuel **`GET /applications/:applicationId/my-perms`**, qui renvoie les permissions de l'utilisateur courant sur une application donnée.
@@ -275,12 +275,30 @@ Variables lues par le **backend** (`backend/src/config/configs/*.ts`, `main.ts`,
 
 Ces variables pilotent un OIDC **agnostique du fournisseur** : Keycloak local en développement, fournisseur d'identité (SSO) de l'organisation en production.
 
-| Nom                      | Rôle                                                                           |
-| ------------------------ | ------------------------------------------------------------------------------ |
-| `OIDC_JWKS_URL`          | URL du JWKS pour valider les JWT — **obligatoire**.                            |
-| `OIDC_CONFIG_URL`        | URL `.well-known/openid-configuration`, exposée au frontend — **obligatoire**. |
-| `OIDC_CLIENT_ID`         | Identifiant du client OIDC, exposé au frontend — **obligatoire**.              |
-| `DISABLE_JWT_VALIDATION` | Décode le JWT sans vérifier la signature (développement uniquement).           |
+| Nom                      | Rôle                                                                                           |
+| ------------------------ | ---------------------------------------------------------------------------------------------- |
+| `OIDC_JWKS_URL`          | URL du JWKS pour valider les JWT — **obligatoire**.                                            |
+| `OIDC_CONFIG_URL`        | URL `.well-known/openid-configuration`, exposée au frontend — **obligatoire**.                 |
+| `OIDC_CLIENT_ID`         | Identifiant du client OIDC, exposé au frontend — **obligatoire**.                              |
+| `DISABLE_JWT_VALIDATION` | Décode le JWT sans vérifier la signature (développement uniquement).                           |
+| `OIDC_SCOPE`             | Scopes demandés par le frontend, exposés dans `GET /config` (défaut : `openid profile email`). |
+
+### Niveau d'authentification (#1985)
+
+Aucune valeur n'est codée en dur : le nom du claim et ses valeurs sont déclarés côté fournisseur d'identité et vivent dans la configuration d'infrastructure. Voir le runbook d'activation dans [Exploitation & déploiement](./12-exploitation-deploiement.md).
+
+| Nom                            | Rôle                                                                                                                                                                       |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AUTH_LEVEL_MODE`              | `off` (défaut : aucune évaluation), `observe` (niveau journalisé et exposé, droits intacts) ou `enforce` (rétrogradation appliquée). Valeur inconnue → échec au démarrage. |
+| `AUTH_LEVEL_CLAIM`             | Nom du claim de mode d'authentification sur l'access token — **obligatoire** dès que le mode n'est pas `off`.                                                              |
+| `AUTH_LEVEL_STRONG_VALUES`     | Valeurs du claim valant authentification forte (CSV, insensible à la casse) — **obligatoire** dès que le mode n'est pas `off`. Un claim absent vaut faible.                |
+| `AUTH_LEVEL_IDP_CLAIM`         | Nom du claim identifiant le fournisseur d'identité d'origine (optionnel).                                                                                                  |
+| `AUTH_LEVEL_TRUSTED_IDPS`      | Fournisseurs fédérés dont l'identification vaut authentification forte (CSV, vide par défaut, validation RSSI).                                                            |
+| `AUTH_LEVEL_REAUTH_ENABLED`    | Propose la reconnexion forte depuis le front (défaut `true`).                                                                                                              |
+| `AUTH_LEVEL_REAUTH_PROMPT`     | Paramètre `prompt` de la reconnexion forte (défaut `login`).                                                                                                               |
+| `AUTH_LEVEL_REAUTH_ACR_VALUES` | Paramètre `acr_values` de la reconnexion forte (optionnel).                                                                                                                |
+| `AUTH_LEVEL_REAUTH_MAX_AGE`    | Paramètre `max_age` en secondes de la reconnexion forte (optionnel).                                                                                                       |
+| `AUTH_LEVEL_HELP_URL`          | Page d'aide liée depuis le bandeau (carte agent, activation de la double authentification).                                                                                |
 
 ### Messagerie (SMTP)
 

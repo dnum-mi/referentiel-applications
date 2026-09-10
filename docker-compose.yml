@@ -53,6 +53,18 @@ services:
       - EMAIL_CRON_ENABLED=false
       # Détection planifiée des corrélations entre applications — off par défaut
       - CORRELATION_CRON_ENABLED=false
+      # #1985 : niveau d'authentification (carte agent / 2FA). `off` par défaut dans le code ;
+      # `enforce` ici pour que dev et CI exercent la rétrogradation. Les comptes Keycloak du
+      # realm portent auth_mode=CARD (fort), sauf `admin-weak` (PASSWORD) et `user-federated`
+      # (auth_idp=partenaire sans mode). Mapper absent = tout le monde rétrogradé : recréer le
+      # conteneur Keycloak après mise à jour du realm (`docker compose rm -sf keycloak`).
+      # Surcharge d'urgence : AUTH_LEVEL_MODE=off docker compose up
+      - AUTH_LEVEL_MODE=${AUTH_LEVEL_MODE:-enforce}
+      - AUTH_LEVEL_CLAIM=auth_mode
+      - AUTH_LEVEL_STRONG_VALUES=CARD
+      - AUTH_LEVEL_IDP_CLAIM=auth_idp
+      # - AUTH_LEVEL_TRUSTED_IDPS=partenaire
+      - AUTH_LEVEL_HELP_URL=#
       - ENV_LABEL=developpement
       - MAINTENANCE_MODE=${MAINTENANCE_MODE:-false}
       - MAINTENANCE_CACHE_TTL_MS=${MAINTENANCE_CACHE_TTL_MS:-30000}

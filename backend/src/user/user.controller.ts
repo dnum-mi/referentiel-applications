@@ -76,14 +76,21 @@ export class UserController {
     type: UserWithPermissions,
   })
   @ApiNotFoundResponse({ description: "Utilisateur non trouvé" })
+  // #1985 : les routes qui décrivent l'utilisateur COURANT répondent à partir du Requestor de
+  // la requête (rôle effectif, `authLevel`), jamais de la ligne Prisma relue — sinon une session
+  // rétrogradée récupérait ses droits pleins dans la réponse au premier changement de préférence.
   async updateMe(
-    @User() user: UserEntity,
+    @User() user: Requestor,
     @Body() UpdateUserPreferencesDto: UpdateUserPreferencesDto,
   ) {
-    return this.userService.updateOwnPreferences(
+    const updated = await this.userService.updateOwnPreferences(
       user.id,
       UpdateUserPreferencesDto,
     );
+    return {
+      ...user,
+      emailNotificationsEnabled: updated.emailNotificationsEnabled,
+    };
   }
 
   @Post("me/subscribe/:appId")
@@ -97,8 +104,9 @@ export class UserController {
     description: "Abonnement pris en compte",
     type: UserWithPermissions,
   })
-  async subscribe(@User() user: UserEntity, @Param("appId") appId: string) {
-    return this.userService.subscribe(user.id, appId);
+  async subscribe(@User() user: Requestor, @Param("appId") appId: string) {
+    const updated = await this.userService.subscribe(user.id, appId);
+    return { ...user, followedApplications: updated.followedApplications };
   }
 
   @Delete("me/subscribe/:appId")
@@ -113,8 +121,9 @@ export class UserController {
     description: "Désabonnement pris en compte",
     type: UserWithPermissions,
   })
-  async unsubscribe(@User() user: UserEntity, @Param("appId") appId: string) {
-    return this.userService.unsubscribe(user.id, appId);
+  async unsubscribe(@User() user: Requestor, @Param("appId") appId: string) {
+    const updated = await this.userService.unsubscribe(user.id, appId);
+    return { ...user, followedApplications: updated.followedApplications };
   }
 
   // #2365 : route de LECTURE (interroge MAIA sans rien modifier), utilisée pour préremplir le

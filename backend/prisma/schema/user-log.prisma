@@ -12,15 +12,32 @@ model UserPermissionLog {
   additionalPermissions Permission[]
 }
 
-/// Ce modèle enregistre les connexions des utilisateurs, avec une entrée par utilisateur par jour.
-model UserConnexionLog {
-  id             String   @id @default(cuid())
-  userId         String
-  user           User     @relation(fields: [userId], references: [id], onDelete: Restrict)
-  authTime  DateTime @db.Date
-  createdAt      DateTime @default(now())
+/// Niveau d'authentification observé sur la session SSO (#1985) : `strong` = carte agent ou
+/// double authentification, `weak` = mode reconnu comme faible, `unknown` = claim absent,
+/// fournisseur non listé ou évaluation désactivée.
+enum AuthLevel {
+  strong
+  weak
+  unknown
+}
 
-  @@unique([userId, authTime])
+/// Ce modèle enregistre les connexions des utilisateurs, avec une entrée par utilisateur, par jour
+/// et par niveau d'authentification (#1985).
+model UserConnexionLog {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  authTime   DateTime  @db.Date
+  createdAt  DateTime  @default(now())
+  /// Niveau d'authentification de la session. Un agent passé de faible à fort dans la journée
+  /// laisse deux lignes : rien n'est perdu, et la mesure en mode `observe` reste exacte.
+  authLevel  AuthLevel @default(unknown)
+  /// Valeur brute du claim de mode d'authentification (ex. CARD), pour la phase d'observation.
+  authMethod String?
+  /// Fournisseur d'identité d'origine (claim IdP), si transmis.
+  authIdp    String?
+
+  @@unique([userId, authTime, authLevel])
 }
 
 /// Journal des sessions d'impersonation : trace quel administrateur s'est fait

@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import { User, UserConnexionLog } from "@prisma/client";
+import { AuthLevel, User, UserConnexionLog } from "@prisma/client";
+import type { AuthLevelEvaluation } from "src/auth-level/auth-level";
 import { BaseService } from "src/common/base.service";
 import { PrismaService } from "src/prisma/prisma.service";
 
@@ -9,13 +10,32 @@ export class UserConnexionLogService extends BaseService<UserConnexionLog> {
     super(prisma.userConnexionLog, prisma);
   }
 
-  public log(userId: User["id"]) {
+  /**
+   * Une ligne par utilisateur, par jour ET par niveau d'authentification (#1985) : un agent
+   * passé de faible à fort dans la journée laisse deux lignes, rien n'est perdu. `createMany`
+   * avec `skipDuplicates` = un seul aller-retour sans lecture préalable, et `created` signale
+   * gratuitement la première connexion du jour à ce niveau (déclencheur de l'unique ligne de
+   * log applicatif). Les valeurs brutes du claim et du fournisseur sont conservées : c'est ce
+   * qui rend la phase d'observation utile.
+   */
+  public async log(
+    userId: User["id"],
+    evaluation?: AuthLevelEvaluation,
+  ): Promise<{ created: boolean }> {
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
-    return this.prisma.userConnexionLog.upsert({
-      where: { userId_authTime: { userId, authTime: today } },
-      create: { userId, authTime: today },
-      update: {},
+    const { count } = await this.prisma.userConnexionLog.createMany({
+      data: [
+        {
+          userId,
+          authTime: today,
+          authLevel: evaluation?.level ?? AuthLevel.unknown,
+          authMethod: evaluation?.claimValue ?? null,
+          authIdp: evaluation?.idp ?? null,
+        },
+      ],
+      skipDuplicates: true,
     });
+    return { created: count === 1 };
   }
 }

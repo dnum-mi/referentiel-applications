@@ -1,4 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Permission, Roles } from "@prisma/client";
 import {
   IsArray,
@@ -7,6 +7,7 @@ import {
   IsOptional,
   IsString,
 } from "class-validator";
+import { AuthLevelDto } from "src/auth-level/auth-level.dto";
 import { APP_PERMISSIONS } from "src/common/utils/types";
 import { OrganizationDto } from "src/organizations/dto/organizations.dto";
 
@@ -142,6 +143,21 @@ export class UserWithPermissions extends UserEntity {
   })
   @IsOptional()
   permissions?: (keyof typeof Permission)[];
+
+  /**
+   * Niveau d'authentification de la session (#1985). Posé par `AuthMiddleware` sur le
+   * Requestor de la requête, jamais lu en base : tout code qui reconstruit un utilisateur
+   * depuis Prisma (cible d'impersonation, jeton API, `GET /users`) ne le porte pas — et c'est
+   * voulu, ces branches sont refusées ou exemptes. Corollaire : toute réponse qui décrit
+   * l'utilisateur COURANT doit dériver du Requestor, pas d'une relecture Prisma.
+   */
+  @ApiPropertyOptional({
+    type: () => AuthLevelDto,
+    description:
+      "Niveau d'authentification de la session courante (absent en mode off et pour les jetons API)",
+  })
+  @IsOptional()
+  authLevel?: AuthLevelDto;
 }
 
 export class Requestor extends UserWithPermissions {
