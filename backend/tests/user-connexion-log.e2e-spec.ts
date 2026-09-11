@@ -135,4 +135,29 @@ describe("GET /users/:id/connexion-logs — historique des connexions (#1985)", 
       .set("Authorization", `Bearer ${getToken(delegated)}`)
       .expect(403);
   });
+
+  // Même règle appliquée à l'historique des droits (route existante, auparavant sans périmètre).
+  describe("GET /users/:id/permission-logs — même contrôle de périmètre", () => {
+    it("refuse un utilisateur hors périmètre et un non-administrateur délégué", async () => {
+      await request(app().getHttpServer())
+        .get(`/users/${targetOutOfScope.id}/permission-logs`)
+        .set("Authorization", `Bearer ${getToken(scopedAdmin)}`)
+        .expect(403);
+      await request(app().getHttpServer())
+        .get(`/users/${targetInScope.id}/permission-logs`)
+        .set("Authorization", `Bearer ${getToken(delegated)}`)
+        .expect(403);
+    });
+
+    it("reste ouvert dans le périmètre et pour un administrateur global", async () => {
+      await request(app().getHttpServer())
+        .get(`/users/${targetInScope.id}/permission-logs`)
+        .set("Authorization", `Bearer ${getToken(scopedAdmin)}`)
+        .expect(200);
+      await request(app().getHttpServer())
+        .get(`/users/${targetOutOfScope.id}/permission-logs`)
+        .set("Authorization", `Bearer ${getToken(globalAdmin)}`)
+        .expect(200);
+    });
+  });
 });

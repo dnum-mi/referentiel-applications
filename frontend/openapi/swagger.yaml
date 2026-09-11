@@ -499,7 +499,13 @@ paths:
                 items:
                   $ref: "#/components/schemas/UserPermissionLogDto"
         "403":
-          description: Accès refusé - Privilège admin requis
+          description: Accès refusé - Privilège admin requis ou utilisateur hors périmètre
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScopePermissionsErrorDto"
+        "404":
+          description: Utilisateur inconnu (contrôle de périmètre d'un administrateur scopé)
       summary: Récupérer l'historique des modifications de droits d'un utilisateur
       tags: *a2
   /api/v2/users/{id}/connexion-logs:

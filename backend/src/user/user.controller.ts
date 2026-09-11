@@ -335,11 +335,21 @@ export class UserController {
     type: [UserPermissionLogDto],
   })
   @ApiForbiddenResponse({
-    description: "Accès refusé - Privilège admin requis",
+    description:
+      "Accès refusé - Privilège admin requis ou utilisateur hors périmètre",
+    type: ScopePermissionsErrorDto,
+  })
+  @ApiNotFoundResponse({
+    description:
+      "Utilisateur inconnu (contrôle de périmètre d'un administrateur scopé)",
   })
   async findPermissionLogs(
     @Param("id") id: string,
+    @User() requestor: Requestor,
   ): Promise<UserPermissionLogDto[]> {
+    // #1985 : même règle que l'historique des connexions — rôle administrateur et cible dans le
+    // périmètre pour un administrateur scopé (cette route n'appliquait que la garde de permission).
+    await this.scopedPermissionService.assertCanReadTarget(id, requestor);
     return this.userService.findPermissionLogs(id);
   }
 
