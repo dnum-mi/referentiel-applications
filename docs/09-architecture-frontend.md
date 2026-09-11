@@ -216,14 +216,23 @@ Le `USER_MANAGER` est instancié avec les URI de redirection (`/oidc/callback`),
 le `response_type: "code"` (Authorization Code Flow) et les scopes servis par
 le backend (`oidcScope`, `openid profile email` par défaut).
 
-**Reconnexion forte (#1985).** `signinStrong()` mémorise la page courante,
-pose un drapeau de tentative, purge une éventuelle impersonation puis appelle
-`USER_MANAGER.signinRedirect({ prompt, acr_values?, max_age? })` avec les
-paramètres servis par `/config.authLevel.reauth`. Ces paramètres ne vont
+**Reconnexion forte (#1985).** `signinStrong(strategy)` mémorise la page
+courante, purge une éventuelle impersonation et pose un drapeau de tentative
+portant la stratégie employée. Stratégie `prompt` (défaut, servie par
+`/config.authLevel.reauth.strategy`) : retrait de l'utilisateur OIDC stocké (sans
+quoi l'ancien jeton faible rechargé au retour ferait la course avec le nouveau),
+puis `USER_MANAGER.signinRedirect({ prompt, acr_values?, max_age? })`. Stratégie
+`logout` : `USER_MANAGER.signoutRedirect()` ferme la session SSO ; au retour, la
+garde globale du routeur appelle `resumeStrongReauthAfterLogout()`, qui relance la
+connexion (drapeau horodaté, valable dix minutes). Ces paramètres ne vont
 **jamais** dans les réglages du `UserManager` : ils s'appliqueraient au
 renouvellement silencieux (`prompt=none`) et à la ré-authentification sur 401.
-Au retour, `userStore.fetchUser()` consomme le drapeau : toast de succès si la
-session n'est plus rétrogradée, variante « boucle » du bandeau sinon.
+Au retour, `userStore.fetchUser()` (seule la réponse la plus récente compte)
+consomme le drapeau : toast de succès si la session n'est plus rétrogradée ;
+sinon `reauthLoopState` retient la stratégie restée sans effet (conservée dans le
+`sessionStorage` de l'onglet, effacée dès qu'une session forte est constatée), et
+le bandeau propose l'étape suivante (`prompt` → « Se déconnecter puis se
+reconnecter »).
 
 L'état d'authentification est maintenu dans `userStore` qui écoute les
 **événements OIDC** : `addUserLoaded` (passe `authenticated` à `true` et appelle

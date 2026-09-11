@@ -1,6 +1,6 @@
 import { createPinia, setActivePinia } from "pinia";
 import type { UserWithPermissions } from "@/client/types.gen";
-import { reauthLoopState, setReauthLoopDetected } from "@/composables/use-auth-level";
+import { reauthLoopState, setReauthLoop } from "@/composables/use-auth-level";
 import { useToasterStore } from "./toasterStore";
 import { useUserStore } from "./userStore";
 
@@ -80,7 +80,7 @@ describe("userStore — niveau d'authentification (#1985)", () => {
     localStorage.clear();
     findMeMock.mockReset();
     assignMock.mockReset();
-    setReauthLoopDetected(false);
+    setReauthLoop(null);
     vi.stubGlobal("location", { ...globalThis.location, assign: assignMock, pathname: "/", search: "" });
   });
   afterEach(() => {
@@ -139,7 +139,7 @@ describe("userStore — niveau d'authentification (#1985)", () => {
     await store.fetchUser();
 
     expect(success).toHaveBeenCalledWith(expect.stringContaining("Authentification forte confirmée"));
-    expect(reauthLoopState.value).toBe(false);
+    expect(reauthLoopState.value).toBeNull();
     expect(sessionStorage.getItem("strongReauthAttempt")).toBeNull();
   });
 
@@ -151,7 +151,7 @@ describe("userStore — niveau d'authentification (#1985)", () => {
 
     await store.fetchUser();
 
-    expect(reauthLoopState.value).toBe(true);
+    expect(reauthLoopState.value).toBe("prompt");
     expect(success).not.toHaveBeenCalled();
   });
 
@@ -192,7 +192,7 @@ describe("userStore — niveau d'authentification (#1985)", () => {
 
     expect(store.user?.role).toBe("ADMIN");
     expect(store.isAuthDowngraded).toBe(false);
-    expect(reauthLoopState.value).toBe(false);
+    expect(reauthLoopState.value).toBeNull();
     expect(success).toHaveBeenCalledTimes(1);
   });
 
@@ -209,11 +209,44 @@ describe("userStore — niveau d'authentification (#1985)", () => {
     await first;
     // La réponse périmée n'a rien consommé : le drapeau attend la réponse la plus récente.
     expect(sessionStorage.getItem("strongReauthAttempt")).toBe("1");
-    expect(reauthLoopState.value).toBe(false);
+    expect(reauthLoopState.value).toBeNull();
     fresh.resolve(okResponse(me({ level: "strong", downgraded: false, reason: "strong-method" }, "ADMIN")));
     await second;
 
     expect(store.user?.role).toBe("ADMIN");
     expect(sessionStorage.getItem("strongReauthAttempt")).toBeNull();
+  });
+
+  it("retient la stratégie `logout` quand la déconnexion complète laisse la session faible", async () => {
+    sessionStorage.setItem("strongReauthAttempt", "logout");
+    findMeMock.mockResolvedValue(okResponse(me({ level: "weak", downgraded: true, reason: "weak-method" })));
+    const store = useUserStore();
+
+    await store.fetchUser();
+
+    expect(reauthLoopState.value).toBe("logout");
+  });
+
+  it("efface la bascule dès qu'une session forte est constatée, sans toast faute de tentative", async () => {
+    setReauthLoop("prompt");
+    findMeMock.mockResolvedValue(okResponse(me({ level: "strong", downgraded: false, reason: "strong-method" }, "ADMIN")));
+    const store = useUserStore();
+    const success = vi.spyOn(useToasterStore(), "addSuccessMessage");
+
+    await store.fetchUser();
+
+    expect(reauthLoopState.value).toBeNull();
+    expect(sessionStorage.getItem("strongReauthLoop")).toBeNull();
+    expect(success).not.toHaveBeenCalled();
+  });
+
+  it("garde la bascule retenue quand la session reste faible sans nouvelle tentative", async () => {
+    setReauthLoop("prompt");
+    findMeMock.mockResolvedValue(okResponse(me({ level: "weak", downgraded: true, reason: "weak-method" })));
+    const store = useUserStore();
+
+    await store.fetchUser();
+
+    expect(reauthLoopState.value).toBe("prompt");
   });
 });

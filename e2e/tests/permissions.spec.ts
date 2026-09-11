@@ -318,13 +318,37 @@ test.describe("Permissions & rôles", () => {
     },
   );
 
+  // PRM-16/19 — reconnexion forte en deux temps. Le compte `admin-weak` porte un mode statique :
+  // chaque reconnexion reste faible, ce qui permet de jouer la bascule `prompt` → `logout`.
   base(
-    "PRM-16 - le bouton Se reconnecter renvoie vers le fournisseur avec prompt=login",
+    "PRM-16 - une reconnexion restée faible propose la déconnexion complète",
     async ({ page }) => {
       await loginAs(page, "admin-weak");
       const chrome = new ChromePage(page);
       await chrome.expectWeakAuthBanner();
+      await chrome.expectReauthButtonLabel("Se reconnecter");
       await chrome.clickReauth();
+      await chrome.submitIdentityProviderLogin("admin-weak", "pass");
+      await chrome.expectWeakAuthBanner(/n'a pas été reconnue comme forte/);
+      await chrome.expectReauthButtonLabel(
+        "Se déconnecter puis se reconnecter",
+      );
+    },
+  );
+
+  base(
+    "PRM-19 - la reconnexion par déconnexion ferme la session SSO et relance la connexion",
+    async ({ page }) => {
+      await loginAs(page, "admin-weak");
+      const chrome = new ChromePage(page);
+      await chrome.clickReauth();
+      await chrome.submitIdentityProviderLogin("admin-weak", "pass");
+      await chrome.expectReauthButtonLabel(
+        "Se déconnecter puis se reconnecter",
+      );
+      await chrome.clickReauthViaLogout();
+      await chrome.submitIdentityProviderLogin("admin-weak", "pass");
+      await chrome.expectWeakAuthBanner(/toujours sans authentification forte/);
     },
   );
 

@@ -1,6 +1,12 @@
 import { UserManager, type SigninRedirectArgs } from "oidc-client-ts";
 import type { ConfigDto } from "@/client";
-import { consumeReauthAttempt, markReauthAttempt } from "@/composables/use-auth-level";
+import {
+  consumeLogoutReauthPending,
+  consumeReauthAttempt,
+  markLogoutReauthPending,
+  markReauthAttempt,
+  type ReauthStrategy,
+} from "@/composables/use-auth-level";
 import { clearImpersonationState } from "./impersonation";
 import { getConfig } from "./config";
 
@@ -34,37 +40,73 @@ export const USER_MANAGER = new UserManager({
   scope: config.oidcScope,
 });
 
+function reauthArgs(): SigninRedirectArgs {
+  const reauth = config.authLevel?.reauth;
+  const args: SigninRedirectArgs = { prompt: reauth?.prompt ?? "login" };
+  if (reauth?.acrValues) args.acr_values = reauth.acrValues;
+  if (reauth?.maxAge !== undefined) args.max_age = reauth.maxAge;
+  return args;
+}
+
 /**
  * Reconnexion forte (#1985) : force une nouvelle authentification auprès du fournisseur pour que
  * l'agent puisse présenter sa carte agent ou sa double authentification. Les paramètres
  * (`prompt`, `acr_values`, `max_age`) viennent de `/config` et ne vont JAMAIS dans les réglages
  * du `UserManager` : ils s'appliqueraient au renouvellement silencieux (`prompt=none`) et à la
  * ré-authentification sur 401. Navigation complète : l'état de l'application repart de zéro.
+ *
+ * - `prompt` : redirection avec `prompt=login` (défaut, servi par `/config`) ;
+ * - `logout` : déconnexion complète de la session SSO, puis nouvelle connexion au retour
+ *   (`resumeStrongReauthAfterLogout`) — l'issue quand le fournisseur ignore `prompt=login`.
  */
-export async function signinStrong(): Promise<void> {
+export async function signinStrong(strategy: ReauthStrategy = config.authLevel?.reauth?.strategy ?? "prompt"): Promise<void> {
   const currentPath = `${globalThis.location.pathname}${globalThis.location.search}`;
   if (!currentPath.startsWith("/oidc/")) {
     sessionStorage.setItem("redirectAfterLogin", currentPath);
   }
   // Une impersonation persistée serait rejouée sur la nouvelle session : on la purge avant.
   clearImpersonationState();
+
+  if (strategy === "logout") {
+    markReauthAttempt("logout");
+    markLogoutReauthPending();
+    try {
+      // Le fournisseur ferme la session SSO et revient sur l'application (post_logout_redirect_uri).
+      await USER_MANAGER.signoutRedirect();
+    } catch (error) {
+      consumeReauthAttempt();
+      consumeLogoutReauthPending();
+      throw error;
+    }
+    return;
+  }
+
   // L'ancien jeton (faible, encore valide quelques minutes) resterait dans le sessionStorage
   // d'oidc-client-ts : au retour sur /oidc/callback, le store le rechargerait et lancerait un
   // `/users/me` « faible » en concurrence avec celui de la nouvelle session. On le retire.
   await USER_MANAGER.removeUser();
-
-  const reauth = config.authLevel?.reauth;
-  const args: SigninRedirectArgs = { prompt: reauth?.prompt ?? "login" };
-  if (reauth?.acrValues) args.acr_values = reauth.acrValues;
-  if (reauth?.maxAge !== undefined) args.max_age = reauth.maxAge;
-
-  markReauthAttempt();
+  markReauthAttempt("prompt");
   try {
-    await USER_MANAGER.signinRedirect(args);
+    await USER_MANAGER.signinRedirect(reauthArgs());
   } catch (error) {
     // Pas de navigation : sans nettoyage, le prochain `/users/me` afficherait à tort la
     // variante « votre reconnexion n'a pas été reconnue comme forte ».
     consumeReauthAttempt();
     throw error;
+  }
+}
+
+/**
+ * Second temps de la reconnexion par déconnexion : de retour du fournisseur sans session, relance
+ * aussitôt la connexion forte. Renvoie vrai si une redirection est en cours.
+ */
+export async function resumeStrongReauthAfterLogout(): Promise<boolean> {
+  if (!consumeLogoutReauthPending()) return false;
+  try {
+    await USER_MANAGER.signinRedirect(reauthArgs());
+    return true;
+  } catch {
+    consumeReauthAttempt();
+    return false;
   }
 }

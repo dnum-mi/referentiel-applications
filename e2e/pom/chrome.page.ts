@@ -208,13 +208,66 @@ export class ChromePage extends BasePage {
     await expect(this.weakAuthBanner()).toBeVisible();
     await expect(this.reauthButton()).toHaveCount(0);
   }
+  async expectReauthButtonLabel(label: string | RegExp): Promise<void> {
+    await expect(this.reauthButton()).toHaveText(label);
+  }
+
   /**
-   * Le compte de test porte un mode statique : une vraie reconnexion forte n'est pas
-   * simulable. On prouve seulement la redirection vers le fournisseur avec `prompt=login`.
+   * Première étape (`prompt`) : redirection vers le fournisseur avec `prompt=login`. Le compte de
+   * test portant un mode statique, la reconnexion elle-même ne peut pas devenir forte.
    */
   async clickReauth(): Promise<void> {
     await this.reauthButton().click();
     await this.page.waitForURL(/protocol\/openid-connect\/auth.*prompt=login/);
+  }
+
+  /**
+   * Seconde étape (`logout`) : la session SSO est fermée (appel à l'endpoint de déconnexion du
+   * fournisseur), puis l'application relance d'elle-même une connexion avec `prompt=login`.
+   */
+  async clickReauthViaLogout(): Promise<void> {
+    const logoutRequest = this.page.waitForRequest(
+      /protocol\/openid-connect\/logout/,
+    );
+    await this.reauthButton().click();
+    await logoutRequest;
+    await this.page.waitForURL(/protocol\/openid-connect\/auth.*prompt=login/);
+  }
+
+  /**
+   * Saisit les identifiants sur la page de connexion du fournisseur puis revient dans
+   * l'application. Sur une ré-authentification, Keycloak peut figer l'identifiant : on ne
+   * remplit alors que le mot de passe.
+   */
+  async submitIdentityProviderLogin(user: string, pass: string): Promise<void> {
+    const username = this.page
+      .locator('#username, #kc-username, input[name="username"]')
+      .first();
+    if ((await username.isVisible()) && (await username.isEditable())) {
+      await username.fill(user);
+    }
+    await this.page
+      .locator('#password, #kc-password, input[name="password"]')
+      .first()
+      .fill(pass);
+    try {
+      await Promise.all([
+        this.page.waitForURL(
+          (url) =>
+            !url.toString().includes("/realms/") &&
+            !url.toString().includes("/oidc/callback"),
+          { timeout: 30000 },
+        ),
+        this.page
+          .locator('#kc-login, button[name="login"], input[type="submit"]')
+          .first()
+          .click(),
+      ]);
+    } catch (error) {
+      // Firefox peut rester sur /oidc/callback : l'utilisateur est chargé, on rejoint l'accueil.
+      if (!this.page.url().includes("/oidc/callback")) throw error;
+      await this.goto("/");
+    }
   }
 
   /**

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { AuthLevelConfigDto } from "@/client";
-import { REAUTH_REDIRECT_FAILED_MESSAGE, reauthLoopState, weakAuthBannerText } from "@/composables/use-auth-level";
+import { REAUTH_REDIRECT_FAILED_MESSAGE, reauthLoopState, weakAuthBannerText, type ReauthStrategy } from "@/composables/use-auth-level";
 import { signinStrong } from "@/services/authentication";
 import { getConfig } from "@/services/config";
 import { useToasterStore } from "@/stores/toasterStore";
@@ -24,11 +24,16 @@ onMounted(async () => {
 const text = computed(() => (userStore.authLevel ? weakAuthBannerText(userStore.authLevel.reason, reauthLoopState.value) : undefined));
 const canReauth = computed(() => Boolean(authLevelConfig.value?.reauth) && text.value?.canReauth === true);
 const helpUrl = computed(() => authLevelConfig.value?.helpUrl || undefined);
+// Après une reconnexion restée sans effet, le bouton ferme complètement la session SSO avant de
+// reconnecter : le référentiel n'a pas besoin de savoir si le fournisseur honore `prompt=login`
+// pour offrir une issue. `AUTH_LEVEL_REAUTH_STRATEGY=logout` impose cette voie d'emblée.
+const strategy = computed<ReauthStrategy>(() => (reauthLoopState.value ? "logout" : (authLevelConfig.value?.reauth?.strategy ?? "prompt")));
+const reauthLabel = computed(() => (strategy.value === "logout" ? "Se déconnecter puis se reconnecter" : "Se reconnecter"));
 
 async function reauth() {
   isRedirecting.value = true;
   try {
-    await signinStrong();
+    await signinStrong(strategy.value);
   } catch {
     isRedirecting.value = false;
     toaster.addErrorMessage(REAUTH_REDIRECT_FAILED_MESSAGE);
@@ -63,7 +68,7 @@ async function reauth() {
           data-testid="weak-auth-reauth-btn"
           @click="reauth"
         >
-          {{ isRedirecting ? "Redirection…" : "Se reconnecter" }}
+          {{ isRedirecting ? "Redirection…" : reauthLabel }}
         </button>
       </div>
     </div>

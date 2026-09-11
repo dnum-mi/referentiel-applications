@@ -115,12 +115,13 @@
   `token-weak-auth-alert` et `token-create-btn` est désactivé (les jetons existants restent
   révocables).
 
-### PRM-16 — Le bouton « Se reconnecter » renvoie vers le fournisseur avec `prompt=login` ✅
+### PRM-16 — Une reconnexion restée faible propose la déconnexion complète ✅
 
-- **Datafeature** : compte `admin-weak`.
-- **Action** : cliquer `weak-auth-reauth-btn` dans le bandeau.
-- **Résultat attendu** : redirection vers `/protocol/openid-connect/auth…prompt=login` (le compte de
-  test portant un mode statique, la reconnexion forte elle-même n'est pas simulable).
+- **Datafeature** : compte `admin-weak` (mode d'authentification faible, statique).
+- **Action** : cliquer `weak-auth-reauth-btn` (« Se reconnecter ») → page du fournisseur avec
+  `prompt=login` → ressaisir le mot de passe.
+- **Résultat attendu** : retour dans l'application, bandeau « Votre reconnexion n'a pas été reconnue
+  comme forte », bouton devenu « Se déconnecter puis se reconnecter ».
 
 ### PRM-17 — Une session forte n'affiche pas le bandeau ✅
 
@@ -134,3 +135,11 @@
 - **Action** : se connecter en `user-federated`, observer le bandeau.
 - **Résultat attendu** : bandeau « fournisseur d'identité externe », sans bouton
   `weak-auth-reauth-btn` (une reconnexion ne changerait rien).
+
+### PRM-19 — La reconnexion par déconnexion ferme la session SSO et relance la connexion ✅
+
+- **Datafeature** : compte `admin-weak`, après une première reconnexion restée faible (PRM-16).
+- **Action** : cliquer « Se déconnecter puis se reconnecter » → ressaisir le mot de passe.
+- **Résultat attendu** : appel à l'endpoint de déconnexion du fournisseur, retour sur l'application
+  qui relance aussitôt la connexion avec `prompt=login` ; après connexion, bandeau « Votre session est
+  toujours sans authentification forte » (le compte de test ne peut pas devenir fort).

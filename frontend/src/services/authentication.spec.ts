@@ -1,7 +1,8 @@
 import type { ConfigDto } from "@/client";
 
-const { signinRedirectMock, removeUserMock, userManagerSettings, configMock } = vi.hoisted(() => ({
+const { signinRedirectMock, signoutRedirectMock, removeUserMock, userManagerSettings, configMock } = vi.hoisted(() => ({
   signinRedirectMock: vi.fn(),
+  signoutRedirectMock: vi.fn(),
   removeUserMock: vi.fn(),
   userManagerSettings: { value: undefined as Record<string, unknown> | undefined },
   configMock: { value: {} as ConfigDto },
@@ -21,6 +22,7 @@ vi.mock("oidc-client-ts", () => ({
       userManagerSettings.value = settings;
     }
     signinRedirect = signinRedirectMock;
+    signoutRedirect = signoutRedirectMock;
     removeUser = removeUserMock;
   },
 }));
@@ -39,6 +41,7 @@ describe("authentication (#1985)", () => {
     configMock.value = { ...BASE_CONFIG };
     signinRedirectMock.mockReset().mockResolvedValue(undefined);
     removeUserMock.mockReset().mockResolvedValue(undefined);
+    signoutRedirectMock.mockReset().mockResolvedValue(undefined);
     sessionStorage.clear();
     localStorage.clear();
     window.history.replaceState({}, "", "/applications/42?tab=infos");
@@ -66,7 +69,7 @@ describe("authentication (#1985)", () => {
     await signinStrong();
 
     expect(sessionStorage.getItem("redirectAfterLogin")).toBe("/applications/42?tab=infos");
-    expect(sessionStorage.getItem("strongReauthAttempt")).toBe("1");
+    expect(sessionStorage.getItem("strongReauthAttempt")).toBe("prompt");
     expect(localStorage.getItem("impersonatedUserId")).toBeNull();
     // L'ancien jeton faible ne doit pas survivre au retour du callback (course de /users/me).
     expect(removeUserMock).toHaveBeenCalledTimes(1);
@@ -76,7 +79,7 @@ describe("authentication (#1985)", () => {
   it("transmet acr_values et max_age quand ils sont configurés", async () => {
     configMock.value = {
       ...BASE_CONFIG,
-      authLevel: { reauth: { prompt: "login consent", acrValues: "eidas2", maxAge: 0 } },
+      authLevel: { reauth: { strategy: "prompt", prompt: "login consent", acrValues: "eidas2", maxAge: 0 } },
     };
     const { signinStrong } = await loadModule();
 
@@ -102,5 +105,54 @@ describe("authentication (#1985)", () => {
     await expect(signinStrong()).rejects.toThrow("network");
 
     expect(sessionStorage.getItem("strongReauthAttempt")).toBeNull();
+  });
+
+  it("stratégie logout : ferme la session SSO sans retirer l'utilisateur ni passer par /authorize", async () => {
+    const { signinStrong } = await loadModule();
+
+    await signinStrong("logout");
+
+    expect(signoutRedirectMock).toHaveBeenCalledTimes(1);
+    expect(removeUserMock).not.toHaveBeenCalled();
+    expect(signinRedirectMock).not.toHaveBeenCalled();
+    expect(sessionStorage.getItem("strongReauthAttempt")).toBe("logout");
+    expect(sessionStorage.getItem("strongReauthAfterLogout")).not.toBeNull();
+  });
+
+  it("applique la stratégie servie par le serveur quand aucune n'est demandée", async () => {
+    configMock.value = { ...BASE_CONFIG, authLevel: { reauth: { strategy: "logout", prompt: "login" } } };
+    const { signinStrong } = await loadModule();
+
+    await signinStrong();
+
+    expect(signoutRedirectMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("nettoie les drapeaux si la déconnexion échoue", async () => {
+    signoutRedirectMock.mockRejectedValue(new Error("network"));
+    const { signinStrong } = await loadModule();
+
+    await expect(signinStrong("logout")).rejects.toThrow("network");
+
+    expect(sessionStorage.getItem("strongReauthAttempt")).toBeNull();
+    expect(sessionStorage.getItem("strongReauthAfterLogout")).toBeNull();
+  });
+
+  it("relance la connexion forte au retour de la déconnexion, une seule fois", async () => {
+    const { signinStrong, resumeStrongReauthAfterLogout } = await loadModule();
+    await signinStrong("logout");
+
+    await expect(resumeStrongReauthAfterLogout()).resolves.toBe(true);
+    expect(signinRedirectMock).toHaveBeenCalledWith({ prompt: "login" });
+    await expect(resumeStrongReauthAfterLogout()).resolves.toBe(false);
+    expect(signinRedirectMock).toHaveBeenCalledTimes(1);
+    // Le drapeau de tentative survit : au retour, le store saura que `logout` a été tentée.
+    expect(sessionStorage.getItem("strongReauthAttempt")).toBe("logout");
+  });
+
+  it("ne relance rien sans déconnexion demandée", async () => {
+    const { resumeStrongReauthAfterLogout } = await loadModule();
+    await expect(resumeStrongReauthAfterLogout()).resolves.toBe(false);
+    expect(signinRedirectMock).not.toHaveBeenCalled();
   });
 });

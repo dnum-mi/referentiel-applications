@@ -1,7 +1,7 @@
 import { flushPromises } from "@vue/test-utils";
 import { cleanup, fireEvent, render } from "@testing-library/vue";
 import type { AuthLevelDto, ConfigDto } from "@/client";
-import { setReauthLoopDetected } from "@/composables/use-auth-level";
+import { setReauthLoop } from "@/composables/use-auth-level";
 import WeakAuthBanner from "./WeakAuthBanner.vue";
 
 const { storeMock, configMock, signinStrongMock, addErrorMessageMock } = vi.hoisted(() => ({
@@ -28,7 +28,7 @@ vi.mock("@/services/config", () => ({
   getConfig: () => Promise.resolve(configMock.value),
 }));
 vi.mock("@/services/authentication", () => ({
-  signinStrong: () => signinStrongMock(),
+  signinStrong: (...args: unknown[]) => signinStrongMock(...args),
 }));
 
 function downgraded(reason: AuthLevelDto["reason"], level: AuthLevelDto["level"] = "weak") {
@@ -47,10 +47,10 @@ describe("WeakAuthBanner (#1985)", () => {
   beforeEach(() => {
     storeMock.authLevel = undefined;
     storeMock.isAuthDowngraded = false;
-    configMock.value = { authLevel: { reauth: { prompt: "login" } } };
+    configMock.value = { authLevel: { reauth: { strategy: "prompt", prompt: "login" } } };
     signinStrongMock.mockReset().mockResolvedValue(undefined);
     addErrorMessageMock.mockReset();
-    setReauthLoopDetected(false);
+    setReauthLoop(null);
   });
   afterEach(cleanup);
 
@@ -76,7 +76,7 @@ describe("WeakAuthBanner (#1985)", () => {
     expect(banner).toHaveTextContent("utilisateur standard");
 
     await fireEvent.click(getByTestId("weak-auth-reauth-btn"));
-    expect(signinStrongMock).toHaveBeenCalledTimes(1);
+    expect(signinStrongMock).toHaveBeenCalledWith("prompt");
   });
 
   it("n'expose jamais le rôle d'origine", async () => {
@@ -92,7 +92,7 @@ describe("WeakAuthBanner (#1985)", () => {
   });
 
   it("ne propose pas de reconnexion pour un fournisseur externe", async () => {
-    configMock.value = { authLevel: { reauth: { prompt: "login" }, helpUrl: "https://intranet.example/aide" } };
+    configMock.value = { authLevel: { reauth: { strategy: "prompt", prompt: "login" }, helpUrl: "https://intranet.example/aide" } };
     downgraded("untrusted-idp", "unknown");
     const { getByTestId, queryByTestId } = await renderLoaded();
     expect(getByTestId("weak-auth-banner")).toHaveTextContent("fournisseur d'identité externe");
@@ -110,7 +110,7 @@ describe("WeakAuthBanner (#1985)", () => {
   });
 
   it("propose la page d'aide quand elle est configurée", async () => {
-    configMock.value = { authLevel: { reauth: { prompt: "login" }, helpUrl: "https://intranet.example/aide" } };
+    configMock.value = { authLevel: { reauth: { strategy: "prompt", prompt: "login" }, helpUrl: "https://intranet.example/aide" } };
     downgraded("weak-method");
     const { getByTestId } = await renderLoaded();
     expect(getByTestId("weak-auth-help-link")).toHaveAttribute("href", "https://intranet.example/aide");
@@ -118,7 +118,7 @@ describe("WeakAuthBanner (#1985)", () => {
 
   it("affiche la variante « boucle » après une reconnexion restée faible", async () => {
     downgraded("weak-method");
-    setReauthLoopDetected(true);
+    setReauthLoop("prompt");
     const { getByTestId } = await renderLoaded();
     expect(getByTestId("weak-auth-banner")).toHaveTextContent("n'a pas été reconnue comme forte");
   });
@@ -133,5 +133,22 @@ describe("WeakAuthBanner (#1985)", () => {
 
     expect(addErrorMessageMock).toHaveBeenCalledWith(expect.stringContaining("redirection"));
     expect(getByTestId("weak-auth-reauth-btn")).not.toBeDisabled();
+  });
+
+  it("bascule sur la déconnexion complète après une reconnexion restée faible", async () => {
+    downgraded("weak-method");
+    setReauthLoop("prompt");
+    const { getByTestId } = await renderLoaded();
+    const button = getByTestId("weak-auth-reauth-btn");
+    expect(button).toHaveTextContent("Se déconnecter puis se reconnecter");
+    await fireEvent.click(button);
+    expect(signinStrongMock).toHaveBeenCalledWith("logout");
+  });
+
+  it("applique d'emblée la stratégie imposée par le serveur", async () => {
+    configMock.value = { authLevel: { reauth: { strategy: "logout", prompt: "login" } } };
+    downgraded("weak-method");
+    const { getByTestId } = await renderLoaded();
+    expect(getByTestId("weak-auth-reauth-btn")).toHaveTextContent("Se déconnecter puis se reconnecter");
   });
 });

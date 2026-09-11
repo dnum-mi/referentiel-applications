@@ -56,8 +56,8 @@ services:
       # #1985 : niveau d'authentification (carte agent / 2FA). `off` par défaut dans le code ;
       # `enforce` ici pour que dev et CI exercent la rétrogradation. Les comptes Keycloak du
       # realm portent auth_mode=CARD (fort), sauf `admin-weak` (PASSWORD) et `user-federated`
-      # (auth_idp=partenaire sans mode). Mapper absent = tout le monde rétrogradé : recréer le
-      # conteneur Keycloak après mise à jour du realm (`docker compose rm -sf keycloak`).
+      # (auth_idp=partenaire sans mode). Mapper absent = tout le monde rétrogradé : incrémenter le
+      # label refapp.realm-revision du service keycloak avec toute modification du realm.
       # Surcharge d'urgence : AUTH_LEVEL_MODE=off docker compose up
       - AUTH_LEVEL_MODE=${AUTH_LEVEL_MODE:-enforce}
       - AUTH_LEVEL_CLAIM=auth_mode
@@ -65,6 +65,13 @@ services:
       - AUTH_LEVEL_IDP_CLAIM=auth_idp
       # - AUTH_LEVEL_TRUSTED_IDPS=partenaire
       # - AUTH_LEVEL_HELP_URL=https://intranet.example/aide-carte-agent
+      # Reconnexion forte par déconnexion SSO dès le premier clic (sinon après un échec de prompt) :
+      # - AUTH_LEVEL_REAUTH_STRATEGY=logout
+      # Repli userinfo quand le claim manque sur l'access token. Inopérant en local : la découverte
+      # (OIDC_CONFIG_URL, localhost:8082) n'est pas joignable depuis ce conteneur, et Keycloak refuse
+      # userinfo via keycloak:8080 (émetteur du jeton : localhost:8082). Le realm place de toute
+      # façon les claims sur le jeton.
+      # - AUTH_LEVEL_USERINFO_FALLBACK=true
       - ENV_LABEL=developpement
       - MAINTENANCE_MODE=${MAINTENANCE_MODE:-false}
       - MAINTENANCE_CACHE_TTL_MS=${MAINTENANCE_CACHE_TTL_MS:-30000}
@@ -95,6 +102,11 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:26.4
     command: [start-dev, --import-realm]
+    # #1985 : `--import-realm` n'importe le realm que s'il n'existe pas encore. Incrémenter ce label
+    # avec toute modification de keycloak/realm-export.json : la configuration du service change,
+    # et le prochain `docker compose up -d` recrée le conteneur (donc réimporte) sur chaque poste.
+    labels:
+      - "refapp.realm-revision=1985-1"
     environment:
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin
       - KC_BOOTSTRAP_ADMIN_PASSWORD=password

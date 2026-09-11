@@ -1,19 +1,21 @@
 import {
+  consumeLogoutReauthPending,
   consumeReauthAttempt,
   consumeStepDownNotice,
   isStepDownResponse,
+  markLogoutReauthPending,
   markReauthAttempt,
   markStepDownNotice,
   profileAuthLevelText,
   reauthLoopState,
-  setReauthLoopDetected,
+  setReauthLoop,
   weakAuthBannerText,
 } from "./use-auth-level";
 
 describe("use-auth-level (#1985)", () => {
   afterEach(() => {
     sessionStorage.clear();
-    setReauthLoopDetected(false);
+    setReauthLoop(null);
   });
 
   describe("isStepDownResponse", () => {
@@ -34,18 +36,53 @@ describe("use-auth-level (#1985)", () => {
     });
   });
 
-  describe("drapeau de reconnexion forte", () => {
-    it("est consommé une seule fois", () => {
-      expect(consumeReauthAttempt()).toBe(false);
-      markReauthAttempt();
-      expect(consumeReauthAttempt()).toBe(true);
-      expect(consumeReauthAttempt()).toBe(false);
+  describe("drapeaux de reconnexion forte", () => {
+    it("porte la stratégie et n'est consommé qu'une fois", () => {
+      expect(consumeReauthAttempt()).toBeUndefined();
+      markReauthAttempt("logout");
+      expect(consumeReauthAttempt()).toBe("logout");
+      expect(consumeReauthAttempt()).toBeUndefined();
     });
 
-    it("expose l'état de boucle en lecture seule", () => {
-      expect(reauthLoopState.value).toBe(false);
-      setReauthLoopDetected(true);
-      expect(reauthLoopState.value).toBe(true);
+    it("lit comme `prompt` le drapeau posé par une version précédente", () => {
+      sessionStorage.setItem("strongReauthAttempt", "1");
+      expect(consumeReauthAttempt()).toBe("prompt");
+    });
+
+    it("expose en lecture seule la stratégie restée sans effet", () => {
+      expect(reauthLoopState.value).toBeNull();
+      setReauthLoop("prompt");
+      expect(reauthLoopState.value).toBe("prompt");
+    });
+
+    it("relance la connexion après déconnexion pendant dix minutes seulement", () => {
+      expect(consumeLogoutReauthPending()).toBe(false);
+      markLogoutReauthPending(1_000);
+      expect(consumeLogoutReauthPending(1_000 + 60_000)).toBe(true);
+      expect(consumeLogoutReauthPending(1_000 + 60_000)).toBe(false);
+      markLogoutReauthPending(1_000);
+      expect(consumeLogoutReauthPending(1_000 + 10 * 60_000 + 1)).toBe(false);
+    });
+  });
+
+  describe("bascule retenue", () => {
+    it("survit à un rechargement de l'onglet et s'efface avec setReauthLoop(null)", async () => {
+      setReauthLoop("prompt");
+      expect(sessionStorage.getItem("strongReauthLoop")).toBe("prompt");
+
+      vi.resetModules();
+      const reloaded = await import("./use-auth-level");
+      expect(reloaded.reauthLoopState.value).toBe("prompt");
+
+      reloaded.setReauthLoop(null);
+      expect(sessionStorage.getItem("strongReauthLoop")).toBeNull();
+    });
+
+    it("ignore une valeur inconnue au rechargement", async () => {
+      sessionStorage.setItem("strongReauthLoop", "autre");
+      vi.resetModules();
+      const reloaded = await import("./use-auth-level");
+      expect(reloaded.reauthLoopState.value).toBeNull();
     });
   });
 
@@ -71,10 +108,17 @@ describe("use-auth-level (#1985)", () => {
       expect(text.canReauth).toBe(false);
     });
 
-    it("prend le pas avec la variante « boucle » quelle que soit la raison", () => {
-      const text = weakAuthBannerText("weak-method", true);
+    it("propose la déconnexion complète après une reconnexion `prompt` restée faible", () => {
+      const text = weakAuthBannerText("weak-method", "prompt");
       expect(text.title).toContain("n'a pas été reconnue comme forte");
-      expect(text.description).toContain("activez la double authentification");
+      expect(text.description).toContain("ferme complètement votre session");
+      expect(text.canReauth).toBe(true);
+    });
+
+    it("oriente vers le support quand même la déconnexion complète laisse la session faible", () => {
+      const text = weakAuthBannerText("claim-missing", "logout");
+      expect(text.title).toContain("toujours sans authentification forte");
+      expect(text.description).toContain("contactez le support");
       expect(text.canReauth).toBe(true);
     });
   });

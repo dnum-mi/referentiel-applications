@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory, type RouteLocationNormalized, type RouteRecordRaw } from "vue-router";
 import { routeNames } from "./route-names";
-import { USER_MANAGER } from "@/services/authentication";
+import { USER_MANAGER, resumeStrongReauthAfterLogout } from "@/services/authentication";
 import { consumeReauthAttempt } from "@/composables/use-auth-level";
 import { useUserStore } from "@/stores/userStore";
 import { Permission } from "@/client";
@@ -174,6 +174,8 @@ const router = createRouter({
 
 // Guard to protect routes that require authentication
 router.beforeEach(async (to) => {
+  // #1985 : retour de la déconnexion demandée par une reconnexion forte — on relance la connexion.
+  if (await resumeStrongReauthAfterLogout()) return false;
   const userStore = useUserStore();
 
   if (to.meta.requiresAuth) {

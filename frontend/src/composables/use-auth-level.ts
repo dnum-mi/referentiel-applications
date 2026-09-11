@@ -61,16 +61,40 @@ function write(key: string, value: string): void {
   }
 }
 
+/**
+ * Stratégie de reconnexion forte : `prompt` redirige vers le fournisseur en exigeant une nouvelle
+ * authentification ; `logout` ferme d'abord complètement la session SSO, pour un fournisseur qui
+ * ignorerait `prompt=login`. Le bandeau passe de lui-même à `logout` après un échec de `prompt`.
+ */
+export type ReauthStrategy = "prompt" | "logout";
+
 // Drapeau de tentative de reconnexion forte : posé juste avant la redirection, consommé au retour
-// pour distinguer un succès (toast) d'une boucle (le fournisseur a renvoyé la même session).
+// pour distinguer un succès (toast) d'une boucle (le fournisseur a renvoyé la même session). Il
+// porte la stratégie employée, pour que le bandeau propose l'étape suivante.
 const REAUTH_ATTEMPT_KEY = "strongReauthAttempt";
 
-export function markReauthAttempt(): void {
-  write(REAUTH_ATTEMPT_KEY, "1");
+export function markReauthAttempt(strategy: ReauthStrategy): void {
+  write(REAUTH_ATTEMPT_KEY, strategy);
 }
 
-export function consumeReauthAttempt(): boolean {
-  return readAndClear(REAUTH_ATTEMPT_KEY) === "1";
+export function consumeReauthAttempt(): ReauthStrategy | undefined {
+  const value = readAndClear(REAUTH_ATTEMPT_KEY);
+  if (value === "prompt" || value === "logout") return value;
+  return value === "1" ? "prompt" : undefined; // valeur posée par une version précédente
+}
+
+// Reconnexion par déconnexion : la page revient de la déconnexion du fournisseur sans session ; ce
+// drapeau horodaté (valable dix minutes) relance aussitôt la connexion forte.
+const LOGOUT_REAUTH_KEY = "strongReauthAfterLogout";
+const LOGOUT_REAUTH_VALIDITY_MS = 10 * 60_000;
+
+export function markLogoutReauthPending(now = Date.now()): void {
+  write(LOGOUT_REAUTH_KEY, String(now));
+}
+
+export function consumeLogoutReauthPending(now = Date.now()): boolean {
+  const markedAt = Number(readAndClear(LOGOUT_REAUTH_KEY));
+  return Number.isFinite(markedAt) && markedAt > 0 && now - markedAt < LOGOUT_REAUTH_VALIDITY_MS;
 }
 
 // Avis à afficher après un rechargement forcé (impersonation refusée → purge + reload) : sans
@@ -86,12 +110,35 @@ export function consumeStepDownNotice(): StepDownReason | undefined {
   return value && (STEP_DOWN_REASONS as readonly string[]).includes(value) ? (value as StepDownReason) : undefined;
 }
 
-const reauthLoopDetected = ref(false);
-/** Vrai quand une reconnexion forte vient d'être tentée et que la session reste rétrogradée. */
-export const reauthLoopState = readonly(reauthLoopDetected);
+// Conservée dans le sessionStorage de l'onglet : un rechargement (F5, mise à jour automatique de
+// l'application, rechargement après une impersonation refusée) ne doit pas ramener le bandeau à la
+// voie qui vient d'échouer. Effacée dès qu'une session forte est constatée.
+const REAUTH_LOOP_KEY = "strongReauthLoop";
 
-export function setReauthLoopDetected(detected: boolean): void {
-  reauthLoopDetected.value = detected;
+function readStoredLoop(): ReauthStrategy | null {
+  try {
+    const value = sessionStorage.getItem(REAUTH_LOOP_KEY);
+    return value === "prompt" || value === "logout" ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+const reauthLoop = ref<ReauthStrategy | null>(readStoredLoop());
+/**
+ * Stratégie de la dernière reconnexion forte restée sans effet (la session est toujours
+ * rétrogradée), `null` sinon. Le bandeau en déduit son texte et l'étape suivante.
+ */
+export const reauthLoopState = readonly(reauthLoop);
+
+export function setReauthLoop(strategy: ReauthStrategy | null): void {
+  reauthLoop.value = strategy;
+  try {
+    if (strategy) sessionStorage.setItem(REAUTH_LOOP_KEY, strategy);
+    else sessionStorage.removeItem(REAUTH_LOOP_KEY);
+  } catch {
+    // sessionStorage indisponible : la bascule ne vaut que jusqu'au prochain rechargement.
+  }
 }
 
 export interface WeakAuthBannerText {
@@ -104,11 +151,18 @@ export interface WeakAuthBannerText {
 const STANDARD_RIGHTS = "Vos droits sont limités à ceux d'un utilisateur standard pour cette session.";
 
 /** Texte du bandeau selon le motif renvoyé par le backend, et variante « boucle » après une reconnexion. */
-export function weakAuthBannerText(reason: AuthLevelReason, loopDetected = false): WeakAuthBannerText {
-  if (loopDetected) {
+export function weakAuthBannerText(reason: AuthLevelReason, loop: ReauthStrategy | null = null): WeakAuthBannerText {
+  if (loop === "prompt") {
     return {
       title: "Votre reconnexion n'a pas été reconnue comme forte",
-      description: `${STANDARD_RIGHTS} Utilisez votre carte agent ou activez la double authentification sur votre compte, puis reconnectez-vous.`,
+      description: `${STANDARD_RIGHTS} Le bouton ci-dessous ferme complètement votre session avant de vous reconnecter : présentez alors votre carte agent ou la double authentification.`,
+      canReauth: true,
+    };
+  }
+  if (loop === "logout") {
+    return {
+      title: "Votre session est toujours sans authentification forte",
+      description: `${STANDARD_RIGHTS} Même après une déconnexion complète, le fournisseur d'identité n'a pas transmis d'authentification forte : vérifiez que vous utilisez votre carte agent ou la double authentification ; si le problème persiste, contactez le support.`,
       canReauth: true,
     };
   }

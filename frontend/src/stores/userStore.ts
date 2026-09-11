@@ -5,7 +5,7 @@ import {
   STEP_DOWN_MESSAGES,
   consumeReauthAttempt,
   consumeStepDownNotice,
-  setReauthLoopDetected,
+  setReauthLoop,
 } from "@/composables/use-auth-level";
 import type { APP_PERMISSIONS } from "@/models/Application";
 import { USER_MANAGER } from "@/services/authentication";
@@ -84,13 +84,15 @@ export const useUserStore = defineStore("userStore", () => {
   // boucle sinon (le fournisseur a renvoyé la même session faible) — le bandeau l'explique.
   // Consommé uniquement sur une réponse réussie : un échec réseau laisse le drapeau au suivant.
   function settleReauthAttempt() {
-    if (!consumeReauthAttempt()) return;
+    const strategy = consumeReauthAttempt();
     if (user.value?.authLevel?.downgraded) {
-      setReauthLoopDetected(true);
+      // Toujours faible : retenir la voie qui vient d'échouer. Une bascule déjà retenue survit aux
+      // rechargements de l'onglet tant qu'aucune session forte n'est constatée.
+      if (strategy) setReauthLoop(strategy);
       return;
     }
-    setReauthLoopDetected(false);
-    useToasterStore().addSuccessMessage(REAUTH_SUCCESS_MESSAGE);
+    setReauthLoop(null);
+    if (strategy) useToasterStore().addSuccessMessage(REAUTH_SUCCESS_MESSAGE);
   }
 
   async function updateEmailPreferences(emailNotificationsEnabled: boolean) {
