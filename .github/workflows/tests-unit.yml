@@ -127,6 +127,7 @@ jobs:
             -Dsonar.javascript.lcov.reportPaths=coverage/backend/lcov.info
             -Dsonar.javascript.node.maxspace=4096
             -Dsonar.sources=backend,frontend
+            -Dsonar.exclusions=backend/tests/**
             -Dsonar.coverage.exclusions=**/tests/**
             -Dsonar.tests=backend/tests
             -Dsonar.scm.provider=git
