@@ -141,7 +141,7 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Start stack using docker compose
         run: IMAGE_TAG=${{ needs.build-backend.outputs.image_tag }} docker compose -f docker-compose.yml -f docker-compose.ci.yml up backend postgres keycloak -d
       - name: Wait for backend to be ready
@@ -189,5 +189,63 @@ jobs:
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
-          path: playwright-report/
+          path: frontend/playwright-report/
           retention-days: 30
+
+  test-auth-e2e:
+    name: Authentication E2E
+    needs: build-backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      IMAGE_TAG: ${{ needs.build-backend.outputs.image_tag }}
+      CI: "true"
+      API_BASE_URL: http://localhost:3500
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Start authentication stack
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d backend postgres keycloak
+      - name: Wait for backend and identity provider
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS -o /dev/null http://localhost:3500/api/v2/health-check &&
+               curl -fsS -o /dev/null http://localhost:8082/realms/referentiel-applications/.well-known/openid-configuration; then
+              exit 0
+            fi
+            sleep 3
+          done
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml logs --tail=100 backend keycloak
+          exit 1
+      - name: Seed authentication fixtures
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml exec -T backend pnpm db:seed
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml exec -T backend pnpm db:seed:qa
+      - name: Install frontend and generate API client
+        working-directory: frontend
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm api:generate
+      - name: Install authentication test dependencies
+        working-directory: e2e
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm exec playwright install --with-deps chromium firefox webkit
+      - name: Verify authentication on three browsers without retries
+        working-directory: e2e
+        # PRM-14..19 : rétrogradation, profil/jetons, reconnexions, F5 et session forte.
+        run: pnpm exec playwright test tests/permissions.spec.ts --grep 'PRM-1[4-9] -' --workers=1 --retries=0 --trace=retain-on-failure --reporter=line,html
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: authentication-playwright-report
+          path: |
+            e2e/playwright-report/
+            e2e/test-results/
+          retention-days: 14
+          if-no-files-found: error

@@ -2,6 +2,11 @@ name: Test and scan
 
 on:
   workflow_dispatch:
+    inputs:
+      backend_image_tag:
+        description: Image backend à tester
+        required: true
+        type: string
   workflow_call:
     inputs:
       backend_image_tag:
@@ -20,8 +25,7 @@ jobs:
     name: Test Backend
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - name: Start stack using docker compose
@@ -68,6 +72,24 @@ jobs:
           name: unit-tests-coverage
           path: ./backend/coverage/
           retention-days: 1
+  coverage-report:
+    name: Backend Coverage Report
+    needs: test-backend
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    # Toutes les branches partagent le stockage des comparaisons. Seule cette
+    # publication est sérialisée ; queue:max conserve aussi les PR en attente.
+    concurrency:
+      group: backend-coverage-storage
+      queue: max
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: unit-tests-coverage
+          path: ./backend/coverage
       - name: Produce coverage report
         uses: insightsengineering/coverage-action@v2
         with:
@@ -77,18 +99,35 @@ jobs:
           publish: true
           diff: true
           diff-storage: _xml_coverage_reports_backend
-      # If you wish to fail your job when the Quality Gate is red, uncomment the
-      # following lines. This would typically be used to fail a deployment.
-      # We do not recommend to use this in a pull request. Prefer using pull request
-      # decoration instead.
-      # - uses: SonarSource/sonarqube-quality-gate-action@v1
-      #   timeout-minutes: 5
-      #   env:
-      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  scan-configuration:
+    name: Sonar Configuration
+    runs-on: ubuntu-latest
+    permissions: {}
+    outputs:
+      enabled: ${{ steps.config.outputs.enabled }}
+    steps:
+      - name: Check optional Sonar configuration
+        id: config
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
+        run: |
+          if [[ -z "$SONAR_TOKEN" && -z "$SONAR_HOST_URL" && -z "$SONAR_PROJECT_KEY" ]]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Sonar non exécuté : les trois secrets sont absents (par exemple sur une PR de fork)." >> "$GITHUB_STEP_SUMMARY"
+          elif [[ -z "$SONAR_TOKEN" || -z "$SONAR_HOST_URL" || -z "$SONAR_PROJECT_KEY" ]]; then
+            echo "::error::Configuration Sonar incomplète : les trois secrets doivent être renseignés."
+            exit 1
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
 
   code-scan:
     name: Code Scan
-    needs: test-backend
+    needs: [test-backend, scan-configuration]
+    if: needs.scan-configuration.outputs.enabled == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -116,9 +155,15 @@ jobs:
 
       - name: Set sonarqube args
         id: sonar-args
+        env:
+          PR_NUMBER: ${{ github.event.number }}
+          PR_HEAD_REF: ${{ github.head_ref }}
+          PR_BASE_REF: ${{ github.base_ref }}
+          REPOSITORY: ${{ github.repository }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
-          echo "SONAR_ARGS_PR=-Dsonar.pullrequest.provider=github -Dsonar.pullrequest.key=${{ github.event.number }} -Dsonar.pullrequest.branch=${{ github.head_ref }} -Dsonar.pullrequest.base=${{ github.base_ref }} -Dsonar.pullrequest.github.repository=${{ github.repository }}" >> $GITHUB_OUTPUT
-          echo "SONAR_ARGS_BRANCH=-Dsonar.branch.name=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          printf 'SONAR_ARGS_PR=%s\n' "-Dsonar.pullrequest.provider=github -Dsonar.pullrequest.key=$PR_NUMBER -Dsonar.pullrequest.branch=$PR_HEAD_REF -Dsonar.pullrequest.base=$PR_BASE_REF -Dsonar.pullrequest.github.repository=$REPOSITORY" >> "$GITHUB_OUTPUT"
+          printf 'SONAR_ARGS_BRANCH=%s\n' "-Dsonar.branch.name=$REF_NAME" >> "$GITHUB_OUTPUT"
 
       - uses: SonarSource/sonarqube-scan-action@v6
         with:
@@ -144,4 +189,3 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        continue-on-error: true
