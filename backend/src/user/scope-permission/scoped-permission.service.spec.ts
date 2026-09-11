@@ -188,3 +188,67 @@ describe("ScopedPermissionService — session rétrogradée (#1985)", () => {
     });
   });
 });
+
+// #1985 : consultation d'un utilisateur (historique des connexions) — mêmes règles que le blocage.
+describe("ScopedPermissionService — assertCanReadTarget", () => {
+  function buildRequestor(
+    scopePath?: string,
+    role: Roles = Roles.ADMIN,
+  ): Requestor {
+    return {
+      id: "requestor-1",
+      role,
+      scopeOrganization: scopePath ? { path: scopePath } : null,
+    } as unknown as Requestor;
+  }
+  function buildService(
+    users: Record<
+      string,
+      { id: string; organization: { path: string } | null }
+    >,
+  ) {
+    const prisma = {
+      user: {
+        findFirst: jest.fn(({ where: { id } }: { where: { id: string } }) =>
+          Promise.resolve(users[id] ?? null),
+        ),
+      },
+    } as unknown as PrismaService;
+    return new ScopedPermissionService(prisma);
+  }
+
+  it("does nothing for a global admin (no scope)", async () => {
+    await expect(
+      buildService({}).assertCanReadTarget("target-1", buildRequestor()),
+    ).resolves.toBeUndefined();
+  });
+
+  it("allows a user within the requestor's scope", async () => {
+    const service = buildService({
+      "target-1": { id: "target-1", organization: { path: "DTNUM/TOTO/SUB" } },
+    });
+    await expect(
+      service.assertCanReadTarget("target-1", buildRequestor("DTNUM/TOTO")),
+    ).resolves.toBeUndefined();
+  });
+
+  it("rejects a user outside the requestor's scope with a read-oriented message", async () => {
+    const service = buildService({
+      "target-1": { id: "target-1", organization: { path: "DGPN" } },
+    });
+    await expect(
+      service.assertCanReadTarget("target-1", buildRequestor("DTNUM/TOTO")),
+    ).rejects.toMatchObject({
+      message: expect.stringContaining("consulter"),
+    });
+  });
+
+  it("rejects a non-administrator", async () => {
+    await expect(
+      buildService({}).assertCanReadTarget(
+        "target-1",
+        buildRequestor(undefined, Roles.CONTRIBUTOR),
+      ),
+    ).rejects.toBeInstanceOf(ScopePermissionsException);
+  });
+});

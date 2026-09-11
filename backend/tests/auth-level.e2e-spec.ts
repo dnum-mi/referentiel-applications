@@ -180,6 +180,17 @@ describe("Niveau d'authentification — rétrogradation en session faible (#1985
       expect(untouched.role).toBe(Roles.VISITOR);
     });
 
+    it("l'historique des connexions d'un utilisateur est refusé en session faible", async () => {
+      await request(app().getHttpServer())
+        .get(`/users/${target.id}/connexion-logs`)
+        .set("Authorization", `Bearer ${getToken(admin, WEAK)}`)
+        .expect(403);
+      await request(app().getHttpServer())
+        .get(`/users/${target.id}/connexion-logs`)
+        .set("Authorization", `Bearer ${getToken(admin, STRONG)}`)
+        .expect(200);
+    });
+
     it("la création d'un jeton personnel répond un 403 typé stepDown", async () => {
       const res = await request(app().getHttpServer())
         .post("/tokens/personal")

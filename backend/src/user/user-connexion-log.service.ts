@@ -4,6 +4,10 @@ import { AuthLevel, User, UserConnexionLog } from "@prisma/client";
 import type { AuthLevelEvaluation } from "src/auth-level/auth-level";
 import { BaseService } from "src/common/base.service";
 import { PrismaService } from "src/prisma/prisma.service";
+import { UserConnexionLogDto } from "./dto/user-connexion-log.dto";
+
+/** Dernières connexions renvoyées à l'administration : assez pour diagnostiquer, sans pagination. */
+export const CONNEXION_LOG_HISTORY_LIMIT = 30;
 
 @Injectable()
 export class UserConnexionLogService extends BaseService<UserConnexionLog> {
@@ -47,5 +51,25 @@ export class UserConnexionLogService extends BaseService<UserConnexionLog> {
       skipDuplicates: true,
     });
     return { created: count === 1 };
+  }
+
+  /** Dernières connexions d'un utilisateur (#1985), du jour le plus récent au plus ancien. */
+  public async findAllForUser(
+    userId: User["id"],
+    limit = CONNEXION_LOG_HISTORY_LIMIT,
+  ): Promise<UserConnexionLogDto[]> {
+    const logs = await this.prisma.userConnexionLog.findMany({
+      where: { userId },
+      orderBy: [{ authTime: "desc" }, { createdAt: "desc" }],
+      take: limit,
+      select: {
+        id: true,
+        authTime: true,
+        authLevel: true,
+        authMethod: true,
+        authIdp: true,
+      },
+    });
+    return logs;
   }
 }
