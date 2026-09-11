@@ -17,13 +17,20 @@ const RefAppTableStub = {
     <tr v-for="row in items" :key="row.id" :data-testid="'row-' + row.id">
       <td><slot name="body-Date" :data="row">{{ row.Date }}</slot></td>
       <td><slot name="body-Niveau" :data="row">{{ row.Niveau }}</slot></td>
-      <td>{{ row.Mode }}</td><td>{{ row.Fournisseur }}</td>
+      <td>{{ row.Mode }}</td><td>{{ row.Fournisseur }}</td><td>{{ row.Source }}</td>
     </tr></tbody></table>`,
 };
 
 const logs: UserConnexionLogDto[] = [
-  { id: "l-1", authTime: new Date("2026-09-10T00:00:00.000Z"), authLevel: "strong", authMethod: "CARD", authIdp: "principal" },
-  { id: "l-2", authTime: new Date("2026-09-09T00:00:00.000Z"), authLevel: "unknown", authMethod: null, authIdp: null },
+  {
+    id: "l-1",
+    authTime: new Date("2026-09-10T00:00:00.000Z"),
+    authLevel: "strong",
+    authMethod: "CARD",
+    authIdp: "principal",
+    authSource: "token",
+  },
+  { id: "l-2", authTime: new Date("2026-09-09T00:00:00.000Z"), authLevel: "unknown", authMethod: null, authIdp: null, authSource: null },
 ];
 
 function renderHistory() {
@@ -37,7 +44,7 @@ describe("UserConnexionLogHistory (#1985)", () => {
   beforeEach(() => findConnexionLogsMock.mockReset());
   afterEach(cleanup);
 
-  it("charge et affiche les connexions avec niveau, mode et fournisseur, « Non transmis » à défaut", async () => {
+  it("charge et affiche les connexions avec niveau, mode et fournisseur, « Non disponible » à défaut", async () => {
     findConnexionLogsMock.mockResolvedValue({ data: logs, response: { ok: true } });
     const { getByTestId } = renderHistory();
     await flushPromises();
@@ -49,8 +56,17 @@ describe("UserConnexionLogHistory (#1985)", () => {
     expect(getByTestId("row-l-1")).toHaveTextContent("Forte");
     expect(getByTestId("row-l-1")).toHaveTextContent("CARD");
     expect(getByTestId("row-l-1")).toHaveTextContent("principal");
+    expect(getByTestId("row-l-1")).toHaveTextContent("Jeton d'accès");
+    expect(getByTestId("row-l-2")).toHaveTextContent("Non renseignée");
     expect(getByTestId("row-l-2")).toHaveTextContent("Inconnue");
-    expect(getByTestId("row-l-2")).toHaveTextContent("Non transmis");
+    expect(getByTestId("row-l-2")).toHaveTextContent("Non disponible");
+  });
+
+  it("distingue userinfo du jeton d'accès", async () => {
+    findConnexionLogsMock.mockResolvedValue({ data: [{ ...logs[0], authSource: "userinfo" }], response: { ok: true } });
+    const { getByTestId } = renderHistory();
+    await flushPromises();
+    expect(getByTestId("row-l-1")).toHaveTextContent("Userinfo");
   });
 
   it("indique l'absence de connexion", async () => {

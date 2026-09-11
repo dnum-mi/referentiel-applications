@@ -52,10 +52,11 @@ describe("GET /users/:id/connexion-logs — historique des connexions (#1985)", 
       additionalPermissions: [Permission.AdminPanelManage],
     });
 
-    // Deux connexions du jour à deux niveaux : deux lignes attendues, dans l'ordre inverse.
+    // Trois contextes du jour, dont deux modes classés faibles : trois lignes attendues.
     for (const claims of [
       { auth_mode: "CARD", auth_idp: "principal" },
       { auth_mode: "PASSWORD", auth_idp: "principal" },
+      { auth_mode: "SYNTHETIC_MFA_METHOD", auth_idp: "principal" },
     ]) {
       await request(app().getHttpServer())
         .get("/users/me")
@@ -70,11 +71,11 @@ describe("GET /users/:id/connexion-logs — historique des connexions (#1985)", 
       .set("Authorization", `Bearer ${getToken(globalAdmin)}`)
       .expect(200);
 
-    expect(res.body).toHaveLength(2);
+    expect(res.body).toHaveLength(3);
     // De la plus récente à la plus ancienne : même jour, la connexion faible a été journalisée
-    // en second (tri secondaire sur createdAt).
+    // en dernier (tri secondaire sur createdAt).
     expect(res.body.map((row: { authLevel: string }) => row.authLevel)).toEqual(
-      [AuthLevel.weak, AuthLevel.strong],
+      [AuthLevel.weak, AuthLevel.weak, AuthLevel.strong],
     );
     expect(res.body).toEqual(
       expect.arrayContaining([
@@ -82,11 +83,13 @@ describe("GET /users/:id/connexion-logs — historique des connexions (#1985)", 
           authLevel: AuthLevel.strong,
           authMethod: "CARD",
           authIdp: "principal",
+          authSource: "token",
         }),
         expect.objectContaining({
           authLevel: AuthLevel.weak,
           authMethod: "PASSWORD",
           authIdp: "principal",
+          authSource: "token",
         }),
       ]),
     );
@@ -95,6 +98,7 @@ describe("GET /users/:id/connexion-logs — historique des connexions (#1985)", 
       "authIdp",
       "authLevel",
       "authMethod",
+      "authSource",
       "authTime",
       "id",
     ]);
@@ -105,7 +109,7 @@ describe("GET /users/:id/connexion-logs — historique des connexions (#1985)", 
       .get(`/users/${targetInScope.id}/connexion-logs`)
       .set("Authorization", `Bearer ${getToken(scopedAdmin)}`)
       .expect(200);
-    expect(res.body).toHaveLength(2);
+    expect(res.body).toHaveLength(3);
   });
 
   it("refuse à un administrateur de périmètre un utilisateur hors périmètre", async () => {

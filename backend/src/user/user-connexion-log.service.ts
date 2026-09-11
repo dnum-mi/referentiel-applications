@@ -68,6 +68,7 @@ export class UserConnexionLogService extends BaseService<UserConnexionLog> {
         authLevel: true,
         authMethod: true,
         authIdp: true,
+        authSource: true,
       },
     });
     return logs;

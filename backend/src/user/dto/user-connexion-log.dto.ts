@@ -2,7 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import { AuthLevel } from "@prisma/client";
 
 /**
- * Une connexion journalisée (#1985) : une ligne par utilisateur, par jour et par niveau
+ * Une connexion journalisée (#1985) : une ligne par utilisateur, par jour et par contexte
  * d'authentification. Sert au diagnostic en administration pendant la phase d'observation
  * (« j'ai ma carte agent et le référentiel ne la voit pas ») puis en exploitation.
  */
@@ -35,4 +35,14 @@ export class UserConnexionLogDto {
     description: "Fournisseur d'identité d'origine, si transmis",
   })
   authIdp: string | null;
+
+  @ApiProperty({
+    type: String,
+    required: false,
+    nullable: true,
+    enum: ["token", "userinfo", null],
+    description:
+      "Source des claims : jeton d'accès ou userinfo ; null pour une source inconnue",
+  })
+  authSource: string | null;
 }

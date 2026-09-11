@@ -7601,6 +7601,15 @@ components:
           type: string
           nullable: true
           description: Fournisseur d'identité d'origine, si transmis
+        authSource:
+          type: string
+          nullable: true
+          enum:
+            - token
+            - userinfo
+            - null
+          description: "Source des claims : jeton d'accès ou userinfo ; null pour une
+            source inconnue"
       required:
         - id
         - authTime

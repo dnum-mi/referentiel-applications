@@ -7,7 +7,7 @@ import { formatDateFR } from "@/composables/use-date";
 import type { TableColumn } from "@/types/table";
 import { computed, onMounted, ref } from "vue";
 
-// #1985 — Historique des connexions d'un utilisateur (une ligne par jour et par niveau
+// #1985 — Historique des connexions d'un utilisateur (une ligne par jour et par contexte
 // d'authentification), pour diagnostiquer ce que le fournisseur d'identité transmet réellement :
 // c'est l'outil du support pendant la phase d'observation, avant toute activation.
 const props = defineProps<{ userId: string }>();
@@ -32,6 +32,7 @@ const headers: TableColumn[] = [
   { field: "Niveau", header: "Niveau d'authentification", sortable: false },
   { field: "Mode", header: "Mode transmis", sortable: false },
   { field: "Fournisseur", header: "Fournisseur d'identité", sortable: false },
+  { field: "Source", header: "Source", sortable: false },
 ];
 
 const rows = computed(() =>
@@ -41,8 +42,9 @@ const rows = computed(() =>
     Date: new Date(log.authTime),
     Niveau: AUTH_LEVEL_WORDING[log.authLevel],
     level: log.authLevel,
-    Mode: log.authMethod ?? "Non transmis",
-    Fournisseur: log.authIdp ?? "Non transmis",
+    Mode: log.authMethod ?? "Non disponible",
+    Fournisseur: log.authIdp ?? "Non disponible",
+    Source: log.authSource === "token" ? "Jeton d'accès" : log.authSource === "userinfo" ? "Userinfo" : "Non renseignée",
   })),
 );
 
@@ -70,11 +72,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="fr-mt-4w" data-testid="user-connexion-log-history">
+  <div class="connexion-history fr-mt-4w" data-testid="user-connexion-log-history">
     <h3 class="fr-h6 fr-mb-2w">Historique des connexions</h3>
     <p class="fr-text--sm fr-mb-2w">
-      Une ligne par jour et par niveau d'authentification. « Non transmis » signifie que le fournisseur d'identité n'a pas envoyé
-      l'information (évaluation désactivée, jeton API ou claim absent).
+      Une ligne par jour et par contexte d'authentification : niveau, mode, fournisseur et source. Plusieurs modes du même niveau restent
+      visibles. Les informations indisponibles peuvent correspondre à un claim absent, une évaluation désactivée ou un ancien journal.
     </p>
 
     <div v-if="errorMessage" class="fr-alert fr-alert--error" data-testid="connexion-log-history-error">
@@ -108,3 +110,27 @@ onMounted(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.connexion-history {
+  /* La modale est montée dans une cellule de la table des utilisateurs. */
+  white-space: normal;
+}
+
+.connexion-history :deep(.p-datatable-table) {
+  /* RefAppTable impose 50rem en ligne : cette modale dispose de moins de place.
+     Les petits écrans conservent le défilement horizontal du tableau. */
+  min-width: 36rem !important;
+}
+
+.connexion-history :deep(th),
+.connexion-history :deep(td) {
+  /* PrimeVue force nowrap sur les cellules redimensionnables. */
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+}
+
+.connexion-history :deep(td:first-child) {
+  white-space: nowrap !important;
+}
+</style>

@@ -73,6 +73,8 @@ En `enforce`, une session non forte ne porte que les **droits d'un utilisateur s
 
 `GET /users/me` expose `authLevel { level, downgraded, reason }` — jamais le rôle, les permissions ou le périmètre d'origine — et les routes qui décrivent l'utilisateur courant (`PATCH /users/me`, abonnements) répondent depuis le Requestor de la requête, pas d'une relecture Prisma. `UserConnexionLog` enregistre une ligne par utilisateur, jour et contexte (niveau, mode, fournisseur et source) avec la valeur brute du claim, le fournisseur et la source (`authSource` : `token`, `userinfo`, ou `null` si inconnue). Deux valeurs encore classées faibles sont conservées séparément ; les requêtes répétées et concurrentes du même contexte sont dédoublonnées. Les anciennes lignes gardent une source inconnue, sans attribution rétrospective.
 
+`GET /users/:id/connexion-logs` expose les 30 derniers contextes quotidiens (niveau, mode, fournisseur et source) au rôle administrateur uniquement. Un administrateur de périmètre doit avoir la cible dans son périmètre ; une simple délégation `AdminPanelManage` ne suffit pas. La même règle protège `GET /users/:id/permission-logs`. Une session rétrogradée est refusée. Le diagnostic apparaît dans la modale de permissions, sans exposer l’empreinte interne de dédoublonnage.
+
 ## 2. Modèle d'autorisation à trois couches
 
 L'autorisation combine **trois sources de permissions cumulatives**. La fusion et la décision sont centralisées dans `backend/src/common/service/check-permissions.service.ts`, méthode `can()`.

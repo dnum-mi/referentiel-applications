@@ -89,6 +89,7 @@ describe("UserConnexionLogService.findAllForUser (#1985)", () => {
           authLevel: true,
           authMethod: true,
           authIdp: true,
+          authSource: true,
         },
       }),
     );
