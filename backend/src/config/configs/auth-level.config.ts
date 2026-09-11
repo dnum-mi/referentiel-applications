@@ -10,6 +10,13 @@ export const AUTH_LEVEL_REAUTH_STRATEGIES = ["prompt", "logout"] as const;
 export type AuthLevelReauthStrategy =
   (typeof AUTH_LEVEL_REAUTH_STRATEGIES)[number];
 
+const HMAC_KEY_BYTES = { HS256: 32, HS384: 48, HS512: 64 } as const;
+export interface UserinfoHmacConfig {
+  algorithm: keyof typeof HMAC_KEY_BYTES;
+  /** Secret du client OIDC, uniquement côté serveur. */
+  secret: string;
+}
+
 export interface AuthLevelReauthConfig {
   /** Propose une reconnexion forte depuis le front (bouton du bandeau). */
   enabled: boolean;
@@ -34,6 +41,8 @@ export interface AuthLevelUserinfoConfig {
   url?: string;
   /** Délai maximal d'un appel userinfo (AUTH_LEVEL_USERINFO_TIMEOUT_MS, défaut 2000). */
   timeoutMs: number;
+  /** Si absent, les JWT userinfo sont vérifiés avec les clés publiques du fournisseur. */
+  hmac?: UserinfoHmacConfig;
 }
 
 export interface AuthLevelConfig {
@@ -123,6 +132,34 @@ function parseStrategy(raw: string | undefined): AuthLevelReauthStrategy {
   return "prompt";
 }
 
+function parseUserinfoHmac(): UserinfoHmacConfig | undefined {
+  const algorithm = process.env.AUTH_LEVEL_USERINFO_HMAC_ALGORITHM?.trim();
+  if (!algorithm) {
+    if (process.env.AUTH_LEVEL_USERINFO_CLIENT_SECRET) {
+      throw new Error(
+        "AUTH_LEVEL_USERINFO_HMAC_ALGORITHM est requis avec un secret userinfo",
+      );
+    }
+    return undefined;
+  }
+  if (algorithm !== "HS256" && algorithm !== "HS384" && algorithm !== "HS512") {
+    throw new Error(
+      "AUTH_LEVEL_USERINFO_HMAC_ALGORITHM doit être HS256, HS384 ou HS512",
+    );
+  }
+  // Ne pas normaliser le secret : OIDC utilise ses octets UTF-8 exacts (Core §10.1).
+  const secret = process.env.AUTH_LEVEL_USERINFO_CLIENT_SECRET;
+  if (
+    !secret?.trim() ||
+    Buffer.byteLength(secret, "utf8") < HMAC_KEY_BYTES[algorithm]
+  ) {
+    throw new Error(
+      `AUTH_LEVEL_USERINFO_CLIENT_SECRET doit contenir au moins ${HMAC_KEY_BYTES[algorithm]} octets UTF-8 pour ${algorithm}`,
+    );
+  }
+  return { algorithm, secret };
+}
+
 /**
  * Niveau d'authentification de la session SSO (#1985) : carte agent ou double authentification
  * donnent les droits pleins, tout autre mode ramène la session aux droits d'un utilisateur
@@ -169,6 +206,7 @@ export const authLevelConfig = registerAs("authLevel", (): AuthLevelConfig => {
     enabled: process.env.AUTH_LEVEL_USERINFO_FALLBACK === "true",
     url: parseOptionalString(process.env.AUTH_LEVEL_USERINFO_URL),
     timeoutMs: parseUserinfoTimeout(process.env.AUTH_LEVEL_USERINFO_TIMEOUT_MS),
+    hmac: parseUserinfoHmac(),
   };
   const helpUrl = parseOptionalString(process.env.AUTH_LEVEL_HELP_URL);
 

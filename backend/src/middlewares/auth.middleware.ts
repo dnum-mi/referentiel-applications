@@ -18,6 +18,7 @@ import {
 } from "src/auth-level/auth-level";
 import { stepDownBody } from "src/auth-level/step-down.exception";
 import { UserinfoClaimsResolver } from "src/auth-level/userinfo-claims";
+import { createUserinfoJwtVerifier } from "src/auth-level/userinfo-jwt-verifier";
 import { authLevelConfig, oidcConfig } from "src/config/configs";
 import { principalToPermissions } from "src/permissions/role-to-permissions";
 import { TokenService } from "src/token/token.service";
@@ -65,10 +66,8 @@ export class AuthMiddleware implements NestMiddleware {
         claimNames: idpClaim ? [claim, idpClaim] : [claim],
         clientId: this.oidc.clientId,
         timeoutMs: userinfo.timeoutMs,
-        verifyJwt: async (jwt) =>
-          process.env.DISABLE_JWT_VALIDATION
-            ? decodeJwt(jwt)
-            : (await jwtVerify(jwt, this.jwks)).payload,
+        verifyJwt: createUserinfoJwtVerifier(this.jwks, userinfo.hmac),
+        requireSignedResponse: !!userinfo.hmac,
         onError: (message) => this.logger.warn(message),
       });
     }

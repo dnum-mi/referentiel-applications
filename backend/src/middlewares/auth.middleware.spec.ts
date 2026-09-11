@@ -1,4 +1,5 @@
 import type { ConfigType } from "@nestjs/config";
+import { SignJWT } from "jose";
 import type { NextFunction, Request, Response } from "express";
 import { AuthLevel, Permission, Roles, UserType } from "@prisma/client";
 import type { LoggerService } from "src/logger/logger.service";
@@ -640,6 +641,48 @@ describe("AuthMiddleware", () => {
         authLevel: { reason: "untrusted-idp", downgraded: true },
       });
     });
+
+    it.each([true, false])(
+      "verifies signed HMAC userinfo before granting rights (valid: %s)",
+      async (valid) => {
+        const secret = "userinfo-test-secret-not-for-deployment-".repeat(2);
+        const signingKey = new TextEncoder().encode(
+          valid ? secret : "wrong-secret".repeat(8),
+        );
+        const signed = await new SignJWT({
+          sub: "sub-1",
+          iss: "https://example.test",
+          aud: "refapp",
+          auth_mode: "CARD",
+        })
+          .setProtectedHeader({ alg: "HS256" })
+          .setExpirationTime("1m")
+          .sign(signingKey);
+        fetchSpy = jest.spyOn(globalThis, "fetch").mockResolvedValue(
+          new globalThis.Response(signed, {
+            headers: { "content-type": "application/jwt" },
+          }),
+        );
+        const { middleware } = buildMiddleware({
+          authLevel: {
+            ...withUserinfo,
+            userinfo: {
+              ...withUserinfo.userinfo,
+              hmac: { algorithm: "HS256", secret },
+            },
+          },
+          user: adminUser,
+        });
+        const request = bearerRequest({
+          email: adminUser.email,
+          sub: "sub-1",
+          iss: "https://example.test",
+        });
+        await run(middleware, request);
+        expect(request.user?.role).toBe(valid ? Roles.ADMIN : Roles.VISITOR);
+        expect(request.user?.authLevel?.downgraded).toBe(!valid);
+      },
+    );
 
     it("stays disabled unless explicitly enabled", async () => {
       mockUserinfo({ sub: "sub-1", auth_mode: "CARD" });

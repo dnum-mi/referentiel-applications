@@ -14,7 +14,8 @@ import type { JWTPayload } from "jose";
  *   dédoublonnées) ; un échec est mis en cache brièvement pour ne pas marteler le fournisseur ;
  * - le `sub` de la réponse est exigé (OIDC Core §5.3.2). RefApp utilise le sujet du jeton
  *   d'accès comme référence : sans sujet de référence non vide et identique, le repli est ignoré ;
- * - une réponse signée (`application/jwt`) est vérifiée avec le JWKS du fournisseur, et son
+ * - une réponse signée (`application/jwt`) est vérifiée avec le JWKS du fournisseur ou le
+ *   secret HMAC explicitement configuré côté serveur ; son
  *   émetteur et son audience sont exigés et doivent être ceux du jeton et du client ;
  * - un endpoint découvert doit être une URL http(s) ;
  * - tout échec vaut « claim absent » : le repli ne peut qu'ajouter une preuve, jamais en inventer.
@@ -31,6 +32,8 @@ export interface UserinfoClaimsResolverOptions {
   timeoutMs: number;
   /** Vérifie une réponse userinfo signée (application/jwt). */
   verifyJwt: (jwt: string) => Promise<JWTPayload>;
+  /** Une configuration HMAC explicite exige une réponse signée, sans repli JSON. */
+  requireSignedResponse?: boolean;
   /** Journalisation des échecs (au plus une ligne par minute). */
   onError?: (message: string) => void;
   now?: () => number;
@@ -122,6 +125,11 @@ export class UserinfoClaimsResolver {
     }
     const contentType = response.headers.get("content-type") ?? "";
     const signed = contentType.includes("application/jwt");
+    if (this.options.requireSignedResponse && !signed) {
+      throw new Error(
+        "une réponse userinfo signée est requise par la configuration",
+      );
+    }
     const body: unknown = signed
       ? await this.options.verifyJwt((await response.text()).trim())
       : await response.json();

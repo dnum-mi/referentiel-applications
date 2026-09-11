@@ -18,6 +18,8 @@ describe("authLevelConfig", () => {
     delete process.env.AUTH_LEVEL_USERINFO_FALLBACK;
     delete process.env.AUTH_LEVEL_USERINFO_URL;
     delete process.env.AUTH_LEVEL_USERINFO_TIMEOUT_MS;
+    delete process.env.AUTH_LEVEL_USERINFO_HMAC_ALGORITHM;
+    delete process.env.AUTH_LEVEL_USERINFO_CLIENT_SECRET;
   });
 
   afterEach(() => {
@@ -141,4 +143,50 @@ describe("authLevelConfig", () => {
       expect(authLevelConfig().userinfo.timeoutMs).toBe(2000);
     },
   );
+
+  it.each([
+    ["HS256", 32],
+    ["HS384", 48],
+    ["HS512", 64],
+  ] as const)("valide la longueur du secret pour %s", (algorithm, bytes) => {
+    process.env.AUTH_LEVEL_USERINFO_HMAC_ALGORITHM = algorithm;
+    expect(() => authLevelConfig()).toThrow(
+      /AUTH_LEVEL_USERINFO_CLIENT_SECRET/,
+    );
+    process.env.AUTH_LEVEL_USERINFO_CLIENT_SECRET = "a".repeat(bytes - 1);
+    expect(() => authLevelConfig()).toThrow(
+      /AUTH_LEVEL_USERINFO_CLIENT_SECRET/,
+    );
+    process.env.AUTH_LEVEL_USERINFO_CLIENT_SECRET = "a".repeat(bytes);
+    expect(authLevelConfig().userinfo.hmac).toEqual({
+      algorithm,
+      secret: "a".repeat(bytes),
+    });
+  });
+
+  it("conserve les octets UTF-8 du secret, y compris les espaces", () => {
+    process.env.AUTH_LEVEL_USERINFO_HMAC_ALGORITHM = "HS256";
+    const secret = ` ${"é".repeat(15)} `;
+    process.env.AUTH_LEVEL_USERINFO_CLIENT_SECRET = secret;
+    expect(authLevelConfig().userinfo.hmac?.secret).toBe(secret);
+  });
+
+  it.each(["none", "RS256", "HS128"])(
+    "refuse un algorithme HMAC inattendu (%s)",
+    (algorithm) => {
+      process.env.AUTH_LEVEL_USERINFO_HMAC_ALGORITHM = algorithm;
+      expect(() => authLevelConfig()).toThrow(
+        /AUTH_LEVEL_USERINFO_HMAC_ALGORITHM/,
+      );
+    },
+  );
+
+  it("refuse un secret sans algorithme explicite", () => {
+    process.env.AUTH_LEVEL_USERINFO_CLIENT_SECRET = "test-only-secret".repeat(
+      5,
+    );
+    expect(() => authLevelConfig()).toThrow(
+      /AUTH_LEVEL_USERINFO_HMAC_ALGORITHM/,
+    );
+  });
 });
