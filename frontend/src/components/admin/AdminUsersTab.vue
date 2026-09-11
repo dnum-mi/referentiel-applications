@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import api from "@/api/index";
-import type { PaginatedUserWithPermissions, UserControllerFindAllData } from "@/client/types.gen";
+import type { PaginatedUserWithPermissions, UserControllerFindAllData, UserWithPermissions } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
 import { formatDateFR } from "@/composables/use-date";
 import type { TableColumn, TableSortEvent } from "@/types/table";
@@ -10,6 +10,7 @@ import type { DataTablePageEvent } from "primevue/datatable";
 import { watchDebounced } from "@vueuse/core";
 import { computed, onMounted, ref, watch } from "vue";
 import UserActions from "./UserActions.vue";
+import UserConnexionLogHistory from "./UserConnexionLogHistory.vue";
 
 const errorMessages = {
   ERR_LOAD_USERS: "Erreur lors du chargement des utilisateurs",
@@ -18,6 +19,12 @@ const errorMessages = {
 type ErrorKey = keyof typeof errorMessages;
 
 const data = ref<PaginatedUserWithPermissions>({ results: [], total: 0 });
+const connexionHistoryUser = ref<Pick<UserWithPermissions, "id" | "email"> | null>(null);
+
+function showConnexionHistory(user: UserWithPermissions) {
+  // Garder l'identité consultée même si la liste est actualisée pendant la consultation.
+  connexionHistoryUser.value = { id: user.id, email: user.email };
+}
 
 const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [
   {
@@ -41,8 +48,8 @@ const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [
     isSortable: true,
   },
   {
-    key: "permissions",
-    label: "Permissions",
+    key: "consultation",
+    label: "Consultation",
     isSortable: false,
   },
   {
@@ -248,10 +255,40 @@ onMounted(fetchUsers);
           <UserActions :user="row.actions" @user-updated="fetchUsers" />
         </template>
 
-        <template #body-permissions="{ data: row }">
-          <UserPermissionsModal :user="row.actions" />
+        <template #body-consultation="{ data: row }">
+          <div class="user-consultation">
+            <UserPermissionsModal :user="row.actions" />
+            <DsfrButton
+              label="Connexions"
+              size="sm"
+              secondary
+              data-testid="admin-user-connexions-btn"
+              :title="`Voir l'historique des connexions de ${row.email}`"
+              :aria-label="`Voir l'historique des connexions de ${row.email}`"
+              @click="showConnexionHistory(row.actions)"
+            />
+          </div>
         </template>
       </RefAppTable>
     </div>
+
+    <DsfrModal
+      :opened="connexionHistoryUser !== null"
+      size="lg"
+      :title="`Historique des connexions — ${connexionHistoryUser?.email ?? ''}`"
+      data-testid="admin-user-connexions-modal"
+      @close="connexionHistoryUser = null"
+    >
+      <UserConnexionLogHistory v-if="connexionHistoryUser" :key="connexionHistoryUser.id" :user-id="connexionHistoryUser.id" />
+    </DsfrModal>
   </div>
 </template>
+
+<style scoped>
+.user-consultation {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+</style>

@@ -72,8 +72,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="connexion-history fr-mt-4w" data-testid="user-connexion-log-history">
-    <h3 class="fr-h6 fr-mb-2w">Historique des connexions</h3>
+  <div class="connexion-history" data-testid="user-connexion-log-history">
     <p class="fr-text--sm fr-mb-2w">
       Une ligne par jour et par contexte d'authentification : niveau, mode, fournisseur et source. Plusieurs modes du même niveau restent
       visibles. Les informations indisponibles peuvent correspondre à un claim absent, une évaluation désactivée ou un ancien journal.
@@ -112,11 +111,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.connexion-history {
-  /* La modale est montée dans une cellule de la table des utilisateurs. */
-  white-space: normal;
-}
-
 .connexion-history :deep(.p-datatable-table) {
   /* RefAppTable impose 50rem en ligne : cette modale dispose de moins de place.
      Les petits écrans conservent le défilement horizontal du tableau. */
