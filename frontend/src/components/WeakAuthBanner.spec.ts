@@ -91,14 +91,14 @@ describe("WeakAuthBanner (#1985)", () => {
     expect(getByTestId("weak-auth-banner")).toHaveTextContent("non transmis par le fournisseur d'identité");
   });
 
-  it("ne propose pas de reconnexion pour un fournisseur externe", async () => {
+  it("propose une reconnexion quand le mode est absent avec un fournisseur non listé", async () => {
     configMock.value = { authLevel: { reauth: { strategy: "prompt", prompt: "login" }, helpUrl: "https://intranet.example/aide" } };
     downgraded("untrusted-idp", "unknown");
-    const { getByTestId, queryByTestId } = await renderLoaded();
-    expect(getByTestId("weak-auth-banner")).toHaveTextContent("fournisseur d'identité externe");
+    const { getByTestId } = await renderLoaded();
+    expect(getByTestId("weak-auth-banner")).toHaveTextContent("non transmis");
     // Le lien d'aide prouve que la configuration (reconnexion activée) est bien appliquée.
     expect(getByTestId("weak-auth-help-link")).toBeInTheDocument();
-    expect(queryByTestId("weak-auth-reauth-btn")).not.toBeInTheDocument();
+    expect(getByTestId("weak-auth-reauth-btn")).toBeInTheDocument();
   });
 
   it("masque le bouton quand la reconnexion forte est désactivée côté serveur", async () => {

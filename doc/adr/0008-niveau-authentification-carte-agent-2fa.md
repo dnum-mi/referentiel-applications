@@ -2,7 +2,7 @@
 
 ## Statut
 
-Accepté — le 2026-09-11. Les quatre points qui dépendaient d'une réponse de l'équipe SSO ont été rendus non bloquants : voir « Points ouverts levés ».
+Accepté — le 2026-09-11 pour les choix d’implémentation. L’activation du contrôle reste conditionnée à la qualification du SSO institutionnel décrite ci-dessous.
 
 ## Date
 
@@ -41,17 +41,17 @@ Le fournisseur sait exiger un niveau minimum par rôle déclaré chez lui. Avant
 ## Décision
 
 - Retenir l'**option 1**. Le claim est lu sur l'**access token** (jamais l'id token, héritage de l'ADR-0005) et, à défaut, sur l'endpoint userinfo avec ce même jeton. Nom du claim, valeurs fortes, claim de fournisseur et fournisseurs de confiance sont **entièrement configurables** (`AUTH_LEVEL_*`), sans aucun défaut de valeur dans le code ; `AUTH_LEVEL_MODE` vaut `off` par défaut.
-- **Un claim absent vaut faible**, sans variable qui le ferait valoir fort. La liste des fournisseurs fédérés de confiance (validée par le RSSI, portée par l'infrastructure) ne comble que l'**absence** de claim : un mode faible transmis reste faible.
+- **Un mode absent est inconnu et réduit les droits en `enforce`**, sauf confiance explicitement configurée dans le fournisseur. Cette exception ne s’applique qu’après consultation de `userinfo` si le repli est activé : un mode faible transmis par l’une des deux sources reste faible.
 - **Utilisateur standard** = rôle `VISITOR`, aucune permission individuelle, aucun périmètre, droits d'acteur limités aux **lectures** (un seul point de coupe, `resolveAppPermissions`). Rien n'est persisté : la réécriture est en mémoire, par requête.
 - L'**impersonation** et la **création de jeton personnel** sont refusées en session faible par un **403 typé** `{ stepDown: true, reason }`, jamais un 401 (qui déclencherait la ré-authentification du front). Les jetons API existants sont des secrets B2B durables, hors périmètre de ce contrôle ; un attaquant en session faible peut révoquer les jetons de sa victime (réduction de privilèges, déni de service accepté).
 - `GET /users/me` expose `authLevel { level, downgraded, reason }` et **jamais** le rôle, les permissions ou le périmètre d'origine : un attaquant tenant un mot de passe n'a pas à connaître le profil de privilèges de sa victime. Les routes qui décrivent l'utilisateur courant répondent depuis le principal de la session.
 - Le front n'est **jamais source de vérité** : bandeau, profil et refus s'appuient sur `downgraded` ; la reconnexion forte force `prompt=login` (paramètres servis par `/config`), avec détection de boucle si le fournisseur renvoie la même session.
 - Activation **progressive et réversible** : `observe` en integ puis qualif (au moins une semaine de `UserConnexionLog`, qui garde la valeur brute du claim, consultable aussi dans l'historique des connexions de l'administration), puis `enforce` en heure creuse.
 
-### Points ouverts levés (2026-09-11)
+### Choix arrêtés et qualification du SSO (2026-09-11)
 
-- **Valeurs du claim de mode.** Seule `CARD` est documentée par le portail d'intégration du SSO (exemple donné pour l'attribut « Auth-Mode » dans sa matrice des attributs transmis) ; la configuration d'infrastructure d'integ et de qualif retient donc `AUTH_LEVEL_STRONG_VALUES=CARD`, choix sûr par défaut : une session à double authentification reste « standard » tant que sa valeur n'a pas été observée. Le mode `observe` enregistre la valeur brute transmise à chaque connexion ; l'ajouter à la liste est un changement de variable d'environnement, sans release.
-- **Claims absents de l'access token.** Repli `userinfo` (`AUTH_LEVEL_USERINFO_FALLBACK`) : l'endpoint userinfo est interrogé avec le même jeton, au plus un appel par jeton toutes les cinq minutes, `sub` exigé, réponse JSON ou JWT signée vérifiée avec le JWKS (émetteur et audience contrôlés), seuls les claims manquants sur le jeton étant comblés, tout échec valant « claim absent ». C'est la cinématique décrite par la documentation d'intégration du SSO, qui sert les attributs à l'endpoint userinfo.
+- **Valeurs du claim de mode.** Seule `CARD` est documentée par le portail d'intégration du SSO (exemple donné pour l'attribut « Auth-Mode » dans sa matrice des attributs transmis) ; la configuration d'infrastructure d'integ et de qualif retient donc `AUTH_LEVEL_STRONG_VALUES=CARD`, choix sûr par défaut : une session à double authentification reste « standard » tant que sa valeur n'a pas été observée. Le mode `observe` conserve chaque contexte quotidien distinct, même si plusieurs valeurs sont encore classées faibles ; l'ajouter à la liste est un changement de variable d'environnement, sans release. La valeur MFA réelle et les parcours carte / mot de passe / MFA doivent être observés en integ puis qualif avant `enforce` ; les fixtures Keycloak et une configuration publiée ne constituent pas cette preuve.
+- **Claims absents de l'access token.** Repli `userinfo` (`AUTH_LEVEL_USERINFO_FALLBACK`) : l'endpoint userinfo est interrogé avec le même jeton, au plus un appel par jeton toutes les cinq minutes, `sub` exigé, réponse JSON ou JWT signée vérifiée avec le JWKS (émetteur et audience obligatoires et contrôlés), seuls les claims manquants sur le jeton étant comblés, tout échec valant « claim absent ». C'est la cinématique décrite par la documentation d'intégration du SSO, qui sert les attributs à l'endpoint userinfo.
 - **`prompt=login` non honoré.** Si une première reconnexion laisse la session faible, le bouton propose de lui-même une déconnexion complète de la session SSO suivie d'une nouvelle connexion (stratégie `logout`, bascule conservée dans l'onglet, imposable d'emblée par `AUTH_LEVEL_REAUTH_STRATEGY`).
 - **Fournisseurs fédérés.** Aucun n'est de confiance par défaut (`AUTH_LEVEL_TRUSTED_IDPS` vide) ; en ajouter un reste une décision de sécurité tracée dans la configuration d'infrastructure. Un mode faible transmis par un fournisseur listé reste faible.
 

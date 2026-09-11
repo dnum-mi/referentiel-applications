@@ -250,24 +250,18 @@ export class ChromePage extends BasePage {
       .locator('#password, #kc-password, input[name="password"]')
       .first()
       .fill(pass);
-    try {
-      await Promise.all([
-        this.page.waitForURL(
-          (url) =>
-            !url.toString().includes("/realms/") &&
-            !url.toString().includes("/oidc/callback"),
-          { timeout: 30000 },
-        ),
-        this.page
-          .locator('#kc-login, button[name="login"], input[type="submit"]')
-          .first()
-          .click(),
-      ]);
-    } catch (error) {
-      // Firefox peut rester sur /oidc/callback : l'utilisateur est chargé, on rejoint l'accueil.
-      if (!this.page.url().includes("/oidc/callback")) throw error;
-      await this.goto("/");
-    }
+    await Promise.all([
+      this.page.waitForURL(
+        (url) =>
+          !url.toString().includes("/realms/") &&
+          !url.toString().includes("/oidc/callback"),
+        { timeout: 30000 },
+      ),
+      this.page
+        .locator('#kc-login, button[name="login"], input[type="submit"]')
+        .first()
+        .click(),
+    ]);
   }
 
   /**

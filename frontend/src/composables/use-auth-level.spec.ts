@@ -101,11 +101,12 @@ describe("use-auth-level (#1985)", () => {
       expect(text.canReauth).toBe(true);
     });
 
-    // Un fournisseur externe ne transmet jamais le mode : la reconnexion ne changerait rien.
-    it("ne propose pas de reconnexion pour un fournisseur non listé", () => {
+    // Le motif ne permet pas de distinguer le fournisseur principal d’un fournisseur fédéré.
+    it("propose une reconnexion sans déduire une fédération du fournisseur non listé", () => {
       const text = weakAuthBannerText("untrusted-idp");
-      expect(text.title).toContain("fournisseur d'identité externe");
-      expect(text.canReauth).toBe(false);
+      expect(text.title).toContain("non transmis");
+      expect(text.title).not.toContain("externe");
+      expect(text.canReauth).toBe(true);
     });
 
     it("propose la déconnexion complète après une reconnexion `prompt` restée faible", () => {
@@ -142,7 +143,7 @@ describe("use-auth-level (#1985)", () => {
     it("suit la même table de motifs que le bandeau pour une session rétrogradée", () => {
       expect(profileAuthLevelText({ level: "weak", downgraded: true, reason: "weak-method" })).toContain("sans carte agent");
       expect(profileAuthLevelText({ level: "unknown", downgraded: true, reason: "claim-missing" })).toContain("non transmis");
-      expect(profileAuthLevelText({ level: "unknown", downgraded: true, reason: "untrusted-idp" })).toContain("externe");
+      expect(profileAuthLevelText({ level: "unknown", downgraded: true, reason: "untrusted-idp" })).toContain("non transmis");
     });
 
     it("décrit une session forte", () => {

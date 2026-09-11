@@ -144,7 +144,7 @@ export function setReauthLoop(strategy: ReauthStrategy | null): void {
 export interface WeakAuthBannerText {
   title: string;
   description: string;
-  /** Faux quand une reconnexion ne changerait rien (fournisseur externe sans mode). */
+  /** Le motif autorise une tentative de reconnexion ; la configuration peut la désactiver. */
   canReauth: boolean;
 }
 
@@ -168,16 +168,11 @@ export function weakAuthBannerText(reason: AuthLevelReason, loop: ReauthStrategy
   }
   switch (reason) {
     case "claim-missing":
-      return {
-        title: "Mode d'authentification non transmis par le fournisseur d'identité",
-        description: `${STANDARD_RIGHTS} Si vous vous êtes connecté avec votre carte agent, reconnectez-vous ; si le problème persiste, contactez le support.`,
-        canReauth: true,
-      };
     case "untrusted-idp":
       return {
-        title: "Connexion via un fournisseur d'identité externe",
-        description: `Ce fournisseur ne transmet pas votre mode d'authentification : ${STANDARD_RIGHTS.charAt(0).toLowerCase()}${STANDARD_RIGHTS.slice(1)}`,
-        canReauth: false,
+        title: "Mode d'authentification non transmis par le fournisseur d'identité",
+        description: `${STANDARD_RIGHTS} Reconnectez-vous avec votre carte agent ou la double authentification ; si le problème persiste, contactez le support.`,
+        canReauth: true,
       };
     default:
       return {
@@ -200,9 +195,8 @@ export function profileAuthLevelText(authLevel: AuthLevelDto | undefined): strin
   if (authLevel.downgraded) {
     switch (authLevel.reason) {
       case "claim-missing":
-        return "Mode d'authentification non transmis par le fournisseur d'identité : droits d'utilisateur standard";
       case "untrusted-idp":
-        return "Fournisseur d'identité externe, mode non transmis : droits d'utilisateur standard (une reconnexion ne changerait rien)";
+        return "Mode d'authentification non transmis par le fournisseur d'identité : droits d'utilisateur standard";
       default:
         return "Session sans carte agent ni double authentification : droits d'utilisateur standard";
     }

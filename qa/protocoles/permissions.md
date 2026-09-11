@@ -121,7 +121,8 @@
 - **Action** : cliquer `weak-auth-reauth-btn` (« Se reconnecter ») → page du fournisseur avec
   `prompt=login` → ressaisir le mot de passe.
 - **Résultat attendu** : retour dans l'application, bandeau « Votre reconnexion n'a pas été reconnue
-  comme forte », bouton devenu « Se déconnecter puis se reconnecter ».
+  comme forte », bouton devenu « Se déconnecter puis se reconnecter ». Recharger la page :
+  le même message et le même bouton doivent rester présents.
 
 ### PRM-17 — Une session forte n'affiche pas le bandeau ✅
 
@@ -129,12 +130,12 @@
 - **Action** : se connecter en `admin`, attendre le lien Admin, ouvrir `/administration`.
 - **Résultat attendu** : aucun `weak-auth-banner`, panneau d'administration chargé.
 
-### PRM-18 — Un fournisseur d'identité non listé est rétrogradé sans reconnexion proposée ✅
+### PRM-18 — Un mode absent avec un fournisseur non listé conserve la reconnexion ✅
 
 - **Datafeature** : compte `user-federated` (claim de fournisseur seul, non listé).
 - **Action** : se connecter en `user-federated`, observer le bandeau.
-- **Résultat attendu** : bandeau « fournisseur d'identité externe », sans bouton
-  `weak-auth-reauth-btn` (une reconnexion ne changerait rien).
+- **Résultat attendu** : bandeau « Mode d’authentification non transmis », bouton
+  `weak-auth-reauth-btn` présent. Le message ne déduit pas que le fournisseur est externe.
 
 ### PRM-19 — La reconnexion par déconnexion ferme la session SSO et relance la connexion ✅
 
@@ -142,4 +143,5 @@
 - **Action** : cliquer « Se déconnecter puis se reconnecter » → ressaisir le mot de passe.
 - **Résultat attendu** : appel à l'endpoint de déconnexion du fournisseur, retour sur l'application
   qui relance aussitôt la connexion avec `prompt=login` ; après connexion, bandeau « Votre session est
-  toujours sans authentification forte » (le compte de test ne peut pas devenir fort).
+  toujours sans authentification forte » (le compte de test ne peut pas devenir fort). Recharger :
+  le message et l’orientation « contactez le support » doivent rester présents.

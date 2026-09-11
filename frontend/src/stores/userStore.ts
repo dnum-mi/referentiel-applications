@@ -17,6 +17,16 @@ import { useToasterStore } from "./toasterStore";
 export const useUserStore = defineStore("userStore", () => {
   const user = ref<UserWithPermissions>();
   const authenticated = ref(false);
+  // Toutes les réponses sont rattachées à la session qui les a lancées, y compris les
+  // préférences et abonnements. Un événement OIDC invalide aussi l'initialisation en cours.
+  let sessionGeneration = 0;
+  let fetchSequence = 0;
+  let preferencesSequence = 0;
+
+  function invalidateSession() {
+    sessionGeneration += 1;
+    user.value = undefined;
+  }
   // État d'impersonation restauré depuis le localStorage (survit au rechargement).
   const impersonation = ref<ImpersonationState | null>(getImpersonationState());
   const isImpersonating = computed(() => impersonation.value !== null);
@@ -28,16 +38,18 @@ export const useUserStore = defineStore("userStore", () => {
 
   // Écoute les événements OIDC pour maintenir l'état d'authentification à jour
   USER_MANAGER.events.addUserLoaded(() => {
+    invalidateSession();
     authenticated.value = true;
     fetchUser();
   });
   USER_MANAGER.events.addUserUnloaded(() => {
+    invalidateSession();
     authenticated.value = false;
-    user.value = undefined;
   });
 
   // Initialise l'état d'authentification au démarrage
   USER_MANAGER.getUser().then((oidcUser) => {
+    if (sessionGeneration !== 0) return;
     authenticated.value = !!oidcUser;
     if (oidcUser) {
       fetchUser();
@@ -51,12 +63,11 @@ export const useUserStore = defineStore("userStore", () => {
   // #1985 : deux `/users/me` peuvent se croiser au retour du callback OIDC (utilisateur chargé
   // au démarrage puis `userLoaded`). Seule la réponse la plus récente compte : une réponse
   // périmée ne doit ni écraser l'état, ni consommer le drapeau de reconnexion.
-  let fetchSequence = 0;
-
   async function fetchUser() {
+    const generation = sessionGeneration;
     const sequence = ++fetchSequence;
     const response = await client.userControllerFindMe();
-    if (sequence !== fetchSequence) return;
+    if (generation !== sessionGeneration || sequence !== fetchSequence) return;
     if (response.data && response.response.ok) {
       user.value = response.data;
       settleReauthAttempt();
@@ -80,7 +91,7 @@ export const useUserStore = defineStore("userStore", () => {
     if (reason) useToasterStore().addErrorMessage(STEP_DOWN_MESSAGES[reason]);
   }
 
-  // Au retour d'une reconnexion forte (#1985) : succès si la session n'est plus rétrogradée,
+  // Au retour d'une reconnexion forte (#1985) : succès uniquement si le niveau fort est confirmé,
   // boucle sinon (le fournisseur a renvoyé la même session faible) — le bandeau l'explique.
   // Consommé uniquement sur une réponse réussie : un échec réseau laisse le drapeau au suivant.
   function settleReauthAttempt() {
@@ -92,16 +103,25 @@ export const useUserStore = defineStore("userStore", () => {
       return;
     }
     setReauthLoop(null);
-    if (strategy) useToasterStore().addSuccessMessage(REAUTH_SUCCESS_MESSAGE);
+    if (strategy && user.value?.authLevel?.level === "strong") useToasterStore().addSuccessMessage(REAUTH_SUCCESS_MESSAGE);
   }
 
   async function updateEmailPreferences(emailNotificationsEnabled: boolean) {
+    const generation = sessionGeneration;
+    const sequence = ++preferencesSequence;
     const response = await client.userControllerUpdateMe({
       body: { emailNotificationsEnabled },
     });
 
-    if (response.data && response.response.ok) {
-      user.value = response.data;
+    if (
+      generation === sessionGeneration &&
+      sequence === preferencesSequence &&
+      user.value &&
+      response.data?.id === user.value.id &&
+      response.response.ok
+    ) {
+      // Une réponse de mutation ne rafraîchit jamais les droits de la session.
+      user.value.emailNotificationsEnabled = response.data.emailNotificationsEnabled;
     }
   }
 
@@ -110,22 +130,24 @@ export const useUserStore = defineStore("userStore", () => {
   }
 
   async function subscribeToApp(appId: string) {
+    const generation = sessionGeneration;
     const response = await client.userControllerSubscribe({
       path: { appId },
     });
 
-    if (response.data && response.response.ok) {
-      user.value = response.data;
+    if (generation === sessionGeneration && user.value && response.data?.id === user.value.id && response.response.ok) {
+      user.value.followedApplications = response.data.followedApplications;
     }
   }
 
   async function unsubscribeFromApp(appId: string) {
+    const generation = sessionGeneration;
     const response = await client.userControllerUnsubscribe({
       path: { appId },
     });
 
-    if (response.data && response.response.ok) {
-      user.value = response.data;
+    if (generation === sessionGeneration && user.value && response.data?.id === user.value.id && response.response.ok) {
+      user.value.followedApplications = response.data.followedApplications;
     }
   }
 
@@ -136,6 +158,7 @@ export const useUserStore = defineStore("userStore", () => {
   // Démarre une impersonation : l'admin se fait passer pour `target`. On recharge
   // l'application à la racine pour repartir d'un état propre sous la nouvelle identité.
   async function startImpersonation(target: UserEntity) {
+    const generation = sessionGeneration;
     const adminEmail = user.value?.email;
     if (!adminEmail) return;
 
@@ -143,7 +166,8 @@ export const useUserStore = defineStore("userStore", () => {
       path: { id: target.id },
     });
 
-    if (response.data && response.response.ok) {
+    if (generation === sessionGeneration && response.data && response.response.ok) {
+      invalidateSession();
       setImpersonationState({
         userId: target.id,
         userEmail: target.email,
@@ -157,12 +181,16 @@ export const useUserStore = defineStore("userStore", () => {
   // Arrête l'impersonation. L'appel part avec le header encore présent pour que le
   // serveur clôture la session côté audit, puis on nettoie l'état et on recharge.
   async function stopImpersonation() {
+    const generation = sessionGeneration;
     try {
       await client.userControllerStopImpersonation();
     } finally {
-      clearImpersonationState();
-      impersonation.value = null;
-      globalThis.location.assign("/");
+      if (generation === sessionGeneration) {
+        invalidateSession();
+        clearImpersonationState();
+        impersonation.value = null;
+        globalThis.location.assign("/");
+      }
     }
   }
 

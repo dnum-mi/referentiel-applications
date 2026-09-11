@@ -4,14 +4,33 @@ import { reauthLoopState, setReauthLoop } from "@/composables/use-auth-level";
 import { useToasterStore } from "./toasterStore";
 import { useUserStore } from "./userStore";
 
-const { findMeMock } = vi.hoisted(() => ({ findMeMock: vi.fn() }));
+const { findMeMock, updateMeMock, subscribeMock, unsubscribeMock, getUserMock, oidcEvents } = vi.hoisted(() => ({
+  findMeMock: vi.fn(),
+  updateMeMock: vi.fn(),
+  subscribeMock: vi.fn(),
+  unsubscribeMock: vi.fn(),
+  getUserMock: vi.fn().mockResolvedValue(null),
+  oidcEvents: { loaded: () => {}, unloaded: () => {} },
+}));
 vi.mock("@/api/index", () => ({
-  default: { userControllerFindMe: (...args: unknown[]) => findMeMock(...args) },
+  default: {
+    userControllerFindMe: (...args: unknown[]) => findMeMock(...args),
+    userControllerUpdateMe: (...args: unknown[]) => updateMeMock(...args),
+    userControllerSubscribe: (...args: unknown[]) => subscribeMock(...args),
+    userControllerUnsubscribe: (...args: unknown[]) => unsubscribeMock(...args),
+  },
 }));
 vi.mock("@/services/authentication", () => ({
   USER_MANAGER: {
-    events: { addUserLoaded: vi.fn(), addUserUnloaded: vi.fn() },
-    getUser: vi.fn().mockResolvedValue(null),
+    events: {
+      addUserLoaded: (callback: () => void) => {
+        oidcEvents.loaded = callback;
+      },
+      addUserUnloaded: (callback: () => void) => {
+        oidcEvents.unloaded = callback;
+      },
+    },
+    getUser: (...args: unknown[]) => getUserMock(...args),
   },
 }));
 
@@ -79,6 +98,10 @@ describe("userStore — niveau d'authentification (#1985)", () => {
     sessionStorage.clear();
     localStorage.clear();
     findMeMock.mockReset();
+    updateMeMock.mockReset();
+    subscribeMock.mockReset();
+    unsubscribeMock.mockReset();
+    getUserMock.mockReset().mockResolvedValue(null);
     assignMock.mockReset();
     setReauthLoop(null);
     vi.stubGlobal("location", { ...globalThis.location, assign: assignMock, pathname: "/", search: "" });
@@ -216,6 +239,92 @@ describe("userStore — niveau d'authentification (#1985)", () => {
     expect(store.user?.role).toBe("ADMIN");
     expect(sessionStorage.getItem("strongReauthAttempt")).toBeNull();
   });
+
+  it("ignore le /me en vol après userUnloaded, même avant le prochain fetch", async () => {
+    const pending = deferred<ReturnType<typeof okResponse>>();
+    findMeMock.mockReturnValue(pending.promise);
+    const store = useUserStore();
+    const fetching = store.fetchUser();
+    oidcEvents.unloaded();
+    sessionStorage.setItem("strongReauthAttempt", "prompt");
+    pending.resolve(okResponse(me({ level: "weak", downgraded: true, reason: "weak-method" })));
+    await fetching;
+    expect(store.user).toBeUndefined();
+    expect(store.authenticated).toBe(false);
+    expect(sessionStorage.getItem("strongReauthAttempt")).toBe("prompt");
+    expect(reauthLoopState.value).toBeNull();
+  });
+
+  it.each(["loaded", "unloaded"] as const)("ignore getUser du démarrage après un événement %s", async (event) => {
+    const startup = deferred<object | null>();
+    getUserMock.mockReturnValueOnce(startup.promise);
+    findMeMock.mockResolvedValue(okResponse(me({ level: "strong", downgraded: false, reason: "strong-method" }, "ADMIN")));
+    const store = useUserStore();
+    oidcEvents[event]();
+    await Promise.resolve();
+    startup.resolve(event === "loaded" ? null : {});
+    await Promise.resolve();
+    expect(store.authenticated).toBe(event === "loaded");
+    expect(findMeMock).toHaveBeenCalledTimes(event === "loaded" ? 1 : 0);
+    expect(store.user?.role).toBe(event === "loaded" ? "ADMIN" : undefined);
+  });
+
+  const mutations = ["preferences", "subscribe", "unsubscribe"] as const;
+  function startMutation(store: ReturnType<typeof useUserStore>, mutation: (typeof mutations)[number]) {
+    if (mutation === "preferences") return store.updateEmailPreferences(true);
+    if (mutation === "subscribe") return store.subscribeToApp("app-1");
+    return store.unsubscribeFromApp("app-1");
+  }
+
+  it.each(mutations)("une réponse %s ne remplace pas les droits plus récents", async (mutation) => {
+    const pending = deferred<ReturnType<typeof okResponse>>();
+    updateMeMock.mockReturnValue(pending.promise);
+    subscribeMock.mockReturnValue(pending.promise);
+    unsubscribeMock.mockReturnValue(pending.promise);
+    const store = useUserStore();
+    store.user = me({ level: "weak", downgraded: true, reason: "weak-method" });
+    const updating = startMutation(store, mutation);
+    const strong = me({ level: "strong", downgraded: false, reason: "strong-method" }, "ADMIN");
+    findMeMock.mockResolvedValue(okResponse(strong));
+    await store.fetchUser();
+    pending.resolve(
+      okResponse({
+        ...me({ level: "weak", downgraded: true, reason: "weak-method" }),
+        emailNotificationsEnabled: true,
+        followedApplications: [],
+      }),
+    );
+    await updating;
+    expect(store.user?.role).toBe("ADMIN");
+    expect(store.isAuthDowngraded).toBe(false);
+    if (mutation === "preferences") expect(store.user?.emailNotificationsEnabled).toBe(true);
+  });
+
+  it.each(mutations)("une réponse %s de la session précédente est entièrement ignorée", async (mutation) => {
+    const pending = deferred<ReturnType<typeof okResponse>>();
+    updateMeMock.mockReturnValue(pending.promise);
+    subscribeMock.mockReturnValue(pending.promise);
+    unsubscribeMock.mockReturnValue(pending.promise);
+    const store = useUserStore();
+    store.user = me(undefined);
+    const updating = startMutation(store, mutation);
+    oidcEvents.unloaded();
+    pending.resolve(okResponse({ ...me(undefined), emailNotificationsEnabled: true, followedApplications: [] }));
+    await updating;
+    expect(store.user).toBeUndefined();
+  });
+
+  it.each([undefined, { level: "weak", downgraded: false, reason: "weak-method" }] as const)(
+    "n'annonce pas de MFA confirmée si le contrôle est désactivé ou en observation (%j)",
+    async (authLevel) => {
+      sessionStorage.setItem("strongReauthAttempt", "prompt");
+      findMeMock.mockResolvedValue(okResponse(me(authLevel)));
+      const store = useUserStore();
+      const success = vi.spyOn(useToasterStore(), "addSuccessMessage");
+      await store.fetchUser();
+      expect(success).not.toHaveBeenCalled();
+    },
+  );
 
   it("retient la stratégie `logout` quand la déconnexion complète laisse la session faible", async () => {
     sessionStorage.setItem("strongReauthAttempt", "logout");

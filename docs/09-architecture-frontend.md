@@ -228,9 +228,9 @@ connexion (drapeau horodaté, valable dix minutes). Ces paramètres ne vont
 **jamais** dans les réglages du `UserManager` : ils s'appliqueraient au
 renouvellement silencieux (`prompt=none`) et à la ré-authentification sur 401.
 Au retour, `userStore.fetchUser()` (seule la réponse la plus récente compte)
-consomme le drapeau : toast de succès si la session n'est plus rétrogradée ;
+consomme le drapeau : toast de succès uniquement si le backend confirme un niveau fort ;
 sinon `reauthLoopState` retient la stratégie restée sans effet (conservée dans le
-`sessionStorage` de l'onglet, effacée dès qu'une session forte est constatée), et
+`sessionStorage` de l'onglet, effacée quand les droits ne sont plus réduits), et
 le bandeau propose l'étape suivante (`prompt` → « Se déconnecter puis se
 reconnecter »).
 
@@ -240,6 +240,8 @@ L'état d'authentification est maintenu dans `userStore` qui écoute les
 initialisé au démarrage via `USER_MANAGER.getUser()`
 (`frontend/src/stores/userStore.ts:13-28`). Le jeton d'accès est ensuite injecté
 automatiquement dans chaque requête par l'intercepteur HTTP (voir §3).
+
+Les réponses du store utilisateur sont rattachées à une génération de session : `userLoaded`, `userUnloaded` et les changements d’impersonation invalident les requêtes en vol. Les préférences et abonnements ne remplacent que leurs propres champs ; seuls les chargements `/users/me` de la session courante peuvent actualiser les droits. Si un ancien backend omet `oidcScope`, le front conserve `openid profile email` pendant le déploiement ou le retour arrière.
 
 ## 7. Système de design
 

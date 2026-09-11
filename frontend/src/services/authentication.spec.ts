@@ -5,7 +5,7 @@ const { signinRedirectMock, signoutRedirectMock, removeUserMock, userManagerSett
   signoutRedirectMock: vi.fn(),
   removeUserMock: vi.fn(),
   userManagerSettings: { value: undefined as Record<string, unknown> | undefined },
-  configMock: { value: {} as ConfigDto },
+  configMock: { value: {} as Omit<ConfigDto, "oidcScope"> & { oidcScope?: string } },
 }));
 
 const BASE_CONFIG: ConfigDto = {
@@ -58,6 +58,12 @@ describe("authentication (#1985)", () => {
     expect(userManagerSettings.value).not.toHaveProperty("prompt");
     expect(userManagerSettings.value).not.toHaveProperty("acr_values");
     expect(userManagerSettings.value).not.toHaveProperty("max_age");
+  });
+
+  it.each([undefined, "", "  "])("garde les scopes historiques si l'ancien backend omet le scope (%s)", async (oidcScope) => {
+    configMock.value = { ...BASE_CONFIG, oidcScope };
+    await loadModule();
+    expect(userManagerSettings.value?.scope).toBe("openid profile email");
   });
 
   it("signinStrong mémorise la page, retire l'ancien jeton, purge l'impersonation et force prompt=login", async () => {

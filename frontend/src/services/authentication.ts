@@ -37,7 +37,7 @@ export const USER_MANAGER = new UserManager({
   response_type: "code",
   // #1985 : servi par le backend (`OIDC_SCOPE`), pour demander un scope dédié au claim de niveau
   // d'authentification sans nouvelle release du front.
-  scope: config.oidcScope,
+  scope: config.oidcScope?.trim() || "openid profile email",
 });
 
 function reauthArgs(): SigninRedirectArgs {

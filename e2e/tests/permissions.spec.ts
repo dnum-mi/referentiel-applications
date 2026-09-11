@@ -330,6 +330,8 @@ test.describe("Permissions & rôles", () => {
       await chrome.clickReauth();
       await chrome.submitIdentityProviderLogin("admin-weak", "pass");
       await chrome.expectWeakAuthBanner(/n'a pas été reconnue comme forte/);
+      await page.reload();
+      await chrome.expectWeakAuthBanner(/n'a pas été reconnue comme forte/);
       await chrome.expectReauthButtonLabel(
         "Se déconnecter puis se reconnecter",
       );
@@ -349,6 +351,9 @@ test.describe("Permissions & rôles", () => {
       await chrome.clickReauthViaLogout();
       await chrome.submitIdentityProviderLogin("admin-weak", "pass");
       await chrome.expectWeakAuthBanner(/toujours sans authentification forte/);
+      await page.reload();
+      await chrome.expectWeakAuthBanner(/toujours sans authentification forte/);
+      await chrome.expectWeakAuthBanner(/contactez le support/);
     },
   );
 
@@ -366,12 +371,12 @@ test.describe("Permissions & rôles", () => {
   );
 
   base(
-    "PRM-18 - un fournisseur d'identité non listé est rétrogradé sans reconnexion proposée",
+    "PRM-18 - un mode absent avec un fournisseur non listé conserve la reconnexion",
     async ({ page }) => {
       await loginAs(page, "user-federated");
       const chrome = new ChromePage(page);
-      await chrome.expectWeakAuthBanner(/fournisseur d'identité externe/);
-      await chrome.expectNoReauthButton();
+      await chrome.expectWeakAuthBanner(/non transmis par le fournisseur/);
+      await chrome.expectReauthButtonLabel("Se reconnecter");
     },
   );
 });
