@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.91.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.90.3...v1.91.0) (2026-09-11)
+
+
+### Features
+
+* **auth:** enforce strong authentication for elevated rights ([#2625](https://github.com/dnum-mi/referentiel-applications/issues/2625)) ([05aefc8](https://github.com/dnum-mi/referentiel-applications/commit/05aefc8f4203e6d0066775647586c0362ee2a597))
+
 ## [1.90.3](https://github.com/dnum-mi/referentiel-applications/compare/v1.90.2...v1.90.3) (2026-09-09)
 
 
