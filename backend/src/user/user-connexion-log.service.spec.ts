@@ -16,7 +16,7 @@ describe("UserConnexionLogService.log (#1985)", () => {
 
   beforeEach(() => createMany.mockReset());
 
-  it("écrit une ligne par utilisateur, jour et niveau, avec les valeurs brutes", async () => {
+  it("écrit une ligne par utilisateur, jour et contexte, avec les valeurs brutes", async () => {
     createMany.mockResolvedValue({ count: 1 });
 
     const result = await service.log("user-1", {
@@ -34,6 +34,8 @@ describe("UserConnexionLogService.log (#1985)", () => {
           authLevel: AuthLevel.weak,
           authMethod: "PASSWORD",
           authIdp: "Passage2",
+          authSource: "token",
+          authContextKey: expect.stringMatching(/^[a-f0-9]{64}$/),
         }),
       ],
       skipDuplicates: true,

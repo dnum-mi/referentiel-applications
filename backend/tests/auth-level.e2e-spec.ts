@@ -367,10 +367,17 @@ describe("Niveau d'authentification — rétrogradation en session faible (#1985
   });
 
   describe("journal et configuration", () => {
-    it("le journal de connexion porte une ligne par jour et par niveau, avec la valeur brute du claim", async () => {
+    it("conserve chaque contexte quotidien, même deux modes classés faibles, sans doublons", async () => {
       // Utilisateur dédié : le test ne dépend ni de l'ordre des autres cas ni de l'heure.
       const journaled = await UserFaker.create({ role: Roles.READER });
-      for (const claims of [STRONG, WEAK, {}, { auth_idp: "Partenaire" }]) {
+      const contexts = [
+        STRONG,
+        WEAK,
+        {},
+        { auth_idp: "Partenaire" },
+        { auth_mode: "SYNTHETIC_MFA_METHOD" },
+      ];
+      for (const claims of [...contexts, ...contexts]) {
         await request(app().getHttpServer())
           .get("/users/me")
           .set("Authorization", `Bearer ${getToken(journaled, claims)}`)
@@ -380,10 +387,10 @@ describe("Niveau d'authentification — rétrogradation en session faible (#1985
       const rows = await prisma.userConnexionLog.findMany({
         where: { userId: journaled.id },
       });
-      // Une ligne par (jour, niveau) : la connexion forte par fournisseur de confiance
-      // (même niveau `strong`) ne crée pas de seconde ligne.
+      expect(rows).toHaveLength(contexts.length);
       const keys = rows.map(
-        (row) => `${row.authTime.toISOString()}|${row.authLevel}`,
+        (row) =>
+          `${row.authTime.toISOString()}|${row.authLevel}|${row.authContextKey}`,
       );
       expect(new Set(keys).size).toBe(rows.length);
       expect(new Set(rows.map((row) => row.authLevel))).toEqual(
@@ -401,11 +408,53 @@ describe("Niveau d'authentification — rétrogradation en session faible (#1985
             authIdp: null,
           }),
           expect.objectContaining({
+            authLevel: AuthLevel.weak,
+            authMethod: "SYNTHETIC_MFA_METHOD",
+            authSource: "token",
+          }),
+          expect.objectContaining({
             authLevel: AuthLevel.unknown,
             authMethod: null,
           }),
         ]),
       );
+    });
+
+    it("distingue les sources et fournisseurs et dédoublonne les écritures concurrentes", async () => {
+      // Charger le service après AppModule : BaseService fait partie d'un cycle d'import existant.
+      const { UserConnexionLogService } = await import(
+        "src/user/user-connexion-log.service"
+      );
+      const journaled = await UserFaker.create();
+      const service = app().get(UserConnexionLogService);
+      const evaluation = {
+        level: AuthLevel.weak,
+        reason: "weak-method" as const,
+        claimValue: "PASSWORD",
+        idp: "Passage2",
+      };
+      const duplicates = await Promise.all(
+        Array.from({ length: 5 }, () => service.log(journaled.id, evaluation)),
+      );
+      expect(duplicates.filter(({ created }) => created)).toHaveLength(1);
+      await service.log(journaled.id, { ...evaluation, source: "userinfo" });
+      await service.log(journaled.id, { ...evaluation, idp: "Autre" });
+      expect(
+        await prisma.userConnexionLog.count({
+          where: { userId: journaled.id },
+        }),
+      ).toBe(3);
+    });
+
+    it("calcule la même empreinte que la reprise SQL des anciennes lignes", async () => {
+      const values = ['méthode,"\\\n🪪', null, "userinfo"];
+      const expected = createHash("sha256")
+        .update(JSON.stringify(values))
+        .digest("hex");
+      const [row] = await prisma.$queryRaw<{ key: string }[]>`
+        SELECT encode(sha256(convert_to(array_to_json(ARRAY[${values[0]}::text, ${values[1]}::text, ${values[2]}::text])::text, 'UTF8')), 'hex') AS key
+      `;
+      expect(row.key).toBe(expected);
     });
 
     it("GET /config expose la reconnexion forte et le scope OIDC en mode enforce", async () => {

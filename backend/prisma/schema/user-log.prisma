@@ -22,22 +22,26 @@ enum AuthLevel {
 }
 
 /// Ce modèle enregistre les connexions des utilisateurs, avec une entrée par utilisateur, par jour
-/// et par niveau d'authentification (#1985).
+/// et par contexte d'authentification (#1985 : niveau, mode, fournisseur et source).
 model UserConnexionLog {
-  id         String    @id @default(cuid())
-  userId     String
-  user       User      @relation(fields: [userId], references: [id], onDelete: Restrict)
-  authTime   DateTime  @db.Date
-  createdAt  DateTime  @default(now())
-  /// Niveau d'authentification de la session. Un agent passé de faible à fort dans la journée
-  /// laisse deux lignes : rien n'est perdu, et la mesure en mode `observe` reste exacte.
-  authLevel  AuthLevel @default(unknown)
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  authTime       DateTime  @db.Date
+  createdAt      DateTime  @default(now())
+  /// Niveau d'authentification de la session.
+  authLevel      AuthLevel @default(unknown)
   /// Valeur brute du claim de mode d'authentification (ex. CARD), pour la phase d'observation.
-  authMethod String?
+  authMethod     String?
   /// Fournisseur d'identité d'origine (claim IdP), si transmis.
-  authIdp    String?
+  authIdp        String?
+  /// Origine des claims : token, userinfo, ou null pour les anciennes lignes / sans évaluation.
+  authSource     String?
+  /// SHA-256 du tableau JSON [mode, fournisseur, source]. La valeur vide permet aux anciens
+  /// serveurs d'écrire pendant un déploiement progressif ; ils gardent leur dédoublonnage par niveau.
+  authContextKey String    @default("")
 
-  @@unique([userId, authTime, authLevel])
+  @@unique([userId, authTime, authLevel, authContextKey])
 }
 
 /// Journal des sessions d'impersonation : trace quel administrateur s'est fait

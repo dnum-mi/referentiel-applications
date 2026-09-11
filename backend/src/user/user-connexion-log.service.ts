@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { Injectable } from "@nestjs/common";
 import { AuthLevel, User, UserConnexionLog } from "@prisma/client";
 import type { AuthLevelEvaluation } from "src/auth-level/auth-level";
@@ -11,12 +12,10 @@ export class UserConnexionLogService extends BaseService<UserConnexionLog> {
   }
 
   /**
-   * Une ligne par utilisateur, par jour ET par niveau d'authentification (#1985) : un agent
-   * passé de faible à fort dans la journée laisse deux lignes, rien n'est perdu. `createMany`
-   * avec `skipDuplicates` = un seul aller-retour sans lecture préalable, et `created` signale
-   * gratuitement la première connexion du jour à ce niveau (déclencheur de l'unique ligne de
-   * log applicatif). Les valeurs brutes du claim et du fournisseur sont conservées : c'est ce
-   * qui rend la phase d'observation utile.
+   * Une ligne par utilisateur, jour et contexte (niveau, mode, fournisseur, source).
+   * Deux modes encore classés faibles restent distinguables pendant l'observation.
+   * L'empreinte borne la taille de l'index, même pour des claims longs. `skipDuplicates`
+   * dédoublonne aussi les requêtes concurrentes et déclenche un seul log par contexte.
    */
   public async log(
     userId: User["id"],
@@ -24,14 +23,25 @@ export class UserConnexionLogService extends BaseService<UserConnexionLog> {
   ): Promise<{ created: boolean }> {
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
+    const authMethod = evaluation?.claimValue ?? null;
+    const authIdp = evaluation?.idp ?? null;
+    const authSource =
+      evaluation && evaluation.reason !== "disabled"
+        ? (evaluation.source ?? "token")
+        : null;
+    const authContextKey = createHash("sha256")
+      .update(JSON.stringify([authMethod, authIdp, authSource]))
+      .digest("hex");
     const { count } = await this.prisma.userConnexionLog.createMany({
       data: [
         {
           userId,
           authTime: today,
           authLevel: evaluation?.level ?? AuthLevel.unknown,
-          authMethod: evaluation?.claimValue ?? null,
-          authIdp: evaluation?.idp ?? null,
+          authMethod,
+          authIdp,
+          authSource,
+          authContextKey,
         },
       ],
       skipDuplicates: true,

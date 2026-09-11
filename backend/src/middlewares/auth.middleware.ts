@@ -222,7 +222,8 @@ export class AuthMiddleware implements NestMiddleware {
     if (
       !this.userinfo ||
       (evaluation.reason !== "claim-missing" &&
-        evaluation.reason !== "untrusted-idp")
+        evaluation.reason !== "untrusted-idp" &&
+        evaluation.reason !== "trusted-idp")
     ) {
       return evaluation;
     }
@@ -242,7 +243,7 @@ export class AuthMiddleware implements NestMiddleware {
   }
 
   /**
-   * Une ligne de log applicatif par utilisateur, par jour et par niveau (jamais par
+   * Une ligne de log applicatif par utilisateur, par jour et par contexte (jamais par
    * requête) : en `observe`, c'est le canal de mesure qui dit ce que le fournisseur
    * d'identité transmet réellement ; en `enforce`, seule une rétrogradation qui retire
    * effectivement quelque chose mérite un avertissement.

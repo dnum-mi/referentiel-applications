@@ -538,7 +538,51 @@ describe("AuthMiddleware", () => {
       });
     });
 
-    // Fail-closed : un fournisseur injoignable n'accorde jamais rien.
+    it("checks userinfo before trusting a provider without a mode in the token", async () => {
+      mockUserinfo({ sub: "sub-1", auth_mode: "PASSWORD" });
+      const { middleware } = buildMiddleware({
+        authLevel: { ...withUserinfo, trustedIdps: ["partenaire"] },
+        user: adminUser,
+      });
+      const request = bearerRequest({
+        email: adminUser.email,
+        sub: "sub-1",
+        auth_idp: "Partenaire",
+      });
+
+      await run(middleware, request);
+
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      expect(request.user).toMatchObject({
+        role: Roles.VISITOR,
+        authLevel: {
+          level: AuthLevel.weak,
+          downgraded: true,
+          reason: "weak-method",
+        },
+      });
+    });
+
+    it("keeps explicit provider trust when neither source supplies a mode", async () => {
+      mockUserinfo({ sub: "sub-1" });
+      const { middleware } = buildMiddleware({
+        authLevel: { ...withUserinfo, trustedIdps: ["partenaire"] },
+        user: adminUser,
+      });
+      const request = bearerRequest({
+        email: adminUser.email,
+        sub: "sub-1",
+        auth_idp: "Partenaire",
+      });
+      await run(middleware, request);
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      expect(request.user?.authLevel).toMatchObject({
+        level: AuthLevel.strong,
+        reason: "trusted-idp",
+      });
+    });
+
+    // Fail-closed : un fournisseur injoignable n'accorde jamais rien sans confiance explicite.
     it("keeps a missing claim weak when userinfo fails", async () => {
       mockUserinfo({ error: "invalid_token" }, 401);
       const { middleware, logger } = buildMiddleware({

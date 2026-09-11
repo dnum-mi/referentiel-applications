@@ -1386,6 +1386,8 @@ erDiagram
   AuthLevel authLevel
   String authMethod "nullable"
   String authIdp "nullable"
+  String authSource "nullable"
+  String authContextKey
 }
 "ImpersonationLog" {
   String id PK
@@ -1451,7 +1453,7 @@ Properties as follows:
 ### `UserConnexionLog`
 
 Ce modèle enregistre les connexions des utilisateurs, avec une entrée par utilisateur, par jour
-et par niveau d'authentification (#1985).
+et par contexte d'authentification (#1985 : niveau, mode, fournisseur et source).
 
 Properties as follows:
 
@@ -1459,11 +1461,13 @@ Properties as follows:
 - `userId`:
 - `authTime`:
 - `createdAt`:
-- `authLevel`
-  > Niveau d'authentification de la session. Un agent passé de faible à fort dans la journée
-  > laisse deux lignes : rien n'est perdu, et la mesure en mode `observe` reste exacte.
+- `authLevel`: Niveau d'authentification de la session.
 - `authMethod`: Valeur brute du claim de mode d'authentification (ex. CARD), pour la phase d'observation.
 - `authIdp`: Fournisseur d'identité d'origine (claim IdP), si transmis.
+- `authSource`: Origine des claims : token, userinfo, ou null pour les anciennes lignes / sans évaluation.
+- `authContextKey`
+  > SHA-256 du tableau JSON [mode, fournisseur, source]. La valeur vide permet aux anciens
+  > serveurs d'écrire pendant un déploiement progressif ; ils gardent leur dédoublonnage par niveau.
 
 ### `ImpersonationLog`
 

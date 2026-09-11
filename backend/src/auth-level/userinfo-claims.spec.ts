@@ -30,6 +30,7 @@ function build(
     url: USERINFO_URL,
     discoveryUrl: DISCOVERY_URL,
     claimNames: ["auth_mode", "auth_idp"],
+    clientId: "refapp",
     timeoutMs: 2000,
     verifyJwt,
     onError,
@@ -48,7 +49,7 @@ function build(
   };
 }
 
-const payload = { sub: "u-1", exp: 2_000_000 }; // exp en secondes, très au-delà de l'horloge
+const payload = { sub: "u-1", iss: "https://idp.example", exp: 2_000_000 }; // exp en secondes, très au-delà de l'horloge
 
 describe("UserinfoClaimsResolver (#1985)", () => {
   it("interroge userinfo avec le jeton et ne retient que les claims utiles", async () => {
@@ -163,7 +164,12 @@ describe("UserinfoClaimsResolver (#1985)", () => {
           headers: { "content-type": "application/jwt" },
         }),
     });
-    verifyJwt.mockResolvedValue({ sub: "u-1", auth_mode: "CARD" });
+    verifyJwt.mockResolvedValue({
+      sub: "u-1",
+      iss: payload.iss,
+      aud: "refapp",
+      auth_mode: "CARD",
+    });
 
     await expect(resolver.resolve("jeton", payload)).resolves.toEqual({
       auth_mode: "CARD",
@@ -241,13 +247,65 @@ describe("UserinfoClaimsResolver (#1985)", () => {
     await expect(resolver.resolve("jeton", payload)).resolves.toEqual({});
   });
 
-  it("accepte une réponse quand le jeton lui-même n'a pas de sub", async () => {
-    const { resolver } = build({
-      handler: () => jsonResponse({ auth_mode: "CARD" }),
-    });
-    await expect(
-      resolver.resolve("jeton", { exp: 2_000_000 }),
-    ).resolves.toEqual({ auth_mode: "CARD" });
+  it.each([undefined, "", " "])(
+    "ignore le repli sans sujet de référence exploitable (%s)",
+    async (sub) => {
+      const { resolver, fetchFn } = build({
+        handler: () => jsonResponse({ sub: "u-1", auth_mode: "CARD" }),
+      });
+      await expect(
+        resolver.resolve("jeton", { ...payload, sub }),
+      ).resolves.toEqual({});
+      expect(fetchFn).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    { iss: undefined, aud: "refapp" },
+    { iss: "", aud: "refapp" },
+    { iss: payload.iss, aud: undefined },
+    { iss: payload.iss, aud: [] },
+    { iss: payload.iss, aud: ["refapp", 1] },
+  ])(
+    "rejette une réponse signée sans liaison complète (%j)",
+    async (binding) => {
+      const { resolver, verifyJwt } = build({
+        handler: () =>
+          new Response("jwt", {
+            headers: { "content-type": "application/jwt" },
+          }),
+      });
+      verifyJwt.mockResolvedValue({
+        sub: payload.sub,
+        auth_mode: "CARD",
+        ...binding,
+      });
+      await expect(resolver.resolve("jeton", payload)).resolves.toEqual({});
+    },
+  );
+
+  it("rejette une réponse signée sans émetteur de référence ou client configuré", async () => {
+    for (const missing of ["issuer", "client"]) {
+      const { resolver, verifyJwt } = build({
+        clientId: missing === "client" ? undefined : "refapp",
+        handler: () =>
+          new Response("jwt", {
+            headers: { "content-type": "application/jwt" },
+          }),
+      });
+      verifyJwt.mockResolvedValue({
+        sub: payload.sub,
+        iss: payload.iss,
+        aud: "refapp",
+        auth_mode: "CARD",
+      });
+      await expect(
+        resolver.resolve("jeton", {
+          ...payload,
+          iss: missing === "issuer" ? undefined : payload.iss,
+        }),
+      ).resolves.toEqual({});
+    }
   });
 
   it("rejette une réponse signée d'un autre émetteur ou pour un autre client", async () => {

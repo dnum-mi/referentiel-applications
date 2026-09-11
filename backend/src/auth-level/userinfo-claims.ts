@@ -12,10 +12,10 @@ import type { JWTPayload } from "jose";
  * Garanties :
  * - un seul appel par jeton (cache positif borné par l'expiration du jeton, requêtes concurrentes
  *   dédoublonnées) ; un échec est mis en cache brièvement pour ne pas marteler le fournisseur ;
- * - le `sub` de la réponse est exigé et doit être celui du jeton (OIDC Core §5.3.2), sinon elle
- *   est ignorée ;
+ * - le `sub` de la réponse est exigé (OIDC Core §5.3.2). RefApp utilise le sujet du jeton
+ *   d'accès comme référence : sans sujet de référence non vide et identique, le repli est ignoré ;
  * - une réponse signée (`application/jwt`) est vérifiée avec le JWKS du fournisseur, et son
- *   émetteur et son audience, s'ils sont présents, doivent être ceux du jeton et du client ;
+ *   émetteur et son audience sont exigés et doivent être ceux du jeton et du client ;
  * - un endpoint découvert doit être une URL http(s) ;
  * - tout échec vaut « claim absent » : le repli ne peut qu'ajouter une preuve, jamais en inventer.
  */
@@ -104,6 +104,11 @@ export class UserinfoClaimsResolver {
     accessToken: string,
     payload: JWTPayload,
   ): Promise<Claims> {
+    if (typeof payload.sub !== "string" || payload.sub.trim().length === 0) {
+      throw new Error(
+        "le jeton ne fournit pas de sub de référence pour userinfo",
+      );
+    }
     const endpoint = await this.resolveEndpoint();
     const response = await this.fetch(endpoint, {
       headers: {
@@ -124,9 +129,8 @@ export class UserinfoClaimsResolver {
       throw new Error("réponse userinfo illisible");
     }
     const record = body as Claims;
-    // OIDC Core §5.3 : `sub` est toujours présent dans une réponse userinfo et doit être celui du
-    // jeton. Une réponse sans `sub` ne peut pas être rattachée au jeton : elle est ignorée.
-    if (typeof payload.sub === "string" && record.sub !== payload.sub) {
+    // Le jeton déjà vérifié est notre référence d'identité pour ce repli serveur.
+    if (record.sub !== payload.sub) {
       throw new Error(
         "le sub de userinfo est absent ou ne correspond pas à celui du jeton",
       );
@@ -139,23 +143,25 @@ export class UserinfoClaimsResolver {
     );
   }
 
-  /** Réponse signée : émetteur du jeton et audience du client, quand ils y figurent. */
+  /** OIDC Core §5.3.2 : une réponse signée doit porter `iss` et `aud`. */
   private assertSignedResponseBinding(record: Claims, payload: JWTPayload) {
     if (
-      typeof payload.iss === "string" &&
-      record.iss !== undefined &&
+      typeof payload.iss !== "string" ||
+      payload.iss.trim().length === 0 ||
       record.iss !== payload.iss
     ) {
       throw new Error(
-        "l'émetteur de la réponse userinfo signée diffère du jeton",
+        "l'émetteur de la réponse userinfo signée est absent ou diffère du jeton",
       );
     }
     const clientId = this.options.clientId;
-    if (clientId && record.aud !== undefined) {
-      const audiences = Array.isArray(record.aud) ? record.aud : [record.aud];
-      if (!audiences.includes(clientId)) {
-        throw new Error("la réponse userinfo signée ne vise pas ce client");
-      }
+    const audiences = Array.isArray(record.aud) ? record.aud : [record.aud];
+    if (
+      !clientId ||
+      !audiences.every((value) => typeof value === "string") ||
+      !audiences.includes(clientId)
+    ) {
+      throw new Error("la réponse userinfo signée ne vise pas ce client");
     }
   }
 
