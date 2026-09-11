@@ -483,7 +483,7 @@ describe("AuthMiddleware", () => {
     function mockUserinfo(body: unknown, status = 200) {
       fetchSpy = jest.spyOn(globalThis, "fetch").mockImplementation(
         async () =>
-          new Response(JSON.stringify(body), {
+          new globalThis.Response(JSON.stringify(body), {
             status,
             headers: { "content-type": "application/json" },
           }),
