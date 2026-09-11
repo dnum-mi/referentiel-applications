@@ -1,8 +1,12 @@
 <script setup lang="ts">
+import { profileAuthLevelText } from "@/composables/use-auth-level";
 import { useUserStore } from "@/stores/userStore";
-import { ref, onMounted, nextTick, useTemplateRef } from "vue";
+import { computed, ref, onMounted, nextTick, useTemplateRef } from "vue";
 
 const userStore = useUserStore();
+
+// #1985 : ligne « Niveau d'authentification », même table de motifs que le bandeau.
+const authLevelText = computed(() => profileAuthLevelText(userStore.authLevel));
 const isUpdating = ref(false);
 const emailNotificationsEnabled = ref(true);
 const successMessage = ref("");
@@ -60,6 +64,18 @@ onMounted(async () => {
             <th scope="row">Email</th>
             <td data-testid="user-profile-email">
               {{ userStore.user.email }}
+            </td>
+          </tr>
+          <tr v-if="authLevelText">
+            <th scope="row">Niveau d'authentification</th>
+            <td data-testid="user-profile-auth-level">
+              <span
+                v-if="userStore.isAuthDowngraded"
+                class="fr-badge fr-badge--warning fr-badge--sm fr-mr-1w"
+                data-testid="user-profile-auth-level-badge"
+                >Limitée</span
+              >
+              {{ authLevelText }}
             </td>
           </tr>
         </tbody>

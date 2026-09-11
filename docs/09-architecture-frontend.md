@@ -46,9 +46,10 @@ app.mount("#app");
 
 Le composant racine `frontend/src/App.vue` assemble la coque applicative DSFR
 (`DsfrHeader`, `DsfrNavigation`, `DsfrFooter`, `DsfrSkipLinks`), affiche le
-`RouterView`, branche le toaster global (`AppToaster`) et l'invite de
-rechargement du service worker (`ReloadPrompt`). Il déclenche au montage la
-configuration du client HTTP (`configureClients(toaster)`) et la récupération de
+`RouterView`, branche le toaster global (`AppToaster`) et les bandeaux et écrans
+transverses (`ImpersonationBanner`, `WeakAuthBanner` — #1985 —, `MaintenanceBanner`,
+`BlockedAccessScreen`). Il déclenche au montage la configuration du client HTTP
+(`configureClients(toaster, { isAuthDowngraded })`) et la récupération de
 la configuration applicative (`getConfig()`), et adapte la navigation et les
 liens rapides selon l'état d'authentification et les permissions
 (`frontend/src/App.vue:22-109`).
@@ -158,19 +159,19 @@ exposant `ref`/`computed` et fonctions, puis renvoyant l'objet public
 
 Stores présents dans `frontend/src/stores/` :
 
-| Store                  | `defineStore(...)`    | Rôle principal                                                                          |
-| ---------------------- | --------------------- | --------------------------------------------------------------------------------------- |
-| `applicationStore.ts`  | `"applicationStore"`  | Cycle de vie des applications (lecture, mise à jour, suppression, export, permissions). |
-| `userStore.ts`         | `"userStore"`         | Utilisateur courant, authentification, permissions, abonnements.                        |
-| `hostingStore.ts`      | `"hostingStore"`      | Hébergements.                                                                           |
-| `organizationStore.ts` | `"organizationStore"` | Organisations / divisions métier.                                                       |
-| `actorTypeStore.ts`    | `"actorTypeStore"`    | Types d'acteurs.                                                                        |
-| `relationStore.ts`     | `"relationStore"`     | Relations entre applications.                                                           |
-| `metadataStore.ts`     | `"metadataStore"`     | Historique des modifications (métadonnées).                                             |
-| `reportStore.ts`       | `"reportStore"`       | Signalements.                                                                           |
-| `statisticsStore.ts`   | `"statisticsStore"`   | Statistiques / indices de qualité.                                                      |
-| `endOfLifeStore.ts`    | `"endOfLifeStore"`    | Vue transverse des fins de vie (`GET /technologies/end-of-life`, filtres, pagination).  |
-| `toasterStore.ts`      | `"toaster"`           | Messages de notification (voir §9).                                                     |
+| Store                  | `defineStore(...)`    | Rôle principal                                                                                                                       |
+| ---------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `applicationStore.ts`  | `"applicationStore"`  | Cycle de vie des applications (lecture, mise à jour, suppression, export, permissions).                                              |
+| `userStore.ts`         | `"userStore"`         | Utilisateur courant, authentification, permissions, abonnements, niveau d'authentification (`authLevel`, `isAuthDowngraded`, #1985). |
+| `hostingStore.ts`      | `"hostingStore"`      | Hébergements.                                                                                                                        |
+| `organizationStore.ts` | `"organizationStore"` | Organisations / divisions métier.                                                                                                    |
+| `actorTypeStore.ts`    | `"actorTypeStore"`    | Types d'acteurs.                                                                                                                     |
+| `relationStore.ts`     | `"relationStore"`     | Relations entre applications.                                                                                                        |
+| `metadataStore.ts`     | `"metadataStore"`     | Historique des modifications (métadonnées).                                                                                          |
+| `reportStore.ts`       | `"reportStore"`       | Signalements.                                                                                                                        |
+| `statisticsStore.ts`   | `"statisticsStore"`   | Statistiques / indices de qualité.                                                                                                   |
+| `endOfLifeStore.ts`    | `"endOfLifeStore"`    | Vue transverse des fins de vie (`GET /technologies/end-of-life`, filtres, pagination).                                               |
+| `toasterStore.ts`      | `"toaster"`           | Messages de notification (voir §9).                                                                                                  |
 
 **Permissions côté front.** La vérification se fait via
 `userStore.hasPermissions([...])`, qui agrège les permissions de l'utilisateur,
@@ -212,8 +213,26 @@ La configuration OIDC est **récupérée du backend** au démarrage via
 `getConfig()` : l'`authority` est dérivée de `oidcConfigUrl` (en retirant le
 suffixe `/.well-known/openid-configuration`) et le `client_id` de `oidcClientId`.
 Le `USER_MANAGER` est instancié avec les URI de redirection (`/oidc/callback`),
-le `response_type: "code"` (Authorization Code Flow) et les scopes
-`openid profile email` (`frontend/src/services/authentication.ts:6-24`).
+le `response_type: "code"` (Authorization Code Flow) et les scopes servis par
+le backend (`oidcScope`, `openid profile email` par défaut).
+
+**Reconnexion forte (#1985).** `signinStrong(strategy)` mémorise la page
+courante, purge une éventuelle impersonation et pose un drapeau de tentative
+portant la stratégie employée. Stratégie `prompt` (défaut, servie par
+`/config.authLevel.reauth.strategy`) : retrait de l'utilisateur OIDC stocké (sans
+quoi l'ancien jeton faible rechargé au retour ferait la course avec le nouveau),
+puis `USER_MANAGER.signinRedirect({ prompt, acr_values?, max_age? })`. Stratégie
+`logout` : `USER_MANAGER.signoutRedirect()` ferme la session SSO ; au retour, la
+garde globale du routeur appelle `resumeStrongReauthAfterLogout()`, qui relance la
+connexion (drapeau horodaté, valable dix minutes). Ces paramètres ne vont
+**jamais** dans les réglages du `UserManager` : ils s'appliqueraient au
+renouvellement silencieux (`prompt=none`) et à la ré-authentification sur 401.
+Au retour, `userStore.fetchUser()` (seule la réponse la plus récente compte)
+consomme le drapeau : toast de succès uniquement si le backend confirme un niveau fort ;
+sinon `reauthLoopState` retient la stratégie restée sans effet (conservée dans le
+`sessionStorage` de l'onglet, effacée quand les droits ne sont plus réduits), et
+le bandeau propose l'étape suivante (`prompt` → « Se déconnecter puis se
+reconnecter »).
 
 L'état d'authentification est maintenu dans `userStore` qui écoute les
 **événements OIDC** : `addUserLoaded` (passe `authenticated` à `true` et appelle
@@ -221,6 +240,8 @@ L'état d'authentification est maintenu dans `userStore` qui écoute les
 initialisé au démarrage via `USER_MANAGER.getUser()`
 (`frontend/src/stores/userStore.ts:13-28`). Le jeton d'accès est ensuite injecté
 automatiquement dans chaque requête par l'intercepteur HTTP (voir §3).
+
+Les réponses du store utilisateur sont rattachées à une génération de session : `userLoaded`, `userUnloaded` et les changements d’impersonation invalident les requêtes en vol. Les préférences et abonnements ne remplacent que leurs propres champs ; seuls les chargements `/users/me` de la session courante peuvent actualiser les droits. Si un ancien backend omet `oidcScope`, le front conserve `openid profile email` pendant le déploiement ou le retour arrière.
 
 ## 7. Système de design
 
@@ -245,21 +266,24 @@ automatiquement dans chaque requête par l'intercepteur HTTP (voir §3).
 Les composables (`frontend/src/composables/`, préfixe `use-`) factorisent la
 logique réutilisable :
 
-| Composable                    | Rôle                                                                       |
-| ----------------------------- | -------------------------------------------------------------------------- |
-| `use-application-search.ts`   | Recherche/filtrage d'applications, synchronisation avec la query de l'URL. |
-| `use-d3-graph.ts`             | Construction et rendu des graphes de relations avec d3.                    |
-| `use-mermaid.ts`              | Directive `v-use-mermaid` pour le rendu des diagrammes mermaid.            |
-| `use-graph-style.ts`          | Styles partagés des graphes (couleurs par statut…).                        |
-| `use-completeness.ts`         | Calcul du score de complétude d'une application.                           |
-| `use-technical-debt-chart.ts` | Données et options du graphe de dette technique.                           |
-| `use-column-preferences.ts`   | Préférences de colonnes des tableaux.                                      |
-| `use-filter-watcher.ts`       | Surveillance et réinitialisation des filtres.                              |
-| `use-relation-manager.ts`     | Gestion des relations entre applications.                                  |
-| `use-accordion-manager.ts`    | Gestion de l'état des accordéons.                                          |
-| `use-modal.ts`                | Ouverture/fermeture des modales.                                           |
-| `use-date.ts`                 | Formatage des dates.                                                       |
-| `use-sanitize-utils.ts`       | Nettoyage/échappement des libellés (notamment pour les graphes).           |
+| Composable                    | Rôle                                                                                              |
+| ----------------------------- | ------------------------------------------------------------------------------------------------- |
+| `use-application-search.ts`   | Recherche/filtrage d'applications, synchronisation avec la query de l'URL.                        |
+| `use-d3-graph.ts`             | Construction et rendu des graphes de relations avec d3.                                           |
+| `use-mermaid.ts`              | Directive `v-use-mermaid` pour le rendu des diagrammes mermaid.                                   |
+| `use-graph-style.ts`          | Styles partagés des graphes (couleurs par statut…).                                               |
+| `use-completeness.ts`         | Calcul du score de complétude d'une application.                                                  |
+| `use-technical-debt-chart.ts` | Données et options du graphe de dette technique.                                                  |
+| `use-column-preferences.ts`   | Préférences de colonnes des tableaux.                                                             |
+| `use-filter-watcher.ts`       | Surveillance et réinitialisation des filtres.                                                     |
+| `use-relation-manager.ts`     | Gestion des relations entre applications.                                                         |
+| `use-accordion-manager.ts`    | Gestion de l'état des accordéons.                                                                 |
+| `use-modal.ts`                | Ouverture/fermeture des modales.                                                                  |
+| `use-date.ts`                 | Formatage des dates.                                                                              |
+| `use-sanitize-utils.ts`       | Nettoyage/échappement des libellés (notamment pour les graphes).                                  |
+| `use-maintenance-mode.ts`     | Détection du mode maintenance (health-check) et état partagé du bandeau.                          |
+| `use-blocked-access.ts`       | Reconnaissance du 403 « accès bloqué » et état de l'écran bloquant.                               |
+| `use-auth-level.ts`           | #1985 : type guard des 403 `stepDown`, messages, drapeau de reconnexion forte, textes du bandeau. |
 
 ## 9. Retours utilisateur et tests
 
@@ -324,7 +348,9 @@ revalidés) ; les assets hashés `/assets/` en `max-age=31536000, immutable`.
 - Routage : objet `routeNames`, vues lazy-loadées, `meta`
   (`requiresAuth`/`requiresAdmin`/`title`), guards `beforeEach`/`afterEach`.
 - Authentification OIDC via `oidc-client-ts`, configuration récupérée du backend,
-  état synchronisé sur les événements `userLoaded`/`userUnloaded`.
+  état synchronisé sur les événements `userLoaded`/`userUnloaded` ; niveau
+  d'authentification décidé par le backend (`authLevel` de `/users/me`), jamais
+  lu dans le jeton côté front.
 - DSFR majoritaire + PrimeVue pour les tableaux (`RefAppTable`) ; d3 / mermaid /
   chart.js pour les visualisations.
 

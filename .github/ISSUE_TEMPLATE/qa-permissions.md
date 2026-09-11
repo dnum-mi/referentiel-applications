@@ -21,7 +21,7 @@ labels: ["qa", "non-regression", "qa:permissions"]
 
 | Total | ✅ Passés | ❌ Échecs | ⏭️ Non testés |
 | ----- | --------- | --------- | ------------- |
-| 13    |           |           |               |
+| 19    |           |           |               |
 
 ## Protocole
 

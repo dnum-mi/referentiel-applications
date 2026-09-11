@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory, type RouteLocationNormalized, type RouteRecordRaw } from "vue-router";
 import { routeNames } from "./route-names";
-import { USER_MANAGER } from "@/services/authentication";
+import { USER_MANAGER, resumeStrongReauthAfterLogout } from "@/services/authentication";
+import { consumeReauthAttempt } from "@/composables/use-auth-level";
 import { useUserStore } from "@/stores/userStore";
 import { Permission } from "@/client";
 import { isChunkLoadError, reloadOnStaleChunk } from "@/utils/stale-chunk";
@@ -10,7 +11,14 @@ const oidcRoutes = [
     name: routeNames.AUTH_CALLBACK,
     path: "callback",
     beforeEnter: async () => {
-      await USER_MANAGER.signinCallback();
+      try {
+        await USER_MANAGER.signinCallback();
+      } catch (error) {
+        // #1985 : reconnexion forte annulée ou refusée chez le fournisseur — sans nettoyage, le
+        // prochain `/users/me` afficherait à tort « votre reconnexion n'a pas été reconnue ».
+        consumeReauthAttempt();
+        throw error;
+      }
       // L'événement userLoaded met à jour le store et appelle fetchUser automatiquement
       const redirectPath = sessionStorage.getItem("redirectAfterLogin");
       sessionStorage.removeItem("redirectAfterLogin");
@@ -166,6 +174,8 @@ const router = createRouter({
 
 // Guard to protect routes that require authentication
 router.beforeEach(async (to) => {
+  // #1985 : retour de la déconnexion demandée par une reconnexion forte — on relance la connexion.
+  if (await resumeStrongReauthAfterLogout()) return false;
   const userStore = useUserStore();
 
   if (to.meta.requiresAuth) {

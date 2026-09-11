@@ -499,8 +499,49 @@ paths:
                 items:
                   $ref: "#/components/schemas/UserPermissionLogDto"
         "403":
-          description: Accès refusé - Privilège admin requis
+          description: Accès refusé - Privilège admin requis ou utilisateur hors périmètre
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScopePermissionsErrorDto"
+        "404":
+          description: Utilisateur inconnu (contrôle de périmètre d'un administrateur scopé)
       summary: Récupérer l'historique des modifications de droits d'un utilisateur
+      tags: *a2
+  /api/v2/users/{id}/connexion-logs:
+    get:
+      description: Retourne les dernières connexions journalisées d'un utilisateur —
+        une ligne par jour et par niveau d'authentification, avec la valeur
+        brute du claim de mode et le fournisseur d'identité transmis (#1985).
+        Réservé aux administrateurs ; un administrateur de périmètre ne consulte
+        que les utilisateurs de son périmètre.
+      operationId: UserController_findConnexionLogs
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID de l'utilisateur
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Dernières connexions, de la plus récente à la plus ancienne
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserConnexionLogDto"
+        "403":
+          description: Accès refusé - Privilège admin requis ou utilisateur hors périmètre
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScopePermissionsErrorDto"
+        "404":
+          description: Utilisateur inconnu (contrôle de périmètre d'un administrateur
+            scopé) ; un administrateur global reçoit une liste vide
+      summary: Récupérer les dernières connexions d'un utilisateur
       tags: *a2
   /api/v2/users:
     get:
@@ -7536,6 +7577,43 @@ components:
         - id
         - createdAt
         - additionalPermissions
+    UserConnexionLogDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID unique de l'entrée
+        authTime:
+          format: date-time
+          type: string
+          description: Jour de connexion (UTC)
+        authLevel:
+          description: "Niveau d'authentification évalué : strong, weak ou unknown (claim
+            absent, fournisseur non listé ou évaluation désactivée)"
+          allOf:
+            - $ref: "#/components/schemas/AuthLevel"
+        authMethod:
+          type: string
+          nullable: true
+          description: Valeur brute du claim de mode d'authentification transmis par le
+            fournisseur d'identité
+        authIdp:
+          type: string
+          nullable: true
+          description: Fournisseur d'identité d'origine, si transmis
+        authSource:
+          type: string
+          nullable: true
+          enum:
+            - token
+            - userinfo
+            - null
+          description: "Source des claims : jeton d'accès ou userinfo ; null pour une
+            source inconnue"
+      required:
+        - id
+        - authTime
+        - authLevel
     PaginatedUserWithPermissions:
       type: object
       properties:

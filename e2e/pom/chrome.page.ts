@@ -192,6 +192,78 @@ export class ChromePage extends BasePage {
     await this.page.waitForURL(/recherche-application/);
   }
 
+  // --- Bandeau « niveau d'authentification » (#1985) ---
+  private weakAuthBanner = () => this.byTestId("weak-auth-banner");
+  private reauthButton = () => this.byTestId("weak-auth-reauth-btn");
+
+  async expectWeakAuthBanner(text?: string | RegExp): Promise<void> {
+    await expect(this.weakAuthBanner()).toBeVisible();
+    if (text) await expect(this.weakAuthBanner()).toContainText(text);
+  }
+  /** À appeler après une preuve que `/users/me` est chargé (ex. lien Admin visible). */
+  async expectNoWeakAuthBanner(): Promise<void> {
+    await expect(this.weakAuthBanner()).toHaveCount(0);
+  }
+  async expectNoReauthButton(): Promise<void> {
+    await expect(this.weakAuthBanner()).toBeVisible();
+    await expect(this.reauthButton()).toHaveCount(0);
+  }
+  async expectReauthButtonLabel(label: string | RegExp): Promise<void> {
+    await expect(this.reauthButton()).toHaveText(label);
+  }
+
+  /**
+   * Première étape (`prompt`) : redirection vers le fournisseur avec `prompt=login`. Le compte de
+   * test portant un mode statique, la reconnexion elle-même ne peut pas devenir forte.
+   */
+  async clickReauth(): Promise<void> {
+    await this.reauthButton().click();
+    await this.page.waitForURL(/protocol\/openid-connect\/auth.*prompt=login/);
+  }
+
+  /**
+   * Seconde étape (`logout`) : la session SSO est fermée (appel à l'endpoint de déconnexion du
+   * fournisseur), puis l'application relance d'elle-même une connexion avec `prompt=login`.
+   */
+  async clickReauthViaLogout(): Promise<void> {
+    const logoutRequest = this.page.waitForRequest(
+      /protocol\/openid-connect\/logout/,
+    );
+    await this.reauthButton().click();
+    await logoutRequest;
+    await this.page.waitForURL(/protocol\/openid-connect\/auth.*prompt=login/);
+  }
+
+  /**
+   * Saisit les identifiants sur la page de connexion du fournisseur puis revient dans
+   * l'application. Sur une ré-authentification, Keycloak peut figer l'identifiant : on ne
+   * remplit alors que le mot de passe.
+   */
+  async submitIdentityProviderLogin(user: string, pass: string): Promise<void> {
+    const username = this.page
+      .locator('#username, #kc-username, input[name="username"]')
+      .first();
+    if ((await username.isVisible()) && (await username.isEditable())) {
+      await username.fill(user);
+    }
+    await this.page
+      .locator('#password, #kc-password, input[name="password"]')
+      .first()
+      .fill(pass);
+    await Promise.all([
+      this.page.waitForURL(
+        (url) =>
+          !url.toString().includes("/realms/") &&
+          !url.toString().includes("/oidc/callback"),
+        { timeout: 30000 },
+      ),
+      this.page
+        .locator('#kc-login, button[name="login"], input[type="submit"]')
+        .first()
+        .click(),
+    ]);
+  }
+
   /**
    * RGA-03 (RGAA 12.8) : le `page-title-announcer` (h1 hors-écran, `tabindex="-1"`) doit recevoir
    * le focus après une navigation SPA. On attend l'état DOM avant l'assertion Playwright pour

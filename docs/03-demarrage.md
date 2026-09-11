@@ -81,7 +81,7 @@ Le realm Keycloak du dépôt (`keycloak/realm-export.json`) expose deux claims s
 | `admin-weak` (ADMIN en base via le seed)                                     | `PASSWORD`  | `principal`  | Session faible : rétrogradé en utilisateur standard.        |
 | `user-federated`                                                             | —           | `partenaire` | Fournisseur non listé : rétrogradé (motif `untrusted-idp`). |
 
-Les deux attributs sont déclarés dans le profil utilisateur du realm : un administrateur Keycloak peut basculer un compte de `CARD` à `PASSWORD` depuis la console (`http://localhost:8082`, `admin` / `password`) sans réimporter le realm. **Après toute mise à jour du realm, recréer le conteneur** — `start-dev --import-realm` n'importe que si le realm n'existe pas encore :
+Les deux attributs sont déclarés dans le profil utilisateur du realm : un administrateur Keycloak peut basculer un compte de `CARD` à `PASSWORD` depuis la console (`http://localhost:8082`, `admin` / `password`) sans réimporter le realm. **Après toute mise à jour du realm, le conteneur doit être recréé** — `start-dev --import-realm` n'importe que si le realm n'existe pas encore. Le service `keycloak` de `docker-compose.yml` porte un label `refapp.realm-revision` : l'incrémenter avec toute modification du realm suffit pour que le prochain `docker compose up -d` recrée le conteneur sur chaque poste. À défaut :
 
 ```bash
 docker compose rm -sf keycloak && docker compose up -d keycloak

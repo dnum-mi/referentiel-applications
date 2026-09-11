@@ -59,3 +59,39 @@ describe("UserConnexionLogService.log (#1985)", () => {
     });
   });
 });
+
+describe("UserConnexionLogService.findAllForUser (#1985)", () => {
+  it("renvoie les dernières lignes, les plus récentes d'abord, bornées et sans colonnes superflues", async () => {
+    const findMany = jest.fn().mockResolvedValue([
+      {
+        id: "l-1",
+        authTime: new Date("2026-09-10"),
+        authLevel: AuthLevel.weak,
+        authMethod: "PASSWORD",
+        authIdp: null,
+      },
+    ]);
+    const service = new UserConnexionLogService({
+      userConnexionLog: { findMany },
+    } as unknown as PrismaService);
+
+    const rows = await service.findAllForUser("user-1");
+
+    expect(rows).toHaveLength(1);
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: "user-1" },
+        orderBy: [{ authTime: "desc" }, { createdAt: "desc" }],
+        take: 30,
+        select: {
+          id: true,
+          authTime: true,
+          authLevel: true,
+          authMethod: true,
+          authIdp: true,
+          authSource: true,
+        },
+      }),
+    );
+  });
+});

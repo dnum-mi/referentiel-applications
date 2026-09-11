@@ -3,7 +3,10 @@
 > Permissions à 3 couches cumulatives : **rôle global** (Visiteur → Lecteur → Contributeur →
 > Administrateur) ∪ **permissions individuelles** ∪ **type d'acteur sur une app**
 > (`GET /applications/:id/my-perms`). Page admin : `/administration` (`routeNames.ADMINPAGE`).
-> Utilisateurs Keycloak : `admin` (ADMIN) et `user` (READER), mot de passe `pass`.
+> Utilisateurs Keycloak : `admin` (ADMIN) et `user` (READER), mot de passe `pass`. Niveau
+> d'authentification (#1985) : `admin-weak` (ADMIN, mode faible) et `user-federated` (fournisseur
+> d'identité non listé, sans mode). **Prérequis PRM-14..18** : `AUTH_LEVEL_MODE=enforce` côté backend
+> (valeur par défaut de `docker-compose.yml`) — hors `enforce`, ces cas sont sans objet.
 
 | Légende           |                                                         |
 | :---------------- | :------------------------------------------------------ |
@@ -94,3 +97,51 @@
 - **Action** : onglet matrice (`panel-app-perms-matrix`) → observer la zone au-dessus du tableau.
 - **Résultat attendu** : `app-perms-legend` affiche la légende (`-` aucun droit, `RO` lecture seule,
   `RW` lecture et écriture) et précède `app-perms-table` dans le DOM (affichée juste au-dessus).
+
+### PRM-14 — Une session sans authentification forte est rétrogradée ✅
+
+- **Datafeature** : compte `admin-weak` avec le rôle **ADMIN en base** (le test le force via la
+  datafeature ; sans ce rôle, un simple Visiteur présenterait les mêmes symptômes et le cas ne
+  prouverait rien).
+- **Action** : se connecter en `admin-weak`, observer le haut de page, aller sur `/administration`.
+- **Résultat attendu** : bandeau `weak-auth-banner` « droits d'un utilisateur standard », pas de lien
+  Admin dans le bandeau, accès à l'administration refusé.
+
+### PRM-15 — Le profil signale la session limitée et bloque la création de jeton ✅
+
+- **Datafeature** : compte `admin-weak`.
+- **Action** : `/profil` → ligne « Niveau d'authentification » → onglet Tokens.
+- **Résultat attendu** : `user-profile-auth-level` porte le badge « Limitée » ; l'onglet affiche
+  `token-weak-auth-alert` et `token-create-btn` est désactivé (les jetons existants restent
+  révocables).
+
+### PRM-16 — Une reconnexion restée faible propose la déconnexion complète ✅
+
+- **Datafeature** : compte `admin-weak` (mode d'authentification faible, statique).
+- **Action** : cliquer `weak-auth-reauth-btn` (« Se reconnecter ») → page du fournisseur avec
+  `prompt=login` → ressaisir le mot de passe.
+- **Résultat attendu** : retour dans l'application, bandeau « Votre reconnexion n'a pas été reconnue
+  comme forte », bouton devenu « Se déconnecter puis se reconnecter ». Recharger la page :
+  le même message et le même bouton doivent rester présents.
+
+### PRM-17 — Une session forte n'affiche pas le bandeau ✅
+
+- **Datafeature** : compte `admin` (mode fort).
+- **Action** : se connecter en `admin`, attendre le lien Admin, ouvrir `/administration`.
+- **Résultat attendu** : aucun `weak-auth-banner`, panneau d'administration chargé.
+
+### PRM-18 — Un mode absent avec un fournisseur non listé conserve la reconnexion ✅
+
+- **Datafeature** : compte `user-federated` (claim de fournisseur seul, non listé).
+- **Action** : se connecter en `user-federated`, observer le bandeau.
+- **Résultat attendu** : bandeau « Mode d’authentification non transmis », bouton
+  `weak-auth-reauth-btn` présent. Le message ne déduit pas que le fournisseur est externe.
+
+### PRM-19 — La reconnexion par déconnexion ferme la session SSO et relance la connexion ✅
+
+- **Datafeature** : compte `admin-weak`, après une première reconnexion restée faible (PRM-16).
+- **Action** : cliquer « Se déconnecter puis se reconnecter » → ressaisir le mot de passe.
+- **Résultat attendu** : appel à l'endpoint de déconnexion du fournisseur, retour sur l'application
+  qui relance aussitôt la connexion avec `prompt=login` ; après connexion, bandeau « Votre session est
+  toujours sans authentification forte » (le compte de test ne peut pas devenir fort). Recharger :
+  le message et l’orientation « contactez le support » doivent rester présents.

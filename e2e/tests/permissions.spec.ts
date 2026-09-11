@@ -3,17 +3,22 @@ import { test, expect } from "../fixtures/test";
 import {
   AdminPage,
   ApplicationPage,
+  ChromePage,
   HistoryPage,
   MetadataDetailPage,
+  UserProfilePage,
   loginAs,
 } from "../pom";
 import { captureStepScreenshot } from "../support/screenshots";
 
 const USER_EMAIL = "user@example.com";
+const ADMIN_WEAK_EMAIL = "admin-weak@example.com";
 
 /**
  * Non-régression — Permissions & rôles (protocole `qa/protocoles/permissions.md`).
- * PRM-01 utilise le rôle `user` (sans datafeature) ; les autres l'admin (datafeature) ; POM strict.
+ * PRM-01 et PRM-15..18 : login explicite sans datafeature (`user`, `admin-weak`, `user-federated`,
+ * `admin`) ; PRM-14 provisionne le rôle via la datafeature puis ouvre un contexte séparé ; les
+ * autres l'admin (datafeature) ; POM strict.
  */
 test.describe("Permissions & rôles", () => {
   base.afterEach(async ({ page }, testInfo) => {
@@ -271,4 +276,107 @@ test.describe("Permissions & rôles", () => {
     await admin.openPermsMatrixTab();
     await admin.expectPermsMatrixLegendVisible();
   });
+
+  // PRM-14..18 — niveau d'authentification (#1985). La suite tourne en mode `enforce`
+  // (docker-compose) : `admin-weak` porte un mode faible, `user-federated` un fournisseur non
+  // listé, tous les autres comptes un mode fort. Sans datafeature (login explicite).
+  // La rétrogradation ne se distingue d'un simple Visiteur que si `admin-weak` est bien ADMIN
+  // en base : on le garantit via la datafeature (session admin sur la page principale), puis on
+  // joue la session faible dans un contexte navigateur séparé.
+  test("PRM-14 - une session sans authentification forte est rétrogradée", async ({
+    browser,
+    data,
+  }) => {
+    const ctx = await browser.newContext();
+    try {
+      const weakPage = await ctx.newPage();
+      await loginAs(weakPage, "admin-weak"); // crée le compte s'il n'existe pas encore
+      await data.setUserRole(ADMIN_WEAK_EMAIL, "ADMIN");
+      expect((await data.getUser(ADMIN_WEAK_EMAIL))?.role).toBe("ADMIN");
+
+      await weakPage.reload();
+      const chrome = new ChromePage(weakPage);
+      await chrome.expectWeakAuthBanner(/utilisateur standard/);
+      await chrome.expectNoAdminLink();
+      const admin = new AdminPage(weakPage);
+      await admin.goToAdministration();
+      await admin.expectAccessDenied();
+    } finally {
+      await ctx.close();
+    }
+  });
+
+  base(
+    "PRM-15 - le profil signale la session limitée et bloque la création de jeton",
+    async ({ page }) => {
+      await loginAs(page, "admin-weak");
+      const profile = new UserProfilePage(page);
+      await profile.open();
+      await profile.expectAuthLevelLimited();
+      await profile.openTokensTab();
+      await profile.expectTokenCreationDisabled();
+    },
+  );
+
+  // PRM-16/19 — reconnexion forte en deux temps. Le compte `admin-weak` porte un mode statique :
+  // chaque reconnexion reste faible, ce qui permet de jouer la bascule `prompt` → `logout`.
+  base(
+    "PRM-16 - une reconnexion restée faible propose la déconnexion complète",
+    async ({ page }) => {
+      await loginAs(page, "admin-weak");
+      const chrome = new ChromePage(page);
+      await chrome.expectWeakAuthBanner();
+      await chrome.expectReauthButtonLabel("Se reconnecter");
+      await chrome.clickReauth();
+      await chrome.submitIdentityProviderLogin("admin-weak", "pass");
+      await chrome.expectWeakAuthBanner(/n'a pas été reconnue comme forte/);
+      await page.reload();
+      await chrome.expectWeakAuthBanner(/n'a pas été reconnue comme forte/);
+      await chrome.expectReauthButtonLabel(
+        "Se déconnecter puis se reconnecter",
+      );
+    },
+  );
+
+  base(
+    "PRM-19 - la reconnexion par déconnexion ferme la session SSO et relance la connexion",
+    async ({ page }) => {
+      await loginAs(page, "admin-weak");
+      const chrome = new ChromePage(page);
+      await chrome.clickReauth();
+      await chrome.submitIdentityProviderLogin("admin-weak", "pass");
+      await chrome.expectReauthButtonLabel(
+        "Se déconnecter puis se reconnecter",
+      );
+      await chrome.clickReauthViaLogout();
+      await chrome.submitIdentityProviderLogin("admin-weak", "pass");
+      await chrome.expectWeakAuthBanner(/toujours sans authentification forte/);
+      await page.reload();
+      await chrome.expectWeakAuthBanner(/toujours sans authentification forte/);
+      await chrome.expectWeakAuthBanner(/contactez le support/);
+    },
+  );
+
+  base(
+    "PRM-17 - une session forte n'affiche pas le bandeau",
+    async ({ page }) => {
+      await loginAs(page, "admin");
+      const chrome = new ChromePage(page);
+      await chrome.expectAdminLink(); // preuve que /users/me est chargé
+      await chrome.expectNoWeakAuthBanner();
+      const admin = new AdminPage(page);
+      await admin.open();
+      await admin.expectLoaded();
+    },
+  );
+
+  base(
+    "PRM-18 - un mode absent avec un fournisseur non listé conserve la reconnexion",
+    async ({ page }) => {
+      await loginAs(page, "user-federated");
+      const chrome = new ChromePage(page);
+      await chrome.expectWeakAuthBanner(/non transmis par le fournisseur/);
+      await chrome.expectReauthButtonLabel("Se reconnecter");
+    },
+  );
 });
