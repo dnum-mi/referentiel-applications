@@ -211,6 +211,33 @@ export class ScopedPermissionService {
     targetUserId: string,
     requestor: Requestor,
   ): Promise<void> {
+    await this.assertTargetWithinScope(
+      targetUserId,
+      requestor,
+      "Vous n'avez pas les permissions pour modifier cet utilisateur",
+    );
+  }
+
+  /**
+   * #1985 : consultation d'un utilisateur (historique des connexions) — mêmes règles que
+   * l'administration : rôle administrateur, et cible dans le périmètre pour un admin scopé.
+   */
+  async assertCanReadTarget(
+    targetUserId: string,
+    requestor: Requestor,
+  ): Promise<void> {
+    await this.assertTargetWithinScope(
+      targetUserId,
+      requestor,
+      "Vous n'avez pas les permissions pour consulter cet utilisateur",
+    );
+  }
+
+  private async assertTargetWithinScope(
+    targetUserId: string,
+    requestor: Requestor,
+    message: string,
+  ): Promise<void> {
     this.assertIsAdministrator(requestor);
     const requestorScopePath = requestor?.scopeOrganization?.path;
     if (!requestorScopePath) return;
@@ -227,7 +254,7 @@ export class ScopedPermissionService {
     this.assertWithinScope(
       currentUser.organization?.path,
       requestorScopePath,
-      "Vous n'avez pas les permissions pour modifier cet utilisateur",
+      message,
     );
   }
 

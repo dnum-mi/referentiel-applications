@@ -32,6 +32,7 @@ onClickOutside(el, () => {
       <div ref="el">
         <UserPermissions :user="props.user" />
         <UserPermissionLogHistory v-if="value" :user-id="props.user.id" />
+        <UserConnexionLogHistory v-if="value" :user-id="props.user.id" />
       </div>
     </DsfrModal>
   </div>

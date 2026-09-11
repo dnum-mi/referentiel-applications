@@ -36,6 +36,7 @@ import { MaiaOrganizationSuggestionDto } from "./dto/maia-organization-suggestio
 import { SyncOrganizationsDto } from "./dto/sync-organizations.dto";
 import { SyncOrganizationsResponseDto } from "./dto/sync-organizations-response.dto";
 import { UpdateUserDto, UpdateUserPreferencesDto } from "./dto/update-user.dto";
+import { UserConnexionLogDto } from "./dto/user-connexion-log.dto";
 import { UserPermissionLogDto } from "./dto/user-permission-log.dto";
 import { ScopePermissionsErrorDto } from "./dto/user.error.dto";
 import {
@@ -43,6 +44,8 @@ import {
   UserEntity,
   UserWithPermissions,
 } from "./entities/user.entity";
+import { ScopedPermissionService } from "./scope-permission/scoped-permission.service";
+import { UserConnexionLogService } from "./user-connexion-log.service";
 import { UserPermissionsInterceptor } from "./user-permissions.interceptor";
 import { UserService } from "./user.service";
 import { RgaaComplianceErrorResponseDto } from "src/rgaa/dto/rgaa-compliance.dto";
@@ -52,7 +55,11 @@ import { RgaaComplianceErrorResponseDto } from "src/rgaa/dto/rgaa-compliance.dto
 @UseInterceptors(UserPermissionsInterceptor)
 @UseGuards(PermissionGuard)
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly userConnexionLogService: UserConnexionLogService,
+    private readonly scopedPermissionService: ScopedPermissionService,
+  ) {}
 
   @Get("me")
   @ApiOperation({ summary: "Récupérer ses propres informations utilisateur" })
@@ -328,12 +335,51 @@ export class UserController {
     type: [UserPermissionLogDto],
   })
   @ApiForbiddenResponse({
-    description: "Accès refusé - Privilège admin requis",
+    description:
+      "Accès refusé - Privilège admin requis ou utilisateur hors périmètre",
+    type: ScopePermissionsErrorDto,
+  })
+  @ApiNotFoundResponse({
+    description:
+      "Utilisateur inconnu (contrôle de périmètre d'un administrateur scopé)",
   })
   async findPermissionLogs(
     @Param("id") id: string,
+    @User() requestor: Requestor,
   ): Promise<UserPermissionLogDto[]> {
+    // #1985 : même règle que l'historique des connexions — rôle administrateur et cible dans le
+    // périmètre pour un administrateur scopé (cette route n'appliquait que la garde de permission).
+    await this.scopedPermissionService.assertCanReadTarget(id, requestor);
     return this.userService.findPermissionLogs(id);
+  }
+
+  @Get(":id/connexion-logs")
+  @RequiredPermissions([Permission.AdminPanelManage])
+  @ApiOperation({
+    summary: "Récupérer les dernières connexions d'un utilisateur",
+    description:
+      "Retourne les dernières connexions journalisées d'un utilisateur — une ligne par jour et par niveau d'authentification, avec la valeur brute du claim de mode et le fournisseur d'identité transmis (#1985). Réservé aux administrateurs ; un administrateur de périmètre ne consulte que les utilisateurs de son périmètre.",
+  })
+  @ApiParam({ name: "id", description: "ID de l'utilisateur" })
+  @ApiOkResponse({
+    description: "Dernières connexions, de la plus récente à la plus ancienne",
+    type: [UserConnexionLogDto],
+  })
+  @ApiForbiddenResponse({
+    description:
+      "Accès refusé - Privilège admin requis ou utilisateur hors périmètre",
+    type: ScopePermissionsErrorDto,
+  })
+  @ApiNotFoundResponse({
+    description:
+      "Utilisateur inconnu (contrôle de périmètre d'un administrateur scopé) ; un administrateur global reçoit une liste vide",
+  })
+  async findConnexionLogs(
+    @Param("id") id: string,
+    @User() requestor: Requestor,
+  ): Promise<UserConnexionLogDto[]> {
+    await this.scopedPermissionService.assertCanReadTarget(id, requestor);
+    return this.userConnexionLogService.findAllForUser(id);
   }
 
   @Get()
