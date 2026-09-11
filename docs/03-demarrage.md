@@ -64,11 +64,36 @@ En développement, les variables nécessaires au backend sont **déjà fournies*
 
 - **Base de données** : `DATABASE_URL` (chaîne de connexion PostgreSQL).
 - **Authentification OIDC** : `OIDC_CONFIG_URL`, `OIDC_JWKS_URL`, `OIDC_CLIENT_ID`.
+- **Niveau d'authentification (#1985)** : `AUTH_LEVEL_MODE` est `off` par défaut dans le code mais `enforce` dans `docker-compose.yml`, avec le claim `auth_mode` et la valeur forte `CARD` simulés par le realm Keycloak (voir [Simuler une authentification forte ou faible](#simuler-une-authentification-forte-ou-faible)).
 - **CORS / réseau** : `ALLOWED_ORIGINS`, `PORT`, `HOST`.
 - **Messagerie (SMTP)** : `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_FROM`, `SMTP_ENABLED` (pointés vers Mailpit en local) ; `EMAIL_CRON_ENABLED` active les envois automatiques (digest quotidien, relances de validation), désactivés par défaut.
 - **Détection des corrélations** : `CORRELATION_CRON_ENABLED` active le job planifié qui rapproche les applications proches (désactivé par défaut) ; `CORRELATION_SCORE_THRESHOLD` et les trois `CORRELATION_WEIGHT_*` règlent le seuil et la pondération des signaux.
 - **Maintenance** : `MAINTENANCE_MODE` force le mode lecture seule ; `MAINTENANCE_CACHE_TTL_MS` règle la durée de cache de la détection PostgreSQL.
 - **Divers** : `LOG_LEVEL`, `ENV_LABEL`, `FOOTER_LINKS`, `MOCK_MAIA_SERVICE`, `MOCK_MAIA_ORGANIZATION`.
+
+### Simuler une authentification forte ou faible
+
+Le realm Keycloak du dépôt (`keycloak/realm-export.json`) expose deux claims sur l'access token à partir d'attributs utilisateur : `auth_mode` (mode d'authentification simulé) et `auth_idp` (fournisseur d'identité simulé). Mot de passe de tous les comptes : `pass`.
+
+| Compte                                                                       | `auth_mode` | `auth_idp`   | Effet en mode `enforce`                                     |
+| ---------------------------------------------------------------------------- | ----------- | ------------ | ----------------------------------------------------------- |
+| `admin`, `support`, `user`, `scope-admin`, `member-toto`, `member-toto-tutu` | `CARD`      | `principal`  | Session forte : droits pleins.                              |
+| `admin-weak` (ADMIN en base via le seed)                                     | `PASSWORD`  | `principal`  | Session faible : rétrogradé en utilisateur standard.        |
+| `user-federated`                                                             | —           | `partenaire` | Fournisseur non listé : rétrogradé (motif `untrusted-idp`). |
+
+Les deux attributs sont déclarés dans le profil utilisateur du realm : un administrateur Keycloak peut basculer un compte de `CARD` à `PASSWORD` depuis la console (`http://localhost:8082`, `admin` / `password`) sans réimporter le realm. **Après toute mise à jour du realm, le conteneur doit être recréé** — `start-dev --import-realm` n'importe que si le realm n'existe pas encore. Le service `keycloak` de `docker-compose.yml` porte un label `refapp.realm-revision` : l'incrémenter avec toute modification du realm suffit pour que le prochain `docker compose up -d` recrée le conteneur sur chaque poste. À défaut :
+
+```bash
+docker compose rm -sf keycloak && docker compose up -d keycloak
+```
+
+Sans cela, le mapper est absent, tout le monde est rétrogradé (`admin` compris) et les symptômes ressemblent à un bug de droits ; `GET /users/me` (`authLevel.reason` = `claim-missing`) rend le diagnostic immédiat. Contrôle rapide des claims émis :
+
+```bash
+curl -s -d grant_type=password -d client_id=referentiel-applications -d username=admin-weak -d password=pass -d scope=openid \
+  http://localhost:8082/realms/referentiel-applications/protocol/openid-connect/token \
+  | jq -r .access_token | node -e 'process.stdin.on("data", (t) => console.log(Buffer.from(String(t).trim().split(".")[1], "base64url").toString()))'
+```
 
 > Aucune valeur secrète n'est requise en développement (les identifiants par défaut sont ceux du `docker-compose.yml`). Le détail des variables, leur signification et leur gestion en environnement déployé (Vault/SOPS) relèvent de la page d'exploitation.
 

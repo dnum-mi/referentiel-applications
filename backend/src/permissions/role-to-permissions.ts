@@ -121,7 +121,7 @@ export const principalToPermissions = (principal: {
     scoped: !!principal.scopeOrganizationId,
   });
 
-const READ_APP_PERMISSIONS = new Set([
+export const READ_APP_PERMISSIONS = new Set([
   Permission.ActorRead,
   Permission.ComplianceRead,
   Permission.HostingRead,

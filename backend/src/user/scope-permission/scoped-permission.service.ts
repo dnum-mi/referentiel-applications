@@ -1,5 +1,6 @@
 import { Injectable, HttpException, HttpStatus } from "@nestjs/common";
 import { Roles } from "@prisma/client";
+import { StepDownException } from "src/auth-level/step-down.exception";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UpdateUserDto } from "../dto/update-user.dto";
 import { Requestor } from "../entities/user.entity";
@@ -210,6 +211,33 @@ export class ScopedPermissionService {
     targetUserId: string,
     requestor: Requestor,
   ): Promise<void> {
+    await this.assertTargetWithinScope(
+      targetUserId,
+      requestor,
+      "Vous n'avez pas les permissions pour modifier cet utilisateur",
+    );
+  }
+
+  /**
+   * #1985 : consultation d'un utilisateur (historique des connexions) — mêmes règles que
+   * l'administration : rôle administrateur, et cible dans le périmètre pour un admin scopé.
+   */
+  async assertCanReadTarget(
+    targetUserId: string,
+    requestor: Requestor,
+  ): Promise<void> {
+    await this.assertTargetWithinScope(
+      targetUserId,
+      requestor,
+      "Vous n'avez pas les permissions pour consulter cet utilisateur",
+    );
+  }
+
+  private async assertTargetWithinScope(
+    targetUserId: string,
+    requestor: Requestor,
+    message: string,
+  ): Promise<void> {
     this.assertIsAdministrator(requestor);
     const requestorScopePath = requestor?.scopeOrganization?.path;
     if (!requestorScopePath) return;
@@ -226,7 +254,7 @@ export class ScopedPermissionService {
     this.assertWithinScope(
       currentUser.organization?.path,
       requestorScopePath,
-      "Vous n'avez pas les permissions pour modifier cet utilisateur",
+      message,
     );
   }
 
@@ -238,6 +266,12 @@ export class ScopedPermissionService {
    * super-administrateur et pouvait se promouvoir ADMIN.
    */
   private assertIsAdministrator(requestor: Requestor): void {
+    // #1985 : défense en profondeur — le principal rétrogradé est déjà VISITOR et la garde de
+    // permissions (AdminPanelManage) refuse en amont ; ce second rideau tient même si un refactor
+    // reconstruisait le rôle depuis la base ou ouvrait une route sans garde.
+    if (requestor?.authLevel?.downgraded) {
+      throw new StepDownException("admin-action");
+    }
     if (requestor?.role !== Roles.ADMIN) {
       throw new ScopePermissionsException(
         "Cette action est réservée aux administrateurs",

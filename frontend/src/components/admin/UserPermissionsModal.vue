@@ -14,7 +14,7 @@ onClickOutside(el, () => {
 <template>
   <div>
     <DsfrButton
-      label="Voir"
+      label="Permissions"
       size="sm"
       secondary
       data-testid="admin-user-permissions-btn"

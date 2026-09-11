@@ -235,6 +235,13 @@ async function seed({
     email: "admin@example.com",
     role: Roles.ADMIN,
   });
+  // #1985 : compte Keycloak `admin-weak` (attribut auth_mode=PASSWORD). ADMIN en base pour que
+  // la rétrogradation en session faible soit démontrable ; créé VISITOR à la première connexion
+  // sinon, le scénario ne prouverait rien.
+  await UserFaker.create({
+    email: "admin-weak@example.com",
+    role: Roles.ADMIN,
+  });
   const regularUser = await UserFaker.create({
     email: "user@example.com",
     role: Roles.READER,

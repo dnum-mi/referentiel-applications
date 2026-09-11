@@ -29,7 +29,8 @@ Le présent document a été rédigé en confrontant la vue produit aux sources 
   - [7.3 Suivi des fins de vie](#73-suivi-des-fins-de-vie)
 - [8. Export Excel](#8-export-excel)
 - [9. Administration](#9-administration)
-- [10. Récapitulatif des fonctionnalités et permissions](#10-récapitulatif-des-fonctionnalités-et-permissions)
+- [10. Niveau d'authentification : carte agent ou double authentification](#10-niveau-dauthentification--carte-agent-ou-double-authentification)
+- [11. Récapitulatif des fonctionnalités et permissions](#11-récapitulatif-des-fonctionnalités-et-permissions)
 
 ## 1. Catalogue et recherche d'applications
 
@@ -342,7 +343,7 @@ globales. Un constat, pas une note.
 
 Le panneau d'administration (`frontend/src/views/AdminPage.vue`) est organisé en onglets, réservés aux administrateurs. Depuis #2446, seuls **Gestion des utilisateurs** et **Gestion des acteurs** relèvent d'`AdminPanelManage` — et sont alors filtrés par le périmètre du requêteur ; tous les autres onglets exigent `GlobalAdminManage`, réservée aux administrateurs **sans** périmètre organisationnel.
 
-- **Gestion des utilisateurs** (`admin/AdminUsersTab.vue`) : liste des utilisateurs (humains et comptes techniques), modification du rôle (Visiteur, Lecteur, Contributeur, Administrateur), rattachement à une organisation, et attribution de **permissions individuelles** complémentaires (couche 2). Un utilisateur peut aussi être **bloqué** (ex : a quitté le ministère) via `POST /users/:id/block` / `POST /users/:id/unblock` : un utilisateur bloqué est rejeté par `AuthMiddleware` à l'authentification (JWT SSO ou token API), quel que soit son moyen d'accès ; un administrateur ne peut pas bloquer son propre compte, ni impersonner un utilisateur bloqué. Notification par email à chaque changement d'état. Module back `backend/src/user/`.
+- **Gestion des utilisateurs** (`admin/AdminUsersTab.vue`) : liste des utilisateurs (humains et comptes techniques), modification du rôle (Visiteur, Lecteur, Contributeur, Administrateur), rattachement à une organisation, et attribution de **permissions individuelles** complémentaires (couche 2). Un utilisateur peut aussi être **bloqué** (ex : a quitté le ministère) via `POST /users/:id/block` / `POST /users/:id/unblock` : un utilisateur bloqué est rejeté par `AuthMiddleware` à l'authentification (JWT SSO ou token API), quel que soit son moyen d'accès ; un administrateur ne peut pas bloquer son propre compte, ni impersonner un utilisateur bloqué. Notification par email à chaque changement d'état. La colonne **Consultation** propose deux accès distincts : **Permissions** pour les droits et l'historique de leurs modifications ; **Connexions** pour l'**historique des connexions** de l'utilisateur (`GET /users/:id/connexion-logs`, une ligne par jour et par contexte d'authentification, avec le mode et le fournisseur d'identité transmis) : c'est l'outil du support pour vérifier ce que le SSO transmet réellement, pendant la phase d'observation comme après activation. Module back `backend/src/user/`.
 - **Gestion des organisations** (`admin/AdminOrganizationsTab.vue`) : création/modification/suppression, rattachement d'une **direction métier** à l'organisation. Permission `OrganizationManage`. Modules `backend/src/organizations/`, `backend/src/organization-maia-references/`.
 - **Directions métier** (`admin/AdminBusinessDivisionsTab.vue`) : création/modification/suppression des directions métier (nom unique) rattachables aux organisations et aux applications. Écritures sous `GlobalAdminManage`. Module `backend/src/business-division/`.
 - **Gestion des tags** (`admin/AdminTagsTab.vue`) : tags libres attachables aux applications. Module `backend/src/tag/`.
@@ -353,7 +354,20 @@ Le panneau d'administration (`frontend/src/views/AdminPage.vue`) est organisé e
 
 **Permission.** Le panneau requiert `AdminPanelManage` (utilisateurs, acteurs) ou `GlobalAdminManage` (tout le reste, #2446). La suppression d'application (`DELETE /applications/:applicationId`) et certaines actions (création de type d'acteur) relèvent également de droits administrateurs.
 
-## 10. Récapitulatif des fonctionnalités et permissions
+## 10. Niveau d'authentification : carte agent ou double authentification
+
+Le SSO admet plusieurs modes de connexion. Lorsque le contrôle est activé (`AUTH_LEVEL_MODE=enforce`, #1985, voir [Permissions et sécurité](./06-permissions-et-securite.md) et le runbook d'[Exploitation](./12-exploitation-deploiement.md)), un agent connecté **sans carte agent ni double authentification** ne dispose que des droits d'un **utilisateur standard** pour la durée de sa session : consultation du référentiel, signalements, abonnements et préférences, révocation de ses jetons — mais ni administration, ni écriture sur les fiches (même en tant qu'acteur), ni impersonation, ni création de jeton personnel.
+
+**Ce que voit l'agent.**
+
+- Un **bandeau** en haut de chaque page (`WeakAuthBanner.vue`) explique la limitation. Son texte dépend du motif : connexion sans carte agent ni double authentification ; mode d'authentification non transmis par le fournisseur (reconnexion avec carte agent ou double authentification proposée, puis support si le problème persiste). La présence d’un fournisseur non listé ne suffit pas à conclure qu’il est externe. Un lien « En savoir plus » pointe vers la page d'aide configurée.
+- Le bouton **« Se reconnecter »** renvoie vers le fournisseur d'identité en forçant une nouvelle authentification, puis ramène sur la page en cours. Si la session revient forte, un message le confirme et les droits complets sont rétablis. Si elle reste faible (le fournisseur a pu réutiliser la session en cours), le bandeau l'indique et le bouton devient **« Se déconnecter puis se reconnecter »** (bascule conservée dans l'onglet, même après un rechargement) : la session SSO est fermée complètement avant une nouvelle connexion, ce qui oblige le fournisseur à redemander l'authentification. Si même cette étape laisse la session faible, le bandeau invite à vérifier l'usage de la carte agent ou de la double authentification, puis à contacter le support.
+- Le **profil** affiche une ligne « Niveau d'authentification » (badge « Limitée » et motif ; en mode observation, le niveau évalué « sans effet sur vos droits ») et un badge « Droits limités (authentification faible) » à côté du rôle effectif. L'onglet **Mes tokens** explique pourquoi la création est indisponible ; les jetons existants restent visibles et révocables.
+- Une action refusée pour ce motif affiche un message dédié plutôt que le « Permission refusée » générique. Une impersonation en cours est interrompue et la page rechargée.
+
+**Mini-FAQ support.** « Pourquoi mes droits sont-ils limités ? » — la session a été ouverte sans carte agent ni double authentification, ou le fournisseur d'identité n'a pas transmis le mode. « Je me suis reconnecté et rien ne change » — la nouvelle session a été ouverte avec le même mode ; utiliser la carte agent ou activer la double authentification sur le compte SSO, puis « Se déconnecter puis se reconnecter », qui force une authentification complète. « Le bandeau dit que le mode n'a pas été transmis » — vérifier le mode de connexion utilisé ; si l'agent s'est bien connecté avec sa carte, le signaler au support (déclaration des claims côté fournisseur). Un jeton API (`x-refapp-token`) n'est jamais concerné.
+
+## 11. Récapitulatif des fonctionnalités et permissions
 
 | Fonctionnalité                      | Emplacement principal (code)                                                    | Permission requise                                                                 |
 | :---------------------------------- | :------------------------------------------------------------------------------ | :--------------------------------------------------------------------------------- |
@@ -378,6 +392,7 @@ Le panneau d'administration (`frontend/src/views/AdminPage.vue`) est organisé e
 | Diagramme Time (dette technique)    | `TimePage.vue` · `backend/src/technical-debt-info`                              | `MDITList`                                                                         |
 | Export Excel                        | `GET /applications/export/excel`                                                | `DataExport` (admin)                                                               |
 | Administration                      | `AdminPage.vue` · `backend/src/user`, `organizations`, `tag`, `permissions`     | `AdminPanelManage` · `GlobalAdminManage` (+ `OrganizationManage`, etc.)            |
+| Niveau d'authentification (#1985)   | `WeakAuthBanner.vue` · `backend/src/auth-level`                                 | en mode `enforce`, tout droit au-delà du socle Visiteur exige une session forte    |
 
 ---
 

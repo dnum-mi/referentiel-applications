@@ -15,6 +15,7 @@ import SearchHeader from "./components/search/SearchHeader.vue";
 import NotificationBell from "./components/notification/NotificationBell.vue";
 import EmailPreviewModal from "./components/EmailPreviewModal.vue";
 import ImpersonationBanner from "./components/ImpersonationBanner.vue";
+import WeakAuthBanner from "./components/WeakAuthBanner.vue";
 import AppToaster from "./components/AppToaster.vue";
 import { useScheme } from "@gouvminint/vue-dsfr";
 import { useRgaaGlobalA11y } from "./composables/use-rgaa-a11y";
@@ -46,7 +47,7 @@ const appConfig = ref<ConfigDto>();
 const toaster = useToasterStore();
 const { maintenanceMode } = useMaintenanceMode();
 
-configureClients(toaster);
+configureClients(toaster, { isAuthDowngraded: () => userStore.isAuthDowngraded });
 
 useNotificationPolling();
 
@@ -225,6 +226,7 @@ useAppUpdate();
     ]"
   />
   <ImpersonationBanner />
+  <WeakAuthBanner />
   <MaintenanceBanner :active="maintenanceMode" />
   <BlockedAccessScreen :active="blockedAccessState" />
   <DsfrHeader

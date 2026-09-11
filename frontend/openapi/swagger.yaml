@@ -499,8 +499,49 @@ paths:
                 items:
                   $ref: "#/components/schemas/UserPermissionLogDto"
         "403":
-          description: Accès refusé - Privilège admin requis
+          description: Accès refusé - Privilège admin requis ou utilisateur hors périmètre
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScopePermissionsErrorDto"
+        "404":
+          description: Utilisateur inconnu (contrôle de périmètre d'un administrateur scopé)
       summary: Récupérer l'historique des modifications de droits d'un utilisateur
+      tags: *a2
+  /api/v2/users/{id}/connexion-logs:
+    get:
+      description: Retourne les dernières connexions journalisées d'un utilisateur —
+        une ligne par jour et par niveau d'authentification, avec la valeur
+        brute du claim de mode et le fournisseur d'identité transmis (#1985).
+        Réservé aux administrateurs ; un administrateur de périmètre ne consulte
+        que les utilisateurs de son périmètre.
+      operationId: UserController_findConnexionLogs
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID de l'utilisateur
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Dernières connexions, de la plus récente à la plus ancienne
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserConnexionLogDto"
+        "403":
+          description: Accès refusé - Privilège admin requis ou utilisateur hors périmètre
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScopePermissionsErrorDto"
+        "404":
+          description: Utilisateur inconnu (contrôle de périmètre d'un administrateur
+            scopé) ; un administrateur global reçoit une liste vide
+      summary: Récupérer les dernières connexions d'un utilisateur
       tags: *a2
   /api/v2/users:
     get:
@@ -6818,6 +6859,51 @@ components:
         - label
         - title
         - href
+    AuthLevelReauthStrategy:
+      type: string
+      enum:
+        - prompt
+        - logout
+      description: "prompt : redirection vers le fournisseur avec le paramètre prompt
+        ; logout : déconnexion complète de la session SSO puis nouvelle
+        connexion"
+    AuthLevelReauthConfigDto:
+      type: object
+      properties:
+        strategy:
+          description: "prompt : redirection vers le fournisseur avec le paramètre prompt
+            ; logout : déconnexion complète de la session SSO puis nouvelle
+            connexion"
+          allOf:
+            - $ref: "#/components/schemas/AuthLevelReauthStrategy"
+        prompt:
+          type: string
+          description: Paramètre `prompt` de la demande d'autorisation OIDC
+          example: login
+        acrValues:
+          type: string
+          description: Paramètre `acr_values` de la demande d'autorisation OIDC
+        maxAge:
+          type: number
+          description: Paramètre `max_age` (secondes) de la demande d'autorisation OIDC
+      required:
+        - strategy
+        - prompt
+    AuthLevelConfigDto:
+      type: object
+      properties:
+        reauth:
+          nullable: true
+          description: Paramètres de la reconnexion forte ; null si elle est désactivée
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/AuthLevelReauthConfigDto"
+        helpUrl:
+          type: string
+          description: Page d'aide (utiliser sa carte agent, activer la double
+            authentification)
+      required:
+        - reauth
     ConfigDto:
       type: object
       properties:
@@ -6829,6 +6915,10 @@ components:
           type: string
           description: OIDC client ID
           example: my-client-id
+        oidcScope:
+          type: string
+          description: OIDC scopes requested by the frontend
+          example: openid profile email
         version:
           type: string
           description: Backend version
@@ -6842,9 +6932,15 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/FooterLinkDto"
+        authLevel:
+          description: "Contrôle du niveau d'authentification (#1985) : présent uniquement
+            quand la rétrogradation est appliquée"
+          allOf:
+            - $ref: "#/components/schemas/AuthLevelConfigDto"
       required:
         - oidcConfigUrl
         - oidcClientId
+        - oidcScope
         - version
         - footerLinks
     Roles:
@@ -7223,6 +7319,45 @@ components:
         - ReportPost
         - ReportManage
       description: Liste des permissions supplémentaire accordé a un user
+    AuthLevel:
+      type: string
+      enum:
+        - strong
+        - weak
+        - unknown
+      description: strong = carte agent ou double authentification ; weak = mode
+        reconnu comme faible ; unknown = claim absent ou fournisseur non listé
+    AuthLevelReason:
+      type: string
+      enum:
+        - disabled
+        - trusted-idp
+        - strong-method
+        - weak-method
+        - untrusted-idp
+        - claim-missing
+      description: Motif du niveau attribué
+    AuthLevelDto:
+      type: object
+      properties:
+        level:
+          description: strong = carte agent ou double authentification ; weak = mode
+            reconnu comme faible ; unknown = claim absent ou fournisseur non
+            listé
+          allOf:
+            - $ref: "#/components/schemas/AuthLevel"
+        downgraded:
+          type: boolean
+          description: Vrai si les droits de la session ont été ramenés à ceux d'un
+            utilisateur standard (mode enforce uniquement)
+        reason:
+          description: Motif du niveau attribué
+          allOf:
+            - $ref: "#/components/schemas/AuthLevelReason"
+      required:
+        - level
+        - downgraded
+        - reason
     UserWithPermissions:
       type: object
       properties:
@@ -7288,6 +7423,11 @@ components:
           items:
             $ref: "#/components/schemas/Permission"
           description: Liste des permissions lié au role d'un user
+        authLevel:
+          description: Niveau d'authentification de la session courante (absent en mode
+            off et pour les jetons API)
+          allOf:
+            - $ref: "#/components/schemas/AuthLevelDto"
         id:
           type: string
         email:
@@ -7437,6 +7577,43 @@ components:
         - id
         - createdAt
         - additionalPermissions
+    UserConnexionLogDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID unique de l'entrée
+        authTime:
+          format: date-time
+          type: string
+          description: Jour de connexion (UTC)
+        authLevel:
+          description: "Niveau d'authentification évalué : strong, weak ou unknown (claim
+            absent, fournisseur non listé ou évaluation désactivée)"
+          allOf:
+            - $ref: "#/components/schemas/AuthLevel"
+        authMethod:
+          type: string
+          nullable: true
+          description: Valeur brute du claim de mode d'authentification transmis par le
+            fournisseur d'identité
+        authIdp:
+          type: string
+          nullable: true
+          description: Fournisseur d'identité d'origine, si transmis
+        authSource:
+          type: string
+          nullable: true
+          enum:
+            - token
+            - userinfo
+            - null
+          description: "Source des claims : jeton d'accès ou userinfo ; null pour une
+            source inconnue"
+      required:
+        - id
+        - authTime
+        - authLevel
     PaginatedUserWithPermissions:
       type: object
       properties:
