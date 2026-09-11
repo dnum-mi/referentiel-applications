@@ -29,6 +29,8 @@ export interface AuthLevelEvaluation {
   claimValue?: string;
   /** Valeur brute du claim de fournisseur d'identité, si transmise. */
   idp?: string;
+  /** `userinfo` quand le claim a été lu sur l'endpoint userinfo (repli), absent sinon. */
+  source?: "userinfo";
 }
 
 /**

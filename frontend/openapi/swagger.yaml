@@ -6818,9 +6818,23 @@ components:
         - label
         - title
         - href
+    AuthLevelReauthStrategy:
+      type: string
+      enum:
+        - prompt
+        - logout
+      description: "prompt : redirection vers le fournisseur avec le paramètre prompt
+        ; logout : déconnexion complète de la session SSO puis nouvelle
+        connexion"
     AuthLevelReauthConfigDto:
       type: object
       properties:
+        strategy:
+          description: "prompt : redirection vers le fournisseur avec le paramètre prompt
+            ; logout : déconnexion complète de la session SSO puis nouvelle
+            connexion"
+          allOf:
+            - $ref: "#/components/schemas/AuthLevelReauthStrategy"
         prompt:
           type: string
           description: Paramètre `prompt` de la demande d'autorisation OIDC
@@ -6832,6 +6846,7 @@ components:
           type: number
           description: Paramètre `max_age` (secondes) de la demande d'autorisation OIDC
       required:
+        - strategy
         - prompt
     AuthLevelConfigDto:
       type: object

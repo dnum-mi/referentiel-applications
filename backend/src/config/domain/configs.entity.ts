@@ -6,6 +6,8 @@ export interface FooterLink {
 
 /** Paramètres de la reconnexion forte proposée par le bandeau (#1985). */
 export interface AuthLevelReauthFrontendConfig {
+  /** `prompt` (redirection avec prompt) ou `logout` (déconnexion SSO puis reconnexion). */
+  strategy: "prompt" | "logout";
   prompt: string;
   acrValues?: string;
   maxAge?: number;

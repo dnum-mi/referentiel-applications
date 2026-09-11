@@ -14,6 +14,10 @@ describe("authLevelConfig", () => {
     delete process.env.AUTH_LEVEL_REAUTH_ACR_VALUES;
     delete process.env.AUTH_LEVEL_REAUTH_MAX_AGE;
     delete process.env.AUTH_LEVEL_HELP_URL;
+    delete process.env.AUTH_LEVEL_REAUTH_STRATEGY;
+    delete process.env.AUTH_LEVEL_USERINFO_FALLBACK;
+    delete process.env.AUTH_LEVEL_USERINFO_URL;
+    delete process.env.AUTH_LEVEL_USERINFO_TIMEOUT_MS;
   });
 
   afterEach(() => {
@@ -67,6 +71,7 @@ describe("authLevelConfig", () => {
       prompt: "login",
       acrValues: undefined,
       maxAge: undefined,
+      strategy: "prompt",
     });
     expect(helpUrl).toBeUndefined();
     expect(trustedIdps).toEqual([]);
@@ -84,6 +89,7 @@ describe("authLevelConfig", () => {
       prompt: "consent login",
       acrValues: "eidas2",
       maxAge: 0,
+      strategy: "prompt",
     });
     expect(helpUrl).toBe("https://intranet.example/aide-2fa");
   });
@@ -98,4 +104,41 @@ describe("authLevelConfig", () => {
     expect(parseCsvList("")).toEqual([]);
     expect(parseCsvList(" , ,")).toEqual([]);
   });
+
+  it("choisit la stratégie de reconnexion, prompt par défaut et en cas de valeur inconnue", () => {
+    expect(authLevelConfig().reauth.strategy).toBe("prompt");
+    process.env.AUTH_LEVEL_REAUTH_STRATEGY = " Logout ";
+    expect(authLevelConfig().reauth.strategy).toBe("logout");
+    process.env.AUTH_LEVEL_REAUTH_STRATEGY = "redirect";
+    expect(authLevelConfig().reauth.strategy).toBe("prompt");
+  });
+
+  // Inerte par défaut, comme le reste : le repli n'appelle le fournisseur que s'il est demandé.
+  it("laisse le repli userinfo désactivé par défaut", () => {
+    expect(authLevelConfig().userinfo).toEqual({
+      enabled: false,
+      url: undefined,
+      timeoutMs: 2000,
+    });
+  });
+
+  it("lit le repli userinfo, son URL explicite et son délai", () => {
+    process.env.AUTH_LEVEL_USERINFO_FALLBACK = "true";
+    process.env.AUTH_LEVEL_USERINFO_URL =
+      " https://idp.example/oauth2/userinfo ";
+    process.env.AUTH_LEVEL_USERINFO_TIMEOUT_MS = "1500";
+    expect(authLevelConfig().userinfo).toEqual({
+      enabled: true,
+      url: "https://idp.example/oauth2/userinfo",
+      timeoutMs: 1500,
+    });
+  });
+
+  it.each(["abc", "-5", "0", "60001", "1.5"])(
+    "retombe sur 2000 ms pour un délai userinfo invalide ou nul (%s)",
+    (value) => {
+      process.env.AUTH_LEVEL_USERINFO_TIMEOUT_MS = value;
+      expect(authLevelConfig().userinfo.timeoutMs).toBe(2000);
+    },
+  );
 });

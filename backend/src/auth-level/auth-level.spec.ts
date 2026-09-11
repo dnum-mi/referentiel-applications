@@ -13,7 +13,8 @@ const enforce: AuthLevelConfig = {
   strongValues: ["card", "otp"],
   idpClaim: "auth_idp",
   trustedIdps: ["partenaire"],
-  reauth: { enabled: true, prompt: "login" },
+  reauth: { enabled: true, prompt: "login", strategy: "prompt" },
+  userinfo: { enabled: false, timeoutMs: 2000 },
 };
 const observe: AuthLevelConfig = { ...enforce, mode: "observe" };
 const off: AuthLevelConfig = { ...enforce, mode: "off" };

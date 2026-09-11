@@ -38,6 +38,7 @@ export class ConfigService {
     return {
       reauth: reauth.enabled
         ? {
+            strategy: reauth.strategy,
             prompt: reauth.prompt,
             acrValues: reauth.acrValues,
             maxAge: reauth.maxAge,

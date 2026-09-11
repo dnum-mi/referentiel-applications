@@ -28,6 +28,14 @@ export class FooterLinkDto implements FooterLink {
 
 export class AuthLevelReauthConfigDto implements AuthLevelReauthFrontendConfig {
   @ApiProperty({
+    enum: ["prompt", "logout"],
+    enumName: "AuthLevelReauthStrategy",
+    description:
+      "prompt : redirection vers le fournisseur avec le paramètre prompt ; logout : déconnexion complète de la session SSO puis nouvelle connexion",
+  })
+  strategy: "prompt" | "logout";
+
+  @ApiProperty({
     description: "Paramètre `prompt` de la demande d'autorisation OIDC",
     example: "login",
   })

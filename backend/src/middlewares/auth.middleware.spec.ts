@@ -46,7 +46,8 @@ const authLevelOff: AuthLevelConfigType = {
   mode: "off",
   strongValues: [],
   trustedIdps: [],
-  reauth: { enabled: true, prompt: "login" },
+  reauth: { enabled: true, prompt: "login", strategy: "prompt" },
+  userinfo: { enabled: false, timeoutMs: 2000 },
 };
 const authLevelEnforce: AuthLevelConfigType = {
   mode: "enforce",
@@ -54,7 +55,8 @@ const authLevelEnforce: AuthLevelConfigType = {
   strongValues: ["card"],
   idpClaim: "auth_idp",
   trustedIdps: ["partenaire"],
-  reauth: { enabled: true, prompt: "login" },
+  reauth: { enabled: true, prompt: "login", strategy: "prompt" },
+  userinfo: { enabled: false, timeoutMs: 2000 },
 };
 const authLevelObserve: AuthLevelConfigType = {
   ...authLevelEnforce,
@@ -462,6 +464,152 @@ describe("AuthMiddleware", () => {
         adminUser.id,
         undefined,
       );
+    });
+  });
+
+  describe("userinfo fallback (#1985)", () => {
+    const withUserinfo: AuthLevelConfigType = {
+      ...authLevelEnforce,
+      userinfo: {
+        enabled: true,
+        url: "https://idp.example/oauth2/userinfo",
+        timeoutMs: 2000,
+      },
+    };
+    let fetchSpy: jest.SpyInstance;
+
+    afterEach(() => fetchSpy?.mockRestore());
+
+    function mockUserinfo(body: unknown, status = 200) {
+      fetchSpy = jest.spyOn(globalThis, "fetch").mockImplementation(
+        async () =>
+          new Response(JSON.stringify(body), {
+            status,
+            headers: { "content-type": "application/json" },
+          }),
+      );
+    }
+
+    it("reads the mode on userinfo when the access token lacks it", async () => {
+      mockUserinfo({ sub: "sub-1", auth_mode: "CARD" });
+      const { middleware, userConnexionLogService } = buildMiddleware({
+        authLevel: withUserinfo,
+        user: adminUser,
+      });
+      const request = bearerRequest({ email: adminUser.email, sub: "sub-1" });
+
+      await run(middleware, request);
+
+      expect(fetchSpy).toHaveBeenCalledWith(
+        "https://idp.example/oauth2/userinfo",
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: expect.stringMatching(/^Bearer /),
+          }),
+        }),
+      );
+      expect(request.user).toMatchObject({
+        role: Roles.ADMIN,
+        authLevel: {
+          level: AuthLevel.strong,
+          downgraded: false,
+          reason: "strong-method",
+        },
+      });
+      expect(userConnexionLogService.log).toHaveBeenCalledWith(
+        adminUser.id,
+        expect.objectContaining({ claimValue: "CARD", source: "userinfo" }),
+      );
+    });
+
+    it("still steps down when userinfo carries a weak mode", async () => {
+      mockUserinfo({ sub: "sub-1", auth_mode: "PASSWORD" });
+      const { middleware } = buildMiddleware({
+        authLevel: withUserinfo,
+        user: adminUser,
+      });
+      const request = bearerRequest({ email: adminUser.email, sub: "sub-1" });
+
+      await run(middleware, request);
+
+      expect(request.user).toMatchObject({
+        role: Roles.VISITOR,
+        authLevel: { level: AuthLevel.weak, downgraded: true },
+      });
+    });
+
+    // Fail-closed : un fournisseur injoignable n'accorde jamais rien.
+    it("keeps a missing claim weak when userinfo fails", async () => {
+      mockUserinfo({ error: "invalid_token" }, 401);
+      const { middleware, logger } = buildMiddleware({
+        authLevel: withUserinfo,
+        user: adminUser,
+      });
+      const request = bearerRequest({ email: adminUser.email, sub: "sub-1" });
+
+      await run(middleware, request);
+
+      expect(request.user).toMatchObject({
+        role: Roles.VISITOR,
+        authLevel: { reason: "claim-missing", downgraded: true },
+      });
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining("Repli userinfo en échec"),
+      );
+    });
+
+    it("never calls userinfo when the access token already carries the mode", async () => {
+      mockUserinfo({ sub: "sub-1", auth_mode: "PASSWORD" });
+      const { middleware } = buildMiddleware({
+        authLevel: withUserinfo,
+        user: adminUser,
+      });
+      const request = bearerRequest({
+        email: adminUser.email,
+        sub: "sub-1",
+        auth_mode: "CARD",
+      });
+
+      await run(middleware, request);
+
+      expect(fetchSpy).not.toHaveBeenCalled();
+      expect(request.user?.authLevel?.level).toBe(AuthLevel.strong);
+    });
+
+    // Un fournisseur présent sur le jeton signé n'est jamais remplacé par celui de userinfo.
+    it("never lets userinfo replace a value carried by the access token", async () => {
+      mockUserinfo({ sub: "sub-1", auth_idp: "Partenaire" });
+      const { middleware } = buildMiddleware({
+        authLevel: withUserinfo,
+        user: adminUser,
+      });
+      const request = bearerRequest({
+        email: adminUser.email,
+        sub: "sub-1",
+        auth_idp: "Autre",
+      });
+
+      await run(middleware, request);
+
+      expect(request.user).toMatchObject({
+        role: Roles.VISITOR,
+        authLevel: { reason: "untrusted-idp", downgraded: true },
+      });
+    });
+
+    it("stays disabled unless explicitly enabled", async () => {
+      mockUserinfo({ sub: "sub-1", auth_mode: "CARD" });
+      const { middleware } = buildMiddleware({
+        authLevel: authLevelEnforce,
+        user: adminUser,
+      });
+
+      await run(
+        middleware,
+        bearerRequest({ email: adminUser.email, sub: "sub-1" }),
+      );
+
+      expect(fetchSpy).not.toHaveBeenCalled();
     });
   });
 

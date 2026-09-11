@@ -9,7 +9,7 @@ import {
 import { ConfigType } from "@nestjs/config";
 import { Roles } from "@prisma/client";
 import { NextFunction, Request, Response } from "express";
-import { createRemoteJWKSet, decodeJwt, jwtVerify } from "jose";
+import { JWTPayload, createRemoteJWKSet, decodeJwt, jwtVerify } from "jose";
 import {
   AuthLevelEvaluation,
   evaluateAuthLevel,
@@ -17,6 +17,7 @@ import {
   stepDownPrincipal,
 } from "src/auth-level/auth-level";
 import { stepDownBody } from "src/auth-level/step-down.exception";
+import { UserinfoClaimsResolver } from "src/auth-level/userinfo-claims";
 import { authLevelConfig, oidcConfig } from "src/config/configs";
 import { principalToPermissions } from "src/permissions/role-to-permissions";
 import { TokenService } from "src/token/token.service";
@@ -40,6 +41,8 @@ declare module "express" {
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
   private readonly jwks: ReturnType<typeof createRemoteJWKSet>;
+  /** #1985 : repli userinfo quand le claim de mode manque sur l'access token. */
+  private readonly userinfo?: UserinfoClaimsResolver;
 
   constructor(
     @Inject(oidcConfig.KEY)
@@ -54,6 +57,21 @@ export class AuthMiddleware implements NestMiddleware {
     private readonly authLevel: ConfigType<typeof authLevelConfig>,
   ) {
     this.jwks = createRemoteJWKSet(new URL(this.oidc.jwksUrl));
+    const { mode, claim, idpClaim, userinfo } = this.authLevel;
+    if (mode !== "off" && claim && userinfo.enabled) {
+      this.userinfo = new UserinfoClaimsResolver({
+        url: userinfo.url,
+        discoveryUrl: this.oidc.configUrl,
+        claimNames: idpClaim ? [claim, idpClaim] : [claim],
+        clientId: this.oidc.clientId,
+        timeoutMs: userinfo.timeoutMs,
+        verifyJwt: async (jwt) =>
+          process.env.DISABLE_JWT_VALIDATION
+            ? decodeJwt(jwt)
+            : (await jwtVerify(jwt, this.jwks)).payload,
+        onError: (message) => this.logger.warn(message),
+      });
+    }
   }
 
   async use(req: Request, res: Response, next: NextFunction) {
@@ -84,7 +102,7 @@ export class AuthMiddleware implements NestMiddleware {
         const payload = process.env.DISABLE_JWT_VALIDATION
           ? decodeJwt(authorization)
           : (await jwtVerify(authorization, this.jwks)).payload;
-        evaluation = evaluateAuthLevel(payload, this.authLevel);
+        evaluation = await this.evaluateLevel(authorization, payload);
         const email = payload.email as string;
         user = maintenanceMode
           ? await this.userService.findByEmailWithRelations(email)
@@ -192,6 +210,38 @@ export class AuthMiddleware implements NestMiddleware {
   }
 
   /**
+   * Évalue le niveau d'authentification sur l'access token, puis, si le claim de mode y manque et
+   * que le repli est activé, sur les claims lus à l'endpoint userinfo avec ce même jeton (#1985).
+   * Les claims userinfo ne comblent que ce qui manque : ils ne peuvent qu'ajouter une preuve.
+   */
+  private async evaluateLevel(
+    accessToken: string,
+    payload: JWTPayload,
+  ): Promise<AuthLevelEvaluation> {
+    const evaluation = evaluateAuthLevel(payload, this.authLevel);
+    if (
+      !this.userinfo ||
+      (evaluation.reason !== "claim-missing" &&
+        evaluation.reason !== "untrusted-idp")
+    ) {
+      return evaluation;
+    }
+    const claims = await this.userinfo.resolve(accessToken, payload);
+    // Les claims userinfo ne comblent que ce qui manque sur le jeton signé : une valeur
+    // présente sur le jeton (ex. le fournisseur d'origine) n'est jamais remplacée.
+    const merged: JWTPayload = { ...payload };
+    let filled = false;
+    for (const [name, value] of Object.entries(claims)) {
+      if (merged[name] === undefined) {
+        merged[name] = value;
+        filled = true;
+      }
+    }
+    if (!filled) return evaluation;
+    return { ...evaluateAuthLevel(merged, this.authLevel), source: "userinfo" };
+  }
+
+  /**
    * Une ligne de log applicatif par utilisateur, par jour et par niveau (jamais par
    * requête) : en `observe`, c'est le canal de mesure qui dit ce que le fournisseur
    * d'identité transmet réellement ; en `enforce`, seule une rétrogradation qui retire
@@ -203,7 +253,7 @@ export class AuthMiddleware implements NestMiddleware {
     downgraded: boolean,
   ) {
     if (!evaluation || this.authLevel.mode === "off") return;
-    const details = `user=${user.email} level=${evaluation.level} reason=${evaluation.reason} method=${evaluation.claimValue ?? "-"} idp=${evaluation.idp ?? "-"} role=${user.role}`;
+    const details = `user=${user.email} level=${evaluation.level} reason=${evaluation.reason} method=${evaluation.claimValue ?? "-"} idp=${evaluation.idp ?? "-"} source=${evaluation.source ?? "jeton"} role=${user.role}`;
     if (this.authLevel.mode === "observe") {
       this.logger.log(`[AuthLevel] ${details}`);
       return;
