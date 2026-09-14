@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.91.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.90.3...v1.91.0) (2026-09-14)
+
+
+### Features
+
+* add alert when user has no all read data rights on application ([#2633](https://github.com/dnum-mi/referentiel-applications/issues/2633)) ([1a12df7](https://github.com/dnum-mi/referentiel-applications/commit/1a12df7e160c8f3f06fc7e4742972288b1ee620d))
+* **auth:** enforce strong authentication for elevated rights ([#2625](https://github.com/dnum-mi/referentiel-applications/issues/2625)) ([05aefc8](https://github.com/dnum-mi/referentiel-applications/commit/05aefc8f4203e6d0066775647586c0362ee2a597))
+
+
+### Bug Fixes
+
+* **auth:** require strong authentication for all access ([#2630](https://github.com/dnum-mi/referentiel-applications/issues/2630)) ([0373698](https://github.com/dnum-mi/referentiel-applications/commit/037369817853ddb820c2e7e3ddf5b3c01c84b6bb))
+* normalize scoped administration paths ([#2632](https://github.com/dnum-mi/referentiel-applications/issues/2632)) ([7d40414](https://github.com/dnum-mi/referentiel-applications/commit/7d404148d74b6cfe80dc96734bdde9a02a6421ad))
+
 ## [1.90.3](https://github.com/dnum-mi/referentiel-applications/compare/v1.90.2...v1.90.3) (2026-09-09)
 
 
