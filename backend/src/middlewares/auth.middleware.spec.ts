@@ -337,62 +337,41 @@ describe("AuthMiddleware", () => {
       });
     });
 
-    // INVARIANT : la forme exacte du principal standard. Les quatre champs sont
-    // réécrits, l'identité et l'organisation (couche 3) sont conservées.
-    it("steps the principal down to a standard user on a weak session in mode enforce", async () => {
-      const { middleware } = buildMiddleware({
-        authLevel: authLevelEnforce,
-        user: adminUser,
-      });
-      const request = bearerRequest({
-        email: adminUser.email,
-        auth_mode: "PASSWORD",
-      });
-
-      const { next } = await run(middleware, request);
-
-      expect(request.user).toEqual({
-        ...adminUser,
-        role: Roles.VISITOR,
-        additionalPermissions: [],
-        scopeOrganizationId: null,
-        scopeOrganization: null,
-        permissions: roleToPermissions(Roles.VISITOR),
-        authLevel: {
-          level: AuthLevel.weak,
-          downgraded: true,
-          reason: "weak-method",
-        },
-      });
-      // Le rôle réel n'est jamais exposé à une session faible, pas même via authLevel.
-      expect(Object.keys(request.user?.authLevel ?? {}).sort()).toEqual([
-        "downgraded",
-        "level",
-        "reason",
-      ]);
-      expect(request.user?.organizationId).toBe("org-1");
-      expect(request.user?.email).toBe(adminUser.email);
-      expect(next).toHaveBeenCalledTimes(1);
-    });
-
-    it("treats a missing claim as a weak session in mode enforce", async () => {
-      const { middleware } = buildMiddleware({
-        authLevel: authLevelEnforce,
-        user: adminUser,
-      });
-      const request = bearerRequest({ email: adminUser.email });
-
-      await run(middleware, request);
-
-      expect(request.user).toMatchObject({
-        role: Roles.VISITOR,
-        authLevel: {
-          level: AuthLevel.unknown,
-          downgraded: true,
-          reason: "claim-missing",
-        },
-      });
-    });
+    it.each([
+      { auth_mode: "PASSWORD" },
+      { auth_mode: "WINDOWS" },
+      { auth_mode: "SYNTHETIC_TOTP" },
+      {},
+    ])(
+      "blocks every non-strong session before assigning a principal (%j)",
+      async (claims) => {
+        const { middleware, userService } = buildMiddleware({
+          authLevel: authLevelEnforce,
+          user: adminUser,
+        });
+        const request = bearerRequest({ email: adminUser.email, ...claims });
+        const { response, next } = await run(middleware, request);
+        expect(response.status).toHaveBeenCalledWith(403);
+        expect(response.json).toHaveBeenCalledWith({
+          statusCode: 403,
+          strongAuthRequired: true,
+          message: expect.any(String),
+          authLevel: {
+            level: claims.auth_mode ? AuthLevel.weak : AuthLevel.unknown,
+            downgraded: true,
+            reason: claims.auth_mode ? "weak-method" : "claim-missing",
+          },
+        });
+        expect(request.user).toBeUndefined();
+        expect(next).not.toHaveBeenCalled();
+        expect(userService.findByIdWithRelations).not.toHaveBeenCalled();
+        expect(adminUser.role).toBe(Roles.ADMIN);
+        expect(adminUser.additionalPermissions).toEqual([
+          Permission.DataExport,
+        ]);
+        expect(adminUser.scopeOrganizationId).toBe("scope-1");
+      },
+    );
 
     it("trusts a listed identity provider without any mode claim", async () => {
       const { middleware } = buildMiddleware({
@@ -523,7 +502,7 @@ describe("AuthMiddleware", () => {
       );
     });
 
-    it("still steps down when userinfo carries a weak mode", async () => {
+    it("blocks access when userinfo carries a weak mode", async () => {
       mockUserinfo({ sub: "sub-1", auth_mode: "PASSWORD" });
       const { middleware } = buildMiddleware({
         authLevel: withUserinfo,
@@ -531,12 +510,21 @@ describe("AuthMiddleware", () => {
       });
       const request = bearerRequest({ email: adminUser.email, sub: "sub-1" });
 
-      await run(middleware, request);
+      const { response, next } = await run(middleware, request);
 
-      expect(request.user).toMatchObject({
-        role: Roles.VISITOR,
-        authLevel: { level: AuthLevel.weak, downgraded: true },
-      });
+      expect(response.status).toHaveBeenCalledWith(403);
+      expect(response.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          strongAuthRequired: true,
+          authLevel: {
+            level: AuthLevel.weak,
+            downgraded: true,
+            reason: "weak-method",
+          },
+        }),
+      );
+      expect(request.user).toBeUndefined();
+      expect(next).not.toHaveBeenCalled();
     });
 
     it("checks userinfo before trusting a provider without a mode in the token", async () => {
@@ -551,17 +539,22 @@ describe("AuthMiddleware", () => {
         auth_idp: "Partenaire",
       });
 
-      await run(middleware, request);
+      const { response, next } = await run(middleware, request);
 
       expect(fetchSpy).toHaveBeenCalledTimes(1);
-      expect(request.user).toMatchObject({
-        role: Roles.VISITOR,
-        authLevel: {
-          level: AuthLevel.weak,
-          downgraded: true,
-          reason: "weak-method",
-        },
-      });
+      expect(response.status).toHaveBeenCalledWith(403);
+      expect(response.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          strongAuthRequired: true,
+          authLevel: {
+            level: AuthLevel.weak,
+            downgraded: true,
+            reason: "weak-method",
+          },
+        }),
+      );
+      expect(request.user).toBeUndefined();
+      expect(next).not.toHaveBeenCalled();
     });
 
     it("keeps explicit provider trust when neither source supplies a mode", async () => {
@@ -592,12 +585,21 @@ describe("AuthMiddleware", () => {
       });
       const request = bearerRequest({ email: adminUser.email, sub: "sub-1" });
 
-      await run(middleware, request);
+      const { response, next } = await run(middleware, request);
 
-      expect(request.user).toMatchObject({
-        role: Roles.VISITOR,
-        authLevel: { reason: "claim-missing", downgraded: true },
-      });
+      expect(response.status).toHaveBeenCalledWith(403);
+      expect(response.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          strongAuthRequired: true,
+          authLevel: {
+            level: AuthLevel.unknown,
+            reason: "claim-missing",
+            downgraded: true,
+          },
+        }),
+      );
+      expect(request.user).toBeUndefined();
+      expect(next).not.toHaveBeenCalled();
       expect(logger.warn).toHaveBeenCalledWith(
         expect.stringContaining("Repli userinfo en échec"),
       );
@@ -634,12 +636,21 @@ describe("AuthMiddleware", () => {
         auth_idp: "Autre",
       });
 
-      await run(middleware, request);
+      const { response, next } = await run(middleware, request);
 
-      expect(request.user).toMatchObject({
-        role: Roles.VISITOR,
-        authLevel: { reason: "untrusted-idp", downgraded: true },
-      });
+      expect(response.status).toHaveBeenCalledWith(403);
+      expect(response.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          strongAuthRequired: true,
+          authLevel: {
+            level: AuthLevel.unknown,
+            reason: "untrusted-idp",
+            downgraded: true,
+          },
+        }),
+      );
+      expect(request.user).toBeUndefined();
+      expect(next).not.toHaveBeenCalled();
     });
 
     it.each([true, false])(
@@ -678,9 +689,16 @@ describe("AuthMiddleware", () => {
           sub: "sub-1",
           iss: "https://example.test",
         });
-        await run(middleware, request);
-        expect(request.user?.role).toBe(valid ? Roles.ADMIN : Roles.VISITOR);
-        expect(request.user?.authLevel?.downgraded).toBe(!valid);
+        const { response, next } = await run(middleware, request);
+        if (valid) {
+          expect(request.user?.role).toBe(Roles.ADMIN);
+          expect(request.user?.authLevel?.downgraded).toBe(false);
+          expect(next).toHaveBeenCalledTimes(1);
+        } else {
+          expect(request.user).toBeUndefined();
+          expect(response.status).toHaveBeenCalledWith(403);
+          expect(next).not.toHaveBeenCalled();
+        }
       },
     );
 
@@ -750,7 +768,7 @@ describe("AuthMiddleware", () => {
 
       expect(response.status).toHaveBeenCalledWith(403);
       expect(response.json).toHaveBeenCalledWith(
-        expect.objectContaining({ stepDown: true, reason: "impersonation" }),
+        expect.objectContaining({ strongAuthRequired: true }),
       );
       expect(userService.stopImpersonation).toHaveBeenCalledWith(
         adminUser.id,
@@ -815,8 +833,8 @@ describe("AuthMiddleware", () => {
       expect(logger.log).not.toHaveBeenCalled();
     });
 
-    // La population majoritaire (VISITOR sans rien) ne perd rien : pas de bruit.
-    it("does not warn when the downgrade removes nothing", async () => {
+    // Le refus retire aussi la consultation aux visiteurs.
+    it("warns when a visitor loses access as well", async () => {
       const { middleware, logger } = buildMiddleware({
         authLevel: authLevelEnforce,
         user: visitorUser,
@@ -828,7 +846,7 @@ describe("AuthMiddleware", () => {
         bearerRequest({ email: visitorUser.email, auth_mode: "PASSWORD" }),
       );
 
-      expect(logger.warn).not.toHaveBeenCalled();
+      expect(logger.warn).toHaveBeenCalledTimes(1);
     });
 
     it("logs the evaluation once a day in mode observe", async () => {

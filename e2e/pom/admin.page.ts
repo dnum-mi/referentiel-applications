@@ -24,6 +24,12 @@ export class AdminPage extends BasePage {
     await expect(this.usersTable()).toBeVisible();
   }
 
+  /** L'URL peut être conservée pour la reconnexion, mais aucun contenu admin n'est monté. */
+  async expectNotLoaded(): Promise<void> {
+    await expect(this.adminTabs()).toHaveCount(0);
+    await expect(this.usersTable()).toHaveCount(0);
+  }
+
   // --- Tuiles thématiques (#2419) : chaque thème donne accès à un sous-ensemble d'onglets. ---
 
   private themeTile = (id: string) => this.byTestId(`admin-theme-tile-${id}`);

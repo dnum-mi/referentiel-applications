@@ -137,6 +137,63 @@ describe("userStore — niveau d'authentification (#1985)", () => {
     return { promise, resolve };
   };
 
+  const deniedLevel = { level: "weak", downgraded: true, reason: "weak-method" } as const;
+  const deniedResponse = {
+    error: { strongAuthRequired: true, authLevel: deniedLevel },
+    response: { ok: false, status: 403 },
+  };
+
+  it("remplace le profil par le refus global et purge l'impersonation sans rechargement", async () => {
+    findMeMock.mockResolvedValue(deniedResponse);
+    localStorage.setItem("impersonatedUserId", "target");
+    const store = useUserStore();
+    store.user = me({ level: "strong", downgraded: false, reason: "strong-method" }, "ADMIN");
+    sessionStorage.setItem("strongReauthAttempt", "prompt");
+    await store.fetchUser();
+    expect(store.user).toBeUndefined();
+    expect(store.authLevel).toEqual(deniedLevel);
+    expect(store.isAuthDowngraded).toBe(true);
+    expect(store.hasApplicationAccess).toBe(false);
+    expect(store.impersonation).toBeNull();
+    expect(localStorage.getItem("impersonatedUserId")).toBeNull();
+    expect(reauthLoopState.value).toBe("prompt");
+    expect(assignMock).not.toHaveBeenCalled();
+  });
+
+  it("un refus invalide aussi une ancienne réponse de profil encore en vol", async () => {
+    const pending = deferred<ReturnType<typeof okResponse>>();
+    findMeMock.mockReturnValue(pending.promise);
+    const store = useUserStore();
+    const fetching = store.fetchUser();
+    store.requireStrongAuth(deniedLevel);
+    pending.resolve(okResponse(me({ level: "strong", downgraded: false, reason: "strong-method" }, "ADMIN")));
+    await fetching;
+    expect(store.user).toBeUndefined();
+    expect(store.isAuthDowngraded).toBe(true);
+  });
+
+  it("retire le refus uniquement après une réponse réussie de la session courante", async () => {
+    const store = useUserStore();
+    await Promise.resolve();
+    store.authenticated = true;
+    store.requireStrongAuth(deniedLevel);
+    findMeMock.mockResolvedValue(okResponse(me({ level: "strong", downgraded: false, reason: "strong-method" }, "ADMIN")));
+    await store.fetchUser();
+    expect(store.hasApplicationAccess).toBe(true);
+    expect(store.isAuthDowngraded).toBe(false);
+    expect(store.user?.role).toBe("ADMIN");
+  });
+
+  it("garde la reconnexion disponible après le retrait du jeton avant redirection", () => {
+    const store = useUserStore();
+    store.requireStrongAuth(deniedLevel);
+    oidcEvents.unloaded();
+    expect(store.authenticated).toBe(false);
+    expect(store.user).toBeUndefined();
+    expect(store.isAuthDowngraded).toBe(true);
+    expect(store.hasApplicationAccess).toBe(false);
+  });
+
   it("n'est rétrogradé que sur `downgraded`, jamais sur le niveau", () => {
     const store = useUserStore();
     expect(store.isAuthDowngraded).toBe(false);

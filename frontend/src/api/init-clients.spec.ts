@@ -14,8 +14,9 @@ vi.mock("@/services/authentication", () => ({
 }));
 
 import { configureClients } from "./init-clients";
+import { USER_MANAGER } from "@/services/authentication";
 
-type ResponseInterceptor = (response: Response) => Promise<Response>;
+type ResponseInterceptor = (response: Response, request?: Request) => Promise<Response>;
 
 function forbidden(payload: unknown): Response {
   return {
@@ -27,6 +28,7 @@ function forbidden(payload: unknown): Response {
 
 describe("init-clients — 403 liés au niveau d'authentification (#1985)", () => {
   const toaster = { addErrorMessage: vi.fn() };
+  const onStrongAuthRequired = vi.fn();
   let interceptor: ResponseInterceptor;
   let downgraded = false;
 
@@ -37,8 +39,10 @@ describe("init-clients — 403 liés au niveau d'authentification (#1985)", () =
     localStorage.clear();
     sessionStorage.clear();
     downgraded = false;
+    onStrongAuthRequired.mockReset();
+    vi.mocked(USER_MANAGER.getUser).mockResolvedValue(null);
     vi.stubGlobal("location", { ...globalThis.location, assign: assignMock, pathname: "/", search: "" });
-    configureClients(toaster, { isAuthDowngraded: () => downgraded });
+    configureClients(toaster, { isAuthDowngraded: () => downgraded, onStrongAuthRequired });
     interceptor = interceptors.response.use.mock.calls[0][0] as ResponseInterceptor;
   });
 
@@ -71,5 +75,18 @@ describe("init-clients — 403 liés au niveau d'authentification (#1985)", () =
   it("conserve le refus générique pour une session forte", async () => {
     await interceptor(forbidden({ statusCode: 403, message: "Forbidden" }));
     expect(toaster.addErrorMessage).toHaveBeenCalledWith("Permission refusée : Vous n'avez pas la permission d'effectuer cette action.");
+  });
+
+  it.each(["current", "expired"])("ne bloque que la session concernée par le refus (%s)", async (token) => {
+    const authLevel = { level: "weak", downgraded: true, reason: "weak-method" };
+    vi.mocked(USER_MANAGER.getUser).mockResolvedValue({ access_token: "current" } as Awaited<ReturnType<typeof USER_MANAGER.getUser>>);
+    const request = { headers: new Headers({ Authorization: `Bearer ${token}` }) } as Request;
+    await interceptor(forbidden({ strongAuthRequired: true, authLevel }), request);
+    if (token === "current") expect(onStrongAuthRequired).toHaveBeenCalledWith(authLevel);
+    else expect(onStrongAuthRequired).not.toHaveBeenCalled();
+    expect(toaster.addErrorMessage).not.toHaveBeenCalled();
+    expect(assignMock).not.toHaveBeenCalled();
+    expect(USER_MANAGER.signinSilent).not.toHaveBeenCalled();
+    expect(USER_MANAGER.signinRedirect).not.toHaveBeenCalled();
   });
 });

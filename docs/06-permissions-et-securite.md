@@ -63,15 +63,22 @@ La configuration OIDC backend est centralisée dans `backend/src/config/configs/
 
 Le SSO de l'organisation admet plusieurs modes de connexion (carte agent, mot de passe avec double authentification, mot de passe seul). RefApp lit, sur l'**access token**, puis sur `userinfo` si le repli est activé et si le mode manque (jamais l'id token, cf. ADR-0005), un claim de mode d'authentification déclaré côté fournisseur — nom et valeurs fortes entièrement configurables (`AUTH_LEVEL_*`, voir [API](./05-api.md)) — et en déduit un niveau `strong`, `weak` ou `unknown` (module pur `backend/src/auth-level/auth-level.ts`). Un claim absent vaut toujours **faible** ; une liste explicite de fournisseurs fédérés de confiance (`AUTH_LEVEL_TRUSTED_IDPS`, vide par défaut) ne comble que l'absence de mode après ce repli, jamais un mode faible transmis par l'une des deux sources. Le repli exige un sujet non vide dans le jeton de référence et identique dans `userinfo` ; une réponse signée doit aussi porter l’émetteur du jeton et l’audience du client. Trois modes (`AUTH_LEVEL_MODE`) : `off` (défaut, aucune évaluation), `observe` (niveau journalisé et exposé, droits intacts — l'étape de mesure avant toute activation, cf. le runbook d'[Exploitation](./12-exploitation-deploiement.md)) et `enforce`.
 
-En `enforce`, une session non forte ne porte que les **droits d'un utilisateur standard**, en cinq points de coupe :
+Depuis la décision métier du 14 septembre 2026, en `enforce`, une session faible ou inconnue est **refusée sur toutes les routes protégées**, y compris les lectures, `GET /users/me`, les préférences et les abonnements. `AuthMiddleware` répond avant de renseigner `req.user` et avant d'appeler les contrôleurs :
 
-- **Réécriture du principal** dans `AuthMiddleware` (`stepDownPrincipal`) : rôle `VISITOR`, `additionalPermissions` vides, périmètre annulé (identifiant **et** relation `scopeOrganization`), **en mémoire uniquement**, avant `principalToPermissions`, avant l'impersonation et avant le journal. L'e-mail et l'organisation sont conservés (couche 3, traçabilité). Le jeton API (`x-refapp-token`) n'est **jamais** évalué.
-- **Couche 3 ramenée aux lectures** dans `CheckPermissions.resolveAppPermissions` (point d'entrée unique de la garde et de `my-perms`) : un acteur en écriture sur ses applications ne conserve que les permissions applicatives de lecture.
-- **Impersonation refusée** par le middleware avec un 403 `{ stepDown: true, reason: "impersonation" }` (jamais 401, qui déclencherait la ré-authentification du front) et clôture de la session `ImpersonationLog` ouverte.
-- **Création de jeton personnel refusée** (`TokenService.create`, 403 `stepDown` / `personal-token`) : un jeton est un secret durable qui contournerait ensuite tout contrôle de niveau.
-- **Second rideau** dans `ScopedPermissionService.assertIsAdministrator` (403 `stepDown` / `admin-action`), derrière la garde `AdminPanelManage` qui refuse déjà.
+```json
+{
+  "statusCode": 403,
+  "strongAuthRequired": true,
+  "message": "L'accès au référentiel nécessite une authentification forte (carte agent ou double authentification).",
+  "authLevel": { "level": "weak", "downgraded": true, "reason": "weak-method" }
+}
+```
 
-`GET /users/me` expose `authLevel { level, downgraded, reason }` — jamais le rôle, les permissions ou le périmètre d'origine — et les routes qui décrivent l'utilisateur courant (`PATCH /users/me`, abonnements) répondent depuis le Requestor de la requête, pas d'une relecture Prisma. `UserConnexionLog` enregistre une ligne par utilisateur, jour et contexte (niveau, mode, fournisseur et source) avec la valeur brute du claim, le fournisseur et la source (`authSource` : `token`, `userinfo`, ou `null` si inconnue). Deux valeurs encore classées faibles sont conservées séparément ; les requêtes répétées et concurrentes du même contexte sont dédoublonnées. Les anciennes lignes gardent une source inconnue, sans attribution rétrospective.
+Le refus ne contient aucune identité, permission, organisation ou valeur brute du claim. Un `401` déclencherait une boucle de connexion SSO ; ce `403` affiche un écran de reconnexion. Aucun rôle n'est modifié en base. Une impersonation active est clôturée hors maintenance et son état navigateur est purgé. Les contrôles défensifs des services (`stepDown`, permissions d'acteur) sont conservés, mais une session faible est arrêtée en amont.
+
+Les jetons API existants (`x-refapp-token`) restent hors du contrôle du niveau SSO. Les routes publiques de configuration et de santé restent disponibles pour démarrer l'application. `off` et `observe` ne bloquent pas l'accès ; ils ne constituent donc pas une protection active.
+
+`UserConnexionLog` enregistre une ligne par utilisateur, jour et contexte (niveau, mode, fournisseur et source) avec la valeur brute du claim, le fournisseur et la source (`authSource` : `token`, `userinfo`, ou `null` si inconnue). Deux valeurs encore classées faibles sont conservées séparément ; les requêtes répétées et concurrentes du même contexte sont dédoublonnées. Les anciennes lignes gardent une source inconnue, sans attribution rétrospective.
 
 `GET /users/:id/connexion-logs` expose les 30 derniers contextes quotidiens (niveau, mode, fournisseur et source) au rôle administrateur uniquement. Un administrateur de périmètre doit avoir la cible dans son périmètre ; une simple délégation `AdminPanelManage` ne suffit pas. La même règle protège `GET /users/:id/permission-logs`. Une session rétrogradée est refusée. Le diagnostic est accessible via **Administration → Utilisateurs & droits → Gestion des utilisateurs → Consultation → Connexions**, dans une fenêtre dédiée, sans exposer l’empreinte interne de dédoublonnage.
 
@@ -287,7 +294,7 @@ La même règle de périmètre s'applique à l'impersonation (#2217, `assertCanI
 
 Côté interface, le bouton « Se connecter en tant que » n'est pas proposé hors périmètre (`UserActions.vue`, `canImpersonate`, alignée sur `canEditUser`).
 
-En mode `enforce` du niveau d'authentification (#1985, [§1.4](#14-niveau-dauthentification--carte-agent-ou-double-authentification-1985)), l'impersonation exige en outre une **session forte** : le middleware refuse le header `x-impersonate-user-id` d'une session rétrogradée par un 403 `stepDown` et clôt la session `ImpersonationLog` ouverte.
+En mode `enforce` du niveau d'authentification (#1985, [§1.4](#14-niveau-dauthentification--carte-agent-ou-double-authentification-1985)), l'impersonation exige en outre une **session forte** : le middleware refuse le header `x-impersonate-user-id` d'une session rétrogradée par un 403 `strongAuthRequired` et clôt la session `ImpersonationLog` ouverte.
 
 ### 6.4. Effet sur les onglets d'administration
 
@@ -358,7 +365,7 @@ return Array.from(userPermissions).some((p) => permissions.includes(p));
 
 Les composants passent en second argument les permissions applicatives obtenues via `my-perms` pour affiner l'affichage par application. Ce contrôle frontend est purement ergonomique : l'autorisation **réelle** est toujours appliquée côté backend par le `PermissionGuard`.
 
-**Niveau d'authentification (#1985).** `GET /users/me` renvoie les permissions **effectives** de la session : `hasPermissions` n'a rien à savoir de la rétrogradation, le lien Admin, les gardes de route et les boutons suivent d'eux-mêmes. Le store expose en plus `authLevel` et `isAuthDowngraded` (calculé sur `downgraded`, jamais sur `level` — en mode `observe` le niveau peut être faible sans effet). Le bandeau `WeakAuthBanner.vue` (non sticky, non fermable, `role="status"`), la ligne « Niveau d'authentification » du profil, le badge « Droits limités » et l'onglet Tokens s'appuient dessus ; le bouton « Se reconnecter » appelle `signinStrong()` (`frontend/src/services/authentication.ts`) qui force `prompt=login` (et `acr_values` / `max_age` s'ils sont servis par `/config`) ; si cette tentative laisse la session faible, le bouton devient « Se déconnecter puis se reconnecter » et ferme complètement la session SSO avant une nouvelle connexion (stratégie `logout`, imposable d'emblée par `AUTH_LEVEL_REAUTH_STRATEGY`). **Le front n'est jamais source de vérité** : il ne lit ni `acr`, ni `amr`, ni le claim de mode dans le jeton (`user.profile` est un id token non validé par le backend), et les 403 typés `stepDown` sont traités par l'intercepteur (`init-clients.ts` : purge de l'impersonation et rechargement, ou message dédié).
+**Niveau d'authentification (#1985).** Le store déduit le refus de la réponse `403 strongAuthRequired` du backend et invalide le profil, les requêtes de session en cours et l'impersonation. `App.vue` ne monte aucune vue du référentiel tant que `/users/me` n'a pas réussi pour la session courante. Recherche, navigation, profil, cloche et aperçu des notifications sont retirés en cas de refus ; le polling des notifications s'arrête. Le composant `WeakAuthBanner.vue` sert désormais d'écran de reconnexion dans le contenu principal. Le bouton appelle `signinStrong()` avec `prompt=login` et les paramètres éventuellement servis par `/config`. Si la reconnexion reste faible, l'écran propose une déconnexion SSO complète ; cette bascule survit au rechargement. Un refus associé à un ancien jeton ne bloque pas la nouvelle session. Le navigateur ne lit jamais les claims OIDC pour décider du niveau.
 
 > Pour le détail de l'architecture backend (modules, middleware, services), se reporter à [Architecture backend](./08-architecture-backend.md).
 
@@ -394,7 +401,7 @@ Les composants passent en second argument les permissions applicatives obtenues 
 | Endpoint `my-perms`                                              | `backend/src/applications/application.controller.ts:149-172` + `application.service.ts:267-269`          |
 | Front `userStore.hasPermissions`                                 | `frontend/src/stores/userStore.ts:79-87`                                                                 |
 | Auth backend (JWKS, modes token/JWT, pivot email)                | `backend/src/middlewares/auth.middleware.ts:37-68`                                                       |
-| Niveau d'authentification : évaluation, rétrogradation, journal  | `backend/src/auth-level/`, `auth.middleware.ts`, `user-connexion-log.service.ts`, `auth-level.config.ts` |
+| Niveau d'authentification : évaluation, refus global, journal    | `backend/src/auth-level/`, `auth.middleware.ts`, `user-connexion-log.service.ts`, `auth-level.config.ts` |
 | Couche 3 en lecture seule sous session faible                    | `check-permissions.service.ts` (`resolveAppPermissions`)                                                 |
 | Refus typés `stepDown` (impersonation, jeton personnel, admin)   | `auth.middleware.ts`, `token.service.ts`, `scoped-permission.service.ts`, `step-down.exception.ts`       |
 | Config OIDC obligatoire (générique, sans fournisseur en dur)     | `backend/src/config/configs/oidc.config.ts`                                                              |

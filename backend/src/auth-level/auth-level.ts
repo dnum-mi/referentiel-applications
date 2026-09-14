@@ -1,7 +1,6 @@
 import type { JWTPayload } from "jose";
-import { AuthLevel, Roles } from "@prisma/client";
+import { AuthLevel } from "@prisma/client";
 import type { AuthLevelConfig } from "src/config/configs/auth-level.config";
-import type { UserEntity } from "src/user/entities/user.entity";
 
 /**
  * Pourquoi la session a reçu ce niveau (#1985) :
@@ -86,31 +85,10 @@ export function evaluateAuthLevel(
   return { level: AuthLevel.unknown, reason: "claim-missing" };
 }
 
-/** Faible ET inconnu sont rétrogradés : un claim absent vaut « faible », sans exception. */
+/** Faible ET inconnu entraînent le refus global en enforce. Le nom reste compatible avec le DTO downgraded. */
 export function isDowngraded(
   evaluation: AuthLevelEvaluation,
   config: AuthLevelConfig,
 ): boolean {
   return config.mode === "enforce" && evaluation.level !== AuthLevel.strong;
-}
-
-/**
- * Utilisateur « standard » (#1985) : rôle VISITOR, aucune permission individuelle, aucun
- * périmètre. Les QUATRE champs sont nécessaires — `role` est lu directement par
- * l'impersonation, `assertIsAdministrator`, la projection de rôle par application et la
- * création de jeton personnel, puis recalculé en permissions par `UserPermissionsInterceptor`
- * sur `/users/me` ; la RELATION `scopeOrganization` (pas seulement l'id) est lue par tout le
- * code de périmètre. E-mail et organisation sont conservés : la couche 3 (acteurs) reste
- * résolue, puis ramenée aux lectures dans `resolveAppPermissions`.
- *
- * Réécriture en mémoire uniquement : rien n'est jamais persisté.
- */
-export function stepDownPrincipal<T extends UserEntity>(user: T): T {
-  return {
-    ...user,
-    role: Roles.VISITOR,
-    additionalPermissions: [],
-    scopeOrganizationId: null,
-    scopeOrganization: null,
-  };
 }

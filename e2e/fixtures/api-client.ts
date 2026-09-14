@@ -62,6 +62,18 @@ export class ApiClient {
     return (await res.json()) as T;
   }
 
+  /** Réponse brute d'une lecture protégée, pour vérifier un refus sans perdre le payload 403. */
+  async accessResponse(path: string) {
+    const response = await this.page.request.get(`/api/v2${path}`, {
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        Accept: "application/json",
+      },
+    });
+    const body: unknown = await response.json();
+    return { status: response.status(), body };
+  }
+
   applications(
     query = "",
   ): Promise<Paginated<{ id: string; label: string }> | null> {

@@ -1,10 +1,18 @@
 import client from "@/api/index";
-import { Roles, type Permission, type UserEntity, type UserFollowedApplicationDto, type UserWithPermissions } from "@/client/types.gen";
+import {
+  Roles,
+  type AuthLevelDto,
+  type Permission,
+  type UserEntity,
+  type UserFollowedApplicationDto,
+  type UserWithPermissions,
+} from "@/client/types.gen";
 import {
   REAUTH_SUCCESS_MESSAGE,
   STEP_DOWN_MESSAGES,
   consumeReauthAttempt,
   consumeStepDownNotice,
+  isStrongAuthRequiredResponse,
   setReauthLoop,
 } from "@/composables/use-auth-level";
 import type { APP_PERMISSIONS } from "@/models/Application";
@@ -17,6 +25,8 @@ import { useToasterStore } from "./toasterStore";
 export const useUserStore = defineStore("userStore", () => {
   const user = ref<UserWithPermissions>();
   const authenticated = ref(false);
+  const sessionInitialized = ref(false);
+  const deniedAuthLevel = ref<AuthLevelDto>();
   // Toutes les réponses sont rattachées à la session qui les a lancées, y compris les
   // préférences et abonnements. Un événement OIDC invalide aussi l'initialisation en cours.
   let sessionGeneration = 0;
@@ -26,6 +36,7 @@ export const useUserStore = defineStore("userStore", () => {
   function invalidateSession() {
     sessionGeneration += 1;
     user.value = undefined;
+    deniedAuthLevel.value = undefined;
   }
   // État d'impersonation restauré depuis le localStorage (survit au rechargement).
   const impersonation = ref<ImpersonationState | null>(getImpersonationState());
@@ -33,24 +44,40 @@ export const useUserStore = defineStore("userStore", () => {
   // #1985 : niveau d'authentification décidé par le backend (`/users/me`). Toujours conditionner
   // l'affichage sur `downgraded`, jamais sur `level` : en mode observation le niveau peut être
   // faible sans aucun effet sur les droits.
-  const authLevel = computed(() => user.value?.authLevel);
-  const isAuthDowngraded = computed(() => user.value?.authLevel?.downgraded === true);
+  const authLevel = computed(() => deniedAuthLevel.value ?? user.value?.authLevel);
+  const isAuthDowngraded = computed(() => authLevel.value?.downgraded === true);
+  const hasApplicationAccess = computed(() => authenticated.value && !!user.value && !isAuthDowngraded.value);
+
+  function requireStrongAuth(level: AuthLevelDto) {
+    invalidateSession();
+    deniedAuthLevel.value = level;
+    clearImpersonationState();
+    impersonation.value = null;
+    settleReauthAttempt();
+  }
 
   // Écoute les événements OIDC pour maintenir l'état d'authentification à jour
   USER_MANAGER.events.addUserLoaded(() => {
     invalidateSession();
     authenticated.value = true;
+    sessionInitialized.value = true;
     fetchUser();
   });
   USER_MANAGER.events.addUserUnloaded(() => {
+    // signinStrong retire le jeton avant la redirection. Garder l'écran de refus
+    // permet de réessayer si le fournisseur est injoignable à cette étape.
+    const denied = isAuthDowngraded.value ? authLevel.value : undefined;
     invalidateSession();
+    deniedAuthLevel.value = denied;
     authenticated.value = false;
+    sessionInitialized.value = true;
   });
 
   // Initialise l'état d'authentification au démarrage
   USER_MANAGER.getUser().then((oidcUser) => {
     if (sessionGeneration !== 0) return;
     authenticated.value = !!oidcUser;
+    sessionInitialized.value = true;
     if (oidcUser) {
       fetchUser();
     }
@@ -69,9 +96,14 @@ export const useUserStore = defineStore("userStore", () => {
     const response = await client.userControllerFindMe();
     if (generation !== sessionGeneration || sequence !== fetchSequence) return;
     if (response.data && response.response.ok) {
+      deniedAuthLevel.value = undefined;
       user.value = response.data;
       settleReauthAttempt();
       notifyStepDown();
+      return;
+    }
+    if (response.response.status === 403 && isStrongAuthRequiredResponse(response.error)) {
+      requireStrongAuth(response.error.authLevel);
       return;
     }
     // #1985 : filet — une impersonation persistée refusée (session rétrogradée) rejoue le header à
@@ -96,7 +128,7 @@ export const useUserStore = defineStore("userStore", () => {
   // Consommé uniquement sur une réponse réussie : un échec réseau laisse le drapeau au suivant.
   function settleReauthAttempt() {
     const strategy = consumeReauthAttempt();
-    if (user.value?.authLevel?.downgraded) {
+    if (authLevel.value?.downgraded) {
       // Toujours faible : retenir la voie qui vient d'échouer. Une bascule déjà retenue survit aux
       // rechargements de l'onglet tant qu'aucune session forte n'est constatée.
       if (strategy) setReauthLoop(strategy);
@@ -237,5 +269,8 @@ export const useUserStore = defineStore("userStore", () => {
     stopImpersonation,
     authLevel,
     isAuthDowngraded,
+    hasApplicationAccess,
+    sessionInitialized,
+    requireStrongAuth,
   };
 });

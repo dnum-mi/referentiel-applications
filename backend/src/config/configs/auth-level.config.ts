@@ -162,12 +162,11 @@ function parseUserinfoHmac(): UserinfoHmacConfig | undefined {
 
 /**
  * Niveau d'authentification de la session SSO (#1985) : carte agent ou double authentification
- * donnent les droits pleins, tout autre mode ramène la session aux droits d'un utilisateur
- * standard.
+ * donnent accès au référentiel, tout autre mode bloque la session en `enforce`.
  *
  * - `mode` (AUTH_LEVEL_MODE) : `off` (défaut, aucune évaluation), `observe` (évaluation
  *   journalisée et exposée sur `/users/me`, droits intacts — l'étape de mesure obligatoire avant
- *   toute activation) ou `enforce` (rétrogradation appliquée).
+ *   toute activation) ou `enforce` (accès refusé sans authentification forte).
  * - `claim` / `strongValues` (AUTH_LEVEL_CLAIM / AUTH_LEVEL_STRONG_VALUES) : obligatoires dès que
  *   le mode n'est pas `off`. Aucune valeur n'est codée en dur : le nom du claim et ses valeurs
  *   sont déclarés côté fournisseur d'identité et vivent dans la configuration d'infra.
@@ -181,7 +180,7 @@ function parseUserinfoHmac(): UserinfoHmacConfig | undefined {
  * Un claim absent vaut toujours « faible » : il n'existe volontairement aucune variable qui le
  * ferait valoir « fort ». Un environnement dont le fournisseur n'émet pas le claim reste en `off`.
  *
- * Fail-fast : un mode actif sans claim ni valeurs fortes rétrograderait tout le monde, il ne
+ * Fail-fast : un mode actif sans claim ni valeurs fortes bloquerait tout le monde, il ne
  * doit pas démarrer.
  */
 export const authLevelConfig = registerAs("authLevel", (): AuthLevelConfig => {
