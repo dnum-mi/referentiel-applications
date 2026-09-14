@@ -9,8 +9,13 @@ export class UserProfilePage extends BasePage {
   private unsubscribeButtons = () => this.byTestId("user-unsubscribe-button");
 
   async open(): Promise<void> {
-    await this.goto("/profil");
+    await this.goToProfile();
     await expect(this.root()).toBeVisible();
+  }
+
+  /** Ouvre l'URL du profil sans présumer que la session a accès au référentiel. */
+  async goToProfile(): Promise<void> {
+    await this.goto("/profil");
   }
 
   async openFollowTab(): Promise<void> {
@@ -25,16 +30,12 @@ export class UserProfilePage extends BasePage {
   }
 
   // --- Niveau d'authentification (#1985) ---
-  private authLevelCell = () => this.byTestId("user-profile-auth-level");
   private tokensPanel = () => this.byTestId("user-profile-tab-tokens");
 
-  async expectAuthLevelLimited(): Promise<void> {
-    await expect(this.authLevelCell()).toContainText("Limitée");
-  }
-
-  async expectTokenCreationDisabled(): Promise<void> {
-    await expect(this.byTestId("token-weak-auth-alert")).toBeVisible();
-    await expect(this.byTestId("token-create-btn")).toBeDisabled();
+  async expectNotLoaded(): Promise<void> {
+    await expect(this.root()).toHaveCount(0);
+    await expect(this.tokensPanel()).toHaveCount(0);
+    await expect(this.byTestId("token-create-btn")).toHaveCount(0);
   }
 
   async hasSubscription(): Promise<boolean> {
