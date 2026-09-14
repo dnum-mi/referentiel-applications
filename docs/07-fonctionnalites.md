@@ -69,6 +69,8 @@ La fiche regroupe toutes les informations d'une application sous forme d'onglets
 
 La création d'une fiche se fait via `CreateApplicationPage.vue` (`POST /applications`, permission `CreateApplication`). La modification passe par `PATCH /applications/:applicationId` (permissions `AppWrite` ou `AppWritePriority`).
 
+**Accès incomplet — alerte et contact admin (#2593).** Quand l'utilisateur n'a pas la lecture complète de la fiche (typiquement un admin scopé hors périmètre de l'application), `ApplicationPage.vue` affiche une alerte d'avertissement (fermable pour la session) l'invitant à s'ajouter comme acteur ou à contacter un administrateur, avec un lien `mailto:` résolu via `GET /applications/:applicationId/contact-admin`. Logique de résolution (admin local du périmètre → admin global → adresse support statique) détaillée dans [Permissions & sécurité](./06-permissions-et-securite.md), §7.4.
+
 ### 2.1 Informations générales
 
 **Ce que ça fait.** Centralise le nom, le nom court (`shortName`), la description (Markdown), le logo, les noms alternatifs (labels), le **type d'application**, les **populations cibles**, les finalités, la **direction métier propriétaire** et la **priorité de redémarrage**. Les dates de création et de dernière modification sont également visibles.

@@ -95,7 +95,7 @@ L'API ne possède **pas de route d'authentification dédiée** : l'authentificat
 - **JWT OIDC (Bearer)** — en-tête `Authorization: Bearer <JWT>` (flux C2B, utilisateur humain). Le jeton est vérifié **par le backend** contre le JWKS du fournisseur via `jose` (`createRemoteJWKSet` + `jwtVerify`), l'**email** servant d'identifiant pivot. En développement, `DISABLE_JWT_VALIDATION` décode le jeton **sans vérifier la signature** (à ne jamais activer en production). Le même jeton porte, s'il est déclaré côté fournisseur, le **claim de niveau d'authentification** (#1985, variables `AUTH_LEVEL_*` ci-dessous) — à défaut, et si le repli est activé, ce claim est lu sur l'endpoint userinfo du fournisseur avec le même jeton : en mode `enforce`, toute session faible ou inconnue est refusée sur l'ensemble des routes protégées, y compris `GET /users/me`. Le backend répond **403** avec `{ statusCode: 403, strongAuthRequired: true, message, authLevel: { level, downgraded: true, reason } }`, sans profil ni données métier. Le navigateur affiche un écran de reconnexion et ne monte pas les vues du référentiel. Ce refus n'est jamais un 401, pour éviter une boucle de connexion SSO. Un jeton API n'est jamais évalué.
 - **Clé d'API / token de service ou personnel** — en-tête `x-refapp-token` (constante `API_KEY_HEADER`, `backend/src/utils/constants.util.ts`), utilisée pour les échanges **B2B** (machine à machine). Le jeton est résolu en utilisateur par le `TokenService`. Ce mécanisme couvre les jetons de service, les jetons personnels et l'impersonation (module `token`).
 
-La matrice des permissions et le détail du contrôle d'accès sont décrits dans [Permissions & sécurité](./06-permissions-et-securite.md). On notera l'endpoint contextuel **`GET /applications/:applicationId/my-perms`**, qui renvoie les permissions de l'utilisateur courant sur une application donnée.
+La matrice des permissions et le détail du contrôle d'accès sont décrits dans [Permissions & sécurité](./06-permissions-et-securite.md). On notera l'endpoint contextuel **`GET /applications/:applicationId/my-perms`**, qui renvoie les permissions de l'utilisateur courant sur une application donnée, et **`GET /applications/:applicationId/contact-admin`**, qui renvoie l'administrateur à contacter quand ces permissions ne couvrent pas la lecture complète de la fiche (#2593).
 
 ## Inventaire des endpoints
 
@@ -111,19 +111,20 @@ Inventaire **par module / ressource** (résumé : verbes et chemins principaux, 
 
 ### Applications
 
-| Verbe & chemin                                     | Rôle                                                   |
-| -------------------------------------------------- | ------------------------------------------------------ |
-| `POST /applications`                               | Créer une application                                  |
-| `GET /applications`                                | Lister / rechercher (paginé, filtres riches)           |
-| `GET /applications/count-by-month`                 | Comptage par mois                                      |
-| `GET /applications/count-by-iq`                    | Comptage par indice qualité                            |
-| `GET /applications/:applicationId/my-perms`        | Permissions de l'utilisateur courant sur l'application |
-| `GET /applications/export/excel`                   | Export Excel (xlsx) — réservé admin                    |
-| `GET /applications/data-quality/update`            | Recalcul global de l'indice qualité                    |
-| `GET /applications/:applicationId`                 | Détail d'une application                               |
-| `GET /applications/:applicationId/quality-summary` | Synthèse qualité                                       |
-| `PATCH /applications/:applicationId`               | Mettre à jour                                          |
-| `DELETE /applications/:applicationId`              | Supprimer                                              |
+| Verbe & chemin                                     | Rôle                                                        |
+| -------------------------------------------------- | ----------------------------------------------------------- |
+| `POST /applications`                               | Créer une application                                       |
+| `GET /applications`                                | Lister / rechercher (paginé, filtres riches)                |
+| `GET /applications/count-by-month`                 | Comptage par mois                                           |
+| `GET /applications/count-by-iq`                    | Comptage par indice qualité                                 |
+| `GET /applications/:applicationId/my-perms`        | Permissions de l'utilisateur courant sur l'application      |
+| `GET /applications/:applicationId/contact-admin`   | Admin à contacter si l'accès à la fiche est partiel (#2593) |
+| `GET /applications/export/excel`                   | Export Excel (xlsx) — réservé admin                         |
+| `GET /applications/data-quality/update`            | Recalcul global de l'indice qualité                         |
+| `GET /applications/:applicationId`                 | Détail d'une application                                    |
+| `GET /applications/:applicationId/quality-summary` | Synthèse qualité                                            |
+| `PATCH /applications/:applicationId`               | Mettre à jour                                               |
+| `DELETE /applications/:applicationId`              | Supprimer                                                   |
 
 ### Sous-ressources d'une application (`/applications/:applicationId/...`)
 

@@ -26,10 +26,12 @@ const application = computed<ApplicationWithPerms>(() => applicationStore.applic
 const isLoading = ref(false);
 const errorMessage = ref("");
 
-// Affiché uniquement juste après la création (redirection depuis CreateApplicationPage), tant
-// que l'utilisateur n'a pas au moins la lecture totale sur la fiche qu'il vient de créer (#2212).
-const showMissingRightsAlert = ref(route.query.justCreated === "true");
+// Affiché tant que l'utilisateur n'a pas la lecture totale de la fiche (droits limités par son
+// périmètre) — fermable pour la session de consultation, comme la version initiale de cette
+// alerte qui ne visait que le cas "je viens de créer cette application" (#2212, #2593).
+const missingRightsAlertClosed = ref(false);
 const hasFullReadRights = computed(() => hasFullReadAppPermissions(application.value?.myPerms));
+const showMissingRightsAlert = computed(() => !hasFullReadRights.value && !missingRightsAlertClosed.value);
 
 const isSubscriptionLoading = ref(false);
 const isSubscribed = computed(() => userStore.isSubscribed(id));
@@ -170,15 +172,15 @@ function formatMetadataAuthor(metadata: MetadataDto): string {
       </h1>
 
       <DsfrAlert
-        v-if="showMissingRightsAlert && !hasFullReadRights"
+        v-if="showMissingRightsAlert"
         id="application-missing-rights-alert"
-        title="Vous n’avez pas encore les droits complets sur cette application"
-        description="Cette application vient d’être créée, mais vous ne disposez pas des droits en lecture totale sur sa fiche. Ajoutez-vous comme acteur ou demandez à un administrateur de vous accorder ces droits pour continuer à y accéder."
+        title="Vous n’avez pas accès à l’ensemble des données de cette application"
+        description="Vous ne disposez pas des droits en lecture totale sur cette fiche."
         type="warning"
         class="fr-mb-3w"
         closeable
         data-testid="application-missing-rights-alert"
-        @close="showMissingRightsAlert = false"
+        @close="missingRightsAlertClosed = true"
       ></DsfrAlert>
 
       <DsfrHighlight v-if="firstMetadata || lastMetadata" class="metadata-highlight" data-testid="application-metadata-highlight">

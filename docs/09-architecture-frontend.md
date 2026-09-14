@@ -148,7 +148,7 @@ if (!response.data || !response.response.ok) {
 
 Les paramètres se passent par objet structuré (`path`, `body`, `query`), ex.
 `api.applicationControllerUpdate({ path: { applicationId }, body: payload })`
-(`frontend/src/stores/applicationStore.ts:55-58`).
+(`frontend/src/stores/applicationStore.ts:69-72`).
 
 ## 4. Stores Pinia
 
@@ -189,7 +189,7 @@ des routes dont les vues sont **lazy-loadées** (`component: () => import("@/vie
 - **Noms de routes centralisés.** Les noms proviennent de l'objet `routeNames`
   (`frontend/src/router/route-names.ts`), jamais de chaînes en dur. On référence
   toujours `{ name: routeNames.SEARCHAPP }` (ex. `frontend/src/App.vue:96`,
-  `frontend/src/stores/applicationStore.ts:85`).
+  `frontend/src/stores/applicationStore.ts:99`).
 - **Métadonnées (`meta`).** Chaque route porte `requiresAuth`, parfois
   `requiresAdmin`, et `title` (ex. `frontend/src/router/index.ts:91`).
 - **Guard d'authentification (`beforeEach`).** Si `to.meta.requiresAuth`, le guard

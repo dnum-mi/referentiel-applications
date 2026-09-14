@@ -1634,6 +1634,29 @@ paths:
                     - AppWritePriority
       summary: Lister les droits de l'utilisateur sur l'application
       tags: *a8
+  /api/v2/applications/{applicationId}/contact-admin:
+    get:
+      description: >-
+        Renvoie l'administrateur le plus pertinent à contacter : l'admin local
+        le plus
+              récent dont le périmètre couvre les acteurs/directions métier de l'application, sinon
+              l'admin global le plus récent, sinon une adresse support si aucun administrateur n'existe.
+      operationId: ApplicationController_getContactAdmin
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Administrateur à contacter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactAdminDto"
+      summary: Administrateur à contacter pour cette application (accès incomplet)
+      tags: *a8
   /api/v2/applications/export/excel:
     get:
       description: >-
@@ -8311,6 +8334,25 @@ components:
         - total
         - averageIq
         - technicalDebtPoints
+    ContactAdminDto:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: admin@interieur.gouv.fr
+          description: Adresse e-mail de l'administrateur à contacter
+        source:
+          enum:
+            - local
+            - global
+            - support
+          type: string
+          description: "Origine de l'adresse : admin local au périmètre de l'application,
+            admin global, ou support si aucun admin n'existe"
+      required:
+        - email
+        - source
     QualitySummaryActorsDto:
       type: object
       properties:

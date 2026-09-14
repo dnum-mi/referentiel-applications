@@ -241,7 +241,7 @@ Permissions applicatives **autonomes** (sans couple lecture/écriture) et signal
 La permission `AppWritePriority` gouverne la **priorité de redémarrage** (R0–R3) et est **dissociée** de `AppWrite` : elle peut être accordée séparément. Cette dissociation se lit à deux endroits :
 
 - Dans le schéma, `AppWritePriority` est un booléen propre de `AppPermissions`, avec `@default(false)` (`permissions.prisma:11-12`).
-- Au niveau d'un handler, les deux permissions sont acceptées en alternative (sémantique OU). Par exemple la mise à jour d'une application requiert `[Permission.AppWrite, Permission.AppWritePriority]` (`backend/src/applications/application.controller.ts:293`) : posséder l'une _ou_ l'autre suffit pour l'opération concernée.
+- Au niveau d'un handler, les deux permissions sont acceptées en alternative (sémantique OU). Par exemple la mise à jour d'une application requiert `[Permission.AppWrite, Permission.AppWritePriority]` (`backend/src/applications/application.controller.ts:338`) : posséder l'une _ou_ l'autre suffit pour l'opération concernée.
 
 ### 4.4. Politique de lecture globale (état des lieux)
 
@@ -348,7 +348,9 @@ La sémantique reste **OU** : la liste passée à `@RequiredPermissions` représ
 
 ### 7.2. Exposition au frontend — `my-perms`
 
-Le frontend connaît les droits de l'utilisateur **sur une application** via `GET /applications/:applicationId/my-perms` (`backend/src/applications/application.controller.ts:149-172`). L'endpoint est lui-même protégé par `@RequiredPermissions([Permission.AppRead])` ; son handler résout **explicitement** les permissions applicatives (couche 3) via `CheckPermissions.resolveAppPermissions(applicationId, requestor)` (#2510) — le même point d'entrée que la garde, qui ne dépend plus d'un effet de bord (`requestor.appPerms`) du passage dans `PermissionGuard`.
+Le frontend connaît les droits de l'utilisateur **sur une application** via `GET /applications/:applicationId/my-perms` (`backend/src/applications/application.controller.ts:151-176`). L'endpoint est lui-même protégé par `@RequiredPermissions([Permission.AppRead])` ; son handler résout **explicitement** les permissions applicatives (couche 3) via `CheckPermissions.resolveAppPermissions(applicationId, requestor)` (#2510) — le même point d'entrée que la garde, qui ne dépend plus d'un effet de bord (`requestor.appPerms`) du passage dans `PermissionGuard`.
+
+Côté Vue, `hasFullReadAppPermissions(myPerms)` (`frontend/src/models/Application.ts`) compare ces droits à `FULL_READ_APP_PERMISSIONS` (miroir des permissions de lecture accordées par défaut par un rôle, `role-to-permissions.ts`) pour déterminer si l'utilisateur a une lecture **complète** de la fiche ou seulement partielle (cas typique : admin scopé hors périmètre de l'application, cf. §7.4).
 
 ### 7.3. Frontend — `userStore.hasPermissions`
 
@@ -367,6 +369,16 @@ Les composants passent en second argument les permissions applicatives obtenues 
 
 **Niveau d'authentification (#1985).** Le store déduit le refus de la réponse `403 strongAuthRequired` du backend et invalide le profil, les requêtes de session en cours et l'impersonation. `App.vue` ne monte aucune vue du référentiel tant que `/users/me` n'a pas réussi pour la session courante. Recherche, navigation, profil, cloche et aperçu des notifications sont retirés en cas de refus ; le polling des notifications s'arrête. Le composant `WeakAuthBanner.vue` sert désormais d'écran de reconnexion dans le contenu principal. Le bouton appelle `signinStrong()` avec `prompt=login` et les paramètres éventuellement servis par `/config`. Si la reconnexion reste faible, l'écran propose une déconnexion SSO complète ; cette bascule survit au rechargement. Un refus associé à un ancien jeton ne bloque pas la nouvelle session. Le navigateur ne lit jamais les claims OIDC pour décider du niveau.
 
+### 7.4. Contact admin quand l'accès est partiel — `contact-admin` (#2593)
+
+Quand `hasFullReadAppPermissions` renvoie `false`, `ApplicationPage.vue` affiche une alerte et interroge `GET /applications/:applicationId/contact-admin` (même garde `AppRead`, `application.controller.ts:179-201`) pour proposer un lien `mailto:` vers l'administrateur le plus pertinent à contacter. `ApplicationService.getContactAdmin` (`application.service.ts:375-452`) résout, dans l'ordre :
+
+1. **Admin local** le plus récent (`User.lastPermissionChangeAt` desc, nulls en dernier) dont le `scopeOrganization.path` couvre l'organisation d'au moins un acteur ou d'une direction métier de l'application. Le périmètre de l'application (qui n'a pas de scope propre) est déduit de ses `Actor.organizationId` et de ses `BusinessDivision.organizations` ; la correspondance utilise `ancestorPathsOf` (`backend/src/common/utils/organization-scope.utils.ts`), l'inverse d'`organizationWithinScope` (§6 ci-dessus) : un admin est local si son path de scope est l'un des préfixes ancrés du path de l'organisation cible.
+2. Sinon, l'**admin global** le plus récent (`scopeOrganizationId` `null`).
+3. Sinon, une adresse **support** statique (aucun admin en base).
+
+Cette résolution n'est déclenchée qu'à l'ouverture de la fiche application, et seulement pour les utilisateurs à accès partiel (pas sur la page de recherche/liste, qui ne calcule pas `myPerms` par ligne).
+
 > Pour le détail de l'architecture backend (modules, middleware, services), se reporter à [Architecture backend](./08-architecture-backend.md).
 
 ## 8. Bonnes pratiques de sécurité
@@ -383,27 +395,25 @@ Les composants passent en second argument les permissions applicatives obtenues 
 
 ### Récapitulatif des mécanismes confirmés
 
-| Mécanisme                                                        | Emplacement vérifié                                                                                      |
-| :--------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------- |
-| Fusion des 3 couches + décision OU (`Set` + `.some()`)           | `backend/src/common/service/check-permissions.service.ts:36-44`                                          |
-| Calcul couche 3 conditionné à `applicationId`                    | `check-permissions.service.ts:25-35`                                                                     |
-| Canaux email / organisation de groupe                            | `check-permissions.service.ts:47-83` + `backend/src/common/service/prisma-query-builder.service.ts`      |
-| Rôle projeté + effet du scope sur l'app                          | `check-permissions.service.ts:85-126`                                                                    |
-| Mapping rôle → permissions (cumulatif)                           | `backend/src/permissions/role-to-permissions.ts`                                                         |
-| Enum `Roles` (VISITOR<READER<CONTRIBUTOR<ADMIN)                  | `backend/prisma/schema/users.prisma:46-52`                                                               |
-| `User.additionalPermissions` + scope                             | `backend/prisma/schema/users.prisma:16-18,41`                                                            |
-| Audit permissions / connexions                                   | `backend/prisma/schema/user-log.prisma:2-21`                                                             |
-| Enum `Permission` (globales + applicatives)                      | `backend/prisma/schema/permissions.prisma:59-105`                                                        |
-| Matrice `AppPermissions` (1:1 ActorType)                         | `backend/prisma/schema/permissions.prisma:5-52`                                                          |
-| `AppWritePriority` dissociée (`@default(false)`, OU sur handler) | `permissions.prisma:11-12` + `application.controller.ts:293`                                             |
-| Transformation matrice → permissions                             | `backend/src/common/utils/types.ts:38-47`                                                                |
-| Garde + décorateur, param `applicationId`                        | `backend/src/common/guards/permission.guard.ts:28-29` + `required-permissions.decorator.ts`              |
-| Endpoint `my-perms`                                              | `backend/src/applications/application.controller.ts:149-172` + `application.service.ts:267-269`          |
-| Front `userStore.hasPermissions`                                 | `frontend/src/stores/userStore.ts:79-87`                                                                 |
-| Auth backend (JWKS, modes token/JWT, pivot email)                | `backend/src/middlewares/auth.middleware.ts:37-68`                                                       |
-| Niveau d'authentification : évaluation, refus global, journal    | `backend/src/auth-level/`, `auth.middleware.ts`, `user-connexion-log.service.ts`, `auth-level.config.ts` |
-| Couche 3 en lecture seule sous session faible                    | `check-permissions.service.ts` (`resolveAppPermissions`)                                                 |
-| Refus typés `stepDown` (impersonation, jeton personnel, admin)   | `auth.middleware.ts`, `token.service.ts`, `scoped-permission.service.ts`, `step-down.exception.ts`       |
-| Config OIDC obligatoire (générique, sans fournisseur en dur)     | `backend/src/config/configs/oidc.config.ts`                                                              |
-| Front OIDC (oidc-client-ts, config dynamique)                    | `frontend/src/services/authentication.ts`                                                                |
-| Scope administratif utilisateurs                                 | `backend/src/user/scope-permission/scoped-permission.service.ts`                                         |
+| Mécanisme                                                        | Emplacement vérifié                                                                                 |
+| :--------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------- |
+| Fusion des 3 couches + décision OU (`Set` + `.some()`)           | `backend/src/common/service/check-permissions.service.ts:36-44`                                     |
+| Calcul couche 3 conditionné à `applicationId`                    | `check-permissions.service.ts:25-35`                                                                |
+| Canaux email / organisation de groupe                            | `check-permissions.service.ts:47-83` + `backend/src/common/service/prisma-query-builder.service.ts` |
+| Rôle projeté + effet du scope sur l'app                          | `check-permissions.service.ts:85-126`                                                               |
+| Mapping rôle → permissions (cumulatif)                           | `backend/src/permissions/role-to-permissions.ts`                                                    |
+| Enum `Roles` (VISITOR<READER<CONTRIBUTOR<ADMIN)                  | `backend/prisma/schema/users.prisma:46-52`                                                          |
+| `User.additionalPermissions` + scope                             | `backend/prisma/schema/users.prisma:16-18,41`                                                       |
+| Audit permissions / connexions                                   | `backend/prisma/schema/user-log.prisma:2-21`                                                        |
+| Enum `Permission` (globales + applicatives)                      | `backend/prisma/schema/permissions.prisma:59-105`                                                   |
+| Matrice `AppPermissions` (1:1 ActorType)                         | `backend/prisma/schema/permissions.prisma:5-52`                                                     |
+| `AppWritePriority` dissociée (`@default(false)`, OU sur handler) | `permissions.prisma:11-12` + `application.controller.ts:338`                                        |
+| Transformation matrice → permissions                             | `backend/src/common/utils/types.ts:38-47`                                                           |
+| Garde + décorateur, param `applicationId`                        | `backend/src/common/guards/permission.guard.ts:28-29` + `required-permissions.decorator.ts`         |
+| Endpoint `my-perms`                                              | `backend/src/applications/application.controller.ts:151-176` + `application.service.ts:361-369`     |
+| Endpoint `contact-admin` (#2593)                                 | `application.controller.ts:179-201` + `application.service.ts:375-452`                              |
+| Front `userStore.hasPermissions`                                 | `frontend/src/stores/userStore.ts:79-87`                                                            |
+| Auth backend (JWKS, modes token/JWT, pivot email)                | `backend/src/middlewares/auth.middleware.ts:37-68`                                                  |
+| Config OIDC obligatoire (générique, sans fournisseur en dur)     | `backend/src/config/configs/oidc.config.ts`                                                         |
+| Front OIDC (oidc-client-ts, config dynamique)                    | `frontend/src/services/authentication.ts`                                                           |
+| Scope administratif utilisateurs                                 | `backend/src/user/scope-permission/scoped-permission.service.ts`                                    |
