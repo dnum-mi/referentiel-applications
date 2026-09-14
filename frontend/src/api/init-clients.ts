@@ -1,10 +1,17 @@
 import axios from "axios";
+import type { AuthLevelDto } from "@/client";
 import { client } from "@/client/client.gen";
 import { USER_MANAGER } from "@/services/authentication";
 import { IMPERSONATE_HEADER, clearImpersonationState, getImpersonatedUserId } from "@/services/impersonation";
 import { isMaintenanceResponse, setMaintenanceMode } from "@/composables/use-maintenance-mode";
 import { isBlockedAccessResponse, setBlockedAccess } from "@/composables/use-blocked-access";
-import { STEP_DOWN_MESSAGES, WEAK_AUTH_PERMISSION_MESSAGE, isStepDownResponse, markStepDownNotice } from "@/composables/use-auth-level";
+import {
+  STEP_DOWN_MESSAGES,
+  WEAK_AUTH_PERMISSION_MESSAGE,
+  isStepDownResponse,
+  isStrongAuthRequiredResponse,
+  markStepDownNotice,
+} from "@/composables/use-auth-level";
 
 axios.defaults.baseURL = "/api/v2";
 axios.defaults.withCredentials = true;
@@ -35,10 +42,11 @@ let isReauthenticating = false;
 export interface ConfigureClientsOptions {
   /** #1985 : vrai quand la session courante est rétrogradée (message de refus enrichi). */
   isAuthDowngraded?: () => boolean;
+  onStrongAuthRequired?: (authLevel: AuthLevelDto) => void;
 }
 
 export function configureClients(toaster: { addErrorMessage: (message: string) => void }, options: ConfigureClientsOptions = {}) {
-  const responseInterceptor: ResInterceptor = async (response) => {
+  const responseInterceptor: ResInterceptor = async (response, request) => {
     if (response.ok) {
       return response;
     }
@@ -79,6 +87,14 @@ export function configureClients(toaster: { addErrorMessage: (message: string) =
         .clone()
         .json()
         .catch(() => undefined);
+      if (isStrongAuthRequiredResponse(payload)) {
+        // Un refus provenant d'un ancien jeton ne doit pas bloquer la nouvelle session.
+        const currentUser = await USER_MANAGER.getUser();
+        if (currentUser?.access_token && request.headers.get("Authorization") === `Bearer ${currentUser.access_token}`) {
+          options.onStrongAuthRequired?.(payload.authLevel);
+        }
+        return response;
+      }
       if (isBlockedAccessResponse(payload)) {
         setBlockedAccess(true);
         return response;

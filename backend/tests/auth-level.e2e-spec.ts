@@ -30,7 +30,7 @@ const sha512 = (value: string) =>
 const STRONG = { auth_mode: "CARD" };
 const WEAK = { auth_mode: "PASSWORD" };
 
-describe("Niveau d'authentification — rétrogradation en session faible (#1985)", () => {
+describe("Niveau d'authentification — refus de toute consultation en session faible (#1985)", () => {
   const app = setupTestSuite();
   const prisma = getPrismaClient();
   const suffix = Date.now();
@@ -79,51 +79,37 @@ describe("Niveau d'authentification — rétrogradation en session faible (#1985
       );
     });
 
-    it("session faible : forme exacte d'un utilisateur standard, rôle d'origine exposé", async () => {
-      const res = await request(app().getHttpServer())
-        .get("/users/me")
-        .set("Authorization", `Bearer ${getToken(admin, WEAK)}`)
-        .expect(200);
-
-      expect(res.body).toMatchObject({
-        id: admin.id,
-        email: admin.email,
-        role: Roles.VISITOR,
-        additionalPermissions: [],
-        scopeOrganizationId: null,
-        scopeOrganization: null,
-        authLevel: {
-          level: AuthLevel.weak,
-          downgraded: true,
-          reason: "weak-method",
-        },
-      });
-      // Ni rôle d'origine, ni claim brut, ni fournisseur : rien de plus que ces trois clés.
-      expect(Object.keys(res.body.authLevel).sort()).toEqual([
-        "downgraded",
-        "level",
-        "reason",
-      ]);
-      expect(res.body.permissions).toEqual(roleToPermissions(Roles.VISITOR));
-      // L'organisation reste : elle sert à la couche 3 et à la traçabilité.
-      expect(res.body.organizationId).toBe(scopeOrganizationId);
-    });
-
-    it("claim absent : rétrogradé, motif claim-missing", async () => {
-      const res = await request(app().getHttpServer())
-        .get("/users/me")
-        .set("Authorization", `Bearer ${getToken(admin)}`)
-        .expect(200);
-
-      expect(res.body).toMatchObject({
-        role: Roles.VISITOR,
-        authLevel: {
-          level: AuthLevel.unknown,
-          downgraded: true,
-          reason: "claim-missing",
-        },
-      });
-    });
+    it.each([
+      ["PASSWORD", AuthLevel.weak, "weak-method"],
+      ["WINDOWS", AuthLevel.weak, "weak-method"],
+      ["SYNTHETIC_TOTP", AuthLevel.weak, "weak-method"],
+      [undefined, AuthLevel.unknown, "claim-missing"],
+    ])(
+      "refuse le profil sans exposer de données personnelles (mode %s)",
+      async (mode, level, reason) => {
+        const res = await request(app().getHttpServer())
+          .get("/users/me")
+          .set(
+            "Authorization",
+            `Bearer ${getToken(admin, mode ? { auth_mode: mode } : {})}`,
+          )
+          .expect(403);
+        expect(res.body).toEqual({
+          statusCode: 403,
+          strongAuthRequired: true,
+          message: expect.any(String),
+          authLevel: { level, downgraded: true, reason },
+        });
+        const unchanged = await prisma.user.findUniqueOrThrow({
+          where: { id: admin.id },
+        });
+        expect(unchanged.role).toBe(Roles.ADMIN);
+        expect(unchanged.scopeOrganizationId).toBe(scopeOrganizationId);
+        expect(unchanged.additionalPermissions).toEqual([
+          Permission.DataExport,
+        ]);
+      },
+    );
 
     it("fournisseur fédéré de confiance sans mode : session forte", async () => {
       const res = await request(app().getHttpServer())
@@ -147,10 +133,10 @@ describe("Niveau d'authentification — rétrogradation en session faible (#1985
           "Authorization",
           `Bearer ${getToken(admin, { auth_idp: "Autre" })}`,
         )
-        .expect(200);
+        .expect(403);
 
       expect(res.body).toMatchObject({
-        role: Roles.VISITOR,
+        strongAuthRequired: true,
         authLevel: { level: AuthLevel.unknown, reason: "untrusted-idp" },
       });
     });
@@ -191,7 +177,7 @@ describe("Niveau d'authentification — rétrogradation en session faible (#1985
         .expect(200);
     });
 
-    it("la création d'un jeton personnel répond un 403 typé stepDown", async () => {
+    it("la création d'un jeton personnel répond un refus global sans créer de jeton", async () => {
       const res = await request(app().getHttpServer())
         .post("/tokens/personal")
         .set("Authorization", `Bearer ${getToken(admin, WEAK)}`)
@@ -203,8 +189,7 @@ describe("Niveau d'authentification — rétrogradation en session faible (#1985
         .expect(403);
 
       expect(res.body).toMatchObject({
-        stepDown: true,
-        reason: "personal-token",
+        strongAuthRequired: true,
       });
       expect(
         await prisma.token.count({ where: { name: `perso-${suffix}` } }),
@@ -231,8 +216,7 @@ describe("Niveau d'authentification — rétrogradation en session faible (#1985
         .expect(403);
 
       expect(res.body).toMatchObject({
-        stepDown: true,
-        reason: "impersonation",
+        strongAuthRequired: true,
       });
       const closed = await prisma.impersonationLog.findUniqueOrThrow({
         where: { id: open!.id },
@@ -249,8 +233,7 @@ describe("Niveau d'authentification — rétrogradation en session faible (#1985
         .set(IMPERSONATE_HEADER, target.id)
         .expect(403);
       expect(res.body).toMatchObject({
-        stepDown: true,
-        reason: "impersonation",
+        strongAuthRequired: true,
       });
     });
 
@@ -318,7 +301,7 @@ describe("Niveau d'authentification — rétrogradation en session faible (#1985
       });
     });
 
-    it("un acteur en écriture n'a plus que ses lectures en session faible", async () => {
+    it("conserve les droits forts puis refuse même les lectures d'un acteur", async () => {
       const strong = await request(app().getHttpServer())
         .get(`/applications/${applicationId}/my-perms`)
         .set("Authorization", `Bearer ${getToken(actor, STRONG)}`)
@@ -327,53 +310,74 @@ describe("Niveau d'authentification — rétrogradation en session faible (#1985
         expect.arrayContaining(["AppWrite", "ActorWrite", "ActorRead"]),
       );
 
-      const weak = await request(app().getHttpServer())
-        .get(`/applications/${applicationId}/my-perms`)
-        .set("Authorization", `Bearer ${getToken(actor, WEAK)}`)
-        .expect(200);
-      expect(weak.body).toEqual(expect.arrayContaining(["ActorRead"]));
-      for (const write of ["AppWrite", "ActorWrite"]) {
-        expect(weak.body).not.toContain(write);
+      for (const path of [
+        "/applications",
+        `/applications/${applicationId}`,
+        `/applications/${applicationId}/my-perms`,
+        "/users/me",
+        "/notifications",
+        "/stats/iq-avg/period",
+      ]) {
+        await request(app().getHttpServer())
+          .get(path)
+          .set("Authorization", `Bearer ${getToken(actor, STRONG)}`)
+          .expect(200);
+        const res = await request(app().getHttpServer())
+          .get(path)
+          .set("Authorization", `Bearer ${getToken(actor, WEAK)}`)
+          .expect(403);
+        expect(res.body).toMatchObject({ strongAuthRequired: true });
+        expect(Object.keys(res.body).sort()).toEqual([
+          "authLevel",
+          "message",
+          "statusCode",
+          "strongAuthRequired",
+        ]);
       }
     });
 
-    // Sans cette garantie, un simple changement de préférence renverrait au front la ligne
-    // Prisma relue — rôle réel et périmètre — et la session faible récupérerait l'UI pleine.
-    it("PATCH /users/me et les abonnements répondent avec le principal de la session", async () => {
-      const preferences = await request(app().getHttpServer())
+    it("refuse préférences et abonnements sans les modifier", async () => {
+      const before = await prisma.user.findUniqueOrThrow({
+        where: { id: admin.id },
+        include: { followedApplications: true },
+      });
+      await request(app().getHttpServer())
         .patch("/users/me")
         .set("Authorization", `Bearer ${getToken(admin, WEAK)}`)
-        .send({ emailNotificationsEnabled: false })
-        .expect(200);
-      expect(preferences.body).toMatchObject({
-        role: Roles.VISITOR,
-        emailNotificationsEnabled: false,
-        additionalPermissions: [],
-        scopeOrganizationId: null,
-        authLevel: { downgraded: true },
-      });
-      expect(preferences.body.permissions).toEqual(
-        roleToPermissions(Roles.VISITOR),
-      );
-
-      const subscribed = await request(app().getHttpServer())
+        .send({ emailNotificationsEnabled: !before.emailNotificationsEnabled })
+        .expect(403);
+      await request(app().getHttpServer())
         .post(`/users/me/subscribe/${applicationId}`)
         .set("Authorization", `Bearer ${getToken(admin, WEAK)}`)
-        .expect(201);
-      expect(subscribed.body).toMatchObject({
-        role: Roles.VISITOR,
-        authLevel: { downgraded: true },
-      });
-      expect(
-        subscribed.body.followedApplications.map((a: { id: string }) => a.id),
-      ).toContain(applicationId);
-
-      const unsubscribed = await request(app().getHttpServer())
+        .expect(403);
+      await request(app().getHttpServer())
         .delete(`/users/me/subscribe/${applicationId}`)
         .set("Authorization", `Bearer ${getToken(admin, WEAK)}`)
+        .expect(403);
+      const after = await prisma.user.findUniqueOrThrow({
+        where: { id: admin.id },
+        include: { followedApplications: true },
+      });
+      expect(after.emailNotificationsEnabled).toBe(
+        before.emailNotificationsEnabled,
+      );
+      expect(after.followedApplications).toEqual(before.followedApplications);
+    });
+
+    it("rétablit l'accès et les droits après une reconnexion forte", async () => {
+      await request(app().getHttpServer())
+        .get("/users/me")
+        .set("Authorization", `Bearer ${getToken(admin, WEAK)}`)
+        .expect(403);
+      const res = await request(app().getHttpServer())
+        .get("/users/me")
+        .set("Authorization", `Bearer ${getToken(admin, STRONG)}`)
         .expect(200);
-      expect(unsubscribed.body).toMatchObject({ role: Roles.VISITOR });
-      expect(unsubscribed.body.followedApplications).toEqual([]);
+      expect(res.body).toMatchObject({
+        role: Roles.ADMIN,
+        scopeOrganizationId,
+        authLevel: { level: "strong", downgraded: false },
+      });
     });
   });
 
@@ -392,7 +396,7 @@ describe("Niveau d'authentification — rétrogradation en session faible (#1985
         await request(app().getHttpServer())
           .get("/users/me")
           .set("Authorization", `Bearer ${getToken(journaled, claims)}`)
-          .expect(200);
+          .expect(claims === STRONG || "auth_idp" in claims ? 200 : 403);
       }
 
       const rows = await prisma.userConnexionLog.findMany({

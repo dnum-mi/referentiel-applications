@@ -189,6 +189,8 @@ router.beforeEach(async (to) => {
     if (!userStore.user) {
       await userStore.fetchUser();
     }
+    // Conserver l'URL demandée pour la reconnexion ; App affiche le refus global.
+    if (userStore.isAuthDowngraded) return;
 
     if (to.meta.requiresAdmin) {
       // QualityCampaignManage et MditCampaignManage peuvent être déléguées à un non-admin

@@ -75,11 +75,11 @@ En développement, les variables nécessaires au backend sont **déjà fournies*
 
 Le realm Keycloak du dépôt (`keycloak/realm-export.json`) expose deux claims sur l'access token à partir d'attributs utilisateur : `auth_mode` (mode d'authentification simulé) et `auth_idp` (fournisseur d'identité simulé). Mot de passe de tous les comptes : `pass`.
 
-| Compte                                                                       | `auth_mode` | `auth_idp`   | Effet en mode `enforce`                                     |
-| ---------------------------------------------------------------------------- | ----------- | ------------ | ----------------------------------------------------------- |
-| `admin`, `support`, `user`, `scope-admin`, `member-toto`, `member-toto-tutu` | `CARD`      | `principal`  | Session forte : droits pleins.                              |
-| `admin-weak` (ADMIN en base via le seed)                                     | `PASSWORD`  | `principal`  | Session faible : rétrogradé en utilisateur standard.        |
-| `user-federated`                                                             | —           | `partenaire` | Fournisseur non listé : rétrogradé (motif `untrusted-idp`). |
+| Compte                                                                       | `auth_mode` | `auth_idp`   | Effet en mode `enforce`                                       |
+| ---------------------------------------------------------------------------- | ----------- | ------------ | ------------------------------------------------------------- |
+| `admin`, `support`, `user`, `scope-admin`, `member-toto`, `member-toto-tutu` | `CARD`      | `principal`  | Session forte : droits pleins.                                |
+| `admin-weak` (ADMIN en base via le seed)                                     | `PASSWORD`  | `principal`  | Session faible : accès au référentiel refusé.                 |
+| `user-federated`                                                             | —           | `partenaire` | Fournisseur non listé : accès refusé (motif `untrusted-idp`). |
 
 Les deux attributs sont déclarés dans le profil utilisateur du realm : un administrateur Keycloak peut basculer un compte de `CARD` à `PASSWORD` depuis la console (`http://localhost:8082`, `admin` / `password`) sans réimporter le realm. **Après toute mise à jour du realm, le conteneur doit être recréé** — `start-dev --import-realm` n'importe que si le realm n'existe pas encore. Le service `keycloak` de `docker-compose.yml` porte un label `refapp.realm-revision` : l'incrémenter avec toute modification du realm suffit pour que le prochain `docker compose up -d` recrée le conteneur sur chaque poste. À défaut :
 
@@ -87,7 +87,7 @@ Les deux attributs sont déclarés dans le profil utilisateur du realm : un admi
 docker compose rm -sf keycloak && docker compose up -d keycloak
 ```
 
-Sans cela, le mapper est absent, tout le monde est rétrogradé (`admin` compris) et les symptômes ressemblent à un bug de droits ; `GET /users/me` (`authLevel.reason` = `claim-missing`) rend le diagnostic immédiat. Contrôle rapide des claims émis :
+Sans cela, le mapper est absent, tout le monde est bloqué (`admin` compris) et les symptômes ressemblent à un bug de droits ; `GET /users/me` (`authLevel.reason` = `claim-missing`) rend le diagnostic immédiat. Contrôle rapide des claims émis :
 
 ```bash
 curl -s -d grant_type=password -d client_id=referentiel-applications -d username=admin-weak -d password=pass -d scope=openid \

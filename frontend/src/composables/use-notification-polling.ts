@@ -32,7 +32,7 @@ export function useNotificationPolling() {
   const userStore = useUserStore();
 
   watch(
-    () => userStore.authenticated,
+    () => userStore.hasApplicationAccess,
     (authenticated) => {
       if (authenticated) {
         startPolling();

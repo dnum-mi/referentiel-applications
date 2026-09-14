@@ -4,11 +4,10 @@ import type { AuthLevelDto, ConfigDto } from "@/client";
 import { setReauthLoop } from "@/composables/use-auth-level";
 import WeakAuthBanner from "./WeakAuthBanner.vue";
 
-const { storeMock, configMock, signinStrongMock, addErrorMessageMock } = vi.hoisted(() => ({
+const { storeMock, configMock, signinStrongMock } = vi.hoisted(() => ({
   storeMock: { authLevel: undefined as AuthLevelDto | undefined, isAuthDowngraded: false },
   configMock: { value: {} as Partial<ConfigDto> },
   signinStrongMock: vi.fn(),
-  addErrorMessageMock: vi.fn(),
 }));
 
 vi.mock("@/stores/userStore", () => ({
@@ -20,9 +19,6 @@ vi.mock("@/stores/userStore", () => ({
       return storeMock.isAuthDowngraded;
     },
   }),
-}));
-vi.mock("@/stores/toasterStore", () => ({
-  useToasterStore: () => ({ addErrorMessage: addErrorMessageMock, addSuccessMessage: vi.fn() }),
 }));
 vi.mock("@/services/config", () => ({
   getConfig: () => Promise.resolve(configMock.value),
@@ -49,7 +45,6 @@ describe("WeakAuthBanner (#1985)", () => {
     storeMock.isAuthDowngraded = false;
     configMock.value = { authLevel: { reauth: { strategy: "prompt", prompt: "login" } } };
     signinStrongMock.mockReset().mockResolvedValue(undefined);
-    addErrorMessageMock.mockReset();
     setReauthLoop(null);
   });
   afterEach(cleanup);
@@ -66,14 +61,14 @@ describe("WeakAuthBanner (#1985)", () => {
     expect(queryByTestId("weak-auth-banner")).not.toBeInTheDocument();
   });
 
-  it("explique la limitation et propose la reconnexion pour un mode faible", async () => {
+  it("explique le refus de tout accès et propose la reconnexion pour un mode faible", async () => {
     downgraded("weak-method");
     const { getByTestId } = await renderLoaded();
 
     const banner = getByTestId("weak-auth-banner");
     expect(banner).toHaveAttribute("role", "status");
-    expect(banner).toHaveTextContent("Connexion sans carte agent ni double authentification");
-    expect(banner).toHaveTextContent("utilisateur standard");
+    expect(banner).toHaveTextContent("Authentification forte requise");
+    expect(banner).toHaveTextContent("L'accès au référentiel est bloqué");
 
     await fireEvent.click(getByTestId("weak-auth-reauth-btn"));
     expect(signinStrongMock).toHaveBeenCalledWith("prompt");
@@ -126,12 +121,12 @@ describe("WeakAuthBanner (#1985)", () => {
   it("signale l'échec de la redirection et réactive le bouton", async () => {
     signinStrongMock.mockRejectedValue(new Error("network"));
     downgraded("weak-method");
-    const { getByTestId } = await renderLoaded();
+    const { getByTestId, getByRole } = await renderLoaded();
 
     await fireEvent.click(getByTestId("weak-auth-reauth-btn"));
     await flushPromises();
 
-    expect(addErrorMessageMock).toHaveBeenCalledWith(expect.stringContaining("redirection"));
+    expect(getByRole("alert")).toHaveTextContent("La redirection vers le fournisseur d'identité a échoué. Réessayez.");
     expect(getByTestId("weak-auth-reauth-btn")).not.toBeDisabled();
   });
 

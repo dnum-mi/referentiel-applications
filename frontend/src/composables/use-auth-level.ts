@@ -1,6 +1,34 @@
 import { readonly, ref } from "vue";
 import type { AuthLevelDto, AuthLevelReason } from "@/client/types.gen";
 
+export interface StrongAuthRequiredResponse {
+  strongAuthRequired: true;
+  authLevel: AuthLevelDto;
+}
+
+/** Refus global de l'API : ne jamais déduire le niveau des claims lus par le navigateur. */
+export function isStrongAuthRequiredResponse(value: unknown): value is StrongAuthRequiredResponse {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    !("strongAuthRequired" in value) ||
+    value.strongAuthRequired !== true ||
+    !("authLevel" in value)
+  )
+    return false;
+  const level = value.authLevel;
+  return (
+    typeof level === "object" &&
+    level !== null &&
+    "downgraded" in level &&
+    level.downgraded === true &&
+    "level" in level &&
+    (level.level === "weak" || level.level === "unknown") &&
+    "reason" in level &&
+    (level.reason === "weak-method" || level.reason === "claim-missing" || level.reason === "untrusted-idp")
+  );
+}
+
 // #1985 — Niveau d'authentification de la session (carte agent / double authentification).
 // Le backend est la seule source de vérité : le front n'affiche que ce que `/users/me` a décidé
 // (`authLevel.downgraded`) et ne lit jamais les claims du jeton lui-même.
@@ -148,21 +176,21 @@ export interface WeakAuthBannerText {
   canReauth: boolean;
 }
 
-const STANDARD_RIGHTS = "Vos droits sont limités à ceux d'un utilisateur standard pour cette session.";
+const ACCESS_DENIED = "L'accès au référentiel est bloqué tant qu'une authentification forte n'est pas confirmée.";
 
 /** Texte du bandeau selon le motif renvoyé par le backend, et variante « boucle » après une reconnexion. */
 export function weakAuthBannerText(reason: AuthLevelReason, loop: ReauthStrategy | null = null): WeakAuthBannerText {
   if (loop === "prompt") {
     return {
       title: "Votre reconnexion n'a pas été reconnue comme forte",
-      description: `${STANDARD_RIGHTS} Le bouton ci-dessous ferme complètement votre session avant de vous reconnecter : présentez alors votre carte agent ou la double authentification.`,
+      description: `${ACCESS_DENIED} Le bouton ci-dessous ferme complètement votre session avant de vous reconnecter : présentez alors votre carte agent ou la double authentification.`,
       canReauth: true,
     };
   }
   if (loop === "logout") {
     return {
       title: "Votre session est toujours sans authentification forte",
-      description: `${STANDARD_RIGHTS} Même après une déconnexion complète, le fournisseur d'identité n'a pas transmis d'authentification forte : vérifiez que vous utilisez votre carte agent ou la double authentification ; si le problème persiste, contactez le support.`,
+      description: `${ACCESS_DENIED} Même après une déconnexion complète, le fournisseur d'identité n'a pas transmis d'authentification forte : vérifiez que vous utilisez votre carte agent ou la double authentification ; si le problème persiste, contactez le support.`,
       canReauth: true,
     };
   }
@@ -171,13 +199,13 @@ export function weakAuthBannerText(reason: AuthLevelReason, loop: ReauthStrategy
     case "untrusted-idp":
       return {
         title: "Mode d'authentification non transmis par le fournisseur d'identité",
-        description: `${STANDARD_RIGHTS} Reconnectez-vous avec votre carte agent ou la double authentification ; si le problème persiste, contactez le support.`,
+        description: `${ACCESS_DENIED} Reconnectez-vous avec votre carte agent ou la double authentification ; si le problème persiste, contactez le support.`,
         canReauth: true,
       };
     default:
       return {
-        title: "Connexion sans carte agent ni double authentification",
-        description: `${STANDARD_RIGHTS} Reconnectez-vous avec votre carte agent ou la double authentification pour retrouver vos droits.`,
+        title: "Authentification forte requise",
+        description: `${ACCESS_DENIED} Reconnectez-vous avec votre carte agent ou la double authentification. Une connexion Windows seule ne suffit pas.`,
         canReauth: true,
       };
   }

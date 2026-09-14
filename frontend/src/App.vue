@@ -47,7 +47,10 @@ const appConfig = ref<ConfigDto>();
 const toaster = useToasterStore();
 const { maintenanceMode } = useMaintenanceMode();
 
-configureClients(toaster, { isAuthDowngraded: () => userStore.isAuthDowngraded });
+configureClients(toaster, {
+  isAuthDowngraded: () => userStore.isAuthDowngraded,
+  onStrongAuthRequired: userStore.requireStrongAuth,
+});
 
 useNotificationPolling();
 
@@ -122,6 +125,9 @@ const unauthenticatedQuickLinks = computed<QuickLink[]>(() => [
 const quickLinks = computed<QuickLink[]>(() => {
   if (!userStore.authenticated) {
     return unauthenticatedQuickLinks.value;
+  }
+  if (!userStore.hasApplicationAccess) {
+    return authenticatedQuickLinks.value.filter((link) => typeof link.to !== "string" && link.to.name === routeNames.LOGOUT);
   }
   return authenticatedQuickLinks.value;
 });
@@ -225,8 +231,7 @@ useAppUpdate();
       { id: 'footer', text: 'Aller au pied de page' },
     ]"
   />
-  <ImpersonationBanner />
-  <WeakAuthBanner />
+  <ImpersonationBanner v-if="userStore.hasApplicationAccess" />
   <MaintenanceBanner :active="maintenanceMode" />
   <BlockedAccessScreen :active="blockedAccessState" />
   <DsfrHeader
@@ -237,7 +242,7 @@ useAppUpdate();
     data-testid="main-header"
   >
     <div class="header-container">
-      <SearchHeader v-if="userStore.authenticated" />
+      <SearchHeader v-if="userStore.hasApplicationAccess" />
     </div>
 
     <template v-if="environmentLabel" #before-quick-links>
@@ -247,7 +252,7 @@ useAppUpdate();
     <!-- DsfrHeaderMenuLinks (quick-links) rend son propre <ul class="fr-btns-group"> et ne
          permet pas d'y injecter un <li> personnalisé : on reproduit la même classe ici pour
          que la cloche s'aligne visuellement dans le même groupe qu'Admin/Mon profil/Déconnexion. -->
-    <template v-if="userStore.authenticated" #after-quick-links>
+    <template v-if="userStore.hasApplicationAccess" #after-quick-links>
       <ul class="fr-btns-group">
         <li>
           <NotificationBell />
@@ -256,12 +261,20 @@ useAppUpdate();
     </template>
 
     <template #mainnav>
-      <DsfrNavigation v-if="userStore.authenticated" :nav-items="navItemsComputed" id="header-nav" data-testid="main-navigation" />
+      <DsfrNavigation v-if="userStore.hasApplicationAccess" :nav-items="navItemsComputed" id="header-nav" data-testid="main-navigation" />
       <p v-else class="fr-sr-only" id="header-nav">Navigation non disponible</p>
     </template>
   </DsfrHeader>
   <main class="fr-mt-3w fr-mt-md-5w fr-mb-5w" id="main-content" role="main">
-    <RouterView :key="String(route.params.id ?? '')" />
+    <WeakAuthBanner v-if="userStore.isAuthDowngraded" />
+    <RouterView
+      v-else-if="userStore.hasApplicationAccess || (userStore.sessionInitialized && !userStore.authenticated && !route.meta.requiresAuth)"
+      :key="String(route.params.id ?? '')"
+    />
+    <div v-else class="fr-container" data-testid="access-verification">
+      <p role="status">Vérification de votre accès au référentiel…</p>
+      <button type="button" class="fr-btn fr-btn--secondary" @click="userStore.fetchUser()">Réessayer</button>
+    </div>
   </main>
 
   <DsfrFooter
@@ -278,11 +291,17 @@ useAppUpdate();
     data-testid="footer"
   />
 
-  <AppToaster :messages="toaster.messages" data-testid="app-toaster" @close-message="toaster.removeMessage($event)" />
+  <AppToaster
+    v-if="userStore.hasApplicationAccess || (!userStore.authenticated && !userStore.isAuthDowngraded)"
+    :messages="toaster.messages"
+    data-testid="app-toaster"
+    @close-message="toaster.removeMessage($event)"
+  />
 
   <!-- Monté une seule fois ici : `emailPreview` est un état global du store, un montage par
        page/composant (cloche + page notifications) ouvrirait deux modales superposées. -->
   <EmailPreviewModal
+    v-if="userStore.hasApplicationAccess"
     :log="notificationStore.emailPreview"
     :opened="!!notificationStore.emailPreview"
     @close="notificationStore.closeEmailPreview()"
