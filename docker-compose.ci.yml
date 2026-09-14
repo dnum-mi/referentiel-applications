@@ -8,6 +8,8 @@ services:
   backend:
     image: ${IMAGE_TAG}
     command: pnpm start:prod
+    environment:
+      - AUTH_LEVEL_MODE=enforce
     depends_on:
       postgres:
         condition: service_healthy

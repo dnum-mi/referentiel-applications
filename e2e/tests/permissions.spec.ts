@@ -278,9 +278,9 @@ test.describe("Permissions & rôles", () => {
     await admin.expectPermsMatrixLegendVisible();
   });
 
-  // PRM-14..19 — niveau d'authentification (#1985). La suite tourne en mode `enforce`
-  // (docker-compose) : `admin-weak` porte un mode faible, `user-federated` un fournisseur non
-  // listé, tous les autres comptes un mode fort. Sans datafeature (login explicite).
+  // PRM-14..19 — niveau d'authentification (#1985). Ces tests requièrent le mode `enforce`
+  // (imposé par docker-compose.ci.yml, à activer en local) : `admin-weak` porte un mode faible,
+  // `user-federated` un fournisseur non listé, les autres un mode fort. Login explicite.
   // Le rôle ADMIN en base prouve que le refus dépend de l'authentification de la session.
   // La datafeature vérifie que ce rôle est conservé avant et après les accès refusés.
   test("PRM-14 - une session sans authentification forte ne peut consulter aucune donnée", async ({
