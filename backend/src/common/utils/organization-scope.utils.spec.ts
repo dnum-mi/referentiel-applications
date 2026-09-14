@@ -1,4 +1,7 @@
-import { organizationWithinScope } from "./organization-scope.utils";
+import {
+  isPathWithinScope,
+  organizationWithinScope,
+} from "./organization-scope.utils";
 
 /**
  * #2370 — Le prédicat doit couvrir le périmètre lui-même et ses descendants, et RIEN d'autre.
@@ -45,4 +48,26 @@ describe("organizationWithinScope", () => {
     };
     expect(OR.every(({ path }) => path.mode === "insensitive")).toBe(true);
   });
+});
+
+describe("isPathWithinScope", () => {
+  it.each(["/ROOT/AREA", "/ROOT/AREA/", "/ROOT/AREA///", "/root/area/"])(
+    "conserve la frontière de segment pour le périmètre %s",
+    (scope) => {
+      expect(isPathWithinScope("/ROOT/AREA", scope)).toBe(true);
+      expect(isPathWithinScope("/ROOT/AREA/", scope)).toBe(true);
+      expect(isPathWithinScope("/ROOT/AREA/CHILD", scope)).toBe(true);
+      expect(isPathWithinScope("/ROOT/AREA2", scope)).toBe(false);
+      expect(isPathWithinScope("/OTHER/ROOT/AREA", scope)).toBe(false);
+      expect(isPathWithinScope(null, scope)).toBe(false);
+    },
+  );
+
+  it.each(["", "/", "///"])(
+    "refuse un périmètre sans segment : '%s'",
+    (scope) => {
+      expect(isPathWithinScope("/ROOT/AREA", scope)).toBe(false);
+      expect(isPathWithinScope("///", scope)).toBe(false);
+    },
+  );
 });
