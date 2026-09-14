@@ -36,6 +36,7 @@ import { MetadatasService } from "src/metadatas/metadatas.service";
 import { Requestor } from "src/user/entities/user.entity";
 import { UserId } from "../common/decorators/user-id.decorator";
 import { ApplicationService } from "./application.service";
+import { ContactAdminDto } from "./dto/contact-admin.dto";
 import {
   CreateApplicationDto,
   PatchApplicationDto,
@@ -173,6 +174,31 @@ Vous devez fournir les informations suivantes :
     @User() user: Requestor,
   ): Promise<APP_PERMISSIONS[]> {
     return this.applicationService.getMyPerms(applicationId, user);
+  }
+
+  @Get(":applicationId/contact-admin")
+  @UseGuards(PermissionGuard)
+  @RequiredPermissions([Permission.AppRead])
+  @ApiOperation({
+    summary:
+      "Administrateur à contacter pour cette application (accès incomplet)",
+    description: `Renvoie l'administrateur le plus pertinent à contacter : l'admin local le plus
+      récent dont le périmètre couvre les acteurs/directions métier de l'application, sinon
+      l'admin global le plus récent, sinon une adresse support si aucun administrateur n'existe.`,
+  })
+  @ApiOkResponse({
+    description: "Administrateur à contacter",
+    type: ContactAdminDto,
+  })
+  @ApiParam({
+    name: "applicationId",
+    required: true,
+    type: String,
+  })
+  getContactAdmin(
+    @Param("applicationId") applicationId: string,
+  ): Promise<ContactAdminDto> {
+    return this.applicationService.getContactAdmin(applicationId);
   }
 
   @Get("export/excel")

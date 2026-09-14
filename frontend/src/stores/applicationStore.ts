@@ -1,4 +1,4 @@
-import type { PatchApplicationDto } from "@/client/types.gen";
+import type { ContactAdminDto, PatchApplicationDto } from "@/client/types.gen";
 import type { Filters } from "@/composables/use-application-search";
 import type { APP_PERMISSIONS, ApplicationWithPerms } from "@/models/Application";
 import { computed, ref } from "vue";
@@ -37,6 +37,20 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     } finally {
       isLoading.value = false;
     }
+  };
+
+  // #2593 : n'est appelé que si l'utilisateur n'a pas la lecture complète de l'application
+  // (cf. ApplicationPage.vue), pour proposer un contact mailto vers l'admin le plus pertinent.
+  const getContactAdmin = async (applicationId: string): Promise<ContactAdminDto> => {
+    const response = await api.applicationControllerGetContactAdmin({ path: { applicationId } });
+    if (!response.data) {
+      throw new Error("Erreur lors de la récupération de l'administrateur à contacter.");
+    }
+    const current = applicationsById.value[applicationId];
+    if (current) {
+      applicationsById.value[applicationId] = { ...current, contactAdmin: response.data };
+    }
+    return response.data;
   };
 
   const patchApplication = async (app: PatchApplicationDto & { id: string }): Promise<ApplicationWithPerms> => {
@@ -112,6 +126,7 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     currentAppId,
     isLoading,
     getMyPerms,
+    getContactAdmin,
     fetchApplication,
     patchApplication,
     patchApplicationsQuality,

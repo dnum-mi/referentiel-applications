@@ -8,6 +8,7 @@ import type {
   AppPermsDto,
   BusinessDivisionDto,
   ComplianceDto,
+  ContactAdminDto,
   CreateApplicationDto,
   CreateApplicationStatusDto,
   LabelDto,
@@ -33,7 +34,9 @@ export type Application = ApplicationDto & {
 
 export type CreateApplicationWithPerms = CreateApplicationDto & { myPerms: Set<APP_PERMISSIONS> };
 // Application complète (DTO + relations chargées par l'API) avec les permissions de l'utilisateur.
-export type ApplicationWithPerms = Application & { myPerms: Set<APP_PERMISSIONS> };
+// `contactAdmin` n'est renseigné que si l'utilisateur n'a pas la lecture complète de la fiche
+// (cf. ApplicationPage.vue) : l'administrateur à contacter pour obtenir plus de droits (#2593).
+export type ApplicationWithPerms = Application & { myPerms: Set<APP_PERMISSIONS>; contactAdmin?: ContactAdminDto };
 
 // Données de préremplissage du formulaire d'application, communes aux modes
 // création (CreateApplicationDto, statut objet) et édition (ApplicationDto, statut chaîne).

@@ -4,6 +4,7 @@ import {
   Permission,
   Prisma,
   QualityCampaignStatus,
+  Roles,
 } from "@prisma/client";
 import { PrismaQueryBuilder } from "src/applications/prisma-query-builder.service";
 import { isRetired } from "src/applications/constants/status-groups";
@@ -12,6 +13,7 @@ import {
   isDimaFilled,
   isPdmaFilled,
 } from "src/common/utils/compliance-presence.utils";
+import { ancestorPathsOf } from "src/common/utils/organization-scope.utils";
 import { calculateIQ } from "src/common/utils/quality.utils";
 import {
   getCompletedQualityActionKeys,
@@ -22,6 +24,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { TagsService } from "src/tag/tags.service";
 import { Requestor } from "src/user/entities/user.entity";
 import { ApplicationRights } from "./dto/application-rights.dto";
+import { ContactAdminDto, ContactAdminSource } from "./dto/contact-admin.dto";
 import {
   CreateApplicationDto,
   PatchApplicationDto,
@@ -49,6 +52,12 @@ export function objectEntries<Obj extends Record<string, unknown>>(
 // Code du type d'acteur système "Créateur", assigné automatiquement à l'utilisateur qui crée une
 // application (cf. createApplication). Créé par la migration 20260814090000_add_createur_actor_type.
 const CREATOR_ACTOR_TYPE_CODE = "CREATEUR";
+
+// Adresse de contact générique, utilisée en dernier recours par getContactAdmin quand aucun
+// administrateur n'existe en base. Même adresse que celle déjà affichée côté frontend
+// (App.vue, AccessibilityPage.vue).
+const SUPPORT_FALLBACK_EMAIL =
+  "support-referentiel-applications@interieur.gouv.fr";
 
 // Sous-ensemble minimal du client Prisma transactionnel utilisé par assignCreatorActor : les
 // types générés du client étendu (PrismaService) et du client `tx` ne sont pas mutuellement
@@ -355,6 +364,89 @@ export class ApplicationService {
       applicationId,
       requestor,
     );
+  }
+
+  // #2593 : quand un utilisateur n'a pas la lecture complète d'une application, le frontend
+  // affiche un lien mailto vers l'administrateur le plus pertinent à contacter — l'admin local
+  // le plus récent (scope couvrant le périmètre de l'appli, déduit de ses acteurs/directions
+  // métier), sinon l'admin global le plus récent, sinon l'adresse support statique.
+  public async getContactAdmin(
+    applicationId: string,
+  ): Promise<ContactAdminDto> {
+    const orgPaths = await this.getApplicationOrganizationPaths(applicationId);
+
+    const localAdmin =
+      orgPaths.length > 0
+        ? await this.findMostRecentLocalAdmin(orgPaths)
+        : null;
+    if (localAdmin) {
+      return this.toContactAdminDto(localAdmin.email, "local");
+    }
+
+    const globalAdmin = await this.findMostRecentGlobalAdmin();
+    if (globalAdmin) {
+      return this.toContactAdminDto(globalAdmin.email, "global");
+    }
+
+    return this.toContactAdminDto(SUPPORT_FALLBACK_EMAIL, "support");
+  }
+
+  private toContactAdminDto(
+    email: string,
+    source: ContactAdminSource,
+  ): ContactAdminDto {
+    return { email, source };
+  }
+
+  // Organisations des acteurs de l'application + organisations de sa direction métier (MOA),
+  // mêmes relations que CheckPermissions.getUserRolePermissions/hasBusinessDivisionScope.
+  private async getApplicationOrganizationPaths(
+    applicationId: string,
+  ): Promise<string[]> {
+    const [actors, businessDivision] = await Promise.all([
+      this.prisma.actor.findMany({
+        where: { applicationId, organizationId: { not: null } },
+        select: { organization: { select: { path: true } } },
+        distinct: ["organizationId"],
+      }),
+      this.prisma.businessDivision.findFirst({
+        where: { applications: { some: { id: applicationId } } },
+        include: { organizations: true },
+      }),
+    ]);
+
+    const paths = [
+      ...actors
+        .map((actor) => actor.organization?.path)
+        .filter((path): path is string => !!path),
+      ...(businessDivision?.organizations.map((org) => org.path) ?? []),
+    ];
+
+    return [...new Set(paths)];
+  }
+
+  private async findMostRecentLocalAdmin(orgPaths: string[]) {
+    const ancestorPaths = [...new Set(orgPaths.flatMap(ancestorPathsOf))];
+    if (ancestorPaths.length === 0) return null;
+
+    return this.prisma.user.findFirst({
+      where: {
+        role: Roles.ADMIN,
+        scopeOrganization: {
+          OR: ancestorPaths.map((path) => ({
+            path: { equals: path, mode: "insensitive" },
+          })),
+        },
+      },
+      orderBy: { lastPermissionChangeAt: { sort: "desc", nulls: "last" } },
+    });
+  }
+
+  private async findMostRecentGlobalAdmin() {
+    return this.prisma.user.findFirst({
+      where: { role: Roles.ADMIN, scopeOrganizationId: null },
+      orderBy: { lastPermissionChangeAt: { sort: "desc", nulls: "last" } },
+    });
   }
 
   public async search(

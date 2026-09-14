@@ -367,3 +367,134 @@ describe("ApplicationService.updateApplicationQuality", () => {
     });
   });
 });
+
+describe("ApplicationService.getContactAdmin", () => {
+  const setup = ({
+    actors = [] as { organization: { path: string } | null }[],
+    businessDivision = null as { organizations: { path: string }[] } | null,
+    findFirstUser,
+  }: {
+    actors?: { organization: { path: string } | null }[];
+    businessDivision?: { organizations: { path: string }[] } | null;
+    findFirstUser: jest.Mock;
+  }) => {
+    const prisma = {
+      actor: {
+        findMany: jest.fn().mockResolvedValue(actors),
+      },
+      businessDivision: {
+        findFirst: jest.fn().mockResolvedValue(businessDivision),
+      },
+      user: {
+        findFirst: findFirstUser,
+      },
+    };
+
+    const service = new ApplicationService(
+      prisma as unknown as PrismaService,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+    );
+
+    return { service, prisma };
+  };
+
+  it("acteur dans le périmètre : renvoie l'admin local le plus récent", async () => {
+    const findFirstUser = jest
+      .fn()
+      .mockResolvedValue({ email: "local-admin@example.com" });
+    const { service } = setup({
+      actors: [{ organization: { path: "/MI/DNUM/SG" } }],
+      findFirstUser,
+    });
+
+    const result = await service.getContactAdmin("app-1");
+
+    expect(result).toEqual({
+      email: "local-admin@example.com",
+      source: "local",
+    });
+    const [{ where, orderBy }] = findFirstUser.mock.calls[0];
+    expect(where.role).toBe("ADMIN");
+    expect(where.scopeOrganization.OR).toEqual(
+      expect.arrayContaining([
+        { path: { equals: "/MI", mode: "insensitive" } },
+        { path: { equals: "/MI/DNUM", mode: "insensitive" } },
+        { path: { equals: "/MI/DNUM/SG", mode: "insensitive" } },
+      ]),
+    );
+    expect(orderBy).toEqual({
+      lastPermissionChangeAt: { sort: "desc", nulls: "last" },
+    });
+  });
+
+  it("directions métier : dérive aussi le périmètre depuis leurs organisations", async () => {
+    const findFirstUser = jest
+      .fn()
+      .mockResolvedValue({ email: "moa-admin@example.com" });
+    const { service } = setup({
+      businessDivision: { organizations: [{ path: "/MI/DNUM" }] },
+      findFirstUser,
+    });
+
+    const result = await service.getContactAdmin("app-1");
+
+    expect(result).toEqual({
+      email: "moa-admin@example.com",
+      source: "local",
+    });
+  });
+
+  it("aucun admin local trouvé : bascule sur l'admin global le plus récent", async () => {
+    const findFirstUser = jest
+      .fn()
+      .mockResolvedValueOnce(null) // recherche locale
+      .mockResolvedValueOnce({ email: "global-admin@example.com" });
+    const { service } = setup({
+      actors: [{ organization: { path: "/MI/DNUM/SG" } }],
+      findFirstUser,
+    });
+
+    const result = await service.getContactAdmin("app-1");
+
+    expect(result).toEqual({
+      email: "global-admin@example.com",
+      source: "global",
+    });
+    const [{ where }] = findFirstUser.mock.calls[1];
+    expect(where).toEqual({ role: "ADMIN", scopeOrganizationId: null });
+  });
+
+  it("application sans acteur ni direction métier : cherche directement un admin global", async () => {
+    const findFirstUser = jest
+      .fn()
+      .mockResolvedValue({ email: "global-admin@example.com" });
+    const { service } = setup({ findFirstUser });
+
+    const result = await service.getContactAdmin("app-1");
+
+    expect(result).toEqual({
+      email: "global-admin@example.com",
+      source: "global",
+    });
+    expect(findFirstUser).toHaveBeenCalledTimes(1);
+  });
+
+  it("aucun admin en base : retombe sur l'adresse support statique", async () => {
+    const findFirstUser = jest.fn().mockResolvedValue(null);
+    const { service } = setup({ findFirstUser });
+
+    const result = await service.getContactAdmin("app-1");
+
+    expect(result).toEqual({
+      email: "support-referentiel-applications@interieur.gouv.fr",
+      source: "support",
+    });
+  });
+});
