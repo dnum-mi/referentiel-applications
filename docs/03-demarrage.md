@@ -64,7 +64,7 @@ En développement, les variables nécessaires au backend sont **déjà fournies*
 
 - **Base de données** : `DATABASE_URL` (chaîne de connexion PostgreSQL).
 - **Authentification OIDC** : `OIDC_CONFIG_URL`, `OIDC_JWKS_URL`, `OIDC_CLIENT_ID`.
-- **Niveau d'authentification (#1985)** : `AUTH_LEVEL_MODE` est `off` par défaut dans le code mais `enforce` dans `docker-compose.yml`, avec le claim `auth_mode` et la valeur forte `CARD` simulés par le realm Keycloak (voir [Simuler une authentification forte ou faible](#simuler-une-authentification-forte-ou-faible)).
+- **Niveau d'authentification (#1985)** : `AUTH_LEVEL_MODE` est `off` par défaut dans le code et dans `docker-compose.yml` pour le développement local. La connexion OIDC et les permissions restent appliquées ; seul le contrôle du niveau d'authentification est désactivé. Les surcharges `docker-compose.ci.yml` et `docker-compose.prod.yml` imposent `enforce` (voir [Simuler une authentification forte ou faible](#simuler-une-authentification-forte-ou-faible)).
 - **CORS / réseau** : `ALLOWED_ORIGINS`, `PORT`, `HOST`.
 - **Messagerie (SMTP)** : `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_FROM`, `SMTP_ENABLED` (pointés vers Mailpit en local) ; `EMAIL_CRON_ENABLED` active les envois automatiques (digest quotidien, relances de validation), désactivés par défaut.
 - **Détection des corrélations** : `CORRELATION_CRON_ENABLED` active le job planifié qui rapproche les applications proches (désactivé par défaut) ; `CORRELATION_SCORE_THRESHOLD` et les trois `CORRELATION_WEIGHT_*` règlent le seuil et la pondération des signaux.
@@ -72,6 +72,20 @@ En développement, les variables nécessaires au backend sont **déjà fournies*
 - **Divers** : `LOG_LEVEL`, `ENV_LABEL`, `FOOTER_LINKS`, `MOCK_MAIA_SERVICE`, `MOCK_MAIA_ORGANIZATION`.
 
 ### Simuler une authentification forte ou faible
+
+Pour activer le contrôle du niveau d'authentification en local et exécuter les scénarios QA PRM-14 à PRM-19 :
+
+```bash
+AUTH_LEVEL_MODE=enforce docker compose up -d --no-deps backend
+```
+
+Pour revenir au mode de développement local sans ce contrôle :
+
+```bash
+docker compose up -d --no-deps backend
+```
+
+Cette dernière commande utilise le défaut `off` si `AUTH_LEVEL_MODE` n'est défini ni dans le shell ni dans un fichier `.env` à la racine. Recharger la page après le redémarrage du backend.
 
 Le realm Keycloak du dépôt (`keycloak/realm-export.json`) expose deux claims sur l'access token à partir d'attributs utilisateur : `auth_mode` (mode d'authentification simulé) et `auth_idp` (fournisseur d'identité simulé). Mot de passe de tous les comptes : `pass`.
 
@@ -87,7 +101,7 @@ Les deux attributs sont déclarés dans le profil utilisateur du realm : un admi
 docker compose rm -sf keycloak && docker compose up -d keycloak
 ```
 
-Sans cela, le mapper est absent, tout le monde est bloqué (`admin` compris) et les symptômes ressemblent à un bug de droits ; `GET /users/me` (`authLevel.reason` = `claim-missing`) rend le diagnostic immédiat. Contrôle rapide des claims émis :
+En mode `enforce`, un mapper absent bloque tous les comptes (`admin` compris) et les symptômes ressemblent à un bug de droits ; `GET /users/me` (`authLevel.reason` = `claim-missing`) rend le diagnostic immédiat. Contrôle rapide des claims émis :
 
 ```bash
 curl -s -d grant_type=password -d client_id=referentiel-applications -d username=admin-weak -d password=pass -d scope=openid \

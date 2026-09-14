@@ -6,7 +6,8 @@
 > Utilisateurs Keycloak : `admin` (ADMIN) et `user` (READER), mot de passe `pass`. Niveau
 > d'authentification (#1985) : `admin-weak` (ADMIN, mode faible) et `user-federated` (fournisseur
 > d'identité non listé, sans mode). **Prérequis PRM-14..19** : `AUTH_LEVEL_MODE=enforce` côté backend
-> (valeur par défaut de `docker-compose.yml`) — hors `enforce`, ces cas sont sans objet.
+> (imposé par `docker-compose.ci.yml`). En local, l'activer avec
+> `AUTH_LEVEL_MODE=enforce docker compose up -d --no-deps backend` avant ces tests.
 
 | Légende           |                                                         |
 | :---------------- | :------------------------------------------------------ |
