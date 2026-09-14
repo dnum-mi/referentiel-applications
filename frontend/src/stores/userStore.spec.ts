@@ -66,6 +66,24 @@ describe("userStore.isWithinScope", () => {
     expect(store.isWithinScope("/MI/SG/DNUM/SDAN")).toBe(true);
   });
 
+  it.each(["/ROOT/AREA/", "/ROOT/AREA///", "/root/area/"])("garde les actions accessibles dans le périmètre %s", (scope) => {
+    const store = useUserStore();
+    store.user = userWithScope(scope);
+    expect(store.isWithinScope("/ROOT/AREA")).toBe(true);
+    expect(store.isWithinScope("/ROOT/AREA/CHILD")).toBe(true);
+    expect(store.isWithinScope("/ROOT/AREA2")).toBe(false);
+    expect(store.isWithinScope("/OTHER/ROOT/AREA/CHILD")).toBe(false);
+    expect(store.isWithinScope(null)).toBe(false);
+  });
+
+  it("ne transforme pas un périmètre constitué de séparateurs en accès global", () => {
+    const store = useUserStore();
+    store.user = userWithScope("///");
+    expect(store.isWithinScope("/ROOT/AREA")).toBe(false);
+    expect(store.isWithinScope("///")).toBe(false);
+    expect(store.isWithinScope(null)).toBe(false);
+  });
+
   it("refuse un simple préfixe de chaîne (/SG ne couvre pas /SGAMI)", () => {
     const store = useUserStore();
     store.user = userWithScope("/MI/SG");

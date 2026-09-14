@@ -11,14 +11,19 @@ import { Prisma } from "@prisma/client";
  *
  * Seul l'ancrage au séparateur est correct. Source unique de la règle, pour que les
  * emplacements qui filtrent par périmètre ne divergent plus. Insensible à la casse.
+ * Les séparateurs finaux sont ignorés : un scope déjà terminé par `/` ne doit pas
+ * produire un préfixe `//`, qui exclurait tous ses descendants.
  */
 export function organizationWithinScope(
   scope: string,
 ): Prisma.OrganizationWhereInput {
+  const normalizedScope = scope.replace(/\/+$/, "");
+  if (!normalizedScope) return { id: { in: [] } };
+
   return {
     OR: [
-      { path: { equals: scope, mode: "insensitive" } },
-      { path: { startsWith: `${scope}/`, mode: "insensitive" } },
+      { path: { equals: normalizedScope, mode: "insensitive" } },
+      { path: { startsWith: `${normalizedScope}/`, mode: "insensitive" } },
     ],
   };
 }
@@ -35,8 +40,9 @@ export function isPathWithinScope(
   scope: string,
 ): boolean {
   if (!targetPath) return false;
-  const normalizedTarget = targetPath.toLowerCase();
-  const normalizedScope = scope.toLowerCase();
+  const normalizedTarget = targetPath.replace(/\/+$/, "").toLowerCase();
+  const normalizedScope = scope.replace(/\/+$/, "").toLowerCase();
+  if (!normalizedScope) return false;
   return (
     normalizedTarget === normalizedScope ||
     normalizedTarget.startsWith(`${normalizedScope}/`)

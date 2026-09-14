@@ -235,7 +235,10 @@ export const useUserStore = defineStore("userStore", () => {
     const scopePath = user.value?.scopeOrganization?.path;
     if (!scopePath) return true;
     if (!targetOrganizationPath) return false;
-    return targetOrganizationPath === scopePath || targetOrganizationPath.startsWith(`${scopePath}/`);
+    const normalizedScope = scopePath.replace(/\/+$/, "").toLowerCase();
+    const normalizedTarget = targetOrganizationPath.replace(/\/+$/, "").toLowerCase();
+    if (!normalizedScope) return false;
+    return normalizedTarget === normalizedScope || normalizedTarget.startsWith(`${normalizedScope}/`);
   }
 
   function hasPermissions(permissions: Permission[], userApplicationPerms?: APP_PERMISSIONS[]) {

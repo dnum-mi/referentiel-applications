@@ -1,6 +1,7 @@
 import { Injectable, HttpException, HttpStatus } from "@nestjs/common";
 import { Roles } from "@prisma/client";
 import { StepDownException } from "src/auth-level/step-down.exception";
+import { isPathWithinScope } from "src/common/utils/organization-scope.utils";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UpdateUserDto } from "../dto/update-user.dto";
 import { Requestor } from "../entities/user.entity";
@@ -299,11 +300,7 @@ export class ScopedPermissionService {
     // admin scopé (l'ancien `if (targetPath && …)` laissait passer ce cas en silence).
     // L'appartenance est ancrée à la frontière de segment (`scope` lui-même ou un descendant
     // `scope + "/"`), et non un simple préfixe de chaîne (`/SG` ne matche pas `/SGAMI`).
-    const withinScope =
-      !!targetPath &&
-      (targetPath === requestorScopePath ||
-        targetPath.startsWith(`${requestorScopePath}/`));
-    if (!withinScope) {
+    if (!isPathWithinScope(targetPath, requestorScopePath)) {
       throw new ScopePermissionsException(message);
     }
   }
