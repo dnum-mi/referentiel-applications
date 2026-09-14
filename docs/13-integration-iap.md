@@ -12,7 +12,7 @@ Ce guide complète [l'exploitation](./12-exploitation-deploiement.md) pour le ti
 
 ## Valeur forte confirmée pour Passage2
 
-Julien a confirmé le 14 septembre 2026 que `Auth_Mode` vaut `CARD` aussi bien pour la carte agent que pour RIO/mot de passe + TOTP. Cette précision complète le PDF. La configuration reste `AUTH_LEVEL_STRONG_VALUES=CARD` : aucune valeur MFA supplémentaire n'est nécessaire.
+Pour Passage2, `Auth_Mode` vaut `CARD` aussi bien pour la carte agent que pour RIO/mot de passe + TOTP. La configuration reste `AUTH_LEVEL_STRONG_VALUES=CARD` : aucune valeur MFA supplémentaire n'est nécessaire.
 
 Pour le fournisseur Passage2 principal, avec `AUTH_LEVEL_TRUSTED_IDPS` vide :
 
