@@ -47,7 +47,7 @@ app.mount("#app");
 Le composant racine `frontend/src/App.vue` assemble la coque applicative DSFR
 (`DsfrHeader`, `DsfrNavigation`, `DsfrFooter`, `DsfrSkipLinks`), affiche le
 `RouterView`, branche le toaster global (`AppToaster`) et les bandeaux et écrans
-transverses (`ImpersonationBanner`, `WeakAuthBanner` — #1985 —, `MaintenanceBanner`,
+transverses (`ImpersonationBanner`, `WeakAuthBanner` — écran de reconnexion #1985 —, `MaintenanceBanner`,
 `BlockedAccessScreen`). Il déclenche au montage la configuration du client HTTP
 (`configureClients(toaster, { isAuthDowngraded })`) et la récupération de
 la configuration applicative (`getConfig()`), et adapte la navigation et les

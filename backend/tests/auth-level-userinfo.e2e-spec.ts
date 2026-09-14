@@ -101,32 +101,32 @@ describe("Niveau d'authentification — repli userinfo (#1985)", () => {
     ]);
   });
 
-  it("rétrograde quand userinfo porte un mode faible", async () => {
+  it("bloque quand userinfo porte un mode faible", async () => {
     const user = await admin();
     userinfoBySub.set(user.email, { auth_mode: "PASSWORD" });
 
     const res = await request(app().getHttpServer())
       .get("/users/me")
       .set("Authorization", `Bearer ${getToken(user)}`)
-      .expect(200);
+      .expect(403);
 
     expect(res.body).toMatchObject({
-      role: Roles.VISITOR,
+      strongAuthRequired: true,
       authLevel: { level: AuthLevel.weak, downgraded: true },
     });
   });
 
   // Fail-closed : un refus du fournisseur n'accorde jamais rien.
-  it("reste faible quand userinfo refuse le jeton", async () => {
+  it("bloque quand userinfo refuse le jeton", async () => {
     const user = await admin();
 
     const res = await request(app().getHttpServer())
       .get("/users/me")
       .set("Authorization", `Bearer ${getToken(user)}`)
-      .expect(200);
+      .expect(403);
 
     expect(res.body).toMatchObject({
-      role: Roles.VISITOR,
+      strongAuthRequired: true,
       authLevel: { reason: "claim-missing", downgraded: true },
     });
   });

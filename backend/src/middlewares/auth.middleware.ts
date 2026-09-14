@@ -14,9 +14,7 @@ import {
   AuthLevelEvaluation,
   evaluateAuthLevel,
   isDowngraded,
-  stepDownPrincipal,
 } from "src/auth-level/auth-level";
-import { stepDownBody } from "src/auth-level/step-down.exception";
 import { UserinfoClaimsResolver } from "src/auth-level/userinfo-claims";
 import { createUserinfoJwtVerifier } from "src/auth-level/userinfo-jwt-verifier";
 import { authLevelConfig, oidcConfig } from "src/config/configs";
@@ -127,19 +125,54 @@ export class AuthMiddleware implements NestMiddleware {
         return;
       }
 
-      // #1985 : en mode `enforce`, une session sans authentification forte (carte
-      // agent ou double authentification) ne porte que les droits d'un utilisateur
-      // standard. La réécriture est faite EN MÉMOIRE, avant `principalToPermissions`,
-      // avant l'impersonation et avant le journal : tout ce qui suit lit ce
-      // principal, jamais la ligne en base.
+      // #1985 : Passage2 peut encore accepter Windows sans second facteur. En
+      // enforce, aucune route protégée, même en lecture, ne doit alors être appelée.
       const downgraded =
         evaluation !== undefined && isDowngraded(evaluation, this.authLevel);
-      const principal = downgraded ? stepDownPrincipal(user) : user;
+      const impersonateUserId = req.headers[IMPERSONATE_HEADER] as
+        | string
+        | undefined;
+      if (downgraded) {
+        if (impersonateUserId && authenticatedByJwt) {
+          this.logger.warn(
+            `[AuthLevel] Impersonation refusée en session faible : ${user.email} → ${impersonateUserId} (${evaluation.reason})`,
+          );
+          if (!maintenanceMode) {
+            await this.userService.stopImpersonation(
+              user.id,
+              impersonateUserId,
+            );
+          }
+        }
+        if (!maintenanceMode) {
+          const logged = await this.userConnexionLogService.log(
+            user.id,
+            evaluation,
+          );
+          if (logged?.created)
+            this.logFirstConnexionOfTheDay(user, evaluation, true);
+        }
+        // 403 typé : un 401 relancerait automatiquement la même connexion SSO.
+        // Aucune identité, permission, organisation ou valeur brute n'est exposée.
+        res.status(403);
+        res.json({
+          statusCode: 403,
+          strongAuthRequired: true,
+          message:
+            "L'accès au référentiel nécessite une authentification forte (carte agent ou double authentification).",
+          authLevel: {
+            level: evaluation.level,
+            downgraded: true,
+            reason: evaluation.reason,
+          },
+        });
+        return;
+      }
 
       // L'utilisateur réellement authentifié (avant toute impersonation).
       const authenticatedUser: Requestor = {
-        ...principal,
-        permissions: principalToPermissions(principal),
+        ...user,
+        permissions: principalToPermissions(user),
         authLevel:
           evaluation && this.authLevel.mode !== "off"
             ? { level: evaluation.level, downgraded, reason: evaluation.reason }
@@ -150,29 +183,7 @@ export class AuthMiddleware implements NestMiddleware {
       // Impersonation : un administrateur peut se faire passer pour un autre
       // utilisateur en fournissant son identifiant via un header dédié. Seule
       // l'authentification humaine (JWT) y donne droit, pas les tokens API.
-      const impersonateUserId = req.headers[IMPERSONATE_HEADER] as
-        | string
-        | undefined;
       if (impersonateUserId && authenticatedByJwt) {
-        if (downgraded) {
-          // Refus explicite plutôt que le refus générique « pas administrateur » :
-          // le front rejoue le header depuis le localStorage à chaque requête et
-          // doit reconnaître le payload `stepDown` pour purger l'impersonation. La
-          // tentative n'atteint pas ActionLogMiddleware (réponse avant `next()`) :
-          // ce warn est la seule trace.
-          this.logger.warn(
-            `[AuthLevel] Impersonation refusée en session faible : ${user.email} → ${impersonateUserId} (${evaluation?.reason})`,
-          );
-          if (!maintenanceMode) {
-            await this.userService.stopImpersonation(
-              user.id,
-              impersonateUserId,
-            );
-          }
-          res.status(403);
-          res.json(stepDownBody("impersonation"));
-          return;
-        }
         req.user = await this.resolveImpersonatedUser(
           authenticatedUser,
           impersonateUserId,
@@ -244,8 +255,8 @@ export class AuthMiddleware implements NestMiddleware {
   /**
    * Une ligne de log applicatif par utilisateur, par jour et par contexte (jamais par
    * requête) : en `observe`, c'est le canal de mesure qui dit ce que le fournisseur
-   * d'identité transmet réellement ; en `enforce`, seule une rétrogradation qui retire
-   * effectivement quelque chose mérite un avertissement.
+   * d'identité transmet réellement ; en `enforce`, le refus d'accès est journalisé
+   * pour tous les rôles, y compris les visiteurs.
    */
   private logFirstConnexionOfTheDay(
     user: UserEntity,
@@ -258,12 +269,8 @@ export class AuthMiddleware implements NestMiddleware {
       this.logger.log(`[AuthLevel] ${details}`);
       return;
     }
-    const losesSomething =
-      user.role !== Roles.VISITOR ||
-      (user.additionalPermissions?.length ?? 0) > 0 ||
-      !!user.scopeOrganizationId;
-    if (downgraded && losesSomething) {
-      this.logger.warn(`[AuthLevel] Session rétrogradée : ${details}`);
+    if (downgraded) {
+      this.logger.warn(`[AuthLevel] Accès refusé : ${details}`);
     }
   }
 

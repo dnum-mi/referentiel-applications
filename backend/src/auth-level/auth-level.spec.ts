@@ -1,11 +1,6 @@
-import { AuthLevel, Permission, Roles } from "@prisma/client";
+import { AuthLevel } from "@prisma/client";
 import type { AuthLevelConfig } from "src/config/configs/auth-level.config";
-import type { UserEntity } from "src/user/entities/user.entity";
-import {
-  evaluateAuthLevel,
-  isDowngraded,
-  stepDownPrincipal,
-} from "./auth-level";
+import { evaluateAuthLevel, isDowngraded } from "./auth-level";
 
 const enforce: AuthLevelConfig = {
   mode: "enforce",
@@ -139,49 +134,5 @@ describe("isDowngraded", () => {
     const weak = { level: AuthLevel.weak, reason: "weak-method" as const };
     expect(isDowngraded(weak, observe)).toBe(false);
     expect(isDowngraded(weak, off)).toBe(false);
-  });
-});
-
-describe("stepDownPrincipal", () => {
-  const admin = {
-    id: "admin-id",
-    email: "admin@example.test",
-    role: Roles.ADMIN,
-    type: "human",
-    organizationId: "org-1",
-    organization: { id: "org-1", path: "MI/DNUM" },
-    scopeOrganizationId: "scope-1",
-    scopeOrganization: { id: "scope-1", path: "MI" },
-    additionalPermissions: [Permission.DataExport],
-    isBlocked: false,
-    followedApplications: [{ id: "app-1", label: "App" }],
-  } as unknown as UserEntity;
-
-  it("réécrit exactement les quatre champs de privilège", () => {
-    const standard = stepDownPrincipal(admin);
-    expect(standard).toEqual({
-      ...admin,
-      role: Roles.VISITOR,
-      additionalPermissions: [],
-      scopeOrganizationId: null,
-      scopeOrganization: null,
-    });
-  });
-
-  // L'organisation et l'e-mail servent à la couche 3 et à la traçabilité : ils restent.
-  it("conserve identité, organisation et préférences", () => {
-    const standard = stepDownPrincipal(admin);
-    expect(standard.id).toBe(admin.id);
-    expect(standard.email).toBe(admin.email);
-    expect(standard.organizationId).toBe("org-1");
-    expect(standard.organization).toEqual(admin.organization);
-    expect(standard.followedApplications).toEqual(admin.followedApplications);
-  });
-
-  it("ne mute pas l'entrée", () => {
-    stepDownPrincipal(admin);
-    expect(admin.role).toBe(Roles.ADMIN);
-    expect(admin.additionalPermissions).toEqual([Permission.DataExport]);
-    expect(admin.scopeOrganizationId).toBe("scope-1");
   });
 });

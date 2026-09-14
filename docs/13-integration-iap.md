@@ -1,6 +1,28 @@
 # Qualification du niveau d'authentification avec IAP / Passage2
 
-Ce guide complète [l'exploitation](./12-exploitation-deploiement.md) pour le ticket #1985. La documentation IAP consultée le 10 septembre 2026 décrit les réglages du fournisseur ; elle ne prouve pas quels réglages sont appliqués au client RefApp. Les tests Keycloak locaux ne remplacent pas la qualification de Passage2.
+Ce guide complète [l'exploitation](./12-exploitation-deploiement.md) pour le ticket #1985. L'export PDF « IAP - Documentation », daté du 10 septembre 2026 et relu le 14 septembre, décrit les réglages du fournisseur ; il ne prouve pas quels réglages sont appliqués au client RefApp. Les tests Keycloak locaux ne remplacent pas la qualification de Passage2.
+
+## Points établis par le document
+
+- **Page 8, gestion des rôles** : un niveau minimum peut être demandé pour bénéficier d'un rôle Passage2. L'exemple élevé impose la carte agent ; le document ne précise pas le classement du TOTP dans ces niveaux.
+- **Page 11, matrice des attributs** : la variable s'appelle `Auth-Mode`, avec `CARD` comme exemple. La matrice ne donne pas la liste exhaustive de ses valeurs, ni celle du parcours mot de passe + TOTP. Elle indique que les partenaires fédérés listés ne transmettent pas cet attribut et précise que la partie fédération est en cours de consolidation.
+- **Pages 13 et 18, claims et scopes** : le nom du claim OIDC se choisit dans IAP à partir de la variable Passage2 ; les attributs sont transmis dans le scope `profile`. `auth_mode` est donc notre nom de mapping, pas un nom imposé par le document.
+- **Page 18, signatures** : le texte cite RS256 ou HS256 pour les JWT ; la capture de découverte montre HS256, HS384 et HS512 pour `userinfo` et l'ID token. Cette capture ne détermine pas l'algorithme effectivement configuré pour RefApp, ni celui du jeton d'accès.
+- **Reconnexion** : le document ne précise pas le comportement de `prompt=login` ni une valeur `acr_values` permettant d'exiger carte ou TOTP. La présence du claim `acr` dans la capture ne suffit pas à établir ce support.
+
+## Valeur forte confirmée pour Passage2
+
+Pour Passage2, `Auth_Mode` vaut `CARD` aussi bien pour la carte agent que pour RIO/mot de passe + TOTP. La configuration reste `AUTH_LEVEL_STRONG_VALUES=CARD` : aucune valeur MFA supplémentaire n'est nécessaire.
+
+Pour le fournisseur Passage2 principal, avec `AUTH_LEVEL_TRUSTED_IDPS` vide :
+
+| Parcours ou mode reçu     | Valeur du claim                  | Résultat en `enforce`                                  |
+| ------------------------- | -------------------------------- | ------------------------------------------------------ |
+| Carte agent               | `CARD`                           | Accès selon les droits RefApp du compte                |
+| RIO/mot de passe + TOTP   | `CARD`                           | Accès selon les droits RefApp du compte                |
+| Autre mode ou mode absent | Autre valeur ou absence de claim | Refus `403 strongAuthRequired` et écran de reconnexion |
+
+Le mode `CARD` atteste donc les deux parcours forts. Ce seul attribut ne permet pas de distinguer une connexion par carte d'une connexion avec TOTP dans le journal.
 
 ## Configuration de l'environnement dans IAP
 
@@ -34,15 +56,19 @@ Ces deux variables vont ensemble. Le secret doit contenir au moins 32, 48 ou 64 
 
 Le choix d'algorithme vient de la configuration serveur. Une signature faite avec une autre clé ou un autre algorithme est refusée. En mode HMAC, une réponse JSON non signée est également refusée. Les vérifications de sujet (`sub`), d'émetteur (`iss`) et d'audience (`aud`) restent obligatoires sur les réponses signées. Leur signature est vérifiée même lorsque la validation des jetons d'accès est désactivée pour un test local.
 
-Ce secret n'est jamais transmis au frontend ou à `/config`, ni utilisé pour accepter des jetons d'accès à l'API RefApp. Il ne transforme pas non plus le client navigateur en client confidentiel : RefApp utilise actuellement Authorization Code + PKCE depuis le navigateur. La documentation IAP décrit aussi un échange serveur avec secret ; il faut confirmer le type du **client RefApp existant**. Si celui-ci exige une authentification par secret lors de l'échange du code, un raccordement serveur est nécessaire. Ne pas placer ce secret dans le navigateur.
+Ce secret n'est jamais transmis au frontend ou à `/config`, ni utilisé pour accepter des jetons d'accès à l'API RefApp. Il ne transforme pas non plus le client navigateur en client confidentiel : RefApp utilise actuellement Authorization Code + PKCE depuis le navigateur (`frontend/src/services/authentication.ts`). La cinématique des pages 17–18 décrit des échanges entre le serveur applicatif et Passage2, avec un identifiant et un secret client. Le flux actuel de RefApp n'est donc pas celui représenté dans ce document. Vérifier les réglages et les conditions d'intégration du **client RefApp existant** : s'il exige une authentification par secret lors de l'échange du code, cet échange doit être pris en charge côté serveur. La vérification HMAC de `userinfo` ne réalise pas cet échange de code. Ne pas placer ce secret dans le navigateur.
 
 ## Parcours de qualification
 
-Déployer une version contenant #1985, appliquer ses migrations et commencer en `AUTH_LEVEL_MODE=observe`. Utiliser un compte RefApp possédant des droits d'administration ou d'écriture, afin de pouvoir vérifier ensuite leur réduction.
+Le retour de l'équipe du 14 septembre 2026 signale que le parcours RIO/mot de passe propose un code TOTP en intégration, mais que Windows peut encore authentifier sans second facteur. La décision est donc de refuser toute consultation sans authentification forte attestée par RefApp, avec `CARD` comme valeur forte confirmée pour les deux parcours. `Auth_Mode`, `Auth-Mode` et `auth_mode` ne sont pas des alias automatiques : vérifier le nom exact publié dans IAP et utiliser ce nom dans `AUTH_LEVEL_CLAIM`. Garder `AUTH_LEVEL_TRUSTED_IDPS` vide pour le fournisseur Passage2 principal.
 
-Pour chaque connexion carte agent, mot de passe seul et mot de passe avec second facteur, relever le mode, le fournisseur et la source dans l'historique d'administration. `CARD` est le seul exemple de mode donné par le guide IAP ; la valeur MFA doit être observée ou confirmée par Passage2 avant de l'ajouter à `AUTH_LEVEL_STRONG_VALUES`. Un niveau minimum de rôle IAP ne remplace pas la vérification des permissions internes de RefApp.
+Déployer une version contenant #1985, appliquer ses migrations et commencer en `AUTH_LEVEL_MODE=observe`. Utiliser un compte RefApp possédant des droits d'administration ou d'écriture, afin de vérifier le refus d'accès puis la restitution des droits après reconnexion forte.
 
-Après validation des valeurs, tester en `enforce` en qualification : droits conservés avec carte/MFA, droits standard avec mot de passe seul, refus d'administration/écriture/impersonation/création de jeton, puis rétablissement des droits après une vraie reconnexion forte. Vérifier aussi le retour sur la page demandée, le renouvellement silencieux et la persistance du message après une reconnexion restée faible et un rechargement.
+Pour chaque connexion carte agent, Windows seul, mot de passe seul et RIO/mot de passe + TOTP, relever le mode, le fournisseur et la source dans l'historique d'administration. Vérifier la transmission de `CARD` pour les deux parcours forts et le refus des parcours sans second facteur. Un niveau minimum de rôle IAP ne remplace pas la vérification des permissions internes de RefApp.
+
+En `enforce`, `/users/me` doit aussi répondre `403 strongAuthRequired` pour les sessions faibles ou inconnues, sans identité ni droits. L’écran de reconnexion doit remplacer la recherche, les fiches et le profil ; aucune requête métier ne doit partir pendant la vérification initiale.
+
+Tester en `enforce` en qualification : droits conservés avec carte agent ou RIO/mot de passe + TOTP, refus de toute consultation avec Windows ou mot de passe seul, refus d'administration/écriture/impersonation/création de jeton, puis rétablissement des droits après une vraie reconnexion forte. Vérifier aussi le retour sur la page demandée, le renouvellement silencieux et la persistance du message après une reconnexion restée faible et un rechargement.
 
 Conserver `observe` tant que la qualification réelle n'est pas acquise. Le retour arrière consiste à rétablir `observe` et redémarrer les instances pour appliquer l'environnement.
 

@@ -238,7 +238,7 @@ jobs:
           pnpm exec playwright install --with-deps chromium firefox webkit
       - name: Verify authentication on three browsers without retries
         working-directory: e2e
-        # PRM-14..19 : rétrogradation, profil/jetons, reconnexions, F5 et session forte.
+        # PRM-14..19 : refus de consultation, profil/jetons inaccessibles, reconnexions, F5 et session forte.
         run: pnpm exec playwright test tests/permissions.spec.ts --grep 'PRM-1[4-9] -' --workers=1 --retries=0 --trace=retain-on-failure --reporter=line,html
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}

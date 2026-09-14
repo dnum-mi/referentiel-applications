@@ -89,8 +89,8 @@ describe("use-auth-level (#1985)", () => {
   describe("weakAuthBannerText", () => {
     it("propose la reconnexion pour un mode faible", () => {
       const text = weakAuthBannerText("weak-method");
-      expect(text.title).toContain("sans carte agent ni double authentification");
-      expect(text.description).toContain("utilisateur standard");
+      expect(text.title).toBe("Authentification forte requise");
+      expect(text.description).toContain("L'accès au référentiel est bloqué");
       expect(text.canReauth).toBe(true);
     });
 

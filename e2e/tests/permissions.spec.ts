@@ -1,5 +1,6 @@
 import { test as base } from "@playwright/test";
 import { test, expect } from "../fixtures/test";
+import { ApiClient } from "../fixtures/api-client";
 import {
   AdminPage,
   ApplicationPage,
@@ -16,7 +17,7 @@ const ADMIN_WEAK_EMAIL = "admin-weak@example.com";
 
 /**
  * Non-régression — Permissions & rôles (protocole `qa/protocoles/permissions.md`).
- * PRM-01 et PRM-15..18 : login explicite sans datafeature (`user`, `admin-weak`, `user-federated`,
+ * PRM-01 et PRM-15..19 : login explicite sans datafeature (`user`, `admin-weak`, `user-federated`,
  * `admin`) ; PRM-14 provisionne le rôle via la datafeature puis ouvre un contexte séparé ; les
  * autres l'admin (datafeature) ; POM strict.
  */
@@ -277,17 +278,17 @@ test.describe("Permissions & rôles", () => {
     await admin.expectPermsMatrixLegendVisible();
   });
 
-  // PRM-14..18 — niveau d'authentification (#1985). La suite tourne en mode `enforce`
+  // PRM-14..19 — niveau d'authentification (#1985). La suite tourne en mode `enforce`
   // (docker-compose) : `admin-weak` porte un mode faible, `user-federated` un fournisseur non
   // listé, tous les autres comptes un mode fort. Sans datafeature (login explicite).
-  // La rétrogradation ne se distingue d'un simple Visiteur que si `admin-weak` est bien ADMIN
-  // en base : on le garantit via la datafeature (session admin sur la page principale), puis on
-  // joue la session faible dans un contexte navigateur séparé.
-  test("PRM-14 - une session sans authentification forte est rétrogradée", async ({
+  // Le rôle ADMIN en base prouve que le refus dépend de l'authentification de la session.
+  // La datafeature vérifie que ce rôle est conservé avant et après les accès refusés.
+  test("PRM-14 - une session sans authentification forte ne peut consulter aucune donnée", async ({
     browser,
+    baseURL,
     data,
   }) => {
-    const ctx = await browser.newContext();
+    const ctx = await browser.newContext({ baseURL });
     try {
       const weakPage = await ctx.newPage();
       await loginAs(weakPage, "admin-weak"); // crée le compte s'il n'existe pas encore
@@ -296,25 +297,49 @@ test.describe("Permissions & rôles", () => {
 
       await weakPage.reload();
       const chrome = new ChromePage(weakPage);
-      await chrome.expectWeakAuthBanner(/utilisateur standard/);
-      await chrome.expectNoAdminLink();
+      await chrome.expectStrongAuthRequired(/Authentification forte requise/);
+
+      const api = await ApiClient.fromPage(weakPage);
+      for (const path of ["/users/me", "/applications", "/notifications"]) {
+        expect(await api.accessResponse(path)).toEqual({
+          status: 403,
+          body: {
+            statusCode: 403,
+            strongAuthRequired: true,
+            message: expect.stringContaining("authentification forte"),
+            authLevel: {
+              level: "weak",
+              downgraded: true,
+              reason: "weak-method",
+            },
+          },
+        });
+      }
+
       const admin = new AdminPage(weakPage);
       await admin.goToAdministration();
-      await admin.expectAccessDenied();
+      await expect(weakPage).toHaveURL(/\/administration$/);
+      await chrome.expectStrongAuthRequired();
+      await admin.expectNotLoaded();
+      expect((await data.getUser(ADMIN_WEAK_EMAIL))?.role).toBe("ADMIN");
     } finally {
       await ctx.close();
     }
   });
 
   base(
-    "PRM-15 - le profil signale la session limitée et bloque la création de jeton",
+    "PRM-15 - le profil et les jetons restent inaccessibles après rechargement",
     async ({ page }) => {
       await loginAs(page, "admin-weak");
+      const chrome = new ChromePage(page);
       const profile = new UserProfilePage(page);
-      await profile.open();
-      await profile.expectAuthLevelLimited();
-      await profile.openTokensTab();
-      await profile.expectTokenCreationDisabled();
+      await profile.goToProfile();
+      await expect(page).toHaveURL(/\/profil$/);
+      await chrome.expectStrongAuthRequired();
+      await profile.expectNotLoaded();
+      await page.reload();
+      await chrome.expectStrongAuthRequired();
+      await profile.expectNotLoaded();
     },
   );
 
@@ -325,13 +350,13 @@ test.describe("Permissions & rôles", () => {
     async ({ page }) => {
       await loginAs(page, "admin-weak");
       const chrome = new ChromePage(page);
-      await chrome.expectWeakAuthBanner();
+      await chrome.expectStrongAuthRequired();
       await chrome.expectReauthButtonLabel("Se reconnecter");
       await chrome.clickReauth();
       await chrome.submitIdentityProviderLogin("admin-weak", "pass");
-      await chrome.expectWeakAuthBanner(/n'a pas été reconnue comme forte/);
+      await chrome.expectStrongAuthRequired(/n'a pas été reconnue comme forte/);
       await page.reload();
-      await chrome.expectWeakAuthBanner(/n'a pas été reconnue comme forte/);
+      await chrome.expectStrongAuthRequired(/n'a pas été reconnue comme forte/);
       await chrome.expectReauthButtonLabel(
         "Se déconnecter puis se reconnecter",
       );
@@ -350,20 +375,29 @@ test.describe("Permissions & rôles", () => {
       );
       await chrome.clickReauthViaLogout();
       await chrome.submitIdentityProviderLogin("admin-weak", "pass");
-      await chrome.expectWeakAuthBanner(/toujours sans authentification forte/);
+      await chrome.expectStrongAuthRequired(
+        /toujours sans authentification forte/,
+      );
       await page.reload();
-      await chrome.expectWeakAuthBanner(/toujours sans authentification forte/);
+      await chrome.expectStrongAuthRequired(
+        /toujours sans authentification forte/,
+      );
       await chrome.expectWeakAuthBanner(/contactez le support/);
     },
   );
 
   base(
-    "PRM-17 - une session forte n'affiche pas le bandeau",
+    "PRM-17 - une session forte accède au référentiel et à l'administration",
     async ({ page }) => {
       await loginAs(page, "admin");
       const chrome = new ChromePage(page);
       await chrome.expectAdminLink(); // preuve que /users/me est chargé
       await chrome.expectNoWeakAuthBanner();
+      await chrome.expectProfileLink();
+      const api = await ApiClient.fromPage(page);
+      for (const path of ["/users/me", "/applications", "/notifications"]) {
+        expect((await api.accessResponse(path)).status).toBe(200);
+      }
       const admin = new AdminPage(page);
       await admin.open();
       await admin.expectLoaded();
@@ -375,8 +409,20 @@ test.describe("Permissions & rôles", () => {
     async ({ page }) => {
       await loginAs(page, "user-federated");
       const chrome = new ChromePage(page);
-      await chrome.expectWeakAuthBanner(/non transmis par le fournisseur/);
+      await chrome.expectStrongAuthRequired(/non transmis par le fournisseur/);
       await chrome.expectReauthButtonLabel("Se reconnecter");
+      const api = await ApiClient.fromPage(page);
+      expect(await api.accessResponse("/users/me")).toMatchObject({
+        status: 403,
+        body: {
+          strongAuthRequired: true,
+          authLevel: {
+            level: "unknown",
+            downgraded: true,
+            reason: "untrusted-idp",
+          },
+        },
+      });
     },
   );
 });

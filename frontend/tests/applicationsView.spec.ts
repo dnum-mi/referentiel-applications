@@ -261,6 +261,10 @@ test.describe("ApplicationsView", () => {
     expect((new URL(page.url()).searchParams.get("currentStatus__in") ?? "").split(",")).not.toContain("to_validate");
 
     await page.goto(`${BASE_URL}/`);
+    // Le chargement du document précède l'initialisation asynchrone du routeur et de la session.
+    // Attendre l'accueil affiché avant de revenir en arrière évite que cette initialisation
+    // remplace l'entrée d'historique que le navigateur vient de restaurer.
+    await expect(page.getByTestId("home-title")).toBeVisible();
     // #2608 : `waitUntil: "domcontentloaded"` + un `waitForURL` séparé peut rester bloqué en
     // WebKit/Firefox — une navigation arrière restaurée depuis le bfcache ne redéclenche pas
     // toujours ces évènements de cycle de vie. On se contente du commit de la navigation, puis on
@@ -394,6 +398,10 @@ test.describe("ApplicationsView", () => {
       expect(toggleFocus).toBeTruthy();
     }
 
+    // La recherche de saisie ne correspond à aucune application. Restaurer les résultats
+    // avant de vérifier la tabulation vers les liens du tableau, notamment sous WebKit.
+    await page.getByTestId(SIDEBAR_RESET).click();
+    await expect(page.getByTestId("application-table").locator("tbody tr a").first()).toBeVisible();
     await focusFirstTabStop(page);
     const tableFocus = await tabUntilFocused(page, page.getByTestId("application-table"), 300);
     expect(tableFocus).toBeTruthy();

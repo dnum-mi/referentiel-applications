@@ -103,21 +103,25 @@ test.describe("Reports flow", () => {
     await openSearchAndOpenGlobalReportModal(page);
     const description = uniqueText("RI04-global-report-401");
 
-    // Corrompt le token OIDC stocké → le prochain appel API renverra 401.
-    await page.evaluate(() => {
-      const stores = [localStorage, sessionStorage];
-      for (const storage of stores) {
-        const keys = Object.keys(storage);
-        for (const key of keys) {
+    const previousToken = await page.evaluate(() => {
+      for (const storage of [localStorage, sessionStorage]) {
+        for (const key of Object.keys(storage)) {
           if (!key.startsWith("oidc.user:")) continue;
-          const raw = storage.getItem(key);
-          if (!raw) continue;
-          const parsed = JSON.parse(raw) as Record<string, unknown>;
-          parsed.access_token = "";
-          storage.setItem(key, JSON.stringify(parsed));
+          const parsed = JSON.parse(storage.getItem(key) ?? "{}") as { access_token?: string };
+          if (parsed.access_token) return parsed.access_token;
         }
       }
+      return undefined;
     });
+    expect(previousToken).toBeTruthy();
+
+    // Invalider uniquement l'envoi testé : un chargement de la page ne doit pas déclencher
+    // la reconnexion avant le clic. Le 401 provient bien du backend, sans réponse simulée.
+    await page.route(
+      "**/api/v2/reports",
+      (route) => route.continue({ headers: { ...route.request().headers(), authorization: "Bearer invalid-token" } }),
+      { times: 1 },
+    );
 
     const failedCreate = await submitGlobalReport(page, description);
     expect(failedCreate.status()).toBe(401);
@@ -129,30 +133,26 @@ test.describe("Reports flow", () => {
       .poll(
         () =>
           page
-            .evaluate(() => {
+            .evaluate((oldToken) => {
               for (const storage of [localStorage, sessionStorage]) {
                 for (const key of Object.keys(storage)) {
                   if (!key.startsWith("oidc.user:")) continue;
                   const parsed = JSON.parse(storage.getItem(key) ?? "{}") as {
                     access_token?: string;
                   };
-                  if (parsed.access_token) return true;
+                  if (parsed.access_token && parsed.access_token !== oldToken) return true;
                 }
               }
               return false;
-            })
+            }, previousToken)
             .catch(() => false),
         { timeout: 20000 },
       )
       .toBe(true);
 
-    // L'utilisateur reste authentifié : le lien profil/déconnexion est présent, pas « Se connecter ».
-    await expect(
-      page
-        .getByRole("banner")
-        .getByRole("link", { name: /Mon profil|Profile|Déconnexion|Logout/i })
-        .first(),
-    ).toBeVisible({ timeout: 15000 });
+    // Le profil redevient accessible après validation de la nouvelle session par le backend.
+    await expect(page.getByRole("banner").getByRole("link", { name: "Mon profil" })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("banner").getByRole("link", { name: /Se connecter|Sign in/i })).toHaveCount(0);
   });
 
   test("RI-05 — Signaler depuis une fiche application", async ({ page }) => {

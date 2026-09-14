@@ -192,13 +192,29 @@ export class ChromePage extends BasePage {
     await this.page.waitForURL(/recherche-application/);
   }
 
-  // --- Bandeau « niveau d'authentification » (#1985) ---
+  // --- Écran de refus du niveau d'authentification (#1985) ---
   private weakAuthBanner = () => this.byTestId("weak-auth-banner");
   private reauthButton = () => this.byTestId("weak-auth-reauth-btn");
 
   async expectWeakAuthBanner(text?: string | RegExp): Promise<void> {
     await expect(this.weakAuthBanner()).toBeVisible();
     if (text) await expect(this.weakAuthBanner()).toContainText(text);
+  }
+
+  /** Le refus remplace les fonctions du référentiel, même pour un compte administrateur. */
+  async expectStrongAuthRequired(text?: string | RegExp): Promise<void> {
+    await this.expectWeakAuthBanner(text);
+    await expect(this.weakAuthBanner()).toContainText(
+      "L'accès au référentiel est bloqué",
+    );
+    await expect(
+      this.weakAuthBanner().getByRole("heading", { level: 1 }),
+    ).toBeVisible();
+    await this.expectNoAdminLink();
+    await this.expectNoProfileLink();
+    await this.expectMainNavigationAbsent();
+    await this.expectQuickSearchAbsent();
+    await expect(this.byTestId("notification-bell-button")).toHaveCount(0);
   }
   /** À appeler après une preuve que `/users/me` est chargé (ex. lien Admin visible). */
   async expectNoWeakAuthBanner(): Promise<void> {
