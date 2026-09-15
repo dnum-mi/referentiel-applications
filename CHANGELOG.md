@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.91.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.91.0...v1.91.1) (2026-09-15)
+
+
+### Bug Fixes
+
+* **auth:** restrict JWT validation bypass to development ([#2657](https://github.com/dnum-mi/referentiel-applications/issues/2657)) ([db6efb3](https://github.com/dnum-mi/referentiel-applications/commit/db6efb3b0f6cdaaa2f20347bf2c944187b62dad0))
+* **dev:** default local auth level checks to off ([#2653](https://github.com/dnum-mi/referentiel-applications/issues/2653)) ([9f8c187](https://github.com/dnum-mi/referentiel-applications/commit/9f8c1879e47a7378ed1c897e183d12d99aaa78a5))
+
 ## [1.91.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.90.3...v1.91.0) (2026-09-14)
 
 
