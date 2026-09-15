@@ -1,7 +1,7 @@
 /**
  * Generate a test JWT token for the given user.
- * Since DISABLE_JWT_VALIDATION is set in tests, the middleware uses decodeJwt
- * which only decodes without verifying the signature.
+ * setupApp() overrides the JWT validation provider for these unsigned fixtures.
+ * The production configuration still refuses to disable validation outside development.
  *
  * `claims` permet d'ajouter des claims au payload (ex. `{ auth_mode: "CARD" }` pour le
  * niveau d'authentification, #1985). Aucun claim n'est posé par défaut : `jest.setup.ts`
