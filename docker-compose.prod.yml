@@ -3,7 +3,9 @@ services:
     image: ${BACK_IMAGE_TAG}
     pull_policy: always
     environment:
-      - AUTH_LEVEL_MODE=enforce
+      # #1985 : désactivation temporaire pendant la finalisation Passage2/IAP.
+      # Réactiver enforce après validation des claims et des parcours forts/faibles.
+      - AUTH_LEVEL_MODE=off
     build: !reset null
     command: !reset null
     volumes: !reset []
