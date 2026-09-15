@@ -51,7 +51,7 @@ Le backend revérifie systématiquement le jeton dans `backend/src/middlewares/a
 - Deux modes d'authentification (`auth.middleware.ts:42-56`) :
   - **Jeton API** (en-tête `API_KEY_HEADER`) → résolution via `TokenService.findUserByToken`.
   - **Bearer JWT** → vérification `jwtVerify(authorization, this.jwks)`, puis `findOrCreateByEmail(payload.email)` (provisionnement à la volée de l'utilisateur sur la base de son email). L'e-mail est **normalisé en minuscules** avant recherche et création, et la recherche est insensible à la casse (#2501) : deux graphies du même compte ne créent plus deux utilisateurs. L'**email est l'identifiant pivot** : le modèle `User` n'a plus de champ `keycloakId` (l'`id` UUID interne reste la clé de liaison).
-- Échappatoire de développement : si `DISABLE_JWT_VALIDATION` est défini, le jeton est seulement **décodé** (`decodeJwt`) sans vérification de signature (`auth.middleware.ts:50-52`). À n'utiliser qu'en local.
+- Échappatoire de développement : seule la valeur exacte `DISABLE_JWT_VALIDATION=true`, avec `NODE_ENV=development` explicitement défini, autorise le décodage sans vérification de signature ni d'expiration. La configuration (`jwt-validation.config.ts`) est validée au démarrage et émet un avertissement quand ce mode est actif. Une activation hors développement, y compris si `NODE_ENV` est absent, empêche le démarrage. Les valeurs `false`, `0`, une chaîne vide ou une variable absente conservent la vérification JWT, quel que soit `AUTH_LEVEL_MODE`.
 - En cas d'absence d'utilisateur, réponse **401**. Sur exception, `UnauthorizedException`.
 - Une fois l'utilisateur résolu, le middleware calcule ses permissions de rôle et les attache à la requête :
   `req.user = { ...user, permissions: roleToPermissions(user.role) }` (`auth.middleware.ts:63-66`).
@@ -384,7 +384,7 @@ Cette résolution n'est déclenchée qu'à l'ouverture de la fiche application, 
 ## 8. Bonnes pratiques de sécurité
 
 - **Aucun secret en clair.** Les identifiants OIDC sont injectés par variables d'environnement obligatoires (`OIDC_JWKS_URL`, `OIDC_CONFIG_URL`, `OIDC_CLIENT_ID` — `oidc.config.ts`), et le frontend récupère sa configuration auprès du backend plutôt que de l'embarquer. La gestion des secrets passe par Vault et/ou SOPS, aucun secret en dur dans le dépôt — voir [Exploitation & déploiement](./12-exploitation-deploiement.md).
-- **Désactivation de la vérification JWT réservée au local.** `DISABLE_JWT_VALIDATION` court-circuite la vérification de signature (`auth.middleware.ts:50-52`) et ne doit jamais être positionné hors développement.
+- **Désactivation de la vérification JWT réservée au développement explicite.** Le démarrage refuse `DISABLE_JWT_VALIDATION=true` sauf avec `NODE_ENV=development`. Les tests qui utilisent des jetons non signés surchargent le provider dans leur module Nest de test ; ils n'activent pas cette variable.
 - **Contexte HTTPS obligatoire.** Le flux OIDC navigateur exige TLS ; en HTTP, attendre des boucles 302 et des 401 intermittents.
 - **Validation du jeton dans le backend.** La validation du JWT (signature via JWKS du fournisseur) est faite par l'`AuthMiddleware` du backend, seul garant de la vérification.
 - **Validation stricte des entrées.** Les DTO NestJS (class-validator) et le typage Prisma encadrent les données ; conserver une validation stricte sur tout nouvel endpoint.

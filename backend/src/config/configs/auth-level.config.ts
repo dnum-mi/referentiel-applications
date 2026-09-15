@@ -220,11 +220,6 @@ export const authLevelConfig = registerAs("authLevel", (): AuthLevelConfig => {
         `AUTH_LEVEL_STRONG_VALUES est requis quand AUTH_LEVEL_MODE=${mode}`,
       );
     }
-    if (process.env.DISABLE_JWT_VALIDATION) {
-      logger.warn(
-        "DISABLE_JWT_VALIDATION est actif : le claim de niveau d'authentification est lu sans vérification de signature (développement uniquement).",
-      );
-    }
     // Premier réflexe de diagnostic pour l'exploitant : aucun secret ici.
     logger.log(
       `mode=${mode} claim=${claim} strongValues=[${strongValues.join(",")}] idpClaim=${idpClaim ?? "-"} trustedIdps=[${trustedIdps.join(",")}] reauth=${reauth.enabled ? `${reauth.strategy}:${reauth.prompt}` : "off"} userinfo=${userinfo.enabled ? (userinfo.url ?? "découverte") : "off"}`,
