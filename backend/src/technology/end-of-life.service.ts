@@ -21,6 +21,11 @@ const SEVERITY: Record<EolStatus, number> = {
   "eoas-passed": 2,
 };
 
+/** Une technologie saine (`status: null`) trie après les trois statuts de fin de vie. */
+function severityOf(status: EolStatus | null): number {
+  return status ? SEVERITY[status] : 3;
+}
+
 /**
  * Vue transverse des fins de vie (#2236).
  *
@@ -145,9 +150,9 @@ export class EndOfLifeService {
   ): EndOfLifeApplicationDto {
     const technologies = application.technologies
       .map((technology) => {
-        // `technologyWhere` a déjà écarté les lignes sans statut ; le repli sur
-        // « eol » ne sert qu'à satisfaire le typage.
-        const status = computeEolStatus(technology, now) ?? "eol";
+        // null pour une technologie saine — atteignable uniquement avec le filtre
+        // `all`, `technologyWhere` écartant les lignes saines dans les autres cas.
+        const status = computeEolStatus(technology, now);
         return {
           id: technology.id,
           technology: technology.technology,
@@ -162,7 +167,7 @@ export class EndOfLifeService {
           status,
         } satisfies EndOfLifeTechnologyDto;
       })
-      .sort((a, b) => SEVERITY[a.status] - SEVERITY[b.status]);
+      .sort((a, b) => severityOf(a.status) - severityOf(b.status));
 
     const organizationPaths = [
       ...new Set(
@@ -178,7 +183,7 @@ export class EndOfLifeService {
       shortName: application.shortName,
       organizationPaths,
       technologies,
-      worstStatus: technologies[0]?.status ?? "eol",
+      worstStatus: technologies[0]?.status ?? null,
     };
   }
 }

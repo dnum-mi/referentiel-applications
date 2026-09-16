@@ -104,6 +104,12 @@ test.describe("Pages transverses", () => {
     await endOfLife.filterByStatus("eol");
     await endOfLife.expectApplicationListed("QA-EOL", "Fin de vie");
 
+    // Seul filtre non partitionnant : « Toutes les technologies » lève la
+    // restriction et ramène aussi la ligne saine (Vue.js) de la fixture, sans
+    // pastille de gravité.
+    await endOfLife.filterByStatus("all");
+    await endOfLife.expectApplicationHasTechnology("QA-EOL", "Vue.js");
+
     // Le trajet qui donne son intérêt à la vue : de la liste vers l'onglet
     // Technologies de la fiche.
     await endOfLife.openApplicationTechnologyTab("QA-EOL");

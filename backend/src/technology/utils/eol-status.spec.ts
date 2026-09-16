@@ -68,6 +68,12 @@ describe("eolStatusWhere", () => {
     });
   });
 
+  // Seul cas non partitionnant : lève la restriction, y compris pour les
+  // technologies saines.
+  it("ne pose aucune restriction pour « all »", () => {
+    expect(eolStatusWhere("all", NOW)).toEqual({});
+  });
+
   /**
    * Le filtre SQL et le classement en mémoire doivent s'accorder : une ligne
    * retenue par `eolStatusWhere(s)` doit être classée `s` par `computeEolStatus`,

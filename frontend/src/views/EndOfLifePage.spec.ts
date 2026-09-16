@@ -175,6 +175,16 @@ describe("EndOfLifePage", () => {
     expect(query).not.toHaveProperty("search");
   });
 
+  it("envoie le filtre « all » pour afficher aussi les technologies saines", async () => {
+    render_();
+    await waitFor(() => expect(storeMock.fetchApplications).toHaveBeenCalledTimes(1));
+
+    await fireEvent.update(screen.getByTestId("end-of-life-filter-status"), "all");
+
+    await waitFor(() => expect(storeMock.fetchApplications).toHaveBeenCalledTimes(2));
+    expect(storeMock.fetchApplications.mock.calls[1][0].status).toBe("all");
+  });
+
   // Rester page 3 d'un résultat qui n'en compte plus qu'une afficherait une
   // liste vide sans explication.
   it("revient en page 0 au changement de filtre", async () => {
@@ -257,6 +267,39 @@ describe("EndOfLifePage — pastille de synthèse et tri (#2528, #2522)", () => 
     storeMock.fetchApplications.mockReset().mockResolvedValue(undefined);
   });
   afterEach(cleanup);
+
+  // Atteignable uniquement avec le filtre `all` : une technologie/application saine
+  // n'a pas de statut de fin de vie, donc pas de pastille de gravité.
+  it("n'affiche aucune pastille pour une application et une technologie sans fin de vie connue", async () => {
+    // Le client généré ne restitue pas le `| null` d'un statut marqué `nullable:
+    // true` dans l'OpenAPI (limitation préexistante, cf. EndOfLifePage.vue) :
+    // caster ici reflète ce qu'envoie réellement le backend avec le filtre `all`.
+    storeMock.applications.value = [
+      applicationFixture({
+        worstStatus: null as unknown as EndOfLifeApplicationDto["worstStatus"],
+        technologies: [
+          {
+            id: "tech-healthy",
+            technology: "Runtime",
+            product: "Node.js",
+            version: "22",
+            eolDate: null,
+            eoasDate: null,
+            latestVersion: "22.10.0",
+            eolSource: "endoflife",
+            status: null as unknown as EndOfLifeApplicationDto["technologies"][number]["status"],
+          },
+        ],
+      }),
+    ];
+    storeMock.total.value = 1;
+    render_();
+
+    const table = await screen.findByTestId("end-of-life-table");
+    expect(table).toHaveTextContent("Node.js 22");
+    expect(screen.queryByTestId("end-of-life-worst-app-1")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("end-of-life-badge-tech-healthy")).not.toBeInTheDocument();
+  });
 
   it("affiche le statut le plus grave de l'application à côté de son libellé", async () => {
     storeMock.applications.value = [applicationFixture({ worstStatus: "eol-soon" })];
