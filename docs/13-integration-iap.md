@@ -38,7 +38,9 @@ Dans « Déclaration des claims / scopes », vérifier les correspondances suiva
 | `Auth-Mode`                  | `Auth_Mode`        | `AUTH_LEVEL_CLAIM=Auth_Mode`    |
 | `Auth_Idp`                   | `Auth_Idp`         | `AUTH_LEVEL_IDP_CLAIM=Auth_Idp` |
 
-Ces noms sont sensibles à la casse : `Auth_Mode` et `Auth_Idp` doivent être conservés exactement. Les fichiers d'infrastructure d'intégration et de qualification utilisent ces deux noms. Les noms choisis dans IAP doivent correspondre à `AUTH_LEVEL_CLAIM` / `AUTH_LEVEL_IDP_CLAIM` pour chaque environnement. RefApp demande déjà `openid profile email` ; aucun nouveau scope n'est nécessaire pour le fonctionnement décrit dans la documentation IAP.
+Ces noms sont sensibles à la casse : `Auth_Mode` et `Auth_Idp` doivent être conservés exactement. Les configurations d'intégration et de qualification de R1 et R2 utilisent ces deux noms. Les noms choisis dans IAP doivent correspondre à `AUTH_LEVEL_CLAIM` / `AUTH_LEVEL_IDP_CLAIM` pour chaque environnement. RefApp demande déjà `openid profile email` ; aucun nouveau scope n'est nécessaire pour le fonctionnement décrit dans la documentation IAP.
+
+La qualification R2 utilise encore le SSO DSO. Si ce fournisseur n'émet pas ces claims, le niveau reste inconnu ; le mode `observe` ne bloque pas l'accès.
 
 Pour l'origine HTTPS de l'environnement, vérifier les retours de connexion `/oidc/callback` et `/oidc/silent-callback`, ainsi que l'origine de l'application comme retour de déconnexion. Le parcours « Se déconnecter puis se reconnecter » dépend de cette dernière URL.
 
