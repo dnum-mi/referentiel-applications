@@ -6,7 +6,7 @@ Ce guide complète [l'exploitation](./12-exploitation-deploiement.md) pour le ti
 
 - **Page 8, gestion des rôles** : un niveau minimum peut être demandé pour bénéficier d'un rôle Passage2. L'exemple élevé impose la carte agent ; le document ne précise pas le classement du TOTP dans ces niveaux.
 - **Page 11, matrice des attributs** : la variable s'appelle `Auth-Mode`, avec `CARD` comme exemple. La matrice ne donne pas la liste exhaustive de ses valeurs, ni celle du parcours mot de passe + TOTP. Elle indique que les partenaires fédérés listés ne transmettent pas cet attribut et précise que la partie fédération est en cours de consolidation.
-- **Pages 13 et 18, claims et scopes** : le nom du claim OIDC se choisit dans IAP à partir de la variable Passage2 ; les attributs sont transmis dans le scope `profile`. `auth_mode` est donc notre nom de mapping, pas un nom imposé par le document.
+- **Pages 13 et 18, claims et scopes** : le nom du claim OIDC se choisit dans IAP à partir de la variable Passage2 ; les attributs sont transmis dans le scope `profile`. La configuration RefApp doit reprendre le nom réellement émis, avec sa casse et ses underscores.
 - **Page 18, signatures** : le texte cite RS256 ou HS256 pour les JWT ; la capture de découverte montre HS256, HS384 et HS512 pour `userinfo` et l'ID token. Cette capture ne détermine pas l'algorithme effectivement configuré pour RefApp, ni celui du jeton d'accès.
 - **Reconnexion** : le document ne précise pas le comportement de `prompt=login` ni une valeur `acr_values` permettant d'exiger carte ou TOTP. La présence du claim `acr` dans la capture ne suffit pas à établir ce support.
 
@@ -20,6 +20,7 @@ Pour le fournisseur Passage2 principal, avec `AUTH_LEVEL_TRUSTED_IDPS` vide :
 | ------------------------- | -------------------------------- | ------------------------------------------------------ |
 | Carte agent               | `CARD`                           | Accès selon les droits RefApp du compte                |
 | RIO/mot de passe + TOTP   | `CARD`                           | Accès selon les droits RefApp du compte                |
+| RIO/mot de passe seul     | `LDAP`                           | Refus `403 strongAuthRequired` et écran de reconnexion |
 | Autre mode ou mode absent | Autre valeur ou absence de claim | Refus `403 strongAuthRequired` et écran de reconnexion |
 
 Le mode `CARD` atteste donc les deux parcours forts. Ce seul attribut ne permet pas de distinguer une connexion par carte d'une connexion avec TOTP dans le journal.
@@ -28,14 +29,16 @@ Le mode `CARD` atteste donc les deux parcours forts. Ce seul attribut ne permet 
 
 Utiliser la fiche RefApp et la configuration OIDC du bon environnement, en conservant son client existant. L'accès à IAP exige un accès Passage2 (RIO), le réseau RGT, le rôle utilisateur IAP et les droits de gérant de cette application. Un gérant externe sans RIO est un interlocuteur de Passage2, mais ne peut pas se connecter à IAP.
 
-Dans « Déclaration des claims / scopes », ajouter ou vérifier les correspondances suivantes, puis sélectionner les deux claims dans le scope `profile` en conservant ses autres claims :
+Le payload observé en qualification le 16 septembre 2026 contient `Auth_Mode: "LDAP"` et `Auth_Idp: "Passage2"` pour une connexion RIO/mot de passe seul. `LDAP` reste hors de `AUTH_LEVEL_STRONG_VALUES`.
 
-| Variable Passage2 | Nom de claim attendu par notre configuration |
-| ----------------- | -------------------------------------------- |
-| `Auth-Mode`       | `auth_mode`                                  |
-| `Auth_Idp`        | `auth_idp`                                   |
+Dans « Déclaration des claims / scopes », vérifier les correspondances suivantes, puis sélectionner les deux claims dans le scope `profile` en conservant ses autres claims :
 
-Les noms des claims sont choisis dans IAP et doivent correspondre à `AUTH_LEVEL_CLAIM` / `AUTH_LEVEL_IDP_CLAIM`. RefApp demande déjà `openid profile email` ; aucun nouveau scope n'est nécessaire pour le fonctionnement décrit dans la documentation IAP.
+| Variable Passage2 documentée | Claim OIDC observé | Configuration RefApp            |
+| ---------------------------- | ------------------ | ------------------------------- |
+| `Auth-Mode`                  | `Auth_Mode`        | `AUTH_LEVEL_CLAIM=Auth_Mode`    |
+| `Auth_Idp`                   | `Auth_Idp`         | `AUTH_LEVEL_IDP_CLAIM=Auth_Idp` |
+
+Ces noms sont sensibles à la casse : `Auth_Mode` et `Auth_Idp` doivent être conservés exactement. Les fichiers d'infrastructure d'intégration et de qualification utilisent ces deux noms. Les noms choisis dans IAP doivent correspondre à `AUTH_LEVEL_CLAIM` / `AUTH_LEVEL_IDP_CLAIM` pour chaque environnement. RefApp demande déjà `openid profile email` ; aucun nouveau scope n'est nécessaire pour le fonctionnement décrit dans la documentation IAP.
 
 Pour l'origine HTTPS de l'environnement, vérifier les retours de connexion `/oidc/callback` et `/oidc/silent-callback`, ainsi que l'origine de l'application comme retour de déconnexion. Le parcours « Se déconnecter puis se reconnecter » dépend de cette dernière URL.
 
