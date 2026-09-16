@@ -40,9 +40,18 @@ Dans « Déclaration des claims / scopes », vérifier les correspondances suiva
 
 Ces noms sont sensibles à la casse : `Auth_Mode` et `Auth_Idp` doivent être conservés exactement. Les configurations d'intégration et de qualification de R1 et R2 utilisent ces deux noms. Les noms choisis dans IAP doivent correspondre à `AUTH_LEVEL_CLAIM` / `AUTH_LEVEL_IDP_CLAIM` pour chaque environnement. RefApp demande déjà `openid profile email` ; aucun nouveau scope n'est nécessaire pour le fonctionnement décrit dans la documentation IAP.
 
-La qualification R2 utilise encore le SSO DSO. Si ce fournisseur n'émet pas ces claims, le niveau reste inconnu ; le mode `observe` ne bloque pas l'accès.
+R1 et R2 partagent la même configuration OIDC et de niveau d'authentification au sein de chaque environnement : le client Passage2 d'intégration pour les deux régions d'intégration, le client Passage2 de qualification pour les deux régions de qualification.
 
 Pour l'origine HTTPS de l'environnement, vérifier les retours de connexion `/oidc/callback` et `/oidc/silent-callback`, ainsi que l'origine de l'application comme retour de déconnexion. Le parcours « Se déconnecter puis se reconnecter » dépend de cette dernière URL.
+
+Les adresses R2 étant distinctes de celles de R1, vérifier les origines suivantes sur le client Passage2 correspondant avant déploiement :
+
+| Environnement | Origine R1                                                             | Origine R2                                              |
+| ------------- | ---------------------------------------------------------------------- | ------------------------------------------------------- |
+| Intégration   | `https://integration.referentiel-applications.interieur.rie.gouv.fr`   | `https://integ-refapp.app2hp.d436.dev.forge.minint.fr`  |
+| Qualification | `https://qualification.referentiel-applications.interieur.rie.gouv.fr` | `https://qualif-refapp.app2hp.d436.dev.forge.minint.fr` |
+
+Pour chaque origine utilisée, autoriser les deux URL de retour de connexion ci-dessus et le retour de déconnexion. Le frontend construit ces URL à partir de l'adresse ouverte dans le navigateur. Les valeurs Helm ne prouvent pas que ces URL sont enregistrées dans IAP ; le mode `observe` ne corrige pas un refus de redirection par Passage2.
 
 Les modifications d'environnement passent par une **commande IAP**. Vérifier son état et la date effective d'intégration dans « Mes commandes ». Le guide annonce un délai maximal d'intégration de trois semaines ; enregistrer la configuration ne prouve pas sa mise en service.
 
