@@ -1,5 +1,5 @@
 import { mount } from "@vue/test-utils";
-import { nextTick } from "vue";
+import { defineComponent, h, nextTick, ref } from "vue";
 import SuggestionsInput from "./SuggestionsInput.vue";
 
 const inputStub = {
@@ -18,6 +18,48 @@ function renderInput(search: (query: string) => Promise<{ id: string; label: str
 afterEach(() => vi.useRealTimers());
 
 describe("SuggestionsInput", () => {
+  it("réactive les filtres du parent après une réinitialisation du champ pendant une requête", async () => {
+    vi.useFakeTimers();
+    const componentKey = ref(0);
+    const parentIsLoading = ref(false);
+    let resolve!: (value: { id: string; label: string }[]) => void;
+    const search = vi.fn(
+      () =>
+        new Promise<{ id: string; label: string }[]>((res) => {
+          resolve = res;
+        }),
+    );
+    const parent = defineComponent({
+      setup: () => () =>
+        h("div", [
+          h(SuggestionsInput, {
+            key: componentKey.value,
+            label: "Application",
+            placeholder: "Rechercher",
+            searchDataFunction: search,
+            "onUpdate:isLoading": (value: boolean) => {
+              parentIsLoading.value = value;
+            },
+          }),
+          h("select", { disabled: parentIsLoading.value }),
+        ]),
+    });
+    const wrapper = mount(parent, { global: { stubs: { DsfrInput: inputStub, DsfrTag: true, DsfrTooltip: true } } });
+
+    await wrapper.get("input").setValue("application");
+    await vi.advanceTimersByTimeAsync(300);
+    expect(wrapper.get("select").element.disabled).toBe(true);
+
+    componentKey.value++;
+    await nextTick();
+    expect(wrapper.get("select").element.disabled).toBe(false);
+    resolve([{ id: "old", label: "Ancienne réponse" }]);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(wrapper.get("select").element.disabled).toBe(false);
+    expect(wrapper.find('[data-testid="suggestions-list"]').exists()).toBe(false);
+    wrapper.unmount();
+  });
+
   it("respecte les 300 ms et n'affiche pas une réponse dépassée avant la prochaine recherche", async () => {
     vi.useFakeTimers();
     let resolve!: (value: { id: string; label: string }[]) => void;

@@ -50,7 +50,7 @@ function selectSuggestion(suggestion: Pick<ApplicationDto, "id" | "label">) {
 
 watch(input, () => reset(), { flush: "sync" });
 watchDebounced(input, onQuery, { debounce: 300 });
-watch(isLoading, (value) => emit("update:isLoading", value));
+watch(isLoading, (value) => emit("update:isLoading", value), { immediate: true });
 
 let stop: WatchHandle;
 stop = watchEffect(() => {
