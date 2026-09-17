@@ -54,13 +54,17 @@
 - **Résultat attendu** : les sections « Déclaration d'accessibilité » et « État de conformité » sont
   visibles.
 
-### TRV-08 — La page « Technologies » liste les applications concernées ✅
+### TRV-08 — La page « Technologies » liste les applications concernées, et toutes leurs technologies avec le filtre « Toutes » ✅
 
-- **Datafeature** : session `admin`, seed QA (`pnpm db:seed:qa`) — au moins une application porte une
-  technologie dont la fin de vie est dépassée.
+- **Datafeature** : session `admin`, seed QA (`pnpm db:seed:qa`) — l'application `QA-EOL` porte une
+  technologie dont la fin de vie est dépassée, une proche, une hors support actif, une saisie à la
+  main, et une **saine** (Vue.js, aucune fin de vie connue).
 - **Action** : ouvrir `/fins-de-vie` depuis le menu « Technologies » ; filtrer sur « Fin de vie
-  dépassée » ; cliquer le nom d'une application de la liste.
+  dépassée », puis sur « Sortie du support actif », puis sur « Toutes les technologies (y compris à
+  jour) » ; cliquer le nom d'une application de la liste.
 - **Résultat attendu** : la page s'intitule « Technologies » (h1 aligné sur le menu, #2413) ; le
   tableau liste les applications concernées, chacune avec ses technologies en fin de vie (badge de
   statut, produit, version, date) ; le filtre de statut restreint la liste et le compteur de
-  résultats est annoncé ; le lien ouvre l'onglet « Technologies » de la fiche.
+  résultats est annoncé ; avec « Toutes les technologies », `QA-EOL` reste listée et sa technologie
+  saine (Vue.js) apparaît dans le tableau, sans badge de gravité ; le lien ouvre l'onglet
+  « Technologies » de la fiche.

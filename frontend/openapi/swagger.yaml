@@ -6042,12 +6042,14 @@ paths:
       tags: *a34
   /api/v2/technologies/end-of-life:
     get:
-      description: "Vue transverse des fins de vie (#2236) : liste paginée des
-        applications dont au moins une technologie est en fin de vie, proche de
-        sa fin de vie (moins de 6 mois) ou sortie du support actif. Filtrable
-        par statut, par organisation et par recherche libre. Seules les
-        technologies retenues par le filtre sont restituées, triées par gravité
-        décroissante."
+      description: "Vue transverse des technologies (#2236) : liste paginée des
+        applications, avec par défaut celles dont au moins une technologie est
+        en fin de vie, proche de sa fin de vie (moins de 6 mois) ou sortie du
+        support actif. Filtrable par statut (`eol`, `eol-soon`, `eoas-passed`,
+        partitionnant), par organisation et par recherche libre. Le filtre `all`
+        lève la restriction et retourne toutes les applications ayant au moins
+        une technologie déclarée, avec l'ensemble de leur stack — y compris les
+        technologies saines."
       operationId: EndOfLifeController_findEndOfLifeApplications
       parameters:
         - name: page
@@ -6089,14 +6091,17 @@ paths:
           required: false
           in: query
           description: "Ne retenir que les technologies portant ce statut de fin de vie.
-            Les trois valeurs partitionnent la liste : une technologie déjà en
-            fin de vie n'apparaît pas sous « fin de support actif »."
+            Les trois statuts partitionnent la liste : une technologie déjà en
+            fin de vie n'apparaît pas sous « fin de support actif ». `all` est
+            un 4ᵉ filtre, non partitionnant : il lève la restriction et retourne
+            aussi les technologies saines."
           schema:
             type: string
             enum:
               - eol
               - eol-soon
               - eoas-passed
+              - all
         - name: organization
           required: false
           in: query
@@ -6120,7 +6125,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedEndOfLifeApplicationDto"
-      summary: Applications concernées par une technologie en fin de vie
+      summary: Technologies utilisées par les applications, fins de vie ou non
       tags:
         - Technologies
   /api/v2/stats/iq-avg/period:
@@ -10827,10 +10832,13 @@ components:
           allOf:
             - $ref: "#/components/schemas/TechnologyEolSource"
         status:
+          nullable: true
           enum: *a49
           type: string
           description: Statut calculé côté serveur, pour que la fiche et la vue transverse
-            classent une technologie de la même façon.
+            classent une technologie de la même façon. null si la technologie ne
+            présente aucune fin de vie connue (restitué uniquement avec le
+            filtre `all`).
       required:
         - id
         - technology
@@ -10860,16 +10868,21 @@ components:
           items:
             type: string
         technologies:
-          description: Uniquement les technologies retenues par le filtre, triées par
-            gravité décroissante.
+          description: Les technologies retenues par le filtre, triées par gravité
+            décroissante. Avec le filtre `all`, ce sont TOUTES les technologies
+            de l'application, pas seulement celles concernées par une fin de
+            vie.
           type: array
           items:
             $ref: "#/components/schemas/EndOfLifeTechnologyDto"
         worstStatus:
+          nullable: true
           enum: *a49
           type: string
           description: Statut le plus grave parmi les technologies retenues — sert au tri
-            et à la pastille de synthèse.
+            et à la pastille de synthèse. null si aucune des technologies
+            retenues n'a de fin de vie connue (n'arrive qu'avec le filtre
+            `all`).
       required:
         - id
         - label

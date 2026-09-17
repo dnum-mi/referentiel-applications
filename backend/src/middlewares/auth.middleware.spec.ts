@@ -1,5 +1,8 @@
 import type { ConfigType } from "@nestjs/config";
-import { SignJWT } from "jose";
+import { UnauthorizedException } from "@nestjs/common";
+import { createServer, type Server } from "node:http";
+import type { AddressInfo } from "node:net";
+import { exportJWK, generateKeyPair, SignJWT } from "jose";
 import type { NextFunction, Request, Response } from "express";
 import { AuthLevel, Permission, Roles, UserType } from "@prisma/client";
 import type { LoggerService } from "src/logger/logger.service";
@@ -10,6 +13,7 @@ import type { UserConnexionLogService } from "src/user/user-connexion-log.servic
 import type { UserService } from "src/user/user.service";
 import type { OidcConfig } from "src/config/configs/oidc.config";
 import type { authLevelConfig } from "src/config/configs/auth-level.config";
+import { jwtValidationConfig } from "src/config/configs/jwt-validation.config";
 import { roleToPermissions } from "src/permissions/role-to-permissions";
 import { AuthMiddleware } from "./auth.middleware";
 
@@ -113,7 +117,9 @@ const visitorUser: TestUser = {
 };
 
 interface MiddlewareOptions {
+  oidc?: OidcConfig;
   authLevel?: AuthLevelConfigType;
+  jwtValidation?: ConfigType<typeof jwtValidationConfig>;
   user?: TestUser;
   tokenUser?: TestUser | null;
   maintenanceActive?: boolean;
@@ -121,7 +127,9 @@ interface MiddlewareOptions {
 }
 
 function buildMiddleware({
+  oidc = oidcConfig,
   authLevel = authLevelOff,
+  jwtValidation = { disabled: true },
   user = existingUser,
   tokenUser = null,
   maintenanceActive = false,
@@ -147,7 +155,7 @@ function buildMiddleware({
     isActive: jest.fn().mockResolvedValue(maintenanceActive),
   };
   const middleware = new AuthMiddleware(
-    oidcConfig,
+    oidc,
     userService as unknown as UserService,
     scopedPermissionService as unknown as ScopedPermissionService,
     tokenService as unknown as TokenService,
@@ -155,6 +163,7 @@ function buildMiddleware({
     logger as unknown as LoggerService,
     maintenanceService as unknown as MaintenanceService,
     authLevel,
+    jwtValidation,
   );
   return {
     middleware,
@@ -196,14 +205,133 @@ function run(
 }
 
 describe("AuthMiddleware", () => {
-  const previousDisableJwtValidation = process.env.DISABLE_JWT_VALIDATION;
+  describe("JWT verification", () => {
+    const initialEnv = { ...process.env };
+    let server: Server;
+    let verificationOidc: OidcConfig;
+    let privateKey: Awaited<ReturnType<typeof generateKeyPair>>["privateKey"];
+    let forgedToken: string;
 
-  beforeAll(() => {
-    process.env.DISABLE_JWT_VALIDATION = "true";
-  });
+    beforeAll(async () => {
+      const [trustedKeys, otherKeys] = await Promise.all([
+        generateKeyPair("RS256"),
+        generateKeyPair("RS256"),
+      ]);
+      privateKey = trustedKeys.privateKey;
+      const publicKey = await exportJWK(trustedKeys.publicKey);
+      server = createServer((_req, res) => {
+        res.writeHead(200, { "content-type": "application/json" });
+        res.end(JSON.stringify({ keys: [{ ...publicKey, kid: "test" }] }));
+      });
+      await new Promise<void>((resolve) =>
+        server.listen(0, "127.0.0.1", resolve),
+      );
+      const { port } = server.address() as AddressInfo;
+      verificationOidc = {
+        ...oidcConfig,
+        jwksUrl: `http://127.0.0.1:${port}/jwks`,
+      };
+      forgedToken = await new SignJWT({ email: existingUser.email })
+        .setProtectedHeader({ alg: "RS256", kid: "test" })
+        .setExpirationTime("1h")
+        .sign(otherKeys.privateKey);
+    });
 
-  afterAll(() => {
-    process.env.DISABLE_JWT_VALIDATION = previousDisableJwtValidation;
+    beforeEach(() => {
+      process.env.NODE_ENV = "production";
+      delete process.env.DISABLE_JWT_VALIDATION;
+    });
+
+    afterEach(() => {
+      process.env = { ...initialEnv };
+    });
+
+    afterAll(async () => {
+      if (server?.listening) {
+        await new Promise<void>((resolve, reject) =>
+          server.close((error) => (error ? reject(error) : resolve())),
+        );
+      }
+    });
+
+    it.each([undefined, "", "false", "0"])(
+      "rejects a forged signature when DISABLE_JWT_VALIDATION is %p",
+      async (value) => {
+        if (value !== undefined) process.env.DISABLE_JWT_VALIDATION = value;
+        const { middleware, userService, userConnexionLogService } =
+          buildMiddleware({
+            oidc: verificationOidc,
+            jwtValidation: jwtValidationConfig(),
+          });
+        const request = bearerRequest(
+          {},
+          { authorization: `Bearer ${forgedToken}` },
+        );
+
+        await expect(run(middleware, request)).rejects.toBeInstanceOf(
+          UnauthorizedException,
+        );
+        expect(userService.findOrCreateByEmail).not.toHaveBeenCalled();
+        expect(userConnexionLogService.log).not.toHaveBeenCalled();
+        expect(request.user).toBeUndefined();
+      },
+    );
+
+    it("accepts a token signed by the configured identity provider", async () => {
+      process.env.DISABLE_JWT_VALIDATION = "false";
+      const token = await new SignJWT({ email: existingUser.email })
+        .setProtectedHeader({ alg: "RS256", kid: "test" })
+        .setExpirationTime("1h")
+        .sign(privateKey);
+      const { middleware, userService } = buildMiddleware({
+        oidc: verificationOidc,
+        jwtValidation: jwtValidationConfig(),
+      });
+      const request = bearerRequest({}, { authorization: `Bearer ${token}` });
+
+      const { next } = await run(middleware, request);
+
+      expect(next).toHaveBeenCalledTimes(1);
+      expect(userService.findOrCreateByEmail).toHaveBeenCalledWith(
+        existingUser.email,
+      );
+      expect(request.user?.id).toBe(existingUser.id);
+    });
+
+    it("rejects an expired token even when its signature is valid", async () => {
+      process.env.DISABLE_JWT_VALIDATION = "0";
+      const token = await new SignJWT({ email: existingUser.email })
+        .setProtectedHeader({ alg: "RS256", kid: "test" })
+        .setExpirationTime(Math.floor(Date.now() / 1000) - 60)
+        .sign(privateKey);
+      const { middleware, userService } = buildMiddleware({
+        oidc: verificationOidc,
+        jwtValidation: jwtValidationConfig(),
+      });
+
+      await expect(
+        run(
+          middleware,
+          bearerRequest({}, { authorization: `Bearer ${token}` }),
+        ),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+      expect(userService.findOrCreateByEmail).not.toHaveBeenCalled();
+    });
+
+    it("accepts an unsigned fixture only with the explicit development bypass", async () => {
+      process.env.NODE_ENV = "development";
+      process.env.DISABLE_JWT_VALIDATION = "true";
+      const { middleware } = buildMiddleware({
+        jwtValidation: jwtValidationConfig(),
+      });
+
+      const { next } = await run(
+        middleware,
+        bearerRequest({ email: existingUser.email }),
+      );
+
+      expect(next).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("maintenance mode", () => {

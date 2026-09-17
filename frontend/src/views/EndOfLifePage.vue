@@ -11,6 +11,10 @@ import type { EndOfLifeApplicationDto, EndOfLifeTechnologyDto } from "@/client/t
 import { EOL_STATUS_BADGE_TYPE, EOL_STATUS_LABELS } from "@/utils/eol-status";
 
 type EolStatus = EndOfLifeTechnologyDto["status"];
+// Le client généré ne restitue pas le `| null` d'un enum marqué `nullable: true`
+// (même limitation préexistante sur `TechnologyDto.eolStatus`) : le statut est bien
+// nullable à l'exécution (technologie saine, atteignable via le filtre `all`), le
+// gabarit s'appuie donc sur des gardes `v-if` plutôt que sur ce type généré.
 
 /**
  * Vue transverse des fins de vie (#2236).
@@ -26,7 +30,7 @@ type EolStatus = EndOfLifeTechnologyDto["status"];
 const store = useEndOfLifeStore();
 const { applications, total, isLoading } = storeToRefs(store);
 
-const statusFilter = ref<EolStatus | "">("");
+const statusFilter = ref<EolStatus | "all" | "">("");
 const organizationFilter = ref("");
 const searchFilter = ref("");
 const pageSize = ref(15);
@@ -43,10 +47,13 @@ const STATUS_LABELS = EOL_STATUS_LABELS;
 
 /** Le libellé du filtre dit ce que le statut recouvre, l'intitulé seul étant ambigu. */
 const statusOptions = [
-  { value: "", text: "Tous les statuts" },
+  { value: "", text: "Fins de vie (tous statuts)" },
   { value: "eol", text: "Fin de vie dépassée" },
   { value: "eol-soon", text: "Fin de vie dans moins de 6 mois" },
   { value: "eoas-passed", text: "Sortie du support actif" },
+  // Seule valeur non partitionnante : lève la restriction et restitue aussi les
+  // technologies saines, pour répondre à « que tourne cette application ? ».
+  { value: "all", text: "Toutes les technologies (y compris à jour)" },
 ];
 
 const columns: TableColumn[] = [
@@ -229,8 +236,10 @@ onMounted(fetchApplications);
             {{ row.Application.label }}
           </router-link>
           <span v-if="row.Application.shortName" class="fr-text--xs fr-ml-1w"> ({{ row.Application.shortName }}) </span>
-          <!-- #2528 : `worstStatus` était reçu mais jamais affiché. -->
+          <!-- #2528 : `worstStatus` était reçu mais jamais affiché. Absent (filtre `all`
+               sur une application entièrement saine) : aucune pastille, rien à signaler. -->
           <DsfrBadge
+            v-if="row.Application.worstStatus"
             :type="EOL_STATUS_BADGE_TYPE[row.Application.worstStatus as EolStatus]"
             :label="STATUS_LABELS[row.Application.worstStatus as EolStatus]"
             small
@@ -249,6 +258,7 @@ onMounted(fetchApplications);
           <ul class="fr-m-0 fr-p-0 eol-technologies">
             <li v-for="technology in row.Technologies" :key="technology.id" class="fr-mb-1v">
               <DsfrBadge
+                v-if="technology.status"
                 :type="EOL_STATUS_BADGE_TYPE[technology.status as EolStatus]"
                 :label="STATUS_LABELS[technology.status as EolStatus]"
                 small
@@ -259,7 +269,12 @@ onMounted(fetchApplications);
                 <template v-if="technology.status === 'eoas-passed'">
                   support actif clos le {{ formatDate(technology.eoasDate) }}
                 </template>
-                <template v-else>fin de vie le {{ formatDate(technology.eolDate) }}</template>
+                <template v-else-if="technology.status">fin de vie le {{ formatDate(technology.eolDate) }}</template>
+                <!-- Technologie saine (filtre `all`) : sa date, si elle est connue mais
+                     lointaine, sinon rien à signaler. -->
+                <template v-else-if="technology.eolDate">fin de vie prévue le {{ formatDate(technology.eolDate) }}</template>
+                <template v-else-if="technology.eoasDate">support actif jusqu'au {{ formatDate(technology.eoasDate) }}</template>
+                <template v-else>—</template>
                 <template v-if="technology.latestVersion"> — dernière version : {{ technology.latestVersion }} </template>
               </span>
               <!-- #2454 : l'origine est signalée, le classement reste celui d'une date calculée. -->

@@ -31,9 +31,9 @@ export class EndOfLifeController {
 
   @Get("end-of-life")
   @ApiOperation({
-    summary: "Applications concernées par une technologie en fin de vie",
+    summary: "Technologies utilisées par les applications, fins de vie ou non",
     description:
-      "Vue transverse des fins de vie (#2236) : liste paginée des applications dont au moins une technologie est en fin de vie, proche de sa fin de vie (moins de 6 mois) ou sortie du support actif. Filtrable par statut, par organisation et par recherche libre. Seules les technologies retenues par le filtre sont restituées, triées par gravité décroissante.",
+      "Vue transverse des technologies (#2236) : liste paginée des applications, avec par défaut celles dont au moins une technologie est en fin de vie, proche de sa fin de vie (moins de 6 mois) ou sortie du support actif. Filtrable par statut (`eol`, `eol-soon`, `eoas-passed`, partitionnant), par organisation et par recherche libre. Le filtre `all` lève la restriction et retourne toutes les applications ayant au moins une technologie déclarée, avec l'ensemble de leur stack — y compris les technologies saines.",
   })
   @ApiOkResponse({
     description: "Liste paginée des applications concernées",

@@ -2,7 +2,9 @@ import { getTestDatabaseUrl } from "./test-database.utils";
 
 // Set NODE_ENV to test for all tests
 process.env.NODE_ENV = "test";
-process.env.DISABLE_JWT_VALIDATION = "true"; // Disable JWT verification in tests
+// Les jetons non signés des fixtures sont acceptés par une surcharge du provider
+// dans setupApp(), sans activer le raccourci de développement dans l'environnement.
+delete process.env.DISABLE_JWT_VALIDATION;
 // #1985 : jest tourne dans le conteneur backend et hérite de l'env docker-compose (`enforce`) ;
 // sans cette ligne, les jetons de `getToken()` — sans claim — tomberaient VISITOR dans toutes
 // les specs supertest. Le spec dédié (`auth-level.e2e-spec.ts`) repose le mode en tête de fichier.

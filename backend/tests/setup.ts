@@ -4,13 +4,17 @@ import type { PrismaClient } from "@prisma/client";
 import { Test } from "@nestjs/testing";
 import { AppModule } from "../src/app.module";
 import { setupGlobalValidation } from "../src/config/app-config";
+import { jwtValidationConfig } from "../src/config/configs";
 import { setupSwagger } from "../src/swagger-config";
 import { getPrismaClient } from "./fakers/prisma";
 
 export async function setupApp(): Promise<INestApplication> {
   const moduleFixture: TestingModule = await Test.createTestingModule({
     imports: [AppModule],
-  }).compile();
+  })
+    .overrideProvider(jwtValidationConfig.KEY)
+    .useValue({ disabled: true })
+    .compile();
 
   const app = moduleFixture.createNestApplication();
 

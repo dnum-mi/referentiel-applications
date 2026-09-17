@@ -17,7 +17,11 @@ import {
 } from "src/auth-level/auth-level";
 import { UserinfoClaimsResolver } from "src/auth-level/userinfo-claims";
 import { createUserinfoJwtVerifier } from "src/auth-level/userinfo-jwt-verifier";
-import { authLevelConfig, oidcConfig } from "src/config/configs";
+import {
+  authLevelConfig,
+  jwtValidationConfig,
+  oidcConfig,
+} from "src/config/configs";
 import { principalToPermissions } from "src/permissions/role-to-permissions";
 import { TokenService } from "src/token/token.service";
 import { Requestor, UserEntity, UserType } from "src/user/entities/user.entity";
@@ -54,6 +58,8 @@ export class AuthMiddleware implements NestMiddleware {
     private readonly maintenanceService: MaintenanceService,
     @Inject(authLevelConfig.KEY)
     private readonly authLevel: ConfigType<typeof authLevelConfig>,
+    @Inject(jwtValidationConfig.KEY)
+    private readonly jwtValidation: ConfigType<typeof jwtValidationConfig>,
   ) {
     this.jwks = createRemoteJWKSet(new URL(this.oidc.jwksUrl));
     const { mode, claim, idpClaim, userinfo } = this.authLevel;
@@ -96,7 +102,7 @@ export class AuthMiddleware implements NestMiddleware {
           readOnly: maintenanceMode,
         });
       } else if (authorization) {
-        const payload = process.env.DISABLE_JWT_VALIDATION
+        const payload = this.jwtValidation.disabled
           ? decodeJwt(authorization)
           : (await jwtVerify(authorization, this.jwks)).payload;
         evaluation = await this.evaluateLevel(authorization, payload);

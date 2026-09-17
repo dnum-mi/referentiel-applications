@@ -72,6 +72,16 @@ describe("EndOfLifeService — construction de la requête", () => {
     await service.findApplications({ sortBy: "shortName", order: "desc" });
     expect(paginate.mock.calls[1][0].orderBy).toEqual({ shortName: "desc" });
   });
+
+  // Seul filtre non partitionnant : la restriction disparaît, y compris pour les
+  // technologies saines — cf. eol-status.spec.ts.
+  it("lève la restriction sur les technologies avec le filtre « all »", async () => {
+    const { service, paginate } = makeService();
+    await service.findApplications({ status: "all" });
+    const { where, include } = paginate.mock.calls[0][0];
+    expect(where.technologies.some).toEqual({});
+    expect(include.technologies.where).toEqual({});
+  });
 });
 
 describe("EndOfLifeService — restitution", () => {
@@ -171,6 +181,74 @@ describe("EndOfLifeService — restitution", () => {
     expect(page.total).toBe(42);
     expect(page.results[0].technologies[0].eolDate).toBe(past.toISOString());
     expect(page.results[0].technologies[0].eoasDate).toBeNull();
+  });
+});
+
+describe("EndOfLifeService — technologies saines (filtre « all »)", () => {
+  // Fixture dédiée : ne pas ajouter cette ligne à `application` ci-dessus casserait
+  // les assertions d'ordre/longueur des tests de restitution existants.
+  const healthyTechnology = {
+    id: "t-healthy",
+    technology: "Runtime",
+    product: "Node.js",
+    version: "22",
+    eolDate: null,
+    eoasDate: null,
+    latestVersion: "22.10.0",
+    eolSource: "endoflife",
+  };
+
+  it("restitue null, jamais « eol », pour une technologie sans fin de vie connue", async () => {
+    const { service, paginate } = makeService();
+    paginate.mockResolvedValue({
+      results: [
+        {
+          id: "app-healthy",
+          label: "Application saine",
+          shortName: null,
+          technologies: [healthyTechnology],
+          actors: [],
+        },
+      ],
+      total: 1,
+    });
+    const page = await service.findApplications({ status: "all" });
+    expect(page.results[0].technologies[0].status).toBeNull();
+    expect(page.results[0].worstStatus).toBeNull();
+  });
+
+  it("trie une technologie saine après les trois statuts de fin de vie", async () => {
+    const { service, paginate } = makeService();
+    paginate.mockResolvedValue({
+      results: [
+        {
+          id: "app-mixed",
+          label: "Application mixte",
+          shortName: null,
+          technologies: [
+            healthyTechnology,
+            {
+              id: "t-eol",
+              technology: "Base de données",
+              product: "PostgreSQL",
+              version: "13",
+              eolDate: past,
+              eoasDate: null,
+              latestVersion: "15.5",
+              eolSource: "endoflife",
+            },
+          ],
+          actors: [],
+        },
+      ],
+      total: 1,
+    });
+    const page = await service.findApplications({ status: "all" });
+    expect(page.results[0].technologies.map((t) => t.id)).toEqual([
+      "t-eol",
+      "t-healthy",
+    ]);
+    expect(page.results[0].worstStatus).toBe("eol");
   });
 });
 

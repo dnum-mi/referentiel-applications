@@ -26,7 +26,7 @@ Le présent document a été rédigé en confrontant la vue produit aux sources 
 - [7. Tableaux de bord](#7-tableaux-de-bord)
   - [7.1 Qualité générale](#71-qualité-générale)
   - [7.2 Dette technique (Time)](#72-dette-technique-time)
-  - [7.3 Suivi des fins de vie](#73-suivi-des-fins-de-vie)
+  - [7.3 Suivi des fins de vie et inventaire des technologies](#73-suivi-des-fins-de-vie-et-inventaire-des-technologies)
 - [8. Export Excel](#8-export-excel)
 - [9. Administration](#9-administration)
 - [10. Niveau d'authentification : carte agent ou double authentification](#10-niveau-dauthentification--carte-agent-ou-double-authentification)
@@ -153,7 +153,7 @@ La corrélation (« est corrélée à ») signale un **doublon potentiel** ou un
 
 ### 2.9 Technologies
 
-**Ce que ça fait.** Déclare la stack technique d'une application : une ligne par couple technologie/produit (famille, produit, version, lien documentaire). La fin de vie de chaque ligne est calculée automatiquement via endoflife.date (cf. [7.3](#73-suivi-des-fins-de-vie)) : badges « Fin de vie », « Fin de vie proche », « Support actif terminé », et états explicites quand le calcul ne peut pas répondre (« Produit non suivi », « Non vérifiée », « Version non reconnue »).
+**Ce que ça fait.** Déclare la stack technique d'une application : une ligne par couple technologie/produit (famille, produit, version, lien documentaire). La fin de vie de chaque ligne est calculée automatiquement via endoflife.date (cf. [7.3](#73-suivi-des-fins-de-vie-et-inventaire-des-technologies)) : badges « Fin de vie », « Fin de vie proche », « Support actif terminé », et états explicites quand le calcul ne peut pas répondre (« Produit non suivi », « Non vérifiée », « Version non reconnue »).
 
 **Saisie manuelle de la fin de vie (#2454).** Quand endoflife.date ne suit pas le produit (logiciel interne, éditeur absent du catalogue) ou est injoignable, le formulaire propose un champ « Fin de vie (saisie manuelle) ». Il n'apparaît que dans ces cas — catalogue indisponible, produit hors catalogue, ligne déjà manuelle, ou ligne existante sans échéance automatique (vérifiée sans résultat ou jamais vérifiée, état « Non vérifiée ») ; sinon la date calculée est seulement rappelée en lecture seule. La date saisie est persistée avec son origine (`eolSource = manual`) et **prime sur l'automatique** : ni le rafraîchissement paresseux ni le recalcul planifié ne la réécrivent, et un changement de produit ou de version ne la détruit pas. Effacer le champ rend la main au calcul, relancé aussitôt. La fiche et la vue transverse signalent l'origine (« saisie manuelle ») ; statuts et alertes s'appliquent à l'identique. Saisie et effacement sont journalisés dans l'onglet Modifications (« fin de vie », « origine de la fin de vie »).
 
@@ -280,11 +280,11 @@ Les contributeurs et administrateurs consultent l'ensemble des signalements, les
 
 **Permission.** `MDITList` (« Voir la liste des MDIT »), incluse dans le socle Lecteur et pouvant être configurée selon un périmètre organisationnel.
 
-### 7.3 Suivi des fins de vie
+### 7.3 Suivi des fins de vie et inventaire des technologies
 
-**Ce que ça fait.** Vue transverse répondant à « quelles applications utilisent une technologie en fin de vie ? ». Elle liste les applications dont au moins une technologie est **en fin de vie**, le sera **dans moins de 6 mois**, ou est **sortie du support actif** — l'information n'existait jusque-là que fiche par fiche, dans l'onglet « Technologies » de la fiche application. La vue est servie par l'entrée de menu « Technologies » (#2413, à la demande du PO ; le titre de page et l'onglet de la fiche suivent le même intitulé). Filtres par statut, par organisation (chemin ou sigle d'un acteur, en correspondance partielle : un chemin de direction ramène ses organisations filles) et par recherche libre sur le libellé d'application ou le produit.
+**Ce que ça fait.** Vue transverse répondant à « quelles applications utilisent une technologie en fin de vie ? » et, plus largement, « quelles technologies sont utilisées dans le parc, fins de vie ou non ? ». Par défaut, elle liste les applications dont au moins une technologie est **en fin de vie**, le sera **dans moins de 6 mois**, ou est **sortie du support actif** — l'information n'existait jusque-là que fiche par fiche, dans l'onglet « Technologies » de la fiche application. Le filtre « Toutes les technologies (y compris à jour) » lève cette restriction : il retourne toute application ayant déclaré au moins une technologie, avec l'intégralité de sa stack, saine comprise. La vue est servie par l'entrée de menu « Technologies » (#2413, à la demande du PO ; le titre de page et l'onglet de la fiche suivent le même intitulé). Filtres par statut, par organisation (chemin ou sigle d'un acteur, en correspondance partielle : un chemin de direction ramène ses organisations filles) et par recherche libre sur le libellé d'application ou le produit.
 
-Les trois statuts **partitionnent** la liste : une technologie déjà en fin de vie n'apparaît pas aussi sous « fin de support actif ». Le classement est calculé côté serveur, pour que la vue transverse et la fiche s'accordent sur le statut d'une même technologie.
+Les trois statuts de fin de vie **partitionnent** la liste : une technologie déjà en fin de vie n'apparaît pas aussi sous « fin de support actif ». Le filtre « Toutes les technologies » est le seul cas **non partitionnant** : il n'ajoute rien à la partition, il la lève. Le classement est calculé côté serveur, pour que la vue transverse et la fiche s'accordent sur le statut d'une même technologie ; il vaut `null` pour une technologie sans fin de vie connue (uniquement atteignable via ce filtre), et la vue n'affiche alors aucune pastille de gravité.
 
 **Fraîcheur des données.** La résolution endoflife.date est écrite sur `TechnologyStack` puis rafraîchie de deux façons :
 
