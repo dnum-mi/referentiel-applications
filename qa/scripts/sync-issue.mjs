@@ -57,7 +57,7 @@ export function statusesFromReport(report) {
     const id = match[1];
     const results = (spec.tests ?? []).flatMap((t) => t.results ?? []);
     const allSkipped =
-      results.length > 0 && results.every((r) => r.status === "skipped");
+      results.length === 0 || results.every((r) => r.status === "skipped");
     const status = allSkipped ? "skipped" : spec.ok ? "passed" : "failed";
     // En cas de doublon d'ID, un échec prime sur un succès.
     if (byId[id] !== "failed") byId[id] = status;
@@ -95,8 +95,8 @@ export function failuresFromReport(report) {
     const match = STEP_ID.exec(spec.title ?? "");
     if (!match || spec.ok) continue;
     const results = (spec.tests ?? []).flatMap((t) => t.results ?? []);
-    if (results.length > 0 && results.every((r) => r.status === "skipped"))
-      continue; // skip légitime, pas un bug
+    if (results.length === 0 || results.every((r) => r.status === "skipped"))
+      continue; // scénario non exécuté ou skip légitime, pas un échec de scénario
     const errored =
       results.find((r) => r.status === "failed" || r.status === "timedOut") ??
       results[results.length - 1];
@@ -108,33 +108,49 @@ export function failuresFromReport(report) {
 }
 
 /** Rend la section « Bugs liés » à partir des échecs (avec lien capture si dispo). */
-function renderBugs(failures, screenshots) {
+function renderBugs(failures, screenshots, runErrors = []) {
   const ids = Object.keys(failures).sort();
-  if (ids.length === 0)
+  if (ids.length === 0 && runErrors.length === 0)
     return "_Aucune régression constatée (suite automatisée)._";
-  return ids
-    .map((id) => {
-      const cap = screenshots?.ids.has(id)
-        ? ` — [capture](${screenshots.baseUrl.replace(/\/$/, "")}/${id}.png)`
-        : "";
-      return `- **${id}** — échec Playwright : ${failures[id]}${cap}`;
-    })
-    .join("\n");
+  const lines = ids.map((id) => {
+    const cap = screenshots?.ids.has(id)
+      ? ` — [capture](${screenshots.baseUrl.replace(/\/$/, "")}/${id}.png)`
+      : "";
+    return `- **${id}** — échec Playwright : ${failures[id]}${cap}`;
+  });
+  if (runErrors.length) {
+    lines.push(
+      "",
+      "### Erreurs de préparation ou d'exécution hors scénario",
+      "",
+    );
+    for (const error of runErrors) {
+      // Garder le diagnostic complet (fixtures et commande de réparation), sans créer d'ID d'étape.
+      const message = String(error.message ?? error.value ?? error).replace(
+        ANSI_PATTERN,
+        "",
+      );
+      lines.push(...message.split("\n").map((line) => `    ${line}`), "");
+    }
+  }
+  return lines.join("\n");
 }
 
 /** Remplace le contenu de la section « Bugs liés » par le rapport d'échecs. */
-export function setBugsSection(body, failures, screenshots) {
-  if (!/## Bugs liés\n/.test(body)) return body;
+export function setBugsSection(body, failures, screenshots, runErrors = []) {
+  const bugs = renderBugs(failures, screenshots, runErrors);
+  if (!/## Bugs liés\n/.test(body))
+    return runErrors.length ? `${body}\n\n## Bugs liés\n\n${bugs}\n` : body;
   return body.replace(
-    /(## Bugs liés\n)[\s\S]*?(?=\n## )/,
-    `$1\n${renderBugs(failures, screenshots)}\n`,
+    /(## Bugs liés\n)[\s\S]*?(?=\n## |$)/,
+    (_match, heading) => `${heading}\n${bugs}\n`,
   );
 }
 
 /**
  * Coche/laisse chaque ligne d'étape selon le statut, et embarque le screenshot de l'étape sous la
  * ligne `📎` quand il existe. `screenshots` = { ids: Set<string>, baseUrl: string } | null.
- * Renvoie { body, passed, failed, total }.
+ * Renvoie { body, passed, failed, total, notTested }.
  */
 export function applyStatuses(body, statuses, screenshots = null) {
   let passed = 0;
@@ -178,22 +194,41 @@ export function applyStatuses(body, statuses, screenshots = null) {
     failed,
     notTested,
   });
-  const updated = setVerdict(withRecap, failed);
-  return { body: updated, passed, failed, total };
+  const updated = setVerdict(withRecap, failed > 0 ? "qa:fail" : "qa:pass");
+  return { body: updated, passed, failed, total, notTested };
 }
 
-/** Coche la case de verdict : `qa:pass` si aucun échec, sinon `qa:fail`. */
-function setVerdict(body, failed) {
+/** Coche exactement le verdict retenu pour la campagne. */
+function setVerdict(body, verdict) {
   return body
     .split("\n")
     .map((line) => {
       const m = /^(\s*-\s*\[)[ xX](\]\s*`qa:(pass|fail)`.*)$/.exec(line);
       if (!m) return line;
-      const checked =
-        (m[3] === "pass" && failed === 0) || (m[3] === "fail" && failed > 0);
+      const checked = `qa:${m[3]}` === verdict;
       return `${m[1]}${checked ? "x" : " "}${m[2]}`;
     })
     .join("\n");
+}
+
+/** Prépare le corps et le label à publier, sans confondre erreur globale et étape échouée. */
+export function prepareIssueUpdate(body, report, screenshots = null) {
+  const steps = applyStatuses(body, statusesFromReport(report), screenshots);
+  const runErrors = report.errors ?? [];
+  const verdict =
+    steps.failed > 0 || runErrors.length > 0 ? "qa:fail" : "qa:pass";
+  const withBugs = setBugsSection(
+    steps.body,
+    failuresFromReport(report),
+    screenshots,
+    runErrors,
+  );
+  return {
+    ...steps,
+    body: setVerdict(withBugs, verdict),
+    verdict,
+    runErrors: runErrors.length,
+  };
 }
 
 /** Met à jour la 1ʳᵉ ligne de données du tableau récapitulatif. */
@@ -243,8 +278,10 @@ async function addLabel(token, owner, name, issueNumber, label, color) {
       method: "POST",
       body: JSON.stringify({ labels: [label] }),
     });
+    return true;
   } catch (error) {
     console.warn(`Label "${label}" non posé : ${error.message}`);
+    return false;
   }
 }
 
@@ -279,35 +316,41 @@ async function main() {
     token,
     `/repos/${owner}/${name}/issues/${issueNumber}`,
   );
-  const { body, passed, failed, total } = applyStatuses(
-    issue.body ?? "",
-    statuses,
-    screenshots,
-  );
-  // Reporte les échecs Playwright dans la section « Bugs liés ».
-  const withBugs = setBugsSection(
-    body,
-    failuresFromReport(report),
-    screenshots,
-  );
+  const { body, passed, failed, total, verdict, runErrors } =
+    prepareIssueUpdate(issue.body ?? "", report, screenshots);
 
   await gh(token, `/repos/${owner}/${name}/issues/${issueNumber}`, {
     method: "PATCH",
-    body: JSON.stringify({ body: withBugs }),
+    body: JSON.stringify({ body }),
   });
 
-  const verdict = failed > 0 ? "qa:fail" : "qa:pass";
-  await addLabel(
+  const labeled = await addLabel(
     token,
     owner,
     name,
     issueNumber,
     verdict,
-    failed > 0 ? "B60205" : "0E8A16",
+    verdict === "qa:fail" ? "B60205" : "0E8A16",
   );
+  const obsoleteVerdict = verdict === "qa:fail" ? "qa:pass" : "qa:fail";
+  if (
+    labeled &&
+    issue.labels?.some(
+      (label) =>
+        (typeof label === "string" ? label : label.name) === obsoleteVerdict,
+    )
+  ) {
+    await gh(
+      token,
+      `/repos/${owner}/${name}/issues/${issueNumber}/labels/${encodeURIComponent(obsoleteVerdict)}`,
+      {
+        method: "DELETE",
+      },
+    );
+  }
 
   console.log(
-    `Issue #${issueNumber} synchronisée : ${passed}/${total} passés, ${failed} échecs → ${verdict}`,
+    `Issue #${issueNumber} synchronisée : ${passed}/${total} passés, ${failed} échecs de scénario, ${runErrors} erreurs hors scénario → ${verdict}`,
   );
 }
 
