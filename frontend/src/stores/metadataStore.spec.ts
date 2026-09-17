@@ -2,18 +2,23 @@ import { createPinia, setActivePinia } from "pinia";
 import type { MetadataDto } from "@/client/types.gen";
 import { useMetadataStore } from "./metadataStore";
 
-const { getFirstAndLastMock } = vi.hoisted(() => ({
+const { getFirstAndLastMock, findByApplicationMock, findGlobalMock, addErrorMessage } = vi.hoisted(() => ({
   getFirstAndLastMock: vi.fn(),
+  findByApplicationMock: vi.fn(),
+  findGlobalMock: vi.fn(),
+  addErrorMessage: vi.fn(),
 }));
 
 vi.mock("@/api/index", () => ({
   default: {
     applicationMetadatasControllerGetFirstAndLastMetadata: getFirstAndLastMock,
+    applicationMetadatasControllerFind: findByApplicationMock,
+    metadatasControllerFind: findGlobalMock,
   },
 }));
 
 vi.mock("@/stores/toasterStore", () => ({
-  useToasterStore: () => ({ addErrorMessage: vi.fn() }),
+  useToasterStore: () => ({ addErrorMessage }),
 }));
 
 const metadataOf = (email: string): MetadataDto =>
@@ -32,7 +37,42 @@ describe("metadataStore — metadatas de fiche", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     getFirstAndLastMock.mockReset();
+    findByApplicationMock.mockReset();
+    findGlobalMock.mockReset();
+    addErrorMessage.mockReset();
     vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it.each(["firstAndLast", "byApplication", "global"])("libère le chargement et propage les rejets réseau (%s)", async (scope) => {
+    const error = new TypeError("Failed to fetch");
+    getFirstAndLastMock.mockRejectedValue(error);
+    findByApplicationMock.mockRejectedValue(error);
+    findGlobalMock.mockRejectedValue(error);
+    const store = useMetadataStore();
+    const pending =
+      scope === "firstAndLast"
+        ? store.getFirstAndLastMetadataByApplication("app-1")
+        : scope === "byApplication"
+          ? store.fetchMetadatasByApplication("app-1")
+          : store.fetchMetadatasGlobal();
+
+    await expect(pending).rejects.toBe(error);
+    expect(store.isLoading).toBe(false);
+    expect(addErrorMessage).toHaveBeenCalledTimes(1);
+  });
+
+  it("notifie les erreurs HTTP de l'historique global et purge l'ancienne page", async () => {
+    const store = useMetadataStore();
+    store.metadatas = [metadataOf("agent@example.gouv.fr")];
+    store.total = 1;
+    findGlobalMock.mockResolvedValue({ response: { ok: false, statusText: "Internal Server Error" }, error: {} });
+    await expect(store.fetchMetadatasGlobal()).rejects.toThrow();
+    expect(store.metadatas).toEqual([]);
+    expect(store.total).toBe(0);
+    expect(store.isLoading).toBe(false);
+    expect(addErrorMessage).toHaveBeenCalledExactlyOnceWith("Erreur lors de la récupération des metadatas globales.");
   });
 
   it("expose les metadatas de l'application demandée", async () => {

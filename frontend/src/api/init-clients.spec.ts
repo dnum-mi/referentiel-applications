@@ -1,19 +1,21 @@
-const { interceptors, assignMock } = vi.hoisted(() => ({
+const { interceptors, assignMock, setConfigMock } = vi.hoisted(() => ({
   interceptors: {
     request: { use: vi.fn() },
     response: { use: vi.fn() },
   },
   assignMock: vi.fn(),
+  setConfigMock: vi.fn(),
 }));
 
 vi.mock("@/client/client.gen", () => ({
-  client: { interceptors, setConfig: vi.fn() },
+  client: { interceptors, setConfig: setConfigMock },
 }));
 vi.mock("@/services/authentication", () => ({
   USER_MANAGER: { getUser: vi.fn().mockResolvedValue(null), signinSilent: vi.fn(), signinRedirect: vi.fn() },
 }));
 
 import { configureClients } from "./init-clients";
+import { fetchWithTimeout } from "./fetch-with-timeout";
 import { USER_MANAGER } from "@/services/authentication";
 
 type ResponseInterceptor = (response: Response, request?: Request) => Promise<Response>;
@@ -48,6 +50,10 @@ describe("init-clients — 403 liés au niveau d'authentification (#1985)", () =
 
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  it("branche le timeout sur le transport du client généré", () => {
+    expect(setConfigMock).toHaveBeenLastCalledWith(expect.objectContaining({ fetch: fetchWithTimeout, credentials: "include" }));
   });
 
   it("purge l'impersonation et recharge une fois sur un refus d'impersonation", async () => {

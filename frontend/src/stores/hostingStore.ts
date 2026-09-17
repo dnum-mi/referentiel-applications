@@ -8,6 +8,7 @@ import type {
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import api from "@/api/index";
+import { callApi, withLoading } from "@/api/call-api";
 import { useToasterStore } from "@/stores/toasterStore";
 
 type HostingOptionFiltersDto = HostingOptionControllerFindAllData["query"];
@@ -20,15 +21,13 @@ export const useHostingStore = defineStore("hostingStore", () => {
   const toaster = useToasterStore();
 
   async function countHostings() {
-    isLoading.value = true;
-    const response = await api.hostingsControllerCountAllHostings();
-    isLoading.value = false;
-    if (!response.response.ok) {
-      toaster.addErrorMessage("Erreur lors de la récupération du nombre d'hébergements");
-      console.error("Error counting hostings:", response.error);
-      throw new Error(`Failed to count hostings: ${response.response.statusText}`);
-    }
-    return response.data ?? 0;
+    return (
+      (await callApi(() => api.hostingsControllerCountAllHostings(), {
+        isLoading,
+        toaster,
+        errorMessage: "Erreur lors de la récupération du nombre d'hébergements",
+      })) ?? 0
+    );
   }
 
   /**
@@ -45,74 +44,53 @@ export const useHostingStore = defineStore("hostingStore", () => {
   const fetchHostings = async (applicationId: string) => {
     resetHostings();
     hostingsApplicationId.value = applicationId;
-    isLoading.value = true;
-    const response = await api.applicationHostingsControllerFindAll({
-      path: { applicationId },
+    const data = await callApi(() => api.applicationHostingsControllerFindAll({ path: { applicationId } }), {
+      isLoading,
+      toaster,
+      errorMessage: "Erreur lors de la récupération des hébergements",
     });
-    isLoading.value = false;
-    if (!response.response.ok) {
-      toaster.addErrorMessage("Erreur lors de la récupération des hébergements");
-      console.error("Error fetching hostings:", response.error);
-      throw new Error(`Failed to fetch hostings: ${response.response.statusText}`);
-    }
     // Navigation rapide : une réponse tardive ne doit pas écraser la fiche courante.
     if (hostingsApplicationId.value !== applicationId) return;
-    hostings.value = response.data ?? [];
+    hostings.value = data ?? [];
   };
 
-  const createHosting = async (applicationId: string, hosting: CreateHostingDto) => {
-    const response = await api.applicationHostingsControllerCreate({
-      path: { applicationId },
-      body: hosting,
+  const createHosting = (applicationId: string, hosting: CreateHostingDto) =>
+    withLoading(isLoading, async () => {
+      await callApi(() => api.applicationHostingsControllerCreate({ path: { applicationId }, body: hosting }), {
+        toaster,
+        errorMessage: "Erreur lors de la création de l'hébergement",
+      });
+      await fetchHostings(applicationId);
+      toaster.addSuccessMessage("Hébergement créé avec succès");
     });
-    if (!response.response.ok) {
-      toaster.addErrorMessage("Erreur lors de la création de l'hébergement");
-      console.error("Error creating hosting:", response.error);
-      throw new Error(`Failed to create hosting: ${response.response.statusText}`);
-    }
-    await fetchHostings(applicationId);
-    toaster.addSuccessMessage("Hébergement créé avec succès");
-  };
 
-  const updateHosting = async (applicationId: string, id: string, hosting: UpdateHostingDto) => {
-    const response = await api.applicationHostingsControllerUpdate({
-      path: { applicationId, id },
-      body: hosting,
+  const updateHosting = (applicationId: string, id: string, hosting: UpdateHostingDto) =>
+    withLoading(isLoading, async () => {
+      await callApi(() => api.applicationHostingsControllerUpdate({ path: { applicationId, id }, body: hosting }), {
+        toaster,
+        errorMessage: "Erreur lors de la mise à jour de l'hébergement",
+      });
+      await fetchHostings(applicationId);
+      toaster.addSuccessMessage("Hébergement mis à jour avec succès");
     });
-    if (!response.response.ok) {
-      toaster.addErrorMessage("Erreur lors de la mise à jour de l'hébergement");
-      console.error("Error updating hosting:", response.error);
-      throw new Error(`Failed to update hosting: ${response.response.statusText}`);
-    }
-    await fetchHostings(applicationId);
-    toaster.addSuccessMessage("Hébergement mis à jour avec succès");
-  };
 
-  const deleteHosting = async (applicationId: string, hostingId: string) => {
-    const response = await api.applicationHostingsControllerRemove({
-      path: { applicationId, id: hostingId },
+  const deleteHosting = (applicationId: string, hostingId: string) =>
+    withLoading(isLoading, async () => {
+      await callApi(() => api.applicationHostingsControllerRemove({ path: { applicationId, id: hostingId } }), {
+        toaster,
+        errorMessage: "Erreur lors de la suppression de l'hébergement",
+      });
+      await fetchHostings(applicationId);
+      toaster.addSuccessMessage("Hébergement supprimé avec succès");
     });
-    if (!response.response.ok) {
-      toaster.addErrorMessage("Erreur lors de la suppression de l'hébergement");
-      console.error("Error deleting hosting:", response.error);
-      throw new Error(`Failed to delete hosting: ${response.response.statusText}`);
-    }
-    await fetchHostings(applicationId);
-    toaster.addSuccessMessage("Hébergement supprimé avec succès");
-  };
 
   const getAllHostingOptions = async (filters: HostingOptionFiltersDto = {}): Promise<HostingOptionDto[]> => {
-    const response = await api.hostingOptionControllerFindAll({
-      query: {
-        ...filters,
-        pageSize: filters?.pageSize ?? 0,
-      },
+    const data = await callApi(() => api.hostingOptionControllerFindAll({ query: { ...filters, pageSize: filters?.pageSize ?? 0 } }), {
+      isLoading,
+      toaster,
+      errorMessage: "Erreur lors de la récupération des options d'hébergement",
     });
-    if (!response.data?.results) {
-      return [];
-    }
-    const responseData = response.data;
-    hostingOptions.value = responseData.results;
+    hostingOptions.value = data?.results ?? [];
     return hostingOptions.value;
   };
 
