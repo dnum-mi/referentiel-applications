@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { watchDebounced } from "@vueuse/core";
 import type { BusinessDivisionDto } from "@/client/types.gen";
 import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
 import BusinessDivisionActions from "./BusinessDivisionActions.vue";
 import api from "@/api";
 import RefAppTable from "@/components/RefAppTable.vue";
-import type { TableColumn, TableSortEvent } from "@/types/table";
+import { useServerPaginatedTable } from "@/composables/use-server-paginated-table";
+import type { TableColumn } from "@/types/table";
 
 // L'API renvoie le décompte des liaisons, non déclaré dans BusinessDivisionDto.
 type BusinessDivisionRow = BusinessDivisionDto & { _count?: { organizations: number; applications: number } };
-const data = ref<{ results: BusinessDivisionRow[]; total: number }>({ results: [], total: 0 });
 
 const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [
   {
@@ -38,59 +38,30 @@ const tableColumns: TableColumn[] = headers.map((h) => ({
   sortable: h.isSortable || false,
 }));
 
-const isLoading = ref(false);
 const searchQuery = ref("");
-
-const sortColumn = ref<(typeof headers)[number]["key"]>();
-const isSortDescending = ref(false);
-
-const itemsPerPage = ref(15);
-const currentPage = ref(0);
-const firstIndex = computed(() => currentPage.value * itemsPerPage.value);
-
-// RGAA-084 (7.5) : message de statut sur le nombre de résultats, restitué aux TA.
-const statusMessage = computed(() => {
-  if (isLoading.value) return "Chargement des directions métier…";
-  const total = data.value.total;
-  if (total === 0) return "Aucune donnée ne correspond à votre recherche : Résultat 0 à 0";
-  const from = firstIndex.value + 1;
-  const to = Math.min(firstIndex.value + data.value.results.length, total);
-  return `Résultat ${from} à ${to} sur ${total}`;
-});
-
-async function fetchBusinessDivisions() {
-  isLoading.value = true;
-
-  const query = {
-    label: searchQuery.value || undefined,
-    page: currentPage.value,
-    pageSize: itemsPerPage.value,
-    sortBy: sortColumn.value,
-    order: isSortDescending.value ? ("desc" as const) : ("asc" as const),
-  };
-
-  const response = await api.businessDivisionControllerFindAll({ query });
-  if (!response.data?.results) {
-    isLoading.value = false;
-    return;
-  }
-  data.value = response.data;
-  isLoading.value = false;
-}
-
-watchDebounced(
-  searchQuery,
-  async () => {
-    currentPage.value = 0;
-    await fetchBusinessDivisions();
+const {
+  data,
+  isLoading,
+  itemsPerPage,
+  firstIndex,
+  sortColumn,
+  isSortDescending,
+  onSort,
+  onPage,
+  resetAndFetch,
+  refresh: fetchBusinessDivisions,
+  statusMessage: createStatusMessage,
+} = useServerPaginatedTable<BusinessDivisionRow>({
+  fetchPage: async (pagination) => {
+    const response = await api.businessDivisionControllerFindAll({
+      query: { ...pagination, label: searchQuery.value || undefined },
+    });
+    return response.data?.results ? response.data : undefined;
   },
-  { debounce: 300 },
-);
-
-watch([sortColumn, isSortDescending], () => {
-  currentPage.value = 0;
-  fetchBusinessDivisions();
 });
+const statusMessage = createStatusMessage("directions métier");
+
+watchDebounced(searchQuery, resetAndFetch, { debounce: 300 });
 
 const tableRows = computed(() =>
   data.value.results.map((businessDivision) => ({
@@ -100,17 +71,6 @@ const tableRows = computed(() =>
     actions: businessDivision,
   })),
 );
-
-function onSort(event: TableSortEvent) {
-  sortColumn.value = event.sortField as (typeof headers)[number]["key"];
-  isSortDescending.value = event.sortOrder === -1;
-}
-
-function onPage(event: { page: number; rows: number }) {
-  currentPage.value = event.page;
-  itemsPerPage.value = event.rows;
-  fetchBusinessDivisions();
-}
 
 onMounted(fetchBusinessDivisions);
 </script>

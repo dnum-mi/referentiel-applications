@@ -1,15 +1,13 @@
 <script setup lang="ts">
 import api from "@/api";
-import type { OrganizationDto, OrganizationsControllerFindAllData, PaginatedOrganizationDto } from "@/client/types.gen";
+import type { OrganizationDto } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
-import type { TableColumn, TableSortEvent } from "@/types/table";
+import { useServerPaginatedTable } from "@/composables/use-server-paginated-table";
+import type { TableColumn } from "@/types/table";
 import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
-import type { DataTablePageEvent } from "primevue/datatable";
 import { watchDebounced } from "@vueuse/core";
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref } from "vue";
 import OrganizationActions from "./OrganizationActions.vue";
-
-const data = ref<PaginatedOrganizationDto>({ results: [], total: 0 });
 
 type OrganizationWithMaiaReferences = OrganizationDto & {
   maiaReferences?: Array<{ maiaRef: string }>;
@@ -53,54 +51,31 @@ const tableColumns: TableColumn[] = headers.map((h) => ({
   sortable: h.isSortable || false,
 }));
 
-const isLoading = ref(false);
 const searchQuery = ref("");
-
-const sortColumn = ref<(typeof headers)[number]["key"]>("path");
-const isSortDescending = ref(false);
-
-const itemsPerPage = ref(15);
-const currentPage = ref(0);
-const firstIndex = computed(() => currentPage.value * itemsPerPage.value);
-
-async function fetchOrganizations() {
-  isLoading.value = true;
-
-  const query: NonNullable<OrganizationsControllerFindAllData["query"]> = {
-    search: searchQuery.value || undefined,
-    page: currentPage.value,
-    pageSize: itemsPerPage.value,
-    sortBy: sortColumn.value,
-    order: isSortDescending.value ? "desc" : "asc",
-  };
-
-  const response = await api.organizationsControllerFindAll({ query });
-  if (!response.data) {
-    isLoading.value = false;
-    return;
-  }
-
-  data.value = response.data;
-  isLoading.value = false;
-}
-
-async function refreshOrganizationsTab() {
-  await fetchOrganizations();
-}
-
-watchDebounced(
-  searchQuery,
-  async () => {
-    currentPage.value = 0;
-    await fetchOrganizations();
+const {
+  data,
+  isLoading,
+  itemsPerPage,
+  firstIndex,
+  sortColumn,
+  isSortDescending,
+  onSort,
+  onPage,
+  resetAndFetch,
+  refresh: fetchOrganizations,
+  statusMessage: createStatusMessage,
+} = useServerPaginatedTable<OrganizationDto>({
+  initialSortColumn: "path",
+  fetchPage: async (pagination) => {
+    const response = await api.organizationsControllerFindAll({
+      query: { ...pagination, search: searchQuery.value || undefined },
+    });
+    return response.data;
   },
-  { debounce: 300 },
-);
-
-watch([sortColumn, isSortDescending], () => {
-  currentPage.value = 0;
-  fetchOrganizations();
 });
+const statusMessage = createStatusMessage("organisations");
+
+watchDebounced(searchQuery, resetAndFetch, { debounce: 300 });
 
 const tableRows = computed(() =>
   data.value.results.map((organization) => {
@@ -122,25 +97,14 @@ const tableRows = computed(() =>
   }),
 );
 
-function onSort(event: TableSortEvent) {
-  sortColumn.value = event.sortField as (typeof headers)[number]["key"];
-  isSortDescending.value = event.sortOrder === -1;
-}
-
-function onPage(event: DataTablePageEvent) {
-  currentPage.value = event.page;
-  itemsPerPage.value = event.rows;
-  fetchOrganizations();
-}
-
-onMounted(refreshOrganizationsTab);
+onMounted(fetchOrganizations);
 </script>
 
 <template>
   <div class="header-row">
     <h1 class="fr-h1" data-testid="admin-organizations-title">Gestion des organisations</h1>
 
-    <OrganizationActions @fetch-organizations="refreshOrganizationsTab" />
+    <OrganizationActions @fetch-organizations="fetchOrganizations" />
   </div>
 
   <div class="fr-mb-4w">
@@ -152,6 +116,10 @@ onMounted(refreshOrganizationsTab);
       class="fr-col-12"
       data-testid="admin-organizations-search"
     />
+  </div>
+
+  <div aria-live="polite" aria-atomic="true" class="fr-sr-only" data-testid="admin-organizations-status">
+    <p>{{ statusMessage }}</p>
   </div>
 
   <div v-if="isLoading" class="fr-alert fr-alert--info" data-testid="admin-organizations-loading">
@@ -174,7 +142,7 @@ onMounted(refreshOrganizationsTab);
       @page="onPage"
     >
       <template #body-actions="{ data: row }">
-        <OrganizationActions :organization="row.actions" @fetch-organizations="refreshOrganizationsTab" />
+        <OrganizationActions :organization="row.actions" @fetch-organizations="fetchOrganizations" />
       </template>
     </RefAppTable>
   </div>

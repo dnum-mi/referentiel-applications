@@ -1,17 +1,16 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { watchDebounced } from "@vueuse/core";
-import type { LabelSourceControllerFindAllData, LabelSourceDto } from "@/client/types.gen";
+import type { LabelSourceDto } from "@/client/types.gen";
 import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
-import type { DataTablePageEvent } from "primevue/datatable";
 import LabelSourceActions from "./LabelSourceActions.vue";
 import api from "@/api";
 import RefAppTable from "@/components/RefAppTable.vue";
-import type { TableColumn, TableSortEvent } from "@/types/table";
+import { useServerPaginatedTable } from "@/composables/use-server-paginated-table";
+import type { TableColumn } from "@/types/table";
 
 // L'API renvoie le décompte des labels liés, non déclaré dans LabelSourceDto.
 type LabelSourceRow = LabelSourceDto & { _count?: { Label: number } };
-const data = ref<{ results: LabelSourceRow[]; total: number }>({ results: [], total: 0 });
 
 const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [
   {
@@ -35,59 +34,30 @@ const tableColumns: TableColumn[] = headers.map((h) => ({
   sortable: h.isSortable || false,
 }));
 
-const isLoading = ref(false);
 const searchQuery = ref("");
-
-const sortColumn = ref<(typeof headers)[number]["key"]>();
-const isSortDescending = ref(false);
-
-const itemsPerPage = ref(15);
-const currentPage = ref(0);
-const firstIndex = computed(() => currentPage.value * itemsPerPage.value);
-
-// RGAA-084 (7.5) : message de statut sur le nombre de résultats, restitué aux TA.
-const statusMessage = computed(() => {
-  if (isLoading.value) return "Chargement des sources de noms alternatifs…";
-  const total = data.value.total;
-  if (total === 0) return "Aucune donnée ne correspond à votre recherche : Résultat 0 à 0";
-  const from = firstIndex.value + 1;
-  const to = Math.min(firstIndex.value + data.value.results.length, total);
-  return `Résultat ${from} à ${to} sur ${total}`;
-});
-
-async function fetchLabelSources() {
-  isLoading.value = true;
-
-  const query: NonNullable<LabelSourceControllerFindAllData["query"]> = {
-    source: searchQuery.value || undefined,
-    page: currentPage.value,
-    pageSize: itemsPerPage.value,
-    sortBy: sortColumn.value,
-    order: isSortDescending.value ? "desc" : "asc",
-  };
-
-  const response = await api.labelSourceControllerFindAll({ query });
-  if (!response.data?.results) {
-    isLoading.value = false;
-    return;
-  }
-  data.value = response.data;
-  isLoading.value = false;
-}
-
-watchDebounced(
-  searchQuery,
-  async () => {
-    currentPage.value = 0;
-    await fetchLabelSources();
+const {
+  data,
+  isLoading,
+  itemsPerPage,
+  firstIndex,
+  sortColumn,
+  isSortDescending,
+  onSort,
+  onPage,
+  resetAndFetch,
+  refresh: fetchLabelSources,
+  statusMessage: createStatusMessage,
+} = useServerPaginatedTable<LabelSourceRow>({
+  fetchPage: async (pagination) => {
+    const response = await api.labelSourceControllerFindAll({
+      query: { ...pagination, source: searchQuery.value || undefined },
+    });
+    return response.data?.results ? response.data : undefined;
   },
-  { debounce: 300 },
-);
-
-watch([sortColumn, isSortDescending], () => {
-  currentPage.value = 0;
-  fetchLabelSources();
 });
+const statusMessage = createStatusMessage("sources de noms alternatifs");
+
+watchDebounced(searchQuery, resetAndFetch, { debounce: 300 });
 
 const tableRows = computed(() =>
   data.value.results.map((labelSource) => ({
@@ -96,17 +66,6 @@ const tableRows = computed(() =>
     actions: labelSource,
   })),
 );
-
-function onSort(event: TableSortEvent) {
-  sortColumn.value = event.sortField as (typeof headers)[number]["key"];
-  isSortDescending.value = event.sortOrder === -1;
-}
-
-function onPage(event: DataTablePageEvent) {
-  currentPage.value = event.page;
-  itemsPerPage.value = event.rows;
-  fetchLabelSources();
-}
 
 onMounted(fetchLabelSources);
 </script>

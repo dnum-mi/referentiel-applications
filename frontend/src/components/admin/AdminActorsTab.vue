@@ -1,22 +1,20 @@
 <script setup lang="ts">
 import api from "@/api";
-import type { ActorControllerFindAllData, ActorDto, ApplicationRefDto, PaginatedActorDto } from "@/client/types.gen";
+import type { ActorDto, ApplicationRefDto } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
+import { useServerPaginatedTable } from "@/composables/use-server-paginated-table";
 import OrgaLink from "@/components/organization/OgaLink.vue";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
-import type { TableColumn, TableSortEvent } from "@/types/table";
+import type { TableColumn } from "@/types/table";
 import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
-import type { DataTablePageEvent } from "primevue/datatable";
 import { watchDebounced } from "@vueuse/core";
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref } from "vue";
 import AdminActorActions from "./AdminActorActions.vue";
 
 const actorTypeStore = useActorTypeStore();
 
 // L'API renvoie l'application liée, non déclarée dans ActorDto.
 type ActorRow = ActorDto & { application?: ApplicationRefDto | null };
-
-const data = ref<PaginatedActorDto>({ results: [], total: 0 });
 
 const headers = [
   { key: "email", label: "Email", isSortable: true },
@@ -35,55 +33,36 @@ const tableColumns: TableColumn[] = headers.map((h) => ({
   sortable: h.isSortable || false,
 }));
 
-const isLoading = ref(false);
 const searchQuery = ref("");
+const {
+  data,
+  isLoading,
+  itemsPerPage,
+  firstIndex,
+  sortColumn,
+  isSortDescending,
+  onSort,
+  onPage,
+  resetAndFetch,
+  refresh: fetchActors,
+  statusMessage: createStatusMessage,
+} = useServerPaginatedTable<ActorRow>({
+  initialSortColumn: "email",
+  fetchPage: async (pagination) => {
+    const response = await api.actorControllerFindAll({
+      query: { ...pagination, search: searchQuery.value || undefined },
+    });
+    return response.data;
+  },
+});
+const statusMessage = createStatusMessage("acteurs");
 
-const sortColumn = ref<(typeof headers)[number]["key"]>("email");
-const isSortDescending = ref(false);
-
-const itemsPerPage = ref(15);
-const currentPage = ref(0);
-const firstIndex = computed(() => currentPage.value * itemsPerPage.value);
+watchDebounced(searchQuery, resetAndFetch, { debounce: 300 });
 
 function getActorTypeLabel(actorTypeId: string): string {
   const type = actorTypeStore.actorTypes.find((t) => t.id === actorTypeId);
   return type ? type.label : "-";
 }
-
-async function fetchActors() {
-  isLoading.value = true;
-
-  const query: NonNullable<ActorControllerFindAllData["query"]> = {
-    search: searchQuery.value || undefined,
-    page: currentPage.value,
-    pageSize: itemsPerPage.value,
-    sortBy: sortColumn.value,
-    order: isSortDescending.value ? "desc" : "asc",
-  };
-
-  const response = await api.actorControllerFindAll({ query });
-  if (!response.data) {
-    isLoading.value = false;
-    return;
-  }
-
-  data.value = response.data;
-  isLoading.value = false;
-}
-
-watchDebounced(
-  searchQuery,
-  async () => {
-    currentPage.value = 0;
-    await fetchActors();
-  },
-  { debounce: 300 },
-);
-
-watch([sortColumn, isSortDescending], () => {
-  currentPage.value = 0;
-  fetchActors();
-});
 
 const tableRows = computed(() =>
   data.value.results.map((actor: ActorRow) => ({
@@ -97,17 +76,6 @@ const tableRows = computed(() =>
     actions: actor,
   })),
 );
-
-function onSort(event: TableSortEvent) {
-  sortColumn.value = event.sortField as (typeof headers)[number]["key"];
-  isSortDescending.value = event.sortOrder === -1;
-}
-
-function onPage(event: DataTablePageEvent) {
-  currentPage.value = event.page;
-  itemsPerPage.value = event.rows;
-  fetchActors();
-}
 
 onMounted(async () => {
   await actorTypeStore.fetchAll();
@@ -128,6 +96,10 @@ onMounted(async () => {
         class="fr-col-12"
         data-testid="admin-actor-search"
       />
+    </div>
+
+    <div aria-live="polite" aria-atomic="true" class="fr-sr-only" data-testid="admin-actors-status">
+      <p>{{ statusMessage }}</p>
     </div>
 
     <div v-if="isLoading" class="fr-alert fr-alert--info" data-testid="admin-actors-loading">
