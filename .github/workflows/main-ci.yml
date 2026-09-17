@@ -58,6 +58,28 @@ jobs:
       - name: Run Prettier
         run: pnpm exec prettier . --check
 
+  test-qa-support:
+    name: QA Fixtures & Type Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Installer les dépendances QA
+        working-directory: e2e
+        run: pnpm install --frozen-lockfile
+      - name: Vérifier les prérequis et le typage QA
+        working-directory: e2e
+        run: |
+          pnpm test:unit
+          pnpm type-check
+      - name: Vérifier le résumé de campagne
+        run: node --test qa/scripts/report-summary.test.mjs
+
   test-frontend-unit:
     name: Frontend Unit Tests & Type Check
     runs-on: ubuntu-latest

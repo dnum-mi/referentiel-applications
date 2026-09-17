@@ -14,7 +14,7 @@ test.describe("Conformités — éco-conception & homologation", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-compliances");
@@ -31,7 +31,7 @@ test.describe("Conformités — éco-conception & homologation", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     // Score 95 → grade A
     await data.setEcoIndex(app!.id, "https://ecoindex.example/cmp04", 95);
@@ -50,7 +50,7 @@ test.describe("Conformités — éco-conception & homologation", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     await data.setEcoIndex(app!.id, "https://ecoindex.example/before", 80);
     const fiche = new ApplicationPage(page);
@@ -71,7 +71,7 @@ test.describe("Conformités — éco-conception & homologation", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     // Admin : bouton « Calculer » actif.
     const adminFiche = new ApplicationPage(page);
@@ -97,7 +97,7 @@ test.describe("Conformités — éco-conception & homologation", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-compliances");
@@ -113,7 +113,7 @@ test.describe("Conformités — éco-conception & homologation", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-compliances");

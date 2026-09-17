@@ -9,8 +9,9 @@ export interface AppRef {
 
 /**
  * Datafeature — résout via l'API les données réelles dont un protocole a besoin (lecture seule).
- * Chaque résolveur renvoie `null` si la donnée n'existe pas dans le jeu courant : le test appelant
- * doit alors se `skip` proprement (pas de faux échec dû à un seed différent).
+ * Chaque résolveur renvoie `null` si la donnée n'existe pas dans le jeu courant. Le test appelant
+ * doit l'asserter pour les fixtures attendues ; seules les données réellement variables peuvent
+ * utiliser `skipIfOptionalDataMissing`, avec une raison visible dans le rapport CI.
  */
 export class DataFeature {
   constructor(private readonly api: ApiClient) {}

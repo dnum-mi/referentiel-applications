@@ -81,6 +81,22 @@ export default tseslint.config(
     },
   },
 
+  // Les données attendues ne doivent jamais désactiver silencieusement la non-régression.
+  {
+    files: ["e2e/tests/**/*.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "CallExpression[callee.object.name='test'][callee.property.name='skip']",
+          message:
+            "Asserter les fixtures attendues. Pour une donnée réellement variable, utiliser skipIfOptionalDataMissing avec une raison explicite.",
+        },
+      ],
+    },
+  },
+
   // À garder en dernier : neutralise les règles ESLint qui entrent en conflit avec Prettier.
   configPrettier,
 );
