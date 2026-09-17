@@ -14,7 +14,7 @@ import type {
 import { OpenDataStatus, UpdateFrequency } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
 import { OPEN_DATA_STATUS_LABELS, UPDATE_FREQUENCY_LABELS } from "@/constants/data-catalog.constants";
-import { MIN_CHAR_FOR_SEARCH } from "@/constants/min-char-for-search";
+import { useAsyncSearch } from "@/composables/use-async-search";
 import AccessibleAutocomplete from "@/components/AccessibleAutocomplete.vue";
 
 const props = defineProps<{
@@ -28,9 +28,21 @@ const emit = defineEmits(["close", "dataCreated", "dataUpdated"]);
 const toaster = useToasterStore();
 const isSubmitting = ref(false);
 const isLoadingOptions = ref(false);
-const isSearchingDescriptions = ref(false);
-
-const descriptionsList = ref<DataDescriptionDto[]>([]);
+const {
+  results: descriptionsList,
+  error: descriptionSearchError,
+  onQuery: queryDescriptions,
+  reset: resetDescriptionSearch,
+} = useAsyncSearch(
+  async (query) => {
+    const response = await api.dataCatalogControllerFindAllDescriptions({
+      query: { name: query, pageSize: 20 },
+      throwOnError: true,
+    });
+    return response.data ?? [];
+  },
+  { errorMessage: "Erreur lors de la recherche de données." },
+);
 const sensibilitiesList = ref<DataSensibilityDto[]>([]);
 const familiesList = ref<DataFamilyDto[]>([]);
 const descriptionSearch = ref("");
@@ -197,13 +209,8 @@ const isFormValid = computed(() => {
 
 // Recherche serveur (débouncée) des data descriptions : les données d'application peuvent être
 // bien plus nombreuses que ce que l'API accepte de renvoyer en une seule page (max 100).
-async function searchDescriptions() {
+function searchDescriptions() {
   if (props.initialItem) return; // champ verrouillé en édition, pas besoin de re-chercher
-
-  if (!descriptionSearch.value || descriptionSearch.value.length < MIN_CHAR_FOR_SEARCH) {
-    descriptionsList.value = [];
-    return;
-  }
 
   // Le texte affiché après sélection contient le nom ET la famille ("Nom (Famille)"), alors que
   // la recherche serveur ne filtre que sur le nom réel : une nouvelle recherche sur ce texte complet
@@ -212,19 +219,17 @@ async function searchDescriptions() {
   const alreadyResolved = descriptionsList.value.some((description) => formatDescriptionText(description) === descriptionSearch.value);
   if (alreadyResolved) return;
 
-  isSearchingDescriptions.value = true;
-  try {
-    const response = await api.dataCatalogControllerFindAllDescriptions({
-      query: { name: descriptionSearch.value, pageSize: 20 },
-    });
-    descriptionsList.value = response.data ?? [];
-  } catch (error) {
-    console.error("Error searching data descriptions:", error);
-  } finally {
-    isSearchingDescriptions.value = false;
-  }
+  queryDescriptions(descriptionSearch.value);
 }
 
+watch(
+  descriptionSearch,
+  (query) => {
+    // Garder la donnée sélectionnée (nom + famille), tout en invalidant les réponses en vol.
+    resetDescriptionSearch(descriptionsList.value.filter((description) => formatDescriptionText(description) === query));
+  },
+  { flush: "sync" },
+);
 watchDebounced(descriptionSearch, searchDescriptions, { debounce: 300 });
 
 async function fetchOptions() {
@@ -440,7 +445,7 @@ async function handleSubmit() {
             required
             :disabled="!!props.initialItem"
             class="fr-mb-1w"
-            :error-message="descriptionError"
+            :error-message="descriptionError || descriptionSearchError"
             data-testid="data-description-search-input"
           >
             <template #label>

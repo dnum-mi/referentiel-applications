@@ -2,6 +2,14 @@
 
 Ce gabarit possède tous les outils configurés pour développer un projets Vue 3 et VueDsfr avec Vite.
 
+## Recherches asynchrones et relations
+
+`useAsyncSearch(search, { minLength, errorMessage })` centralise les résultats, le chargement et l'erreur d'un champ. Le seuil vaut trois caractères par défaut ; `AccessibleAutocomplete` conserve son seuil d'un caractère. Seule la dernière requête peut modifier l'état, y compris lorsqu'une ancienne requête échoue.
+
+Les champs gardent leur délai VueUse de 300 ms. Ils appellent `reset()` dès chaque saisie, avant ce délai, afin qu'une ancienne réponse ne réapparaisse pas entre deux frappes. L'effacement, la sélection et le démontage invalident aussi les recherches en cours. Une instance du composable est nécessaire par champ indépendant. `reset(initialResults)` permet de conserver une sélection déjà résolue, comme une donnée affichée sous la forme « nom (famille) ».
+
+`RelationModal` prend `mode="add"` ou `mode="edit"`, `applicationId` et, en édition, `relation`. Elle émet `addRelation` ou `updateRelation` et `close`. Depuis la fiche cible d'une relation entrante, la source reste en lecture seule. Les recherches de relations partagent `NEUTRAL_RELATION_FILTERS`, qui couvre aussi la corrélation et la médiation.
+
 ## Configuration recommandée
 
 - Visual Studio Code avec ces extensions:

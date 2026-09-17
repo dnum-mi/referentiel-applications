@@ -321,7 +321,8 @@ onMounted(async () => {
   </div>
 
   <!-- Modals -->
-  <AddRelationModal
+  <RelationModal
+    mode="add"
     :opened="isAddRelationModalOpen"
     title="Ajouter une relation"
     :application-id="props.application.id"
@@ -329,11 +330,12 @@ onMounted(async () => {
     @close="closeAddRelationModal"
     @add-relation="onAddRelation"
   />
-  <EditRelationModal
+  <RelationModal
+    mode="edit"
     :opened="isEditRelationModalOpen"
     title="Modifier une relation"
     :relation="relationToEdit"
-    :current-application-id="props.application.id"
+    :application-id="props.application.id"
     data-testid="relation-edit-modal"
     @close="closeEditRelationModal"
     @update-relation="handleUpdateRelation"

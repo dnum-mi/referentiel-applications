@@ -14,3 +14,13 @@ export type MediationServiceField = keyof NonNullable<ApplicationControllerSearc
 /// Le `Extract` suit le contrat : un type de relation n'apparaît ici que si la recherche
 /// expose le filtre correspondant. `is_correlated_with` en fait partie depuis #2287.
 export type FilterableRelationField = Extract<RelationType, keyof NonNullable<ApplicationControllerSearchData["query"]>>;
+
+export const NEUTRAL_RELATION_FILTERS = {
+  is_part_of: RELATION_TYPE_FILTERS.neutral,
+  is_data_user_of: RELATION_TYPE_FILTERS.neutral,
+  is_service_user_of: RELATION_TYPE_FILTERS.neutral,
+  in_replacement_of: RELATION_TYPE_FILTERS.neutral,
+  use_sso_of: RELATION_TYPE_FILTERS.neutral,
+  is_correlated_with: RELATION_TYPE_FILTERS.neutral,
+  is_mediation_service: RELATION_TYPE_FILTERS.neutral,
+} as const satisfies Record<FilterableRelationField | MediationServiceField, RelationTypeFilter>;

@@ -2,7 +2,6 @@
 import { computed, watch } from "vue";
 import api from "@/api";
 import type { BusinessDivisionDto } from "@/client";
-import { MIN_CHAR_FOR_SEARCH } from "@/constants/min-char-for-search";
 
 const props = withDefaults(
   defineProps<{
@@ -22,8 +21,6 @@ const emit = defineEmits<{
 }>();
 
 const selectedDivisions = ref<BusinessDivisionDto[]>([]);
-const isLoading = ref(false);
-const errorMessage = ref("");
 
 // Filtre alimenté par l'URL : le prop peut arriver comme une simple chaîne plutôt qu'un tableau
 // (deep-link à un seul id), voire comme un tableau dont un élément porte encore plusieurs ids
@@ -65,30 +62,11 @@ function removeDivision(index: number) {
 }
 
 async function performSearch(query: string) {
-  if (query && query.length >= MIN_CHAR_FOR_SEARCH) {
-    isLoading.value = true;
-    errorMessage.value = "";
-    try {
-      const { data } = await api.businessDivisionControllerFindAll({
-        query: {
-          label: query,
-          pageSize: 0,
-        },
-      });
-      if (!data || !data.results) {
-        errorMessage.value = "Aucun résultat trouvé.";
-        return [];
-      }
-      return data.results;
-    } catch (error) {
-      console.error(error);
-      errorMessage.value = "Erreur lors de la recherche de direction de metier.";
-      return [];
-    } finally {
-      isLoading.value = false;
-    }
-  }
-  return [];
+  const { data } = await api.businessDivisionControllerFindAll({
+    query: { label: query, pageSize: 0 },
+    throwOnError: true,
+  });
+  return data?.results ?? [];
 }
 </script>
 
@@ -97,6 +75,7 @@ async function performSearch(query: string) {
     <SuggestionsInput
       @update:selected-value="addDivision"
       :search-data-function="performSearch"
+      search-error-message="Erreur lors de la recherche de direction de métier."
       :label="props.label"
       :tooltip-content="props.tooltipContent"
       :hide-selected-tag="true"
