@@ -1,3 +1,4 @@
+import { skipIfOptionalDataMissing } from "../support/optional-data";
 import { test, expect } from "../fixtures/test";
 import { ApplicationPage, SearchPage, loginAs } from "../pom";
 
@@ -13,7 +14,7 @@ test.describe("Fiche application", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id);
@@ -22,7 +23,7 @@ test.describe("Fiche application", () => {
 
   test("FIC-03 - onglet Acteurs", async ({ page, data }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-actors");
@@ -31,7 +32,7 @@ test.describe("Fiche application", () => {
 
   test("FIC-04 - onglet Statuts / cycle de vie", async ({ page, data }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-statuses");
@@ -40,7 +41,7 @@ test.describe("Fiche application", () => {
 
   test("FIC-05 - onglet Conformités (6 axes)", async ({ page, data }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-compliances");
@@ -52,7 +53,10 @@ test.describe("Fiche application", () => {
     data,
   }) => {
     const app = await data.applicationWithRelations();
-    test.skip(!app, "Aucune application avec relation dans le jeu de données");
+    skipIfOptionalDataMissing(
+      !app,
+      "Aucune application avec relation dans le jeu de données",
+    );
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-relations");
@@ -61,7 +65,7 @@ test.describe("Fiche application", () => {
 
   test("FIC-08 - onglet Liens externes", async ({ page, data }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-links");
@@ -70,7 +74,7 @@ test.describe("Fiche application", () => {
 
   test("FIC-10 - onglet Qualité (IQ détaillé)", async ({ page, data }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-quality");
@@ -79,7 +83,7 @@ test.describe("Fiche application", () => {
 
   test("FIC-11 - navigation par onglet via l'URL", async ({ page, data }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-statuses");
@@ -89,7 +93,7 @@ test.describe("Fiche application", () => {
 
   test("FIC-02 - onglet Informations générales", async ({ page, data }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-infos");
@@ -98,7 +102,7 @@ test.describe("Fiche application", () => {
 
   test("FIC-06 - axe RGAA (section dédiée)", async ({ page, data }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-compliances");
@@ -107,7 +111,7 @@ test.describe("Fiche application", () => {
 
   test("FIC-09 - onglet Sources de données", async ({ page, data }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-data");
@@ -116,7 +120,7 @@ test.describe("Fiche application", () => {
 
   test("FIC-12 - copier le lien de la fiche", async ({ page, data }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id);
@@ -128,7 +132,7 @@ test.describe("Fiche application", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-reports");
@@ -137,7 +141,7 @@ test.describe("Fiche application", () => {
 
   test("FIC-14 - onglet Modifications (historique)", async ({ page, data }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-modifications");
@@ -149,10 +153,10 @@ test.describe("Fiche application", () => {
     data,
   }) => {
     const app = await data.applicationWithTechnicalDebt();
-    test.skip(
-      !app,
+    expect(
+      app,
       "Impossible de garantir une application avec dette technique",
-    );
+    ).toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-infos");
@@ -164,10 +168,10 @@ test.describe("Fiche application", () => {
     data,
   }) => {
     const app = await data.seedTechnicalDebtWithoutCost();
-    test.skip(
-      !app,
+    expect(
+      app,
       "Impossible de garantir une application avec dette technique partielle",
-    );
+    ).toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-infos");
@@ -179,10 +183,10 @@ test.describe("Fiche application", () => {
     data,
   }) => {
     const result = await data.applicationWithTags();
-    test.skip(
-      !result,
+    expect(
+      result,
       "Impossible de garantir une application avec au moins un tag",
-    );
+    ).toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(result!.app.id, "tab-infos");
@@ -194,7 +198,10 @@ test.describe("Fiche application", () => {
 
   test("FIC-17 - tri onglet Acteurs", async ({ page, data }) => {
     const app = await data.applicationWithActors();
-    test.skip(!app, "Aucune application avec acteurs dans le jeu de données");
+    skipIfOptionalDataMissing(
+      !app,
+      "Aucune application avec acteurs dans le jeu de données",
+    );
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-actors");
@@ -206,7 +213,10 @@ test.describe("Fiche application", () => {
 
   test("FIC-18 - tri onglet Relations", async ({ page, data }) => {
     const app = await data.applicationWithRelations();
-    test.skip(!app, "Aucune application avec relation dans le jeu de données");
+    skipIfOptionalDataMissing(
+      !app,
+      "Aucune application avec relation dans le jeu de données",
+    );
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-relations");
@@ -218,7 +228,7 @@ test.describe("Fiche application", () => {
 
   test("FIC-19 - tri onglet Signalements", async ({ page, data }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-reports");
@@ -233,7 +243,7 @@ test.describe("Fiche application", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-modifications");

@@ -29,7 +29,7 @@ test.describe("Périmètres admin & groupes d'acteurs", () => {
   }) => {
     await loginAs(page, "scope-admin");
     const app = await appByLabel(page, "QA-SCOPE-TOTO");
-    test.skip(!app, SEED_HINT);
+    expect(app, SEED_HINT).toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-infos");
@@ -41,7 +41,7 @@ test.describe("Périmètres admin & groupes d'acteurs", () => {
   }) => {
     await loginAs(page, "scope-admin");
     const app = await appByLabel(page, "QA-SCOPE-ABCD");
-    test.skip(!app, SEED_HINT);
+    expect(app, SEED_HINT).toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-infos");
@@ -53,7 +53,7 @@ test.describe("Périmètres admin & groupes d'acteurs", () => {
   }) => {
     await loginAs(page, "member-toto-tutu");
     const app = await appByLabel(page, "QA-GROUP-PARENT");
-    test.skip(!app, SEED_HINT);
+    expect(app, SEED_HINT).toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-infos");
@@ -65,7 +65,7 @@ test.describe("Périmètres admin & groupes d'acteurs", () => {
   }) => {
     await loginAs(page, "member-toto");
     const app = await appByLabel(page, "QA-GROUP-CHILD");
-    test.skip(!app, SEED_HINT);
+    expect(app, SEED_HINT).toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-infos");
@@ -90,7 +90,7 @@ test.describe("Périmètres admin & groupes d'acteurs", () => {
 
     const covered = await appByLabel(page, "QA-GROUP-PARENT");
     const foreign = await appByLabel(page, "QA-SCOPE-ABCD");
-    test.skip(!covered || !foreign, SEED_HINT);
+    expect(!covered || !foreign, SEED_HINT).toBeFalsy();
 
     const fiche = new ApplicationPage(page);
 
@@ -135,7 +135,7 @@ test.describe("Périmètres admin & groupes d'acteurs", () => {
     // sous un motif trompeur (« fixture absente ») alors que le seed était bien en place.
     const target = await data.getUser("qa-target@example.com");
     const outside = await data.getUser("qa-outside@example.com");
-    test.skip(!target || !outside, SEED_HINT);
+    expect(!target || !outside, SEED_HINT).toBeFalsy();
 
     // `switchTo` (pas `loginAs`) : la fixture `data` a déjà connecté `page` en `admin`.
     await switchTo(page, "scope-admin");

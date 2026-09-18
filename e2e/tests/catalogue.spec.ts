@@ -1,3 +1,4 @@
+import { skipIfOptionalDataMissing } from "../support/optional-data";
 import { test as base } from "@playwright/test";
 import { test, expect } from "../fixtures/test";
 import { ApplicationPage, SearchPage } from "../pom";
@@ -24,10 +25,10 @@ test.describe("Catalogue & recherche", () => {
   });
 
   test("CAT-02 - affiche la liste et l'IQ moyen", async ({ page, data }) => {
-    test.skip(
-      !(await data.firstApplication()),
+    expect(
+      await data.firstApplication(),
       "Aucune application dans le jeu de données",
-    );
+    ).toBeTruthy();
 
     const search = new SearchPage(page);
     await search.open();
@@ -39,10 +40,10 @@ test.describe("Catalogue & recherche", () => {
     page,
     data,
   }) => {
-    test.skip(
-      !(await data.firstApplication()),
+    expect(
+      await data.firstApplication(),
       "Aucune application dans le jeu de données",
-    );
+    ).toBeTruthy();
 
     const search = new SearchPage(page);
     await search.open();
@@ -62,10 +63,10 @@ test.describe("Catalogue & recherche", () => {
     page,
     data,
   }) => {
-    test.skip(
-      !(await data.firstApplication()),
+    expect(
+      await data.firstApplication(),
       "Aucune application dans le jeu de données",
-    );
+    ).toBeTruthy();
 
     const search = new SearchPage(page);
     await search.open();
@@ -79,10 +80,10 @@ test.describe("Catalogue & recherche", () => {
   });
 
   test("CAT-08 - tri par colonne met à jour l'URL", async ({ page, data }) => {
-    test.skip(
-      !(await data.firstApplication()),
+    expect(
+      await data.firstApplication(),
       "Aucune application dans le jeu de données",
-    );
+    ).toBeTruthy();
 
     const search = new SearchPage(page);
     await search.open();
@@ -96,15 +97,15 @@ test.describe("Catalogue & recherche", () => {
   });
 
   test("CAT-09 - pagination met à jour l'URL", async ({ page, data }) => {
-    test.skip(
-      !(await data.firstApplication()),
+    expect(
+      await data.firstApplication(),
       "Aucune application dans le jeu de données",
-    );
+    ).toBeTruthy();
 
     const search = new SearchPage(page);
     await search.open();
     await search.expectListLoaded();
-    test.skip(
+    skipIfOptionalDataMissing(
       (await search.totalCount()) <= 5,
       "Pas assez de données pour la pagination",
     );
@@ -115,10 +116,10 @@ test.describe("Catalogue & recherche", () => {
   });
 
   test("CAT-10 - bascule « Mes applications »", async ({ page, data }) => {
-    test.skip(
-      !(await data.firstApplication()),
+    expect(
+      await data.firstApplication(),
       "Aucune application dans le jeu de données",
-    );
+    ).toBeTruthy();
 
     const search = new SearchPage(page);
     await search.open();
@@ -130,10 +131,10 @@ test.describe("Catalogue & recherche", () => {
     page,
     data,
   }) => {
-    test.skip(
-      !(await data.firstApplication()),
+    expect(
+      await data.firstApplication(),
       "Aucune application dans le jeu de données",
-    );
+    ).toBeTruthy();
 
     const search = new SearchPage(page);
     await search.open();
@@ -145,10 +146,10 @@ test.describe("Catalogue & recherche", () => {
     page,
     data,
   }) => {
-    test.skip(
-      !(await data.firstApplication()),
+    expect(
+      await data.firstApplication(),
       "Aucune application dans le jeu de données",
-    );
+    ).toBeTruthy();
 
     const search = new SearchPage(page);
     await search.open();
@@ -160,10 +161,10 @@ test.describe("Catalogue & recherche", () => {
     page,
     data,
   }) => {
-    test.skip(
-      !(await data.firstApplication()),
+    expect(
+      await data.firstApplication(),
       "Aucune application dans le jeu de données",
-    );
+    ).toBeTruthy();
 
     const search = new SearchPage(page);
     await search.open();
@@ -175,10 +176,10 @@ test.describe("Catalogue & recherche", () => {
     page,
     data,
   }) => {
-    test.skip(
-      !(await data.firstApplication()),
+    expect(
+      await data.firstApplication(),
       "Aucune application dans le jeu de données",
-    );
+    ).toBeTruthy();
 
     const search = new SearchPage(page);
     await search.open();
@@ -193,10 +194,10 @@ test.describe("Catalogue & recherche", () => {
     page,
     data,
   }) => {
-    test.skip(
-      !(await data.firstApplication()),
+    expect(
+      await data.firstApplication(),
       "Aucune application dans le jeu de données",
-    );
+    ).toBeTruthy();
 
     const search = new SearchPage(page);
     await search.open();
@@ -208,10 +209,10 @@ test.describe("Catalogue & recherche", () => {
     page,
     data,
   }) => {
-    test.skip(
-      !(await data.firstApplication()),
+    expect(
+      await data.firstApplication(),
       "Aucune application dans le jeu de données",
-    );
+    ).toBeTruthy();
 
     const search = new SearchPage(page);
     await search.open();
@@ -228,10 +229,10 @@ test.describe("Catalogue & recherche", () => {
     page,
     data,
   }) => {
-    test.skip(
-      !(await data.firstApplication()),
+    expect(
+      await data.firstApplication(),
       "Aucune application dans le jeu de données",
-    );
+    ).toBeTruthy();
 
     const search = new SearchPage(page);
     await search.open();
@@ -240,10 +241,10 @@ test.describe("Catalogue & recherche", () => {
   });
 
   test("CAT-15 - export Excel (admin)", async ({ page, data }) => {
-    test.skip(
-      !(await data.firstApplication()),
+    expect(
+      await data.firstApplication(),
       "Aucune application dans le jeu de données",
-    );
+    ).toBeTruthy();
 
     const search = new SearchPage(page);
     await search.open();
@@ -252,10 +253,10 @@ test.describe("Catalogue & recherche", () => {
   });
 
   test("CAT-16 - bascule « Mes abonnements »", async ({ page, data }) => {
-    test.skip(
-      !(await data.firstApplication()),
+    expect(
+      await data.firstApplication(),
       "Aucune application dans le jeu de données",
-    );
+    ).toBeTruthy();
 
     const search = new SearchPage(page);
     await search.open();
@@ -267,10 +268,10 @@ test.describe("Catalogue & recherche", () => {
     page,
     data,
   }) => {
-    test.skip(
-      !(await data.firstApplication()),
+    expect(
+      await data.firstApplication(),
       "Aucune application dans le jeu de données",
-    );
+    ).toBeTruthy();
 
     const search = new SearchPage(page);
     await search.open();
@@ -288,10 +289,10 @@ test.describe("Catalogue & recherche", () => {
   });
 
   test("CAT-18 - tri colonne Hébergement", async ({ page, data }) => {
-    test.skip(
-      !(await data.firstApplication()),
+    expect(
+      await data.firstApplication(),
       "Aucune application dans le jeu de données",
-    );
+    ).toBeTruthy();
 
     const search = new SearchPage(page);
     await search.open();
@@ -307,10 +308,10 @@ test.describe("Catalogue & recherche", () => {
     page,
     data,
   }) => {
-    test.skip(
-      !(await data.firstApplication()),
+    expect(
+      await data.firstApplication(),
       "Aucune application dans le jeu de données",
-    );
+    ).toBeTruthy();
 
     const search = new SearchPage(page);
     await search.open();
@@ -328,10 +329,10 @@ test.describe("Catalogue & recherche", () => {
     page,
     data,
   }) => {
-    test.skip(
-      !(await data.firstApplication()),
+    expect(
+      await data.firstApplication(),
       "Aucune application dans le jeu de données",
-    );
+    ).toBeTruthy();
 
     const search = new SearchPage(page);
     await search.open();

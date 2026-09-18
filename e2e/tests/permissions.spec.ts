@@ -1,3 +1,4 @@
+import { skipIfOptionalDataMissing } from "../support/optional-data";
 import { test as base } from "@playwright/test";
 import { test, expect } from "../fixtures/test";
 import { ApiClient } from "../fixtures/api-client";
@@ -61,7 +62,7 @@ test.describe("Permissions & rôles", () => {
     data,
   }) => {
     const app = await data.applicationWithMyPerms();
-    test.skip(
+    skipIfOptionalDataMissing(
       !app,
       "Aucune application avec droits contextuels (my-perms) pour cet utilisateur",
     );
@@ -126,7 +127,7 @@ test.describe("Permissions & rôles", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
     await data.resetUser(USER_EMAIL); // garantit le rôle Lecteur
 
     const ctx = await browser.newContext();
@@ -150,7 +151,7 @@ test.describe("Permissions & rôles", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const ctx = await browser.newContext();
     try {
@@ -181,18 +182,18 @@ test.describe("Permissions & rôles", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const actorTypes = await data.actorTypes();
     const typeId = actorTypes?.[actorTypes.length - 1]?.id;
-    test.skip(!typeId, "Aucun type d'acteur disponible");
+    expect(typeId, "Aucun type d'acteur disponible").toBeTruthy();
 
     const matrix = await data.permsMatrix();
     const original = matrix?.find((entry) => entry.actorTypeId === typeId);
-    test.skip(
+    expect(
       !matrix || !original,
       "Type d'acteur introuvable dans la matrice",
-    );
+    ).toBeFalsy();
 
     await data.resetUser(USER_EMAIL);
     let actor: { id: string } | null = null;
@@ -211,7 +212,7 @@ test.describe("Permissions & rôles", () => {
         lastname: "Priority",
         actorTypeId: typeId,
       });
-      test.skip(!actor, "Impossible de créer l'acteur de test");
+      expect(actor, "Impossible de créer l'acteur de test").toBeTruthy();
 
       const userPage = await ctx.newPage();
       await loginAs(userPage, "user");
@@ -239,7 +240,10 @@ test.describe("Permissions & rôles", () => {
     data,
   }) => {
     const matrix = await data.permsMatrix();
-    test.skip(!matrix || matrix.length === 0, "Matrice des permissions vide");
+    expect(
+      !matrix || matrix.length === 0,
+      "Matrice des permissions vide",
+    ).toBeFalsy();
 
     const snapshot = structuredClone(matrix!);
     try {
