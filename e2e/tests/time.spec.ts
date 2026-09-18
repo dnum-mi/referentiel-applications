@@ -51,7 +51,10 @@ test.describe("Diagramme Time", () => {
     data,
   }) => {
     const millesimes = await data.ensureTwoCampaigns();
-    test.skip(!millesimes, "Impossible de garantir deux campagnes dette IT");
+    expect(
+      millesimes,
+      "Impossible de garantir deux campagnes dette IT",
+    ).toBeTruthy();
 
     const time = new TimePage(page);
     await time.open();
@@ -69,7 +72,10 @@ test.describe("Diagramme Time", () => {
     data,
   }) => {
     const millesimes = await data.ensureTwoCampaigns();
-    test.skip(!millesimes, "Impossible de garantir deux campagnes dette IT");
+    expect(
+      millesimes,
+      "Impossible de garantir deux campagnes dette IT",
+    ).toBeTruthy();
     const [, previous] = millesimes!;
 
     const time = new TimePage(page);

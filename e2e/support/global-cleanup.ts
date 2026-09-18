@@ -2,6 +2,7 @@ import { chromium, type FullConfig } from "@playwright/test";
 import { loginAs } from "../pom/auth";
 import { ApiClient } from "../fixtures/api-client";
 import { BASE_URL } from "./helpers";
+import { verifyRequiredFixtures } from "./required-fixtures";
 
 /**
  * Nettoyage global des données de test.
@@ -12,8 +13,8 @@ import { BASE_URL } from "./helpers";
  * auraient été interrompus). Résultat : la base reste propre d'un run à l'autre — on peut **rejouer
  * les tests à l'infini sans re-seed**.
  *
- * Robuste et non bloquant : si la stack n'est pas joignable, le nettoyage est ignoré (les tests
- * échoueront/se skipperont d'eux-mêmes), il ne fait jamais échouer le run.
+ * Avant le nettoyage, vérifie les fixtures déterministes. Une stack inaccessible ou un seed
+ * incomplet fait échouer le run avec un diagnostic, sans désactiver silencieusement les tests.
  */
 const E2E = /E2E/i;
 
@@ -103,11 +104,13 @@ export default async function globalSetup(_config: FullConfig): Promise<void> {
     const page = await context.newPage();
     await loginAs(page, "admin");
     const api = await ApiClient.fromPage(page);
+    await verifyRequiredFixtures(api);
     const removed = await sweepE2EData(api);
     console.log(`[global-setup] résidus de test E2E nettoyés : ${removed}.`);
   } catch (error) {
-    console.warn(
-      `[global-setup] nettoyage ignoré : ${(error as Error).message}`,
+    throw new Error(
+      `[global-setup] prérequis QA invalides : ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
     );
   } finally {
     await browser.close();

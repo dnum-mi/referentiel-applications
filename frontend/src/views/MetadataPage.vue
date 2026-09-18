@@ -71,8 +71,10 @@ function fetchData() {
   };
 
   isLoading.value = true;
+  // Le store notifie les erreurs et vide les résultats obsolètes.
   return metadataStore
     .fetchMetadatasGlobal(filters)
+    .catch(() => {})
     .then(() => {
       data.value = {
         results: metadataStore.metadatas,

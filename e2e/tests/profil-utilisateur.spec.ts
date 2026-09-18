@@ -11,7 +11,7 @@ test.describe("Profil utilisateur", () => {
     await profile.expectProfileInfos();
 
     const me = await data.currentUser();
-    test.skip(!me, "Impossible de récupérer l'utilisateur courant");
+    expect(me, "Impossible de récupérer l'utilisateur courant").toBeTruthy();
     const displayedEmail = await profile.profileEmail();
     expect(displayedEmail).toBe(me!.email);
   });
@@ -28,7 +28,7 @@ test.describe("Profil utilisateur", () => {
 
   test("PRF-03 - lister les applications suivies", async ({ page, data }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
     await data.subscribe(app!.id);
 
     try {
@@ -47,7 +47,7 @@ test.describe("Profil utilisateur", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
     await data.subscribe(app!.id);
 
     const profile = new UserProfilePage(page);
@@ -75,7 +75,7 @@ test.describe("Profil utilisateur", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
     await data.subscribe(app!.id);
 
     try {
@@ -84,7 +84,7 @@ test.describe("Profil utilisateur", () => {
       await profile.openFollowTab();
 
       const label = await profile.firstFollowedAppLabel();
-      test.skip(!label, "Aucune application suivie visible");
+      expect(label, "Aucune application suivie visible").toBeTruthy();
 
       await profile.clickFirstFollowedApp();
 

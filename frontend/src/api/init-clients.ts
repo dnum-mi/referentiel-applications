@@ -1,6 +1,6 @@
-import axios from "axios";
 import type { AuthLevelDto } from "@/client";
 import { client } from "@/client/client.gen";
+import { fetchWithTimeout } from "@/api/fetch-with-timeout";
 import { USER_MANAGER } from "@/services/authentication";
 import { IMPERSONATE_HEADER, clearImpersonationState, getImpersonatedUserId } from "@/services/impersonation";
 import { isMaintenanceResponse, setMaintenanceMode } from "@/composables/use-maintenance-mode";
@@ -12,12 +12,6 @@ import {
   isStrongAuthRequiredResponse,
   markStepDownNotice,
 } from "@/composables/use-auth-level";
-
-axios.defaults.baseURL = "/api/v2";
-axios.defaults.withCredentials = true;
-axios.defaults.headers.common.Accept = "application/json";
-axios.defaults.headers.common["Content-Type"] = "application/json";
-axios.defaults.timeout = 10000;
 
 type ReqInterceptor = Parameters<typeof client.interceptors.request.use>[0];
 const requestInterceptor: ReqInterceptor = async (req) => {
@@ -138,10 +132,11 @@ export function configureClients(toaster: { addErrorMessage: (message: string) =
     return response;
   };
 
-  // Configurer le nouveau client axios
+  // Le SDK généré utilise fetch ; sa configuration est centralisée ici.
   client.interceptors.request.use(requestInterceptor);
 
   client.setConfig({
+    fetch: fetchWithTimeout,
     credentials: "include",
     headers: {
       Accept: "application/json",

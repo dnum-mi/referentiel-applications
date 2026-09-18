@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import api from "@/api/index";
-import type { PaginatedUserWithPermissions, UserControllerFindAllData, UserWithPermissions } from "@/client/types.gen";
+import type { UserWithPermissions } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
+import { useServerPaginatedTable } from "@/composables/use-server-paginated-table";
 import { formatDateFR } from "@/composables/use-date";
-import type { TableColumn, TableSortEvent } from "@/types/table";
+import type { TableColumn } from "@/types/table";
 import { RolesWording, RolesWordingBadgeClass } from "@/utils/roles-utils";
 import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
-import type { DataTablePageEvent } from "primevue/datatable";
 import { watchDebounced } from "@vueuse/core";
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref } from "vue";
 import UserActions from "./UserActions.vue";
 import UserConnexionLogHistory from "./UserConnexionLogHistory.vue";
 
@@ -16,9 +16,6 @@ const errorMessages = {
   ERR_LOAD_USERS: "Erreur lors du chargement des utilisateurs",
 } as const;
 
-type ErrorKey = keyof typeof errorMessages;
-
-const data = ref<PaginatedUserWithPermissions>({ results: [], total: 0 });
 const connexionHistoryUser = ref<Pick<UserWithPermissions, "id" | "email"> | null>(null);
 
 function showConnexionHistory(user: UserWithPermissions) {
@@ -69,72 +66,37 @@ const tableColumns: TableColumn[] = headers.map((h) => ({
   sortable: h.isSortable || false,
 }));
 
-const isLoading = ref(false);
-// Ne démonter la table qu'au chargement INITIAL : le `v-if isLoading` historique remplaçait la
-// table par l'alerte de chargement à CHAQUE refetch, démontant les `UserActions` des lignes et
-// fermant donc tout modal d'édition ouvert (#1830). Les refetchs suivants passent par l'état
-// `loading` de RefAppTable, qui garde la table (et ses modals) montée.
-const hasLoadedOnce = ref(false);
-const errorKeySet = ref<Set<ErrorKey>>(new Set());
+// Les actualisations gardent la table et les modals UserActions montés (#1830).
 const searchQuery = ref("");
-
-const sortColumn = ref<(typeof headers)[number]["key"]>("email");
-const isSortDescending = ref<boolean>(false);
-
-const itemsPerPage = ref<number>(15);
-const currentPage = ref<number>(0);
-const firstIndex = computed(() => currentPage.value * itemsPerPage.value);
-
-// RGAA-084 (7.5) : message de statut sur le nombre de résultats, restitué aux TA.
-const statusMessage = computed(() => {
-  if (isLoading.value) return "Chargement des utilisateurs…";
-  const total = data.value.total;
-  if (total === 0) return "Aucune donnée ne correspond à votre recherche : Résultat 0 à 0";
-  const from = firstIndex.value + 1;
-  const to = Math.min(firstIndex.value + data.value.results.length, total);
-  return `Résultat ${from} à ${to} sur ${total}`;
-});
-
-async function fetchUsers() {
-  try {
-    isLoading.value = true;
-
-    const query: NonNullable<UserControllerFindAllData["query"]> = {
-      search: searchQuery.value || undefined,
-      page: currentPage.value,
-      pageSize: itemsPerPage.value,
-      sortBy: sortColumn.value,
-      order: isSortDescending.value ? "desc" : "asc",
-    };
-
-    const response = await api.userControllerFindAll({ query });
-
-    if (response.response.ok && response.data) {
-      data.value = response.data;
-      errorKeySet.value.delete("ERR_LOAD_USERS");
-      hasLoadedOnce.value = true;
-    } else {
-      errorKeySet.value.add("ERR_LOAD_USERS");
-      console.error(response.error);
+const {
+  data,
+  isLoading,
+  hasLoadedOnce,
+  hasError,
+  itemsPerPage,
+  firstIndex,
+  sortColumn,
+  isSortDescending,
+  onSort,
+  onPage,
+  resetAndFetch,
+  refresh: fetchUsers,
+  statusMessage: createStatusMessage,
+} = useServerPaginatedTable<UserWithPermissions>({
+  initialSortColumn: "email",
+  fetchPage: async (pagination) => {
+    const response = await api.userControllerFindAll({
+      query: { ...pagination, search: searchQuery.value || undefined },
+    });
+    if (!response.response.ok || !response.data) {
+      throw response.error ?? new Error(errorMessages.ERR_LOAD_USERS);
     }
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-watchDebounced(
-  searchQuery,
-  async () => {
-    currentPage.value = 0;
-    await fetchUsers();
+    return response.data;
   },
-  { debounce: 300 },
-);
-
-watch([sortColumn, isSortDescending], () => {
-  currentPage.value = 0;
-  fetchUsers();
 });
+const statusMessage = createStatusMessage("utilisateurs");
+
+watchDebounced(searchQuery, resetAndFetch, { debounce: 300 });
 
 const tableRows = computed(() =>
   data.value.results.map((user) => ({
@@ -156,17 +118,6 @@ const tableRows = computed(() =>
     actions: user,
   })),
 );
-
-function onSort(event: TableSortEvent) {
-  sortColumn.value = (event.sortField as (typeof headers)[number]["key"]) || "email";
-  isSortDescending.value = event.sortOrder === -1;
-}
-
-function onPage(event: DataTablePageEvent) {
-  currentPage.value = event.page;
-  itemsPerPage.value = event.rows;
-  fetchUsers();
-}
 
 onMounted(fetchUsers);
 </script>
@@ -192,10 +143,8 @@ onMounted(fetchUsers);
 
     <!-- Bannière (pas un remplacement) : une erreur de refetch ne doit pas démonter la table
          déjà chargée — ni les modals d'édition ouverts dans ses lignes (#1830). -->
-    <div v-if="errorKeySet.size" class="fr-alert fr-alert--error fr-mb-2w" data-testid="admin-users-error">
-      <p v-for="errorKey in Array.from(errorKeySet.keys())" :key="errorKey">
-        {{ errorMessages[errorKey] }}
-      </p>
+    <div v-if="hasError" class="fr-alert fr-alert--error fr-mb-2w" data-testid="admin-users-error">
+      <p>{{ errorMessages.ERR_LOAD_USERS }}</p>
     </div>
 
     <div v-if="isLoading && !hasLoadedOnce" class="fr-alert fr-alert--info" data-testid="admin-users-loading">

@@ -1,3 +1,4 @@
+import { expect } from "@playwright/test";
 import { test } from "../fixtures/test";
 import {
   ApplicationPage,
@@ -22,7 +23,7 @@ test.describe("Signalements & abonnements", () => {
 
   test("SIG-06 - s'abonner à une application", async ({ page, data }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id);
@@ -33,7 +34,7 @@ test.describe("Signalements & abonnements", () => {
 
   test("SIG-07 - se désabonner depuis le profil", async ({ page, data }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     // Garantit au moins un abonnement, puis se désabonne depuis le profil.
     const fiche = new ApplicationPage(page);
@@ -55,10 +56,10 @@ test.describe("Signalements & abonnements", () => {
   });
 
   test("SIG-01 - soumettre un signalement global", async ({ page, data }) => {
-    test.skip(
-      !(await data.firstApplication()),
+    expect(
+      await data.firstApplication(),
       "Aucune application dans le jeu de données",
-    );
+    ).toBeTruthy();
 
     const search = new SearchPage(page);
     await search.open();
@@ -70,7 +71,7 @@ test.describe("Signalements & abonnements", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-reports");
@@ -78,10 +79,10 @@ test.describe("Signalements & abonnements", () => {
   });
 
   test("SIG-04 - recherche dans les signalements", async ({ page, data }) => {
-    test.skip(
-      !(await data.firstApplication()),
+    expect(
+      await data.firstApplication(),
       "Aucune application dans le jeu de données",
-    );
+    ).toBeTruthy();
     const term = `SIG-04 ${Date.now()}`;
 
     const search = new SearchPage(page);
@@ -98,10 +99,10 @@ test.describe("Signalements & abonnements", () => {
     page,
     data,
   }) => {
-    test.skip(
-      !(await data.firstApplication()),
+    expect(
+      await data.firstApplication(),
       "Aucune application dans le jeu de données",
-    );
+    ).toBeTruthy();
     const term = `SIG-05 ${Date.now()}`;
 
     const search = new SearchPage(page);
@@ -128,9 +129,12 @@ test.describe("Signalements & abonnements", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
     const me = await data.currentUser();
-    test.skip(!me?.email, "Email de l'utilisateur courant introuvable");
+    expect(
+      me?.email,
+      "Email de l'utilisateur courant introuvable",
+    ).toBeTruthy();
 
     const mailpit = new Mailpit(page);
     try {

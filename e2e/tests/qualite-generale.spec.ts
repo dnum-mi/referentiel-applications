@@ -1,3 +1,4 @@
+import { expect } from "@playwright/test";
 import { test } from "../fixtures/test";
 import { QualityPage } from "../pom";
 
@@ -29,10 +30,10 @@ test.describe("Qualité générale", () => {
     page,
     data,
   }) => {
-    test.skip(
-      !(await data.firstApplication()),
+    expect(
+      await data.firstApplication(),
       "Aucune application dans le jeu de données",
-    );
+    ).toBeTruthy();
 
     const quality = new QualityPage(page);
     await quality.open();
@@ -43,10 +44,10 @@ test.describe("Qualité générale", () => {
     page,
     data,
   }) => {
-    test.skip(
-      !(await data.firstApplication()),
+    expect(
+      await data.firstApplication(),
       "Aucune application dans le jeu de données",
-    );
+    ).toBeTruthy();
 
     const quality = new QualityPage(page);
     await quality.open();
