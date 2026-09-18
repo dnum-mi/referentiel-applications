@@ -1,10 +1,11 @@
+import { skipIfOptionalDataMissing } from "../support/optional-data";
 import { test, expect } from "../fixtures/test";
 import { ApplicationPage, DataDetailPage } from "../pom";
 
 /**
  * Non-régression — Détail d'une donnée applicative (protocole `qa/protocoles/data-application.md`).
  * POM strict : `DataDetailPage` + `ApplicationPage` (onglet Sources de données). Données résolues via
- * l'API (`applicationWithData`) ; `test.skip` si aucune application ne porte de donnée.
+ * l'API (`applicationWithData`) ; skip explicite de donnée optionnelle si aucune n'en porte.
  *
  * DAT-06 à DAT-12 étendent la suite au CRUD du catalogue de données (rattachement, création inline,
  * édition, détachement) livré depuis l'onglet Données de la fiche et depuis la page de détail.
@@ -22,7 +23,7 @@ test.describe("Détail d'une donnée applicative", () => {
     data,
   }) => {
     const ref = await data.applicationWithData();
-    test.skip(!ref, "Aucune application avec données");
+    skipIfOptionalDataMissing(!ref, "Aucune application avec données");
 
     const detail = new DataDetailPage(page);
     await detail.open(ref!.appId, ref!.dataId);
@@ -34,7 +35,7 @@ test.describe("Détail d'une donnée applicative", () => {
     data,
   }) => {
     const ref = await data.applicationWithData();
-    test.skip(!ref, "Aucune application avec données");
+    skipIfOptionalDataMissing(!ref, "Aucune application avec données");
 
     const fiche = new ApplicationPage(page);
     await fiche.open(ref!.appId, "tab-data");
@@ -48,7 +49,7 @@ test.describe("Détail d'une donnée applicative", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const detail = new DataDetailPage(page);
     await detail.open(app!.id, "00000000-0000-0000-0000-000000000000");
@@ -60,7 +61,7 @@ test.describe("Détail d'une donnée applicative", () => {
     data,
   }) => {
     const ref = await data.applicationWithData();
-    test.skip(!ref, "Aucune application avec données");
+    skipIfOptionalDataMissing(!ref, "Aucune application avec données");
 
     const detail = new DataDetailPage(page);
     await detail.open(ref!.appId, ref!.dataId);
@@ -73,7 +74,7 @@ test.describe("Détail d'une donnée applicative", () => {
     data,
   }) => {
     const ref = await data.applicationWithData();
-    test.skip(!ref, "Aucune application avec données");
+    skipIfOptionalDataMissing(!ref, "Aucune application avec données");
 
     const detail = new DataDetailPage(page);
     await detail.open(ref!.appId, ref!.dataId);
@@ -85,7 +86,7 @@ test.describe("Détail d'une donnée applicative", () => {
     data,
   }) => {
     const ref = await data.applicationWithData();
-    test.skip(!ref, "Aucune application avec données");
+    skipIfOptionalDataMissing(!ref, "Aucune application avec données");
 
     const fiche = new ApplicationPage(page);
     await fiche.open(ref!.appId, "tab-data");
@@ -134,7 +135,7 @@ test.describe("Détail d'une donnée applicative", () => {
     data,
   }) => {
     const tag = await data.firstTag();
-    test.skip(!tag, "Aucun tag dans le jeu de données");
+    expect(tag, "Aucun tag dans le jeu de données").toBeTruthy();
 
     const ts = Date.now();
     const uniqueName = `E2E DAT-08 ${ts}`;
@@ -174,7 +175,7 @@ test.describe("Détail d'une donnée applicative", () => {
     data,
   }) => {
     const ref = await data.applicationWithData();
-    test.skip(!ref, "Aucune application avec données");
+    skipIfOptionalDataMissing(!ref, "Aucune application avec données");
 
     const fiche = new ApplicationPage(page);
     await fiche.open(ref!.appId, "tab-data");
@@ -184,10 +185,10 @@ test.describe("Détail d'une donnée applicative", () => {
 
     const originalValue = await fiche.currentSensibilityValue();
     const chosen = await fiche.selectDifferentSensibility(originalValue);
-    test.skip(
-      !chosen,
+    expect(
+      chosen,
       "Le référentiel n'expose aucune sensibilité alternative",
-    );
+    ).toBeTruthy();
 
     try {
       await fiche.submitDataEdit();
@@ -223,7 +224,7 @@ test.describe("Détail d'une donnée applicative", () => {
     data,
   }) => {
     const ref = await data.applicationWithData();
-    test.skip(!ref, "Aucune application avec données");
+    skipIfOptionalDataMissing(!ref, "Aucune application avec données");
 
     const detail = new DataDetailPage(page);
     await detail.open(ref!.appId, ref!.dataId);
@@ -266,7 +267,10 @@ test.describe("Détail d'une donnée applicative", () => {
     data,
   }) => {
     const existingFamily = await data.firstDataFamily();
-    test.skip(!existingFamily, "Aucune famille métier dans le référentiel");
+    expect(
+      existingFamily,
+      "Aucune famille métier dans le référentiel",
+    ).toBeTruthy();
 
     const ts = Date.now();
     const uniqueName = `E2E DAT-13 ${ts}`;
@@ -304,7 +308,7 @@ test.describe("Détail d'une donnée applicative", () => {
     data,
   }) => {
     const family = await data.firstDataFamily();
-    test.skip(!family, "Aucune famille métier dans le référentiel");
+    expect(family, "Aucune famille métier dans le référentiel").toBeTruthy();
 
     // Application dédiée et jetable (cf. commentaire DAT-07).
     const { applicationId, dataApplicationId, descriptionId } =

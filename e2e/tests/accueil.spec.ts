@@ -1,3 +1,4 @@
+import { skipIfOptionalDataMissing } from "../support/optional-data";
 import { test as base } from "@playwright/test";
 import { test, expect } from "../fixtures/test";
 import { ChromePage, HomePage, SearchPage, loginAs } from "../pom";
@@ -125,7 +126,7 @@ test.describe("Accueil & chrome", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const chrome = new ChromePage(page);
     await chrome.open();
@@ -138,7 +139,7 @@ test.describe("Accueil & chrome", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const chrome = new ChromePage(page);
     await chrome.open();
@@ -152,7 +153,7 @@ test.describe("Accueil & chrome", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     // On filtre la page de recherche jusqu'à un état vide (0 résultat)…
     const search = new SearchPage(page);
@@ -180,7 +181,7 @@ test.describe("Accueil & chrome", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const chrome = new ChromePage(page);
     await chrome.open();
@@ -195,7 +196,10 @@ test.describe("Accueil & chrome", () => {
     data,
   }) => {
     const app = await data.applicationWithPunctuationInLabel();
-    test.skip(!app, "Aucune application au nom ponctué dans le jeu de données");
+    skipIfOptionalDataMissing(
+      !app,
+      "Aucune application au nom ponctué dans le jeu de données",
+    );
 
     const chrome = new ChromePage(page);
     await chrome.open();

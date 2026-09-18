@@ -70,7 +70,7 @@ test.describe("Administration des référentiels", () => {
     const ts = Date.now();
     const orgPath = `E2E/ADM02/${ts}`;
     const org = await data.createOrganization(orgPath);
-    test.skip(!org, "Impossible de créer l'organisation de test");
+    expect(org, "Impossible de créer l'organisation de test").toBeTruthy();
 
     try {
       const admin = new AdminPage(page);
@@ -90,7 +90,7 @@ test.describe("Administration des référentiels", () => {
     const ts = Date.now();
     const orgPath = `E2E/ADM03/${ts}`;
     const org = await data.createOrganization(orgPath);
-    test.skip(!org, "Impossible de créer l'organisation de test");
+    expect(org, "Impossible de créer l'organisation de test").toBeTruthy();
 
     try {
       const admin = new AdminPage(page);
@@ -107,7 +107,7 @@ test.describe("Administration des référentiels", () => {
     const ts = Date.now();
     const orgPath = `E2E/ADM04/${ts}`;
     const org = await data.createOrganization(orgPath);
-    test.skip(!org, "Impossible de créer l'organisation de test");
+    expect(org, "Impossible de créer l'organisation de test").toBeTruthy();
 
     const admin = new AdminPage(page);
     await admin.open();
@@ -186,8 +186,8 @@ test.describe("Administration des référentiels", () => {
     const email = `e2e-adm08-${ts}@example.com`;
     const app = await data.firstApplication();
     const actorType = await firstActorType();
-    test.skip(!app, "Aucune application disponible");
-    test.skip(!actorType, "Aucun type d'acteur disponible");
+    expect(app, "Aucune application disponible").toBeTruthy();
+    expect(actorType, "Aucun type d'acteur disponible").toBeTruthy();
 
     try {
       const workbook = await buildActorImportWorkbook([
@@ -235,8 +235,8 @@ test.describe("Administration des référentiels", () => {
     const email = `e2e-adm09-${ts}@example.com`;
     const app = await data.firstApplication();
     const actorType = await firstActorType();
-    test.skip(!app, "Aucune application disponible");
-    test.skip(!actorType, "Aucun type d'acteur disponible");
+    expect(app, "Aucune application disponible").toBeTruthy();
+    expect(actorType, "Aucun type d'acteur disponible").toBeTruthy();
 
     const seeded = await data.createActor(app!.id, {
       firstname: "Acteur",
@@ -245,7 +245,7 @@ test.describe("Administration des référentiels", () => {
       actorTypeId: actorType!.id,
       isGroup: false,
     });
-    test.skip(!seeded, "Impossible de créer l'acteur de test");
+    expect(seeded, "Impossible de créer l'acteur de test").toBeTruthy();
 
     try {
       const workbook = await buildActorImportWorkbook([
@@ -291,9 +291,9 @@ test.describe("Administration des référentiels", () => {
     const app = await data.firstApplication();
     const actorType = await firstActorType();
     const orgId = await firstOrganizationId();
-    test.skip(!app, "Aucune application disponible");
-    test.skip(!actorType, "Aucun type d'acteur disponible");
-    test.skip(!orgId, "Aucune organisation disponible");
+    expect(app, "Aucune application disponible").toBeTruthy();
+    expect(actorType, "Aucun type d'acteur disponible").toBeTruthy();
+    expect(orgId, "Aucune organisation disponible").toBeTruthy();
 
     const seeded = await data.createActor(app!.id, {
       firstname: "Acteur",
@@ -303,7 +303,7 @@ test.describe("Administration des référentiels", () => {
       organizationId: orgId,
       isGroup: false,
     });
-    test.skip(!seeded, "Impossible de créer l'acteur de test");
+    expect(seeded, "Impossible de créer l'acteur de test").toBeTruthy();
 
     try {
       const admin = new AdminPage(page);
@@ -322,9 +322,9 @@ test.describe("Administration des référentiels", () => {
     const app = await data.firstApplication();
     const actorType = await firstActorType();
     const orgId = await firstOrganizationId();
-    test.skip(!app, "Aucune application disponible");
-    test.skip(!actorType, "Aucun type d'acteur disponible");
-    test.skip(!orgId, "Aucune organisation disponible");
+    expect(app, "Aucune application disponible").toBeTruthy();
+    expect(actorType, "Aucun type d'acteur disponible").toBeTruthy();
+    expect(orgId, "Aucune organisation disponible").toBeTruthy();
 
     const seeded = await data.createActor(app!.id, {
       firstname: "Acteur",
@@ -334,7 +334,7 @@ test.describe("Administration des référentiels", () => {
       organizationId: orgId,
       isGroup: false,
     });
-    test.skip(!seeded, "Impossible de créer l'acteur de test");
+    expect(seeded, "Impossible de créer l'acteur de test").toBeTruthy();
 
     try {
       const admin = new AdminPage(page);
@@ -355,9 +355,9 @@ test.describe("Administration des référentiels", () => {
     const app = await data.firstApplication();
     const actorType = await firstActorType();
     const orgId = await firstOrganizationId();
-    test.skip(!app, "Aucune application disponible");
-    test.skip(!actorType, "Aucun type d'acteur disponible");
-    test.skip(!orgId, "Aucune organisation disponible");
+    expect(app, "Aucune application disponible").toBeTruthy();
+    expect(actorType, "Aucun type d'acteur disponible").toBeTruthy();
+    expect(orgId, "Aucune organisation disponible").toBeTruthy();
 
     const seeded = await data.createActor(app!.id, {
       firstname: "Acteur",
@@ -367,7 +367,7 @@ test.describe("Administration des référentiels", () => {
       organizationId: orgId,
       isGroup: false,
     });
-    test.skip(!seeded, "Impossible de créer l'acteur de test");
+    expect(seeded, "Impossible de créer l'acteur de test").toBeTruthy();
 
     const admin = new AdminPage(page);
     await admin.open();
@@ -386,9 +386,9 @@ test.describe("Administration des référentiels", () => {
     const apps = await data.twoApplications();
     const actorType = await firstActorType();
     const orgId = await firstOrganizationId();
-    test.skip(!apps, "Besoin de deux applications");
-    test.skip(!actorType, "Aucun type d'acteur disponible");
-    test.skip(!orgId, "Aucune organisation disponible");
+    expect(apps, "Besoin de deux applications").toBeTruthy();
+    expect(actorType, "Aucun type d'acteur disponible").toBeTruthy();
+    expect(orgId, "Aucune organisation disponible").toBeTruthy();
 
     const actor1 = await data.createActor(apps![0].id, {
       firstname: "Acteur",
@@ -406,7 +406,10 @@ test.describe("Administration des référentiels", () => {
       organizationId: orgId,
       isGroup: false,
     });
-    test.skip(!actor1 || !actor2, "Impossible de créer les acteurs de test");
+    expect(
+      !actor1 || !actor2,
+      "Impossible de créer les acteurs de test",
+    ).toBeFalsy();
 
     try {
       const admin = new AdminPage(page);
@@ -430,9 +433,9 @@ test.describe("Administration des référentiels", () => {
     const apps = await data.twoApplications();
     const actorType = await firstActorType();
     const orgId = await firstOrganizationId();
-    test.skip(!apps, "Besoin de deux applications");
-    test.skip(!actorType, "Aucun type d'acteur disponible");
-    test.skip(!orgId, "Aucune organisation disponible");
+    expect(apps, "Besoin de deux applications").toBeTruthy();
+    expect(actorType, "Aucun type d'acteur disponible").toBeTruthy();
+    expect(orgId, "Aucune organisation disponible").toBeTruthy();
 
     const actor1 = await data.createActor(apps![0].id, {
       firstname: "Acteur",
@@ -450,7 +453,10 @@ test.describe("Administration des référentiels", () => {
       organizationId: orgId,
       isGroup: false,
     });
-    test.skip(!actor1 || !actor2, "Impossible de créer les acteurs de test");
+    expect(
+      !actor1 || !actor2,
+      "Impossible de créer les acteurs de test",
+    ).toBeFalsy();
 
     try {
       const admin = new AdminPage(page);
@@ -476,8 +482,8 @@ test.describe("Administration des référentiels", () => {
     const okLastname = `IMPORT-OK-${ts}`;
     const app = await data.firstApplication();
     const actorType = await firstActorType();
-    test.skip(!app, "Aucune application disponible");
-    test.skip(!actorType, "Aucun type d'acteur disponible");
+    expect(app, "Aucune application disponible").toBeTruthy();
+    expect(actorType, "Aucun type d'acteur disponible").toBeTruthy();
 
     try {
       // Une ligne valide (création) + une ligne fautive (rôle inexistant → non résolu).
@@ -748,10 +754,10 @@ test.describe("Administration des référentiels", () => {
     // Le seed QA porte le périmètre de `scope-admin` (TOTO/) ; sans lui, le compte n'est pas scopé
     // et le test ne prouverait rien.
     const scopedAdmin = await data.getUser("scope-admin@example.com");
-    test.skip(
-      !scopedAdmin?.scopeOrganizationId,
+    expect(
+      scopedAdmin?.scopeOrganizationId,
       "Fixture QA absente — `pnpm db:seed:qa` requis.",
-    );
+    ).toBeTruthy();
 
     // `switchTo` (pas `loginAs`) : la fixture `data` a déjà connecté `page` en `admin` ; sans
     // `logout()` préalable, `login()` détecte une session active et ne change pas d'utilisateur
@@ -807,7 +813,7 @@ test.describe("Administration des référentiels", () => {
     const divisionLabel = `e2e-adm23-${ts}`;
     await data.removeBusinessDivisionLabel(divisionLabel);
     const org = await data.createOrganization(orgPath);
-    test.skip(!org, "Impossible de créer l'organisation de test");
+    expect(org, "Impossible de créer l'organisation de test").toBeTruthy();
 
     const admin = new AdminPage(page);
     await admin.open();

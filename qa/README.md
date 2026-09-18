@@ -80,8 +80,9 @@ par Playwright (`webServer` → `../frontend`).
   méthodes sémantiques.
 - **Datafeature** : `e2e/fixtures/` — fixture `data` exécutée **avant chaque test**, qui **résout via
   l'API** (`/api/v2`) les données réelles dont le protocole a besoin (1ʳᵉ application, app avec
-  relations, app dont l'utilisateur est acteur…). Pas de seed déterministe requis ; un test qui ne
-  trouve pas sa donnée se **skip proprement**.
+  relations, app dont l'utilisateur est acteur…). Le seed principal puis `pnpm db:seed:qa` sont
+  requis. Une fixture attendue absente fait **échouer** le test ; seuls les cas dépendant de données
+  variables utilisent `skipIfOptionalDataMissing(condition, raison)`.
 - **Specs** : `e2e/tests/<domaine>.spec.ts`, un `test()` par étape automatisable (titre = ID d'étape).
 
 ```bash
@@ -90,7 +91,25 @@ pnpm install             # 1ʳᵉ fois (le frontend doit aussi avoir ses deps in
 pnpm test:e2e            # tous les specs (stack docker requise : back + Keycloak + Postgres)
 pnpm test:e2e:json       # sortie JSON consommée par qa-sync (résultats par ID d'étape)
 pnpm type-check          # tsc --noEmit (vérifie le typage du POM)
+pnpm test:unit           # contrat des prérequis QA, sans stack ni navigateur
 ```
+
+### Fixtures manquantes et tests ignorés
+
+Avant toute spec, le setup vérifie via l'API authentifiée que les cinq applications `QA-*`,
+les organisations `TOTO`, `TOTO/TUTU`, `ABCD` et les cinq comptes de périmètre sont trouvables.
+L'échec indique les fixtures manquantes et la commande de seed. Des données présentes en base
+mais absentes de la recherche nécessitent aussi de vérifier l'index `application_search_index`.
+Une erreur de connexion ou de préparation fait échouer la campagne.
+
+Dans les specs, utiliser une assertion pour toute donnée seedée, tout résultat attendu ou toute
+création nécessaire au scénario. ESLint interdit les appels directs à `test.skip` dans ces fichiers.
+`skipIfOptionalDataMissing` est réservé aux données variables (par exemple une relation existante
+ou une seconde page d'historique) et ajoute une annotation explicite au rapport.
+
+Les workflows de campagne et de rejeu publient dans leur résumé les nombres de réussites, échecs,
+tests instables et tests ignorés, avec les titres et raisons des skips. Le rapport JSON est conservé
+en artefact. Les tests du contrat de fixtures, le typage QA et le résumé sont vérifiés à chaque PR.
 
 ## Campagne automatique pilotée par release-please (`.github/workflows/qa-campaign.yml`)
 
