@@ -8,18 +8,23 @@ import {
   IsString,
 } from "class-validator";
 import { PaginationDto } from "src/common/dto";
-import { EOL_STATUSES, type EolStatus } from "../utils/eol-status";
+import {
+  EOL_STATUS_FILTERS,
+  EOL_STATUSES,
+  type EolStatus,
+  type EolStatusFilter,
+} from "../utils/eol-status";
 
 /** Filtres de la vue transverse des fins de vie (#2236). */
 export class EndOfLifeFiltersDto extends PaginationDto {
   @ApiPropertyOptional({
     description:
-      "Ne retenir que les technologies portant ce statut de fin de vie. Les trois valeurs partitionnent la liste : une technologie déjà en fin de vie n'apparaît pas sous « fin de support actif ».",
-    enum: EOL_STATUSES,
+      "Ne retenir que les technologies portant ce statut de fin de vie. Les trois statuts partitionnent la liste : une technologie déjà en fin de vie n'apparaît pas sous « fin de support actif ». `all` est un 4ᵉ filtre, non partitionnant : il lève la restriction et retourne aussi les technologies saines.",
+    enum: EOL_STATUS_FILTERS,
   })
   @IsOptional()
-  @IsIn(EOL_STATUSES as unknown as string[])
-  status?: EolStatus;
+  @IsIn(EOL_STATUS_FILTERS as unknown as string[])
+  status?: EolStatusFilter;
 
   @ApiPropertyOptional({
     description:
@@ -94,11 +99,13 @@ export class EndOfLifeTechnologyDto {
 
   @ApiProperty({
     description:
-      "Statut calculé côté serveur, pour que la fiche et la vue transverse classent une technologie de la même façon.",
+      "Statut calculé côté serveur, pour que la fiche et la vue transverse classent une technologie de la même façon. null si la technologie ne présente aucune fin de vie connue (restitué uniquement avec le filtre `all`).",
     enum: EOL_STATUSES,
+    nullable: true,
   })
+  @IsOptional()
   @IsIn(EOL_STATUSES as unknown as string[])
-  status: EolStatus;
+  status: EolStatus | null;
 }
 
 /** Application concernée par au moins une technologie en fin de vie. */
@@ -127,16 +134,18 @@ export class EndOfLifeApplicationDto {
 
   @ApiProperty({
     description:
-      "Uniquement les technologies retenues par le filtre, triées par gravité décroissante.",
+      "Les technologies retenues par le filtre, triées par gravité décroissante. Avec le filtre `all`, ce sont TOUTES les technologies de l'application, pas seulement celles concernées par une fin de vie.",
     type: [EndOfLifeTechnologyDto],
   })
   technologies: EndOfLifeTechnologyDto[];
 
   @ApiProperty({
     description:
-      "Statut le plus grave parmi les technologies retenues — sert au tri et à la pastille de synthèse.",
+      "Statut le plus grave parmi les technologies retenues — sert au tri et à la pastille de synthèse. null si aucune des technologies retenues n'a de fin de vie connue (n'arrive qu'avec le filtre `all`).",
     enum: EOL_STATUSES,
+    nullable: true,
   })
+  @IsOptional()
   @IsIn(EOL_STATUSES as unknown as string[])
-  worstStatus: EolStatus;
+  worstStatus: EolStatus | null;
 }

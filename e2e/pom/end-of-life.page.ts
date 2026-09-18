@@ -41,7 +41,7 @@ export class EndOfLifePage extends BasePage {
    * On attend la requête plutôt qu'un délai : la liste est débouncée (300 ms).
    */
   async filterByStatus(
-    status: "eol" | "eol-soon" | "eoas-passed",
+    status: "eol" | "eol-soon" | "eoas-passed" | "all",
   ): Promise<void> {
     const refetch = this.page
       .waitForResponse(
@@ -68,6 +68,20 @@ export class EndOfLifePage extends BasePage {
     const row = this.table().locator("tbody tr").filter({ hasText: label });
     await expect(row).toHaveCount(1);
     await expect(row).toContainText(statusLabel);
+  }
+
+  /**
+   * Vérifie que l'application `label` est listée avec une technologie dont le texte contient
+   * `productText` — sans présumer d'un badge de gravité, pour une technologie saine (filtre
+   * `all`) qui n'en affiche aucun.
+   */
+  async expectApplicationHasTechnology(
+    label: string,
+    productText: string,
+  ): Promise<void> {
+    const row = this.table().locator("tbody tr").filter({ hasText: label });
+    await expect(row).toHaveCount(1);
+    await expect(row).toContainText(productText);
   }
 
   /**

@@ -268,9 +268,10 @@ async function seedQa() {
 
 /**
  * Trois lignes de stack couvrant les trois statuts de la vue transverse (#2236) : fin de vie
- * dépassée, proche (moins de 6 mois), et sortie du seul support actif — plus une quatrième dont
+ * dépassée, proche (moins de 6 mois), et sortie du seul support actif — une quatrième dont
  * la fin de vie a été saisie à la main (#2454), pour que la fiche, la vue transverse et les e2e
- * voient la mention « saisie manuelle ».
+ * voient la mention « saisie manuelle » — et une cinquième SAINE, pour que le filtre « Toutes
+ * les technologies » ait une ligne sans fin de vie à distinguer des quatre autres.
  *
  * Les dates sont RELATIVES à l'exécution du seed, pour que les fixtures gardent leur statut au fil
  * du temps — des dates en dur finiraient toutes « dépassées » et le cas « proche » ne serait plus
@@ -335,6 +336,21 @@ async function ensureEndOfLifeStack(applicationId: string) {
       eoasDate: null,
       latestVersion: null,
       eolSource: TechnologyEolSource.manual,
+    },
+    // Cinquième ligne SAINE (`status: null`) : produit résolu, cycle apparié, échéance à dix
+    // ans — aucun des trois statuts de fin de vie ne s'applique. Sans elle, le filtre « Toutes
+    // les technologies » (vue transverse) n'aurait rien de plus à montrer que les trois autres
+    // filtres, et TRV-08 ne pourrait pas vérifier qu'une technologie saine apparaît bien, sans
+    // pastille de gravité.
+    {
+      technology: "Frontend",
+      product: "Vue.js",
+      eolProduct: "vuejs",
+      version: "3",
+      eolCycle: "3",
+      eolDate: at(3650),
+      eoasDate: null,
+      latestVersion: "3.5.13",
     },
   ];
 

@@ -56,7 +56,8 @@ services:
       # #1985 : contrôle du niveau d'authentification (carte agent / 2FA), désactivé en local.
       # Pour tester le refus des sessions faibles :
       # AUTH_LEVEL_MODE=enforce docker compose up -d --no-deps backend
-      # Les surcharges CI et production imposent `enforce`.
+      # La surcharge CI impose `enforce` ; la production reste temporairement en `off`
+      # pendant la finalisation Passage2/IAP.
       # Le realm simule auth_mode=CARD, sauf `admin-weak` (PASSWORD) et `user-federated`
       # (auth_idp=partenaire sans mode). Incrémenter le label refapp.realm-revision du service
       # keycloak avec toute modification du realm pour recréer le conteneur et ses mappers.

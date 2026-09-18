@@ -33,6 +33,19 @@ export const EOL_STATUSES: readonly EolStatus[] = [
 ];
 
 /**
+ * Valeurs acceptées par le FILTRE de la vue transverse : les trois statuts de
+ * `EolStatus`, qui partitionnent la liste, plus `"all"`, qui lève la restriction et
+ * retourne aussi les technologies saines. `"all"` n'est pas un statut — jamais restitué
+ * comme valeur de `status` sur une ligne, qui reste `EolStatus | null`.
+ */
+export type EolStatusFilter = EolStatus | "all";
+
+export const EOL_STATUS_FILTERS: readonly EolStatusFilter[] = [
+  ...EOL_STATUSES,
+  "all",
+];
+
+/**
  * Classe une ligne à partir de ses deux dates, en cascade : le premier statut qui
  * s'applique gagne. Une technologie déjà en fin de vie n'est donc jamais
  * rétrogradée en « fin de support actif », même si les deux dates sont passées.
@@ -60,6 +73,9 @@ export function computeEolStatus(
  *
  * Sans statut demandé, on retient toute ligne qui porte au moins un des trois —
  * `eolDate < soon` couvre à la fois `eol` et `eol-soon`.
+ *
+ * `"all"` est le seul cas NON partitionnant : il lève la restriction et retient aussi
+ * les technologies saines, pour la vue transverse « toutes les technologies ».
  */
 /**
  * #2515 — même exclusion que la recherche d'applications (`application.service.ts`) :
@@ -73,7 +89,7 @@ export const ACTIVE_APPLICATION_WHERE = {
 } satisfies Prisma.ApplicationWhereInput;
 
 export function eolStatusWhere(
-  status: EolStatus | undefined,
+  status: EolStatusFilter | undefined,
   now: Date = new Date(),
 ): Prisma.TechnologyStackWhereInput {
   const soon = new Date(now.getTime() + EOL_SOON_MS);
@@ -87,6 +103,8 @@ export function eolStatusWhere(
         eoasDate: { lt: now },
         OR: [{ eolDate: null }, { eolDate: { gte: soon } }],
       };
+    case "all":
+      return {};
     default:
       return {
         OR: [{ eolDate: { lt: soon } }, { eoasDate: { lt: now } }],
