@@ -4,7 +4,7 @@ import { watchDebounced } from "@vueuse/core";
 import type { PropType } from "vue";
 import type { OrganizationDto } from "@/client/types.gen";
 import { useOrganizationStore } from "@/stores/organizationStore";
-import { MIN_CHAR_FOR_SEARCH } from "@/constants/min-char-for-search";
+import { useAsyncSearch } from "@/composables/use-async-search";
 
 const props = defineProps({
   modelValue: {
@@ -43,8 +43,15 @@ const organizationStore = useOrganizationStore();
 const groupLabelId = useId();
 
 const searchQuery = ref("");
-const organizations = ref<OrganizationDto[]>([]);
-const isLoading = ref(false);
+const {
+  results: organizations,
+  isLoading,
+  error: searchError,
+  onQuery,
+  reset,
+} = useAsyncSearch((query) => organizationStore.find(query), {
+  errorMessage: "Erreur lors de la recherche d'organisations.",
+});
 const selectedOrganizationId = ref(props.modelValue);
 
 // Computed label for the search input with asterisk if required
@@ -58,6 +65,7 @@ const searchLabel = computed(() => {
 // via une région live (nombre de suggestions / recherche en cours / absence de résultat).
 const searchStatus = computed(() => {
   if (!searchQuery.value) return "";
+  if (searchError.value) return searchError.value;
   if (isLoading.value) return "Recherche en cours…";
   const n = organizations.value.length;
   if (n === 0) return "Aucune organisation trouvée";
@@ -74,11 +82,12 @@ const selectOptions = computed(() => {
     value: "",
   });
 
-  // Add initial organization if it exists and is not already in the search results
-  if (props.initialOrganization && !organizations.value.some((org) => org.id === props.initialOrganization?.id)) {
+  // Conserver la sélection pendant l'invalidation ou le chargement d'une autre recherche.
+  const selectedOrganization = organizationStore.organizations[selectedOrganizationId.value] ?? props.initialOrganization;
+  if (selectedOrganization && !organizations.value.some((org) => org.id === selectedOrganization.id)) {
     options.push({
-      text: props.initialOrganization.path,
-      value: props.initialOrganization.id,
+      text: selectedOrganization.path,
+      value: selectedOrganization.id,
     });
   }
 
@@ -113,32 +122,14 @@ watch(selectedOrganizationId, (newValue) => {
   }
 });
 
-// Search organizations
-async function searchOrganizations() {
-  if (!searchQuery.value || searchQuery.value.length < MIN_CHAR_FOR_SEARCH) {
-    organizations.value = [];
-    return;
-  }
-
-  try {
-    isLoading.value = true;
-    const results = await organizationStore.find(searchQuery.value);
-    organizations.value = results;
-  } catch (error) {
-    console.error("Error searching organizations:", error);
-    organizations.value = [];
-  } finally {
-    isLoading.value = false;
-  }
-}
-
 function clearSearch() {
   searchQuery.value = "";
-  organizations.value = [];
+  reset();
   selectedOrganizationId.value = "";
 }
 
-watchDebounced(searchQuery, searchOrganizations, { debounce: 300 });
+watch(searchQuery, () => reset(), { flush: "sync" });
+watchDebounced(searchQuery, onQuery, { debounce: 300 });
 </script>
 
 <template>

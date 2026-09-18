@@ -1,6 +1,7 @@
 <script setup lang="ts" generic="T">
 import { onClickOutside, watchDebounced } from "@vueuse/core";
-import { computed, nextTick, ref, type Ref } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
+import { useAsyncSearch } from "@/composables/use-async-search";
 
 export interface Props<T> {
   id?: string;
@@ -19,11 +20,15 @@ const props = defineProps<Props<T>>();
 const emit = defineEmits(["onChange", "onInputValueChange", "close"]);
 
 const inputValue = ref("");
-// `ref([]) as Ref<T[]>` : contournement documenté de l'unwrap des refs avec un générique.
-const results = ref([]) as Ref<T[]>;
+const {
+  results,
+  isLoading: loading,
+  error,
+  hasSearched,
+  onQuery,
+  reset,
+} = useAsyncSearch<T>((query) => props.search(query), { minLength: 1 });
 const highlightedIndex = ref(-1);
-const loading = ref(false);
-const hasSearched = ref(false);
 const showList = ref(false);
 const inputEl = ref<HTMLInputElement | null>(null);
 const containerEl = ref<HTMLElement | null>(null);
@@ -34,45 +39,25 @@ const optionIdPrefix = computed(() => props.id ?? "autocomplete");
 const listId = computed(() => `${optionIdPrefix.value}-list`);
 const optionId = (index: number) => `${optionIdPrefix.value}-item-${index}`;
 
-// Compteur de requêtes : neutralise les réponses obsolètes / en désordre.
-let latestRequestId = 0;
-
-async function doSearch(query: string) {
-  highlightedIndex.value = -1;
-  if (!query) {
-    latestRequestId++; // invalide toute réponse en vol
-    results.value = [];
-    hasSearched.value = false;
-    loading.value = false;
-    return;
-  }
-  const requestId = ++latestRequestId;
-  loading.value = true;
-  try {
-    const searchResults = await props.search(query);
-    if (requestId !== latestRequestId) return; // réponse obsolète : ignorée
-    results.value = searchResults;
-    hasSearched.value = true;
-  } catch {
-    if (requestId !== latestRequestId) return;
-    results.value = [];
-    hasSearched.value = true;
-  } finally {
-    if (requestId === latestRequestId) loading.value = false;
-  }
-}
-
 function onInput(event: Event) {
   const value = (event.target as HTMLInputElement).value;
   inputValue.value = value;
   showList.value = true;
 }
 
+watch(
+  inputValue,
+  () => {
+    reset();
+    highlightedIndex.value = -1;
+  },
+  { flush: "sync" },
+);
 watchDebounced(
   inputValue,
   (newLabel) => {
     emit("onInputValueChange", newLabel);
-    doSearch(newLabel);
+    onQuery(newLabel);
   },
   { debounce: 300 },
 );
@@ -119,12 +104,9 @@ function onKeydown(e: KeyboardEvent) {
 }
 
 function clear() {
-  latestRequestId++; // invalide toute réponse en vol
+  reset();
   inputValue.value = "";
-  results.value = [];
   highlightedIndex.value = -1;
-  hasSearched.value = false;
-  loading.value = false;
   showList.value = false;
 }
 
@@ -136,7 +118,13 @@ defineExpose({ clear, focus });
 const hasResults = computed(() => results.value.length > 0);
 // « Aucun résultat » uniquement après une recherche aboutie, hors chargement.
 const showEmpty = computed(
-  () => !!props.displayNoResult && !loading.value && hasSearched.value && inputValue.value.trim().length > 0 && !hasResults.value,
+  () =>
+    !!props.displayNoResult &&
+    !error.value &&
+    !loading.value &&
+    hasSearched.value &&
+    inputValue.value.trim().length > 0 &&
+    !hasResults.value,
 );
 
 const ariaActiveDescendant = computed(() => {
@@ -149,6 +137,7 @@ const ariaDescribedById = computed(() => (props.id ? `${props.id}-helptext` : un
 const liveRegionText = computed(() => {
   if (!showList.value) return "";
   if (loading.value) return "Recherche en cours…";
+  if (error.value) return error.value;
   if (!hasSearched.value) return "";
   if (results.value.length === 0) return props.displayNoResult ? "Aucun résultat" : "";
   const n = results.value.length;
@@ -184,7 +173,7 @@ onClickOutside(containerEl, () => {
     </div>
 
     <ul
-      v-if="showList && (hasResults || showEmpty || loading)"
+      v-if="showList && (hasResults || showEmpty || loading || error)"
       :id="listId"
       class="autocomplete-list"
       role="listbox"
@@ -211,6 +200,7 @@ onClickOutside(containerEl, () => {
         </li>
 
         <li v-if="showEmpty" class="no-result" role="presentation">Aucun résultat</li>
+        <li v-if="error" class="no-result" role="presentation">{{ error }}</li>
       </template>
     </ul>
 

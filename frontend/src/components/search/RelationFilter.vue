@@ -2,9 +2,9 @@
 import api from "@/api";
 import { RelationType, type ApplicationDto } from "@/client";
 import { useApplicationSearch } from "@/composables/use-application-search";
-import { MIN_CHAR_FOR_SEARCH } from "@/constants/min-char-for-search";
 import {
   IS_MEDIATION_SERVICE,
+  NEUTRAL_RELATION_FILTERS,
   RELATION_TYPE_FILTERS,
   RELATION_TYPE_FILTERS_ARRAY,
   type FilterableRelationField,
@@ -16,40 +16,12 @@ import { watch } from "vue";
 
 const { searchApplications, setFilter, filters } = useApplicationSearch();
 const isLoading = ref(false);
-const errorMessage = ref("");
 const componentKey = ref(0);
 const defaultValue = ref<undefined | string>(undefined);
 
 async function performSearch(query: string) {
-  if (query && query.length >= MIN_CHAR_FOR_SEARCH) {
-    isLoading.value = true;
-    errorMessage.value = "";
-    try {
-      const response = await searchApplications(
-        {
-          search: query,
-          pageSize: 10,
-          is_part_of: RELATION_TYPE_FILTERS.neutral,
-          is_data_user_of: RELATION_TYPE_FILTERS.neutral,
-          is_service_user_of: RELATION_TYPE_FILTERS.neutral,
-          in_replacement_of: RELATION_TYPE_FILTERS.neutral,
-          use_sso_of: RELATION_TYPE_FILTERS.neutral,
-          is_correlated_with: RELATION_TYPE_FILTERS.neutral,
-          is_mediation_service: RELATION_TYPE_FILTERS.neutral,
-          relationAppId: undefined,
-        },
-        false,
-      );
-      return response.results;
-    } catch (error) {
-      console.error(error);
-      errorMessage.value = "Erreur lors de la recherche d'applications.";
-      return [];
-    } finally {
-      isLoading.value = false;
-    }
-  }
-  return [];
+  const response = await searchApplications({ search: query, pageSize: 10, ...NEUTRAL_RELATION_FILTERS, relationAppId: undefined }, false);
+  return response.results;
 }
 
 const updateSelectedValue = (application?: Pick<ApplicationDto, "label" | "id">) => {
@@ -162,6 +134,8 @@ watch(
       @update:selected-value="updateSelectedValue"
       :default-value="defaultValue"
       :search-data-function="performSearch"
+      search-error-message="Erreur lors de la recherche d'applications."
+      @update:is-loading="isLoading = $event"
       label="Rechercher une application"
       tooltip-content="Sélectionne l’application de référence utilisée pour filtrer les relations ci-dessous (fait partie de, remplace, utilise le service de…)."
       placeholder="Tapez au moins 3 caractères"

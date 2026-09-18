@@ -1,8 +1,9 @@
 <script lang="ts" setup>
 import type { ApplicationDto } from "@/client";
+import { useAsyncSearch } from "@/composables/use-async-search";
 import { generateId } from "@/utils/generator-utils";
 import { watchDebounced } from "@vueuse/core";
-import { ref, type WatchHandle } from "vue";
+import { ref, watch, type WatchHandle } from "vue";
 
 const props = withDefaults(
   defineProps<{
@@ -12,48 +13,44 @@ const props = withDefaults(
     placeholder: string;
     defaultValue?: string;
     tooltipContent?: string;
+    searchErrorMessage?: string;
     /** Masque le tag de la sélection courante (utile en mode multi-sélection, géré par le parent). */
     hideSelectedTag?: boolean;
   }>(),
   {
     hideSelectedTag: false,
+    searchErrorMessage: "Erreur lors de la recherche.",
   },
 );
 
 const emit = defineEmits<{
   "update:selectedValue": [application?: Pick<ApplicationDto, "id" | "label">];
+  "update:isLoading": [isLoading: boolean];
 }>();
 const inputId = generateId("suggestions-input");
 const searchSuggestion = ref("");
-const isLoading = ref(false);
-const suggestions = ref<Array<{ id: string; label: string }>>([]);
+const {
+  results: suggestions,
+  isLoading,
+  error,
+  onQuery,
+  reset,
+} = useAsyncSearch((query) => props.searchDataFunction?.(query) ?? Promise.resolve([]), {
+  errorMessage: props.searchErrorMessage,
+});
 
 const input = ref("");
 
 function selectSuggestion(suggestion: Pick<ApplicationDto, "id" | "label">) {
   searchSuggestion.value = suggestion.label;
   emit("update:selectedValue", suggestion);
-  suggestions.value = [];
+  reset();
   input.value = "";
 }
 
-watchDebounced(
-  input,
-  (newValue) => {
-    isLoading.value = true;
-    if (props.searchDataFunction) {
-      props
-        .searchDataFunction(newValue)
-        .then((data) => {
-          suggestions.value = data;
-        })
-        .finally(() => {
-          isLoading.value = false;
-        });
-    }
-  },
-  { debounce: 300 },
-);
+watch(input, () => reset(), { flush: "sync" });
+watchDebounced(input, onQuery, { debounce: 300 });
+watch(isLoading, (value) => emit("update:isLoading", value), { immediate: true });
 
 let stop: WatchHandle;
 stop = watchEffect(() => {
@@ -63,6 +60,8 @@ stop = watchEffect(() => {
 });
 
 const resetInput = () => {
+  reset();
+  input.value = "";
   searchSuggestion.value = "";
   emit("update:selectedValue", undefined);
 };
@@ -83,6 +82,7 @@ const resetInput = () => {
     />
 
     <div v-if="isLoading" data-testid="suggestions-loading">Chargement ...</div>
+    <p v-if="error" class="fr-error-text" role="alert">{{ error }}</p>
     <ul v-if="suggestions.length" class="suggestions-list" data-testid="suggestions-list">
       <li
         v-for="suggestion in suggestions"
