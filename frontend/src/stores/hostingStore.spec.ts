@@ -2,14 +2,14 @@ import { createPinia, setActivePinia } from "pinia";
 import type { HostingDto } from "@/client/types.gen";
 import { useHostingStore } from "./hostingStore";
 
-const { findAllMock } = vi.hoisted(() => ({ findAllMock: vi.fn() }));
+const { findAllMock, addErrorMessage } = vi.hoisted(() => ({ findAllMock: vi.fn(), addErrorMessage: vi.fn() }));
 
 vi.mock("@/api/index", () => ({
   default: { applicationHostingsControllerFindAll: findAllMock },
 }));
 
 vi.mock("@/stores/toasterStore", () => ({
-  useToasterStore: () => ({ addErrorMessage: vi.fn() }),
+  useToasterStore: () => ({ addErrorMessage }),
 }));
 
 const hosting = (id: string) => ({ id }) as unknown as HostingDto;
@@ -23,7 +23,20 @@ describe("hostingStore — cloisonnement par fiche", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     findAllMock.mockReset();
+    addErrorMessage.mockReset();
     vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it("libère le spinner et notifie une erreur réseau", async () => {
+    const error = new TypeError("Failed to fetch");
+    findAllMock.mockRejectedValueOnce(error);
+    const store = useHostingStore();
+    await expect(store.fetchHostings("app-1")).rejects.toBe(error);
+    expect(store.isLoading).toBe(false);
+    expect(store.hostings).toEqual([]);
+    expect(addErrorMessage).toHaveBeenCalledExactlyOnceWith("Erreur lors de la récupération des hébergements");
   });
 
   it("ne conserve pas les hébergements de la fiche précédente quand l'appel échoue", async () => {
@@ -53,9 +66,11 @@ describe("hostingStore — cloisonnement par fiche", () => {
 
     findAllMock.mockResolvedValueOnce(okResponse([hosting("h-courant")]));
     await store.fetchHostings("app-2");
+    expect(store.isLoading).toBe(true);
 
     releaseStale(okResponse([hosting("h-perime")]));
     await stalePending;
+    expect(store.isLoading).toBe(false);
 
     expect(store.hostings).toStrictEqual([hosting("h-courant")]);
   });

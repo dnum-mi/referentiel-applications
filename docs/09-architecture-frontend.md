@@ -127,11 +127,18 @@ import api from "@/api/index";
 ```
 
 **Configuration HTTP.** `frontend/src/api/init-clients.ts` configure le client
-(base `/api/v2`, en-têtes, sérialisation des tableaux en CSV via `querySerializer`)
-et installe les intercepteurs : injection du jeton d'accès OIDC en `Authorization:
-Bearer …` sur chaque requête, et gestion centralisée des réponses 401
-(relance du login), 403 (toast « Permission refusée ») et 404 (redirection vers
-`NOTFOUND`). `configureClients(toaster)` est appelée au montage dans `App.vue`.
+fetch généré (cookies, en-têtes, sérialisation des tableaux en CSV via
+`querySerializer`). `fetchWithTimeout` applique un délai de 10 secondes, y
+compris pendant la lecture du corps de réponse, et conserve le signal
+d'annulation de l'appelant. Un dépassement interrompt la requête ; aucune
+relance automatique n'est effectuée. Le transport utilise les API navigateur
+`AbortSignal.timeout` et `AbortSignal.any`.
+
+Les intercepteurs injectent le jeton OIDC en `Authorization: Bearer …` et
+centralisent les réponses 401 (renouvellement silencieux ou reconnexion), 403
+(niveau d'authentification, accès bloqué ou permission refusée) et 503 de
+maintenance. Les autres erreurs HTTP restent gérées par les stores et les
+composants. `configureClients(toaster)` est appelée au montage dans `App.vue`.
 
 **Convention de lecture des réponses.** Vérifier systématiquement
 `response.response.ok` **et** `response.data` avant d'exploiter le résultat.
@@ -156,6 +163,29 @@ Les stores utilisent la **setup syntax** : `defineStore("xxxStore", () => { … 
 exposant `ref`/`computed` et fonctions, puis renvoyant l'objet public
 (ex. `frontend/src/stores/applicationStore.ts:10`,
 `frontend/src/stores/userStore.ts:8`).
+
+**Chargement et erreurs.** Pour les nouveaux appels, utiliser `callApi` depuis
+`frontend/src/api/call-api.ts`. Le helper vérifie les erreurs HTTP du SDK,
+notifie une fois via le toaster fourni puis propage les erreurs HTTP ou réseau.
+Le composant appelant peut ainsi gérer sa fermeture ou son état d'erreur sans
+ajouter un second toast. `hostingStore` et `metadataStore` suivent cette
+convention ; la migration des autres stores est progressive.
+
+```ts
+const data = await callApi(
+  () => api.applicationHostingsControllerFindAll({ path: { applicationId } }),
+  {
+    isLoading,
+    toaster,
+    errorMessage: "Erreur lors de la récupération des hébergements",
+  },
+);
+```
+
+`withLoading(isLoading, fn)` remet toujours le chargement à jour dans un
+`finally`. Plusieurs opérations concurrentes ou imbriquées utilisant la même
+ref gardent le chargement actif jusqu'à la dernière terminaison. La protection
+contre les réponses périmées reste à la charge du store.
 
 Stores présents dans `frontend/src/stores/` :
 
@@ -287,6 +317,15 @@ logique réutilisable :
 
 ## 9. Retours utilisateur et tests
 
+**Debounce.** Utiliser les primitives VueUse, sans timer de recherche maison :
+`watchDebounced` pour les sources réactives et `useDebounceFn` pour un callback.
+`useFilterWatcher` observe toutes les clés demandées avec un seul
+`watchDebounced` de 300 ms, y compris les refs et les tableaux. La recherche
+d'applications partage une seule attente entre ses composants : 300 ms pour la
+saisie, aucun délai pour les cases, le tri, la pagination et la réinitialisation.
+Les changements d'un même tick sont regroupés et une action immédiate remplace
+la saisie en attente.
+
 **Retours utilisateur.** Les notifications passent par le store
 `useToasterStore()` (`frontend/src/stores/toasterStore.ts`), qui expose
 `addSuccessMessage`, `addErrorMessage` et `addMessage` (avec délai d'expiration
@@ -370,11 +409,5 @@ revalidés) ; les assets hashés `/assets/` en `max-age=31536000, immutable`.
 - Le manifeste PWA dans `frontend/vite.config.ts:35-53` porte encore des valeurs
   génériques (`name: "Dummy app"`, `short_name: "Dummy"`) — vestige de
   _boilerplate_ à corriger.
-- `frontend/src/api/init-clients.ts:27` contient un `console.log({ status })` et
-  d'autres `console.log` dans les intercepteurs — traces de debug à retirer.
-- `init-clients.ts:75-76` installe puis **éjecte immédiatement** le
-  `responseInterceptor` (`use` suivi de `eject`) : la gestion centralisée des
-  réponses 401/403/404 est donc de fait désactivée. À vérifier / corriger si la
-  gestion d'erreurs centralisée est attendue.
 - L'aide à la décision technique sous-jacente n'est pas documentée dans un
   [ADR](../doc/adr/README.md) dédié.

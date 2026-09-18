@@ -5,7 +5,8 @@ import type {
   TechnicalDebtControllerGetTechnicalDebtPointsResponses,
 } from "@/client/types.gen";
 import type { Ref } from "vue";
-import { computed, ref, watch } from "vue";
+import { computed, ref, shallowRef, watch } from "vue";
+import { watchDebounced } from "@vueuse/core";
 import { useRoute, useRouter } from "vue-router";
 import api from "@/api/index.js";
 import { APPLICATION_STATUSES } from "@/constants/dictionary";
@@ -106,9 +107,17 @@ const DEBOUNCED_FILTER_KEYS = new Set<string>([
   "iqLte",
 ]);
 
-// Timer partagé entre toutes les instances du composable : une seule recherche
-// en attente à la fois, quel que soit le composant qui modifie les filtres.
-let pendingSearchTimer: ReturnType<typeof setTimeout> | undefined;
+// Une seule attente VueUse pour toutes les instances. Le watch regroupe les
+// changements d'un même tick, y compris ceux dont le délai est nul.
+const pendingSearch = shallowRef<{ run: () => Promise<unknown>; delay: number }>();
+watchDebounced(
+  pendingSearch,
+  (search) => {
+    // Les erreurs sont déjà capturées dans `error` par searchApplications.
+    search?.run().catch(() => {});
+  },
+  { debounce: () => pendingSearch.value?.delay ?? 0 },
+);
 
 // Identifiant de la dernière recherche « stockée » partie sur le réseau : une
 // réponse dépassée par une requête plus récente ne doit pas écraser l'état.
@@ -247,18 +256,7 @@ export function useApplicationSearch() {
   const router = useRouter();
 
   function scheduleSearch(immediate: boolean) {
-    if (pendingSearchTimer) clearTimeout(pendingSearchTimer);
-    // Même en mode immédiat, on passe par un timer à 0 ms : plusieurs
-    // modifications de filtres dans un même tick (ex. initialisation d'une
-    // page) sont ainsi coalescées en une seule requête.
-    pendingSearchTimer = setTimeout(
-      () => {
-        pendingSearchTimer = undefined;
-        // Les erreurs sont déjà capturées dans `error` par searchApplications.
-        searchApplications().catch(() => {});
-      },
-      immediate ? 0 : 300,
-    );
+    pendingSearch.value = { run: () => searchApplications(), delay: immediate ? 0 : 300 };
   }
 
   const filters = (sharedFilters ??= ref<Filters>({

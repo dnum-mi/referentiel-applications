@@ -2,6 +2,7 @@ import type { MetadataDto } from "@/client/types.gen";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import api from "@/api/index";
+import { callApi } from "@/api/call-api";
 import { useToasterStore } from "@/stores/toasterStore";
 
 export const useMetadataStore = defineStore("metadataStore", () => {
@@ -32,82 +33,47 @@ export const useMetadataStore = defineStore("metadataStore", () => {
     // fiche précédente ne doit rester affichée (a fortiori si l'appel échoue).
     resetFirstAndLastMetadata();
     metadataApplicationId.value = applicationId;
-    isLoading.value = true;
-    const response = await api.applicationMetadatasControllerGetFirstAndLastMetadata({
-      path: { applicationId },
+    const data = await callApi(() => api.applicationMetadatasControllerGetFirstAndLastMetadata({ path: { applicationId } }), {
+      isLoading,
+      toaster,
+      errorMessage: "Erreur lors de la récupération des metadatas.",
     });
-    isLoading.value = false;
-    if (!response.response.ok) {
-      toaster.addErrorMessage("Erreur lors de la récupération des metadatas.");
-      console.error("Error fetching first and last metadata:", response.error);
-      throw new Error(`Failed to fetch first and last metadata: ${response.response.statusText}`);
-    }
     // Navigation rapide : une réponse arrivée en retard ne doit pas écraser
     // celle de la fiche courante.
     if (metadataApplicationId.value !== applicationId) {
       return;
     }
-    if (response.data) {
-      firstMetadata.value = response.data.first;
-      lastMetadata.value = response.data.last;
-    } else {
-      firstMetadata.value = null;
-      lastMetadata.value = null;
-    }
+    firstMetadata.value = data?.first ?? null;
+    lastMetadata.value = data?.last ?? null;
   }
 
   const fetchMetadatasByApplication = async (
     applicationId: string,
     query: { page?: number; pageSize?: number; sortBy?: string; order?: "asc" | "desc"; createdAtGte?: string; createdAtLte?: string } = {},
   ) => {
-    isLoading.value = true;
-    const response = await api.applicationMetadatasControllerFind({
-      path: { applicationId },
-      query,
+    metadatas.value = [];
+    total.value = 0;
+    const data = await callApi(() => api.applicationMetadatasControllerFind({ path: { applicationId }, query }), {
+      isLoading,
+      toaster,
+      errorMessage: "Erreur lors de la récupération des metadatas.",
     });
-    isLoading.value = false;
-    if (!response.response.ok) {
-      toaster.addErrorMessage("Erreur lors de la récupération des metadatas.");
-      console.error("Error fetching metadatas:", response.error);
-      throw new Error(`Failed to fetch metadatas: ${response.response.statusText}`);
-    }
-    if (!response.data) {
-      metadatas.value = [];
-      total.value = 0;
-      return;
-    }
-
-    // Handle paginated response
-    const responseData = response.data;
-    metadatas.value = responseData.results ?? [];
-    total.value = responseData.total ?? 0;
+    metadatas.value = data?.results ?? [];
+    total.value = data?.total ?? 0;
   };
 
   const fetchMetadatas = async (
     query: { page?: number; pageSize?: number; sortBy?: string; order?: "asc" | "desc"; createdAtGte?: string; createdAtLte?: string } = {},
   ) => {
-    isLoading.value = true;
-    try {
-      const response = await api.metadatasControllerFind({ query });
-      isLoading.value = false;
-
-      if (!response.data) {
-        metadatas.value = [];
-        total.value = 0;
-        return;
-      }
-
-      // Handle paginated response
-      const responseData = response.data;
-      metadatas.value = responseData.results ?? [];
-      total.value = responseData.total ?? 0;
-    } catch (error) {
-      isLoading.value = false;
-      toaster.addErrorMessage("Erreur technique lors de la récupération des metadatas globales.");
-      metadatas.value = [];
-      total.value = 0;
-      console.error(error);
-    }
+    metadatas.value = [];
+    total.value = 0;
+    const data = await callApi(() => api.metadatasControllerFind({ query }), {
+      isLoading,
+      toaster,
+      errorMessage: "Erreur lors de la récupération des metadatas globales.",
+    });
+    metadatas.value = data?.results ?? [];
+    total.value = data?.total ?? 0;
   };
 
   return {
