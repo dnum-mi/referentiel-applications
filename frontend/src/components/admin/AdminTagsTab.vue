@@ -1,17 +1,16 @@
 <script setup lang="ts">
 import api from "@/api";
-import type { TagDto, TagsControllerFindAllData } from "@/client/types.gen";
+import type { TagDto } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
-import type { TableColumn, TableSortEvent } from "@/types/table";
+import { useServerPaginatedTable } from "@/composables/use-server-paginated-table";
+import type { TableColumn } from "@/types/table";
 import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
-import type { DataTablePageEvent } from "primevue/datatable";
 import { watchDebounced } from "@vueuse/core";
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref } from "vue";
 import TagActions from "./TagActions.vue";
 
 // L'API renvoie le décompte des applications liées, non déclaré dans TagDto.
 type TagRow = TagDto & { _count?: { applications: number } };
-const data = ref<{ results: TagRow[]; total: number }>({ results: [], total: 0 });
 
 const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [
   {
@@ -41,60 +40,30 @@ const tableColumns: TableColumn[] = headers.map((h) => ({
   sortable: h.isSortable || false,
 }));
 
-const isLoading = ref(false);
 const searchQuery = ref("");
-
-const sortColumn = ref<(typeof headers)[number]["key"]>();
-const isSortDescending = ref(false);
-
-const itemsPerPage = ref(15);
-const currentPage = ref(0);
-const firstIndex = computed(() => currentPage.value * itemsPerPage.value);
-
-// RGAA-084 (7.5) : message de statut sur le nombre de résultats, restitué aux TA.
-const statusMessage = computed(() => {
-  if (isLoading.value) return "Chargement des tags…";
-  const total = data.value.total;
-  if (total === 0) return "Aucune donnée ne correspond à votre recherche : Résultat 0 à 0";
-  const from = firstIndex.value + 1;
-  const to = Math.min(firstIndex.value + data.value.results.length, total);
-  return `Résultat ${from} à ${to} sur ${total}`;
-});
-
-async function fetchTags() {
-  isLoading.value = true;
-
-  const query: NonNullable<TagsControllerFindAllData["query"]> = {
-    name: searchQuery.value || undefined,
-    page: currentPage.value,
-    pageSize: itemsPerPage.value,
-    sortBy: sortColumn.value,
-    order: isSortDescending.value ? "desc" : "asc",
-  };
-
-  const response = await api.tagsControllerFindAll({ query });
-  if (!response.data) {
-    isLoading.value = false;
-    return;
-  }
-  data.value = response.data;
-
-  isLoading.value = false;
-}
-
-watchDebounced(
-  searchQuery,
-  async () => {
-    currentPage.value = 0;
-    await fetchTags();
+const {
+  data,
+  isLoading,
+  itemsPerPage,
+  firstIndex,
+  sortColumn,
+  isSortDescending,
+  onSort,
+  onPage,
+  resetAndFetch,
+  refresh: fetchTags,
+  statusMessage: createStatusMessage,
+} = useServerPaginatedTable<TagRow>({
+  fetchPage: async (pagination) => {
+    const response = await api.tagsControllerFindAll({
+      query: { ...pagination, name: searchQuery.value || undefined },
+    });
+    return response.data;
   },
-  { debounce: 300 },
-);
-
-watch([sortColumn, isSortDescending], () => {
-  currentPage.value = 0;
-  fetchTags();
 });
+const statusMessage = createStatusMessage("tags");
+
+watchDebounced(searchQuery, resetAndFetch, { debounce: 300 });
 
 const tableRows = computed(() =>
   data.value.results.map((tag) => ({
@@ -104,17 +73,6 @@ const tableRows = computed(() =>
     actions: tag,
   })),
 );
-
-function onSort(event: TableSortEvent) {
-  sortColumn.value = event.sortField as (typeof headers)[number]["key"];
-  isSortDescending.value = event.sortOrder === -1;
-}
-
-function onPage(event: DataTablePageEvent) {
-  currentPage.value = event.page;
-  itemsPerPage.value = event.rows;
-  fetchTags();
-}
 
 onMounted(fetchTags);
 </script>
