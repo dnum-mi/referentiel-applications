@@ -121,6 +121,10 @@ jobs:
           PLAYWRIGHT_JSON_OUTPUT_NAME: results.json
         run: pnpm exec playwright test --project=chromium --reporter=json
 
+      - name: Résumer les résultats et les tests ignorés
+        if: always() && (steps.e2e.outcome == 'success' || steps.e2e.outcome == 'failure')
+        run: node qa/scripts/report-summary.mjs e2e/results.json
+
       # --- Publier les screenshots sur la branche dédiée qa-screenshots ---
       - name: Publier les screenshots
         if: hashFiles('e2e/qa-screenshots/*.png') != ''
@@ -162,7 +166,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: e2e/playwright-report/
+          path: |
+            e2e/playwright-report/
+            e2e/results.json
           retention-days: 7
 
       # --- GATE : échec de non-régression ⇒ échec du job ⇒ merge bloqué (si check requis) ---

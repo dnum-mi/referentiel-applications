@@ -11,5 +11,5 @@
     "skipLibCheck": true,
     "resolveJsonModule": true
   },
-  "include": ["pom", "fixtures", "support", "tests"]
+  "include": ["pom", "fixtures", "support", "tests", "unit", "*.config.ts"]
 }

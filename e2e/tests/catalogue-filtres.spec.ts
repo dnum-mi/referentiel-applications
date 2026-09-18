@@ -1,3 +1,4 @@
+import { expect } from "@playwright/test";
 import { test } from "../fixtures/test";
 import { SearchPage } from "../pom";
 
@@ -158,10 +159,10 @@ test.describe("Catalogue — filtres avancés", () => {
     const search = new SearchPage(page);
     await search.open();
     const values = await search.actorTypeOptionValues();
-    test.skip(
+    expect(
       values.length === 0,
       "Aucun type d'acteur dans le jeu de données",
-    );
+    ).toBeFalsy();
     await search.filterByActorType(values[0]);
   });
 
@@ -173,16 +174,16 @@ test.describe("Catalogue — filtres avancés", () => {
     const search = new SearchPage(page);
     await search.open();
     const values = await search.hostingProviderOptionValues();
-    test.skip(
+    expect(
       values.length === 0,
       "Aucune option d'hébergement dans le jeu de données",
-    );
+    ).toBeFalsy();
     await search.filterByHostingProvider(values[0]);
   });
 
   test("CSF-16 - filtre Tag reflété dans tag", async ({ page, data }) => {
     const tag = await data.firstTag();
-    test.skip(!tag, "Aucun tag dans le jeu de données");
+    expect(tag, "Aucun tag dans le jeu de données").toBeTruthy();
     const search = new SearchPage(page);
     await search.open();
     await search.filterByTag(tag!.name);
@@ -193,7 +194,10 @@ test.describe("Catalogue — filtres avancés", () => {
     data,
   }) => {
     const bd = await data.firstBusinessDivision();
-    test.skip(!bd, "Aucune direction de métier dans le jeu de données");
+    expect(
+      bd,
+      "Aucune direction de métier dans le jeu de données",
+    ).toBeTruthy();
     const search = new SearchPage(page);
     await search.open();
     await search.filterByBusinessDivision(bd!.label);
@@ -204,7 +208,7 @@ test.describe("Catalogue — filtres avancés", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
     const search = new SearchPage(page);
     await search.open();
     await search.filterByRelationTarget(app!.label.slice(0, 4));

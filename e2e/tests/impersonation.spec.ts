@@ -78,7 +78,10 @@ test.describe("Impersonation", () => {
     data,
   }) => {
     const target = await data.getUser(USER_EMAIL);
-    test.skip(!target, "Utilisateur cible introuvable dans le jeu de données");
+    expect(
+      target,
+      "Utilisateur cible introuvable dans le jeu de données",
+    ).toBeTruthy();
 
     // Session Lecteur dans un contexte séparé (pas d'interférence avec la session admin).
     const ctx = await browser.newContext();
@@ -128,7 +131,10 @@ test.describe("Impersonation", () => {
       );
       botId = await data.findBotUserId();
     }
-    test.skip(!botId, "Impossible d'obtenir un compte de service (bot)");
+    expect(
+      botId,
+      "Impossible d'obtenir un compte de service (bot)",
+    ).toBeTruthy();
 
     try {
       expect(await data.impersonateStatus(botId!)).toBe(400);
@@ -140,7 +146,7 @@ test.describe("Impersonation", () => {
   test("IMP-07 - pas d'impersonation en chaîne (403)", async ({ data }) => {
     const reader = await data.getUser(USER_EMAIL);
     const admin = await data.getUser(ADMIN_EMAIL);
-    test.skip(!reader || !admin, "Comptes admin/lecteur introuvables");
+    expect(!reader || !admin, "Comptes admin/lecteur introuvables").toBeFalsy();
 
     // Déjà en train d'impersonner le lecteur (header), tenter d'impersonner un autre compte :
     // l'identité effective (lecteur) n'a pas le droit d'administration → refus.
@@ -156,7 +162,10 @@ test.describe("Impersonation", () => {
     data,
   }) => {
     const inScope = await data.getUser("qa-target@example.com");
-    test.skip(!inScope, "Fixture QA absente — `pnpm db:seed:qa` requis.");
+    expect(
+      inScope,
+      "Fixture QA absente — `pnpm db:seed:qa` requis.",
+    ).toBeTruthy();
 
     const ts = Date.now();
     const label = `E2E-IMP09-${ts}`;
@@ -204,7 +213,10 @@ test.describe("Impersonation", () => {
     data,
   }) => {
     const inScope = await data.getUser("qa-target@example.com");
-    test.skip(!inScope, "Fixture QA absente — `pnpm db:seed:qa` requis.");
+    expect(
+      inScope,
+      "Fixture QA absente — `pnpm db:seed:qa` requis.",
+    ).toBeTruthy();
 
     const ts = Date.now();
     const label = `E2E-IMP10-${ts}`;
@@ -241,7 +253,10 @@ test.describe("Impersonation", () => {
     data,
   }) => {
     const inScope = await data.getUser("qa-target@example.com");
-    test.skip(!inScope, "Fixture QA absente — `pnpm db:seed:qa` requis.");
+    expect(
+      inScope,
+      "Fixture QA absente — `pnpm db:seed:qa` requis.",
+    ).toBeTruthy();
 
     const ts = Date.now();
     const label = `E2E-IMP11-${ts}`;
@@ -284,10 +299,10 @@ test.describe("Impersonation", () => {
     // `scope-admin`) et `qa-outside` (org ABCD, hors périmètre — donc hors liste).
     const outside = await data.getUser("qa-outside@example.com");
     const inScope = await data.getUser("qa-target@example.com");
-    test.skip(
+    expect(
       !outside || !inScope,
       "Fixture QA absente — `pnpm db:seed:qa` requis.",
-    );
+    ).toBeFalsy();
 
     // `switchTo` (pas `loginAs`) : la fixture `data` a déjà connecté `page` en `admin`.
     await switchTo(page, "scope-admin");

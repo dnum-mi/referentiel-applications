@@ -8,18 +8,21 @@ test.describe("Actions CRUD de base", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const actorTypes = await data.actorTypes();
     const typeId = actorTypes?.[0]?.id;
-    test.skip(!typeId, "Aucun type d'acteur disponible");
+    expect(typeId, "Aucun type d'acteur disponible").toBeTruthy();
 
     // L'acteur édité est créé PAR le test, AVEC une organisation : le formulaire
     // d'édition exige une organisation pour enregistrer, et un acteur pris « au
     // hasard » peut ne pas en avoir — notamment ceux créés sans organisation par
     // les tests ADM tournant en parallèle (échec de campagne du 26/08).
     const organization = await data.anyOrganization();
-    test.skip(!organization, "Aucune organisation dans le jeu de données");
+    expect(
+      organization,
+      "Aucune organisation dans le jeu de données",
+    ).toBeTruthy();
 
     const ts = Date.now();
     const seeded = await data.createActor(app!.id, {
@@ -28,7 +31,7 @@ test.describe("Actions CRUD de base", () => {
       actorTypeId: typeId,
       organizationId: organization!.id,
     });
-    test.skip(!seeded, "Impossible de créer l'acteur de test");
+    expect(seeded, "Impossible de créer l'acteur de test").toBeTruthy();
 
     try {
       const fiche = new ApplicationPage(page);
@@ -50,11 +53,11 @@ test.describe("Actions CRUD de base", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const actorTypes = await data.actorTypes();
     const typeId = actorTypes?.[0]?.id;
-    test.skip(!typeId, "Aucun type d'acteur disponible");
+    expect(typeId, "Aucun type d'acteur disponible").toBeTruthy();
 
     const ts = Date.now();
     const a1 = await data.createActor(app!.id, {
@@ -86,15 +89,15 @@ test.describe("Actions CRUD de base", () => {
 
   test("CRU-03 - créer un acteur groupe", async ({ page, data }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const actorTypes = await data.actorTypes();
-    test.skip(!actorTypes?.length, "Aucun type d'acteur disponible");
+    expect(actorTypes?.length, "Aucun type d'acteur disponible").toBeTruthy();
 
     // Une organisation EXISTANTE : le champ est un sélecteur (`OrganizationSearchSelect`), pas une
     // saisie libre — un libellé inventé ne remonte aucun résultat et ne peut pas être choisi.
     const orgPath = await data.anyOrganizationPath();
-    test.skip(!orgPath, "Aucune organisation dans le jeu de données");
+    expect(orgPath, "Aucune organisation dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-actors");
@@ -106,7 +109,7 @@ test.describe("Actions CRUD de base", () => {
     browser,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const readerCtx = await browser.newContext();
     try {
@@ -126,7 +129,7 @@ test.describe("Actions CRUD de base", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-infos");
@@ -156,7 +159,7 @@ test.describe("Actions CRUD de base", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-infos");
@@ -171,7 +174,7 @@ test.describe("Actions CRUD de base", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-infos");
@@ -184,7 +187,7 @@ test.describe("Actions CRUD de base", () => {
     data,
   }) => {
     const orgPath = await data.anyOrganizationPath();
-    test.skip(!orgPath, "Aucune organisation dans le jeu de données");
+    expect(orgPath, "Aucune organisation dans le jeu de données").toBeTruthy();
 
     const ts = Date.now();
     const label = `E2E-CRU08-${ts}`;
@@ -226,7 +229,7 @@ test.describe("Actions CRUD de base", () => {
     data,
   }) => {
     const orgPath = await data.anyOrganizationPath();
-    test.skip(!orgPath, "Aucune organisation dans le jeu de données");
+    expect(orgPath, "Aucune organisation dans le jeu de données").toBeTruthy();
 
     const ts = Date.now();
     const label = `E2E-CRU16-${ts}`;
@@ -274,7 +277,7 @@ test.describe("Actions CRUD de base", () => {
 
   test("CRU-09 - supprimer une application", async ({ page, data }) => {
     const orgPath = await data.anyOrganizationPath();
-    test.skip(!orgPath, "Aucune organisation dans le jeu de données");
+    expect(orgPath, "Aucune organisation dans le jeu de données").toBeTruthy();
 
     const ts = Date.now();
     const label = `E2E-CRU09-${ts}`;
@@ -319,7 +322,7 @@ test.describe("Actions CRUD de base", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-infos");
@@ -333,7 +336,7 @@ test.describe("Actions CRUD de base", () => {
 
   test("CRU-11 - cycle de vie d'un nom alternatif", async ({ page, data }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-infos");
@@ -347,7 +350,7 @@ test.describe("Actions CRUD de base", () => {
 
   test("CRU-12 - cycle de vie d'un statut", async ({ page, data }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-statuses");
@@ -363,7 +366,7 @@ test.describe("Actions CRUD de base", () => {
     data,
   }) => {
     const apps = await data.twoApplications();
-    test.skip(!apps, "Moins de 2 applications dans le jeu de données");
+    expect(apps, "Moins de 2 applications dans le jeu de données").toBeTruthy();
 
     const [appA, appB] = apps!;
     const fiche = new ApplicationPage(page);
@@ -376,7 +379,7 @@ test.describe("Actions CRUD de base", () => {
 
   test("CRU-14 - cycle de vie d'un lien externe", async ({ page, data }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-links");
@@ -393,7 +396,7 @@ test.describe("Actions CRUD de base", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-compliances");

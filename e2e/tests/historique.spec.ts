@@ -1,3 +1,5 @@
+import { expect } from "@playwright/test";
+import { skipIfOptionalDataMissing } from "../support/optional-data";
 import { test } from "../fixtures/test";
 import { ApplicationPage, HistoryPage, MetadataDetailPage } from "../pom";
 
@@ -18,10 +20,10 @@ test.describe("Historique des modifications", () => {
     page,
     data,
   }) => {
-    test.skip(
-      !(await data.anyMetadata()),
+    expect(
+      await data.anyMetadata(),
       "Aucune modification dans le journal",
-    );
+    ).toBeTruthy();
 
     const history = new HistoryPage(page);
     await history.open();
@@ -32,10 +34,10 @@ test.describe("Historique des modifications", () => {
     page,
     data,
   }) => {
-    test.skip(
-      !(await data.anyMetadata()),
+    expect(
+      await data.anyMetadata(),
       "Aucune modification dans le journal",
-    );
+    ).toBeTruthy();
 
     const history = new HistoryPage(page);
     await history.open();
@@ -48,10 +50,10 @@ test.describe("Historique des modifications", () => {
     page,
     data,
   }) => {
-    test.skip(
-      !(await data.anyMetadata()),
+    expect(
+      await data.anyMetadata(),
       "Aucune modification dans le journal",
-    );
+    ).toBeTruthy();
 
     const history = new HistoryPage(page);
     await history.open();
@@ -64,7 +66,7 @@ test.describe("Historique des modifications", () => {
     data,
   }) => {
     const meta = await data.anyMetadata();
-    test.skip(!meta, "Aucune modification dans le journal");
+    expect(meta, "Aucune modification dans le journal").toBeTruthy();
 
     const detail = new MetadataDetailPage(page);
     await detail.open(meta!.id);
@@ -75,10 +77,10 @@ test.describe("Historique des modifications", () => {
     page,
     data,
   }) => {
-    test.skip(
-      !(await data.anyMetadata()),
+    expect(
+      await data.anyMetadata(),
       "Aucune modification dans le journal",
-    );
+    ).toBeTruthy();
 
     const history = new HistoryPage(page);
     await history.open();
@@ -91,12 +93,12 @@ test.describe("Historique des modifications", () => {
     data,
   }) => {
     const meta = await data.anyMetadata();
-    test.skip(!meta, "Aucune modification dans le journal");
+    expect(meta, "Aucune modification dans le journal").toBeTruthy();
 
     const detail = new MetadataDetailPage(page);
     await detail.open(meta!.id);
     await detail.expectDetailLoaded();
-    test.skip(
+    skipIfOptionalDataMissing(
       !(await detail.hasApplicationLink()),
       "La modification n'est pas rattachée à une application",
     );
@@ -117,10 +119,10 @@ test.describe("Historique des modifications", () => {
     page,
     data,
   }) => {
-    test.skip(
-      !(await data.anyMetadata()),
+    expect(
+      await data.anyMetadata(),
       "Aucune modification dans le journal",
-    );
+    ).toBeTruthy();
 
     const history = new HistoryPage(page);
     await history.open();
@@ -133,12 +135,12 @@ test.describe("Historique des modifications", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-modifications");
     await fiche.expectModificationsTabLoaded();
-    test.skip(
+    skipIfOptionalDataMissing(
       (await fiche.modificationsSeeMoreCount()) === 0,
       "Cette application n'a aucune modification",
     );
@@ -150,15 +152,18 @@ test.describe("Historique des modifications", () => {
     page,
     data,
   }) => {
-    test.skip(
-      !(await data.anyMetadata()),
+    expect(
+      await data.anyMetadata(),
       "Aucune modification dans le journal",
-    );
+    ).toBeTruthy();
 
     const history = new HistoryPage(page);
     await history.open();
     await history.expectHasRows();
-    test.skip(!(await history.hasSecondPage()), "Une seule page d'historique");
+    skipIfOptionalDataMissing(
+      !(await history.hasSecondPage()),
+      "Une seule page d'historique",
+    );
     await history.goToSecondPage();
   });
 
@@ -170,10 +175,10 @@ test.describe("Historique des modifications", () => {
       data.ensureMonoLineMetadata(),
       data.ensureMultiLineMetadata(),
     ]);
-    test.skip(
+    expect(
       !mono && !multi,
       "Aucune modification mono/multi-ligne trouvable ni créable",
-    );
+    ).toBeFalsy();
 
     try {
       const detail = new MetadataDetailPage(page);

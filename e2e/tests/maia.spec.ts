@@ -23,7 +23,7 @@ test.describe("Intégration MAIA", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-actors");
@@ -38,7 +38,7 @@ test.describe("Intégration MAIA", () => {
     data,
   }) => {
     const app = await data.firstApplication();
-    test.skip(!app, "Aucune application dans le jeu de données");
+    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-actors");
