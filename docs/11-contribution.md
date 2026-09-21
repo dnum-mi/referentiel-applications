@@ -99,38 +99,40 @@ Avant de considérer une tâche comme finie, exécutez les contrôles correspond
 **Racine** (formatage et lint transverses) :
 
 ```bash
-pnpm run format   # prettier . --write
-pnpm run lint     # eslint .
+pnpm run format                # prettier . --write
+pnpm run lint --max-warnings=0  # eslint ., aucun avertissement accepté en CI
 ```
 
 **Backend** (`backend/`) :
 
 ```bash
-pnpm run build      # nest build (compilation TypeScript)
-pnpm run db:generate # prisma generate (client Prisma à jour)
-pnpm run test       # jest (tests)
-pnpm run test:cov   # jest --coverage (couverture, comme en CI)
+pnpm run db:generate:client # prisma generate --generator client
+pnpm run type-check         # tsc --noEmit --incremental false (sans base de données)
+pnpm run build              # nest build (compilation TypeScript)
+pnpm run test               # jest (tests)
+pnpm run test:cov           # jest --coverage (couverture, comme en CI)
 ```
 
 **Frontend** (`frontend/`) :
 
 ```bash
-pnpm run type-check   # vue-tsc --build --force (typage Vue/TS)
-pnpm run api:generate # openapi-ts (régénère le client API, voir §9)
-pnpm run test:unit    # vitest run (tests unitaires)
-pnpm run test:e2e     # playwright test (tests bout en bout)
-pnpm run build        # type-check + build de production
+pnpm run api:generate       # openapi-ts (régénère le client API, voir §9)
+pnpm run type-check         # vue-tsc --build --force (typage Vue/TS)
+pnpm run test:unit          # vitest run (tests unitaires)
+pnpm run test:unit:coverage # vitest run --coverage (rapport coverage/lcov.info)
+pnpm run test:e2e           # playwright test (tests bout en bout)
+pnpm run build              # type-check + build de production
 ```
 
-> Conformément aux préférences de l'équipe, ne déclarez une tâche terminée qu'après vous être assuré que le **lint**, le **typage** (front), le **build** (back) et les **tests** passent.
+> Conformément aux préférences de l'équipe, ne déclarez une tâche terminée qu'après vous être assuré que le **lint**, le **typage** (front et back), le **build** (back) et les **tests** passent.
 
 ## 6. Tests
 
-| Périmètre               | Outil                | Emplacement                                                | Commande                            |
-| ----------------------- | -------------------- | ---------------------------------------------------------- | ----------------------------------- |
-| Backend                 | **Jest** (tests e2e) | `backend/tests/` (fichiers `*.e2e-spec.ts`)                | `pnpm test`, `pnpm test:cov`        |
-| Frontend — unitaires    | **Vitest**           | `frontend/` (config `vitest.config.ts`, `vitest-setup.ts`) | `pnpm test:unit`                    |
-| Frontend — bout en bout | **Playwright**       | `frontend/tests/` (fichiers `*.spec.ts`)                   | `pnpm test:e2e`, `pnpm test:e2e:ui` |
+| Périmètre               | Outil                | Emplacement                                                | Commande                                    |
+| ----------------------- | -------------------- | ---------------------------------------------------------- | ------------------------------------------- |
+| Backend                 | **Jest** (tests e2e) | `backend/tests/` (fichiers `*.e2e-spec.ts`)                | `pnpm test`, `pnpm test:cov`                |
+| Frontend — unitaires    | **Vitest**           | `frontend/` (config `vitest.config.ts`, `vitest-setup.ts`) | `pnpm test:unit`, `pnpm test:unit:coverage` |
+| Frontend — bout en bout | **Playwright**       | `frontend/tests/` (fichiers `*.spec.ts`)                   | `pnpm test:e2e`, `pnpm test:e2e:ui`         |
 
 Le projet a migré ses tests bout en bout de **Cypress vers Playwright** ; un dossier `frontend/cypress/` peut subsister mais Playwright est l'outil de référence.
 
@@ -142,16 +144,24 @@ L'exécution des tests backend en local et en CI s'appuie sur la pile Docker Com
 
 Les workflows GitHub Actions se trouvent dans `.github/workflows/`.
 
-| Workflow            | Déclencheur                                               | Rôle                                                                                                                                                        |
-| ------------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `main-ci.yml`       | `push` et `pull_request` sur `main` et `dev`, ou manuel   | Pipeline principal : build des images Docker back et front, lint + Prettier (`--check`), tests unitaires (appel à `tests-unit.yml`) et tests e2e Playwright |
-| `commitlint.yml`    | `pull_request` (ouverture, édition, synchro, réouverture) | Valide les **messages de commit** de la PR et le **titre** de la PR (conventional commits)                                                                  |
-| `tests-unit.yml`    | Appelé par `main-ci.yml` (ou manuel)                      | Démarre la pile Docker, applique les migrations Prisma, lance la couverture backend (seuil 70 %) puis le scan SonarQube (back + front)                      |
-| `build.yml`         | Workflow réutilisable (`workflow_call`)                   | Construit et pousse une image Docker (back ou front) vers `ghcr.io/dnum-mi/referentiel-applications`                                                        |
-| `release.yml`       | `push` sur `main`                                         | Exécute **release-please** ; à la publication d'une version, bascule le board `Main` → `Qualif` et ferme les issues de campagne QA                          |
-| `release-build.yml` | `push` d'un tag `v*` ou manuel                            | Construit et pousse les images Docker de la version publiée — **en pratique jamais déclenché par un tag** (voir l'encadré ci-dessous)                       |
+| Workflow            | Déclencheur                                                      | Rôle                                                                                                                                                                                                         |
+| ------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `main-ci.yml`       | `push` sur `main` et `dev`, toute `pull_request`, ou manuel      | Pipeline principal : images Docker, lint sans avertissements + Prettier, typage backend, tests Vitest avec couverture et typage frontend, contrôle Swagger, tests QA et Playwright, appel à `tests-unit.yml` |
+| `commitlint.yml`    | `pull_request` (ouverture, édition, synchro, réouverture)        | Valide les **messages de commit** de la PR et le **titre** de la PR (conventional commits)                                                                                                                   |
+| `tests-unit.yml`    | Appelé par `main-ci.yml` (ou manuel avec un tag d'image backend) | Démarre la pile Docker, applique les migrations Prisma, lance la couverture backend (seuil 70 %) puis SonarQube avec les rapports LCOV backend et frontend                                                   |
+| `build.yml`         | Workflow réutilisable (`workflow_call`)                          | Construit et pousse une image Docker (back ou front) vers `ghcr.io/dnum-mi/referentiel-applications`                                                                                                         |
+| `release.yml`       | `push` sur `main`                                                | Exécute **release-please** ; à la publication d'une version, bascule le board `Main` → `Qualif` et ferme les issues de campagne QA                                                                           |
+| `release-build.yml` | `push` d'un tag `v*` ou manuel                                   | Construit et pousse les images Docker de la version publiée — **en pratique jamais déclenché par un tag** (voir l'encadré ci-dessous)                                                                        |
+| `qa-campaign.yml`   | PR release-please ouverte ou mise à jour, ou manuel              | Rejoue la campagne complète, met à jour les issues QA et fait échouer le job si le verdict est `qa:fail`                                                                                                     |
+| `qa-sync.yml`       | Manuel, avec un numéro d'issue QA                                | Rejoue les tests Playwright sélectionnés et synchronise les résultats et le verdict dans l'issue de campagne                                                                                                 |
 
-Le pipeline e2e démarre la pile (`docker compose ... up backend postgres keycloak`), amorce la base (`pnpm db:seed`), installe les navigateurs Playwright, **régénère le client API** (`pnpm openapi-ts`) puis lance `pnpm test:e2e`.
+Les contrôles ESLint (`--max-warnings=0`), Prettier (`--check`), Vitest et les deux contrôles de typage font échouer leur job en cas d'erreur. `Backend Type Check` génère uniquement le client Prisma avant `tsc --noEmit` et ne démarre aucune base de données. Les jobs de typage et de tests frontend utilisent Node.js 22.
+
+`Frontend Unit Tests & Type Check` produit l'artefact `frontend-unit-tests-coverage`. Son rapport `lcov.info` couvre les fichiers TypeScript et Vue de `frontend/src/`, y compris les fichiers non testés, en excluant les tests et le client OpenAPI généré. Les chemins du rapport partent de la racine du dépôt (`frontend/src/...`) pour que Sonar les associe aux bons fichiers. `main-ci.yml` attend la fin de ce job avant d'appeler `tests-unit.yml` et lui transmet le nom de l'artefact ; un rapport absent ou vide fait échouer la CI. En lancement manuel de `tests-unit.yml`, la couverture frontend est produite sur place avant le scan.
+
+Sonar est exécuté si les trois secrets `SONAR_TOKEN`, `SONAR_HOST_URL` et `SONAR_PROJECT_KEY` sont présents : le scanner reçoit les deux rapports LCOV et son échec fait échouer le job. Si aucun secret n'est fourni (notamment sur une PR de fork), le scan est explicitement ignoré dans le résumé du workflow ; une configuration partielle est une erreur. Aucun seuil de couverture frontend supplémentaire n'est imposé par Vitest.
+
+Le pipeline e2e démarre la pile (`docker compose ... up backend postgres keycloak`), amorce la base (`pnpm db:seed`), installe les navigateurs Playwright, **régénère le client API** (`pnpm openapi-ts`) puis lance `pnpm test:e2e`. Son rapport est publié depuis `frontend/playwright-report/` sous le nom d'artefact `playwright-report`.
 
 ## 8. Versionnage et release
 
@@ -213,8 +223,8 @@ Quelques règles éprouvées, à respecter impérativement en contribution :
 - **Workflow** : branche `feature/*` ou `fix/*` depuis `main`, PR avec **1 approbation**, fusion par l'auteur en **`rebase and merge`**, brouillon si non terminée.
 - **Commits** : conventional commits en minuscules, validés par Husky (`commit-msg`) et en CI (`commitlint.yml`).
 - **Hooks** : `pre-commit` → `lint-staged` (Prettier) ; `commit-msg` → `commitlint`.
-- **Qualité avant PR** : `pnpm run lint` / `format` (racine), `pnpm run build` + `test`/`test:cov` (back), `pnpm run type-check` + `test:unit` + `test:e2e` (front).
+- **Qualité avant PR** : `pnpm run lint --max-warnings=0` / `format` (racine), `pnpm run type-check` + `build` + `test`/`test:cov` (back), `pnpm run type-check` + `test:unit:coverage` + `test:e2e` (front).
 - **Tests** : Jest (back), Vitest + Playwright avec `@axe-core/playwright` (front).
-- **CI** : `main-ci.yml` (build + lint + tests + e2e), `commitlint.yml`, `tests-unit.yml` (couverture + Sonar), `build.yml`, `release.yml`, `release-build.yml`.
+- **CI** : `main-ci.yml` (build + lint + typage + tests + e2e), `commitlint.yml`, `tests-unit.yml` (couverture + Sonar), `build.yml`, `release.yml`, `release-build.yml`, `qa-campaign.yml` et `qa-sync.yml`.
 - **Release** : automatisée par **release-please** sur `main`.
 - **Pièges** : `db:dev` (jamais `db push`), `pnpm gen` après modif d'API, ne pas éditer `frontend/src/client/**`, commiter `swagger.yaml`, aucun secret ni liste d'hébergement en clair.
