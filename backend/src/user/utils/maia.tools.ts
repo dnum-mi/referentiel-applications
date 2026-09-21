@@ -1,17 +1,48 @@
+import { getMaiaTimeoutMs } from "src/config/configs/maia.config";
+import { MaiaUnavailableException } from "../errors/maia-unavailable.exception";
+
 type MaiaFinderResponse = {
   data?: Array<{
     values?: {
       structure?: {
         values?: {
-          fullCode?: string;
-        };
-      };
-      fullName?: string;
-      lastName?: string;
-      firstName?: string;
-    };
+          fullCode?: string | null;
+        } | null;
+      } | null;
+      fullName?: string | null;
+      lastName?: string | null;
+      firstName?: string | null;
+    } | null;
   }>;
 };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isMaiaResponse(payload: unknown): payload is MaiaFinderResponse {
+  if (!isRecord(payload)) return false;
+  if (!Array.isArray(payload.data)) return false;
+  return payload.data.every((entry: unknown) => {
+    if (!isRecord(entry)) return false;
+    if (entry.values == null) return true;
+    if (!isRecord(entry.values)) return false;
+    const values = entry.values;
+    if (
+      ["fullName", "lastName", "firstName"].some(
+        (key) => values[key] != null && typeof values[key] !== "string",
+      )
+    ) {
+      return false;
+    }
+    if (values.structure == null) return true;
+    if (!isRecord(values.structure)) return false;
+    if (values.structure.values == null) return true;
+    if (!isRecord(values.structure.values)) return false;
+    const fullCode = values.structure.values.fullCode;
+    return fullCode == null || typeof fullCode === "string";
+  });
+}
 
 function isMockEnabled(): boolean {
   const value = process.env.MOCK_MAIA_SERVICE;
@@ -56,7 +87,9 @@ export async function getOrganizationPathFromMaia(
 }
 
 async function callMaia(email: string): Promise<MaiaFinderResponse> {
-  const maiaUrl = process.env.MAIA_API_URL!.trim();
+  const maiaUrl = process.env.MAIA_API_URL?.trim();
+  if (!maiaUrl) throw new MaiaUnavailableException("configuration");
+  const signal = AbortSignal.timeout(getMaiaTimeoutMs());
 
   const headers: Record<string, string> = {
     Accept: "application/json, text/plain, */*",
@@ -65,42 +98,67 @@ async function callMaia(email: string): Promise<MaiaFinderResponse> {
 
   // `fetch` global à dessein : MAIA est interne au SI et ne doit pas passer par le
   // proxy sortant (cf. src/common/http/outbound-dispatcher.ts).
-  const response = await fetch(maiaUrl, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      objectType: "Person",
-      criteria: [
-        {
-          displayFilter: {
-            label: { fr: "Courriel" },
+  let response: Response;
+  try {
+    response = await fetch(maiaUrl, {
+      method: "POST",
+      headers,
+      signal,
+      body: JSON.stringify({
+        objectType: "Person",
+        criteria: [
+          {
+            displayFilter: {
+              label: { fr: "Courriel" },
+              value: email,
+            },
+            field: "mail",
+            operator: "contains",
             value: email,
           },
-          field: "mail",
-          operator: "contains",
-          value: email,
+        ],
+        fields: [
+          "fullName",
+          "phoneNumber.number",
+          "structure.fullCode",
+          "mail",
+          "lastName",
+          "firstName",
+        ],
+        metadata: ["pagination"],
+        ordering: [{ mode: "asc", field: "fullName" }],
+        pagination: {
+          range: {
+            start: 0,
+            limit: 20,
+          },
         },
-      ],
-      fields: [
-        "fullName",
-        "phoneNumber.number",
-        "structure.fullCode",
-        "mail",
-        "lastName",
-        "firstName",
-      ],
-      metadata: ["pagination"],
-      ordering: [{ mode: "asc", field: "fullName" }],
-      pagination: {
-        range: {
-          start: 0,
-          limit: 20,
-        },
-      },
-    }),
-  });
+      }),
+    });
+  } catch (error) {
+    throw new MaiaUnavailableException(
+      signal.aborted ? "timeout" : "network",
+      error,
+    );
+  }
 
-  const payload = (await response.json()) as MaiaFinderResponse;
+  if (!response.ok) {
+    await response.body?.cancel().catch(() => undefined);
+    throw new MaiaUnavailableException("http", undefined, response.status);
+  }
+
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch (error) {
+    throw new MaiaUnavailableException(
+      signal.aborted ? "timeout" : "response",
+      error,
+    );
+  }
+  if (!isMaiaResponse(payload)) {
+    throw new MaiaUnavailableException("response");
+  }
   return payload;
 }
 

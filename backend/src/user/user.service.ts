@@ -23,6 +23,7 @@ import { UserPermissionLogService } from "./user-permission-log.service";
 import { LoggerService } from "src/logger/logger.service";
 import { EmailService } from "src/email/email.service";
 import { emailEquals, normalizeEmail } from "src/common/utils/email.utils";
+import { MaiaUnavailableException } from "./errors/maia-unavailable.exception";
 
 @Injectable()
 export class UserService {
@@ -64,7 +65,15 @@ export class UserService {
 
   async createUser(rawEmail: string) {
     const email = normalizeEmail(rawEmail);
-    const organizationPath = await getOrganizationPathFromMaia(email);
+    let organizationPath: string | null = null;
+    try {
+      organizationPath = await getOrganizationPathFromMaia(email);
+    } catch (error) {
+      if (!(error instanceof MaiaUnavailableException)) throw error;
+      this.logger.warn(
+        `[MAIA] Création de compte sans organisation (${error.reason}) ; rattrapage par synchronisation MAIA.`,
+      );
+    }
     const data: Prisma.UserCreateArgs["data"] = {
       email,
       role: Roles.VISITOR,
@@ -560,7 +569,7 @@ export class UserService {
     });
   }
 
-  async syncOrganizationsFromMaia(dto: SyncOrganizationsDto): Promise<void> {
+  async syncOrganizationsFromMaia(dto: SyncOrganizationsDto) {
     const onlyMissing = dto.onlyMissing ?? true;
 
     const users = await this.prisma.user.findMany({
@@ -572,21 +581,41 @@ export class UserService {
       orderBy: { id: "asc" },
     });
 
+    const summary = {
+      processed: users.length,
+      synced: 0,
+      notFound: 0,
+      failed: 0,
+    };
     for (const user of users) {
-      const organizationPath = await getOrganizationPathFromMaia(user.email);
+      try {
+        const organizationPath = await getOrganizationPathFromMaia(user.email);
 
-      if (!organizationPath) {
-        continue;
+        if (!organizationPath) {
+          summary.notFound++;
+          continue;
+        }
+
+        const { organization } =
+          await this.findOrCreateOrganizationFromPath(organizationPath);
+
+        await this.prisma.user.update({
+          where: { id: user.id },
+          data: { organizationId: organization.id },
+        });
+        summary.synced++;
+      } catch (error) {
+        summary.failed++;
+        this.logger.error(
+          `[MAIA] Échec de synchronisation pour l'utilisateur ${user.id}.`,
+          error,
+        );
       }
-
-      const { organization } =
-        await this.findOrCreateOrganizationFromPath(organizationPath);
-
-      await this.prisma.user.update({
-        where: { id: user.id },
-        data: { organizationId: organization.id },
-      });
     }
+    this.logger.log(
+      `[MAIA] Synchronisation terminée : ${JSON.stringify(summary)}`,
+    );
+    return summary;
   }
 
   startSyncOrganizationsFromMaiaInBackground(
@@ -602,7 +631,12 @@ export class UserService {
     }
     const onlyMissing = dto.onlyMissing ?? true;
 
-    void this.syncOrganizationsFromMaia({ onlyMissing }).catch(() => undefined);
+    void this.syncOrganizationsFromMaia({ onlyMissing }).catch((error) => {
+      this.logger.error(
+        "[MAIA] Échec du lancement de la synchronisation.",
+        error,
+      );
+    });
 
     return {
       status: "queued" as const,
