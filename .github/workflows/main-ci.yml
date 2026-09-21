@@ -54,7 +54,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Run ESLint
-        run: pnpm run lint
+        run: pnpm run lint --max-warnings=0
       - name: Run Prettier
         run: pnpm exec prettier . --check
 
@@ -91,17 +91,50 @@ jobs:
         uses: pnpm/action-setup@v3
         with:
           version: 10.14.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - name: Install dependencies
         working-directory: ./frontend
         run: pnpm install --frozen-lockfile
       - name: Generate API client
         working-directory: ./frontend
         run: pnpm api:generate
-      - name: Run unit tests
+      - name: Run unit tests with coverage
         working-directory: ./frontend
-        run: pnpm test:unit
+        run: |
+          pnpm test:unit:coverage
+          test -s coverage/lcov.info
       - name: Run type check
         working-directory: ./frontend
+        run: pnpm type-check
+      - name: Upload frontend coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-unit-tests-coverage
+          path: frontend/coverage/lcov.info
+          if-no-files-found: error
+          retention-days: 1
+
+  test-backend-types:
+    name: Backend Type Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install backend dependencies
+        working-directory: backend
+        run: pnpm install --frozen-lockfile
+      - name: Generate Prisma client
+        working-directory: backend
+        run: pnpm db:generate:client
+      - name: Run type check
+        working-directory: backend
         run: pnpm type-check
 
   swagger-freshness:
@@ -143,13 +176,14 @@ jobs:
 
   unit-tests:
     name: Unit Tests
-    needs: [build-backend]
+    needs: [build-backend, test-frontend-unit]
     permissions:
       contents: write
       pull-requests: write
     uses: ./.github/workflows/tests-unit.yml
     with:
       backend_image_tag: ${{ needs.build-backend.outputs.image_tag }}
+      frontend_coverage_artifact: frontend-unit-tests-coverage
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
