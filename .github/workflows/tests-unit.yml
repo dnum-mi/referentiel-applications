@@ -12,6 +12,11 @@ on:
       backend_image_tag:
         required: true
         type: string
+      frontend_coverage_artifact:
+        description: Artefact LCOV déjà produit par le workflow appelant
+        required: false
+        type: string
+        default: ""
     secrets:
       SONAR_TOKEN:
         required: false
@@ -66,7 +71,7 @@ jobs:
         run: chmod -R 777 ./backend/coverage
       - name: Run test coverage
         run: IMAGE_TAG=${{ inputs.backend_image_tag }} docker compose -f docker-compose.yml -f docker-compose.ci.yml exec backend pnpm test:cov
-      - name: Upload vitest coverage artifacts
+      - name: Upload backend coverage
         uses: actions/upload-artifact@v4
         with:
           name: unit-tests-coverage
@@ -145,6 +150,9 @@ jobs:
         uses: pnpm/action-setup@v3
         with:
           version: 10.14.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - name: Install dependencies
         run: |
           pnpm install --frozen-lockfile
@@ -152,6 +160,19 @@ jobs:
         run: cd backend && pnpm install --frozen-lockfile && pnpm db:generate
       - name: Generate frontend API schema
         run: cd frontend && pnpm install --frozen-lockfile && pnpm api:generate
+      - name: Download frontend coverage
+        if: inputs.frontend_coverage_artifact != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.frontend_coverage_artifact }}
+          path: frontend/coverage
+      # Une exécution manuelle n'a pas d'artefact provenant de main-ci.yml.
+      - name: Generate frontend coverage when running standalone
+        if: inputs.frontend_coverage_artifact == ''
+        working-directory: frontend
+        run: pnpm test:unit:coverage
+      - name: Verify frontend coverage report
+        run: test -s frontend/coverage/lcov.info
 
       - name: Set sonarqube args
         id: sonar-args
@@ -169,11 +190,11 @@ jobs:
         with:
           args: >
             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
-            -Dsonar.javascript.lcov.reportPaths=coverage/backend/lcov.info
+            -Dsonar.javascript.lcov.reportPaths=coverage/backend/lcov.info,frontend/coverage/lcov.info
             -Dsonar.javascript.node.maxspace=4096
             -Dsonar.sources=backend,frontend
-            -Dsonar.exclusions=backend/tests/**
-            -Dsonar.coverage.exclusions=**/tests/**
+            -Dsonar.exclusions=backend/tests/**,**/coverage/**
+            -Dsonar.coverage.exclusions=**/tests/**,**/*.spec.ts,frontend/src/client/**
             -Dsonar.tests=backend/tests
             -Dsonar.scm.provider=git
             -Dsonar.issue.ignore.multicriteria=e2699,emailWidth,emailLayout,emailRole

@@ -16,6 +16,7 @@
     "db:deploy": "prisma migrate deploy",
     "dev": "cross-env NODE_ENV=development nest start --watch",
     "build": "nest build",
+    "type-check": "tsc --noEmit --incremental false",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:prod": "prisma migrate deploy && node dist/src/main.js",
