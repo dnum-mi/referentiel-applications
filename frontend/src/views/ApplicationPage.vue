@@ -11,9 +11,10 @@ import { useApplicationStore } from "@/stores/applicationStore";
 import { useMetadataStore } from "@/stores/metadataStore";
 import { useUserStore } from "@/stores/userStore";
 import { useToasterStore } from "@/stores/toasterStore";
-import { Permission } from "@/client";
+import { Permission, RelationType, Status } from "@/client";
 import type { MetadataDto } from "@/client/types.gen";
 import { useAppPermission } from "@/composables/use-app-permission";
+import { useRelationStore } from "@/stores/relationStore";
 
 const userStore = useUserStore();
 const applicationStore = useApplicationStore();
@@ -70,6 +71,26 @@ watch(
 
 const canReadMetadata = useAppPermission(() => application.value?.myPerms, [Permission.METADATA_READ]);
 const canDeleteApplication = useAppPermission(() => application.value?.myPerms, [Permission.DELETE_APPLICATION]);
+const canReadRelation = useAppPermission(() => application.value?.myPerms, [Permission.RELATION_READ]);
+
+// Tag "remplacée par" affiché avec les autres tags (statut/IQ/type) : uniquement pertinent
+// pour une application décommissionnée ayant une relation entrante "in_replacement_of".
+const relationStore = useRelationStore();
+const replacementApplications = ref<{ id: string; label: string }[]>([]);
+const isDecommissioned = computed(() => application.value?.currentStatus?.status === Status.DECOMMISSIONED);
+
+async function loadReplacementApplications() {
+  replacementApplications.value = [];
+  if (!isDecommissioned.value || !canReadRelation.value) return;
+  try {
+    await relationStore.fetchRelationsByApplication(id);
+    replacementApplications.value = relationStore.relationsAsTarget
+      .filter((relation) => relation.type === RelationType.IN_REPLACEMENT_OF)
+      .map((relation) => ({ id: relation.sourceApplication.id, label: relation.sourceApplication.label }));
+  } catch (err) {
+    console.error("Failed to load replacement relations:", err);
+  }
+}
 
 // Les metadatas de fiche ne s'affichent que si le store porte bien CELLES de
 // l'application affichée. Le store survit à la navigation : sans ce garde-fou,
@@ -96,6 +117,7 @@ async function loadApplication() {
   errorMessage.value = "";
   try {
     await fetchApplicationMetadata();
+    await loadReplacementApplications();
   } catch (err) {
     console.error("Failed to load application:", err);
     errorMessage.value = "Impossible de charger les données de l'application.";
@@ -233,6 +255,15 @@ function formatMetadataAuthor(metadata: MetadataDto): string {
               : statusApplicationDictionary[application.currentStatus.status]
           "
           data-testid="application-status-tag"
+        />
+
+        <DsfrTag
+          v-for="replacement in replacementApplications"
+          :key="replacement.id"
+          class="fr-mr-1v"
+          :label="`Remplacée par : ${replacement.label}`"
+          :link="`/applications/${replacement.id}`"
+          data-testid="application-replaced-by-tag"
         />
 
         <DsfrTag
