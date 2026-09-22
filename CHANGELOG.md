@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.92.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.91.0...v1.92.0) (2026-09-21)
+
+
+### Features
+
+* add search for technologie without end of life ([#2660](https://github.com/dnum-mi/referentiel-applications/issues/2660)) ([30422a3](https://github.com/dnum-mi/referentiel-applications/commit/30422a36640eaa366ceeff1dbcba41c88f2545b7))
+* add tag app for replaced app ([#2665](https://github.com/dnum-mi/referentiel-applications/issues/2665)) ([7460950](https://github.com/dnum-mi/referentiel-applications/commit/746095032aea7aa7b0350ed23b7b80036e1e90de))
+
+
+### Bug Fixes
+
+* **auth:** restrict JWT validation bypass to development ([#2657](https://github.com/dnum-mi/referentiel-applications/issues/2657)) ([db6efb3](https://github.com/dnum-mi/referentiel-applications/commit/db6efb3b0f6cdaaa2f20347bf2c944187b62dad0))
+* **auth:** temporarily disable production auth level checks ([#2655](https://github.com/dnum-mi/referentiel-applications/issues/2655)) ([63ad973](https://github.com/dnum-mi/referentiel-applications/commit/63ad9730c5a96bb9ca8c904fc43807738098a330))
+* **dev:** default local auth level checks to off ([#2653](https://github.com/dnum-mi/referentiel-applications/issues/2653)) ([9f8c187](https://github.com/dnum-mi/referentiel-applications/commit/9f8c1879e47a7378ed1c897e183d12d99aaa78a5))
+* fail QA tests when required fixtures are missing ([#2661](https://github.com/dnum-mi/referentiel-applications/issues/2661)) ([745636b](https://github.com/dnum-mi/referentiel-applications/commit/745636bbe60f0c8b1f6a002f9ec2d8410643537e))
+* keep first login available during MAIA outages ([#2666](https://github.com/dnum-mi/referentiel-applications/issues/2666)) ([eb061a7](https://github.com/dnum-mi/referentiel-applications/commit/eb061a7691298ed30380194f71a329716dc39175))
+* standardize store loading and API timeouts ([#2663](https://github.com/dnum-mi/referentiel-applications/issues/2663)) ([a4a2f4d](https://github.com/dnum-mi/referentiel-applications/commit/a4a2f4d10c1c5a63ba677f95ae7b943b2aa5e49c))
+
 ## [1.91.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.90.3...v1.91.0) (2026-09-14)
 
 

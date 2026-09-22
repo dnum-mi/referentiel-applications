@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CreateServiceTokenDto, ExposedTokenDto, TokenDto } from "@/client/types.gen";
+import type { CreateServiceTokenDto, ExposedTokenDto, ServiceTokenMode, TokenDto } from "@/client/types.gen";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import type { DataTablePageEvent } from "primevue/datatable";
@@ -8,7 +8,7 @@ import RefAppTable from "@/components/RefAppTable.vue";
 import OrganizationSearchSelect from "@/components/common/OrganizationSearchSelect.vue";
 import type { TableColumn } from "@/types/table";
 import { RolesOptions, RolesScopes, RolesWording } from "@/utils/roles-utils";
-import { TokenKindWording } from "@/utils/token-utils";
+import { ServiceTokenModeHint, ServiceTokenModeWording, TokenKindWording } from "@/utils/token-utils";
 
 // #2384 : ces tables sont en mode lazy sans handler `@sort`, et la route `GET /tokens` ne trie pas
 // côté serveur (le service ignore sortBy/order, orderBy figé à createdAt desc). Un en-tête triable
@@ -16,6 +16,7 @@ import { TokenKindWording } from "@/utils/token-utils";
 // serveur n'est pas implémenté pour cette route, on désactive le tri sur toutes les colonnes.
 const serviceTokenHeaders = [
   { key: "kind", label: "Type", isSortable: false },
+  { key: "serviceMode", label: "Mode d’accès", isSortable: false },
   { key: "name", label: "Nom", isSortable: false },
   { key: "description", label: "Description", isSortable: false },
   { key: "role", label: "Rôle", isSortable: false },
@@ -56,9 +57,16 @@ const newlyCreatedToken = ref<ExposedTokenDto | null>(null);
 const showRevokeConfirmation = ref(false);
 const tokenToRevoke = ref<string | null>(null);
 
-type ServiceTokenForm = Omit<CreateServiceTokenDto, "scopeOrganizationId"> & {
+type ServiceTokenForm = Omit<CreateServiceTokenDto, "scopeOrganizationId" | "serviceMode"> & {
   scopeOrganizationId?: string;
+  serviceMode: ServiceTokenMode;
 };
+
+const serviceTokenModeOptions = (["delegated", "machine"] satisfies ServiceTokenMode[]).map((mode) => ({
+  value: mode,
+  label: `${ServiceTokenModeWording[mode]}${mode === "delegated" ? " (recommandé)" : ""}`,
+  hint: ServiceTokenModeHint[mode],
+}));
 
 const newToken = ref<ServiceTokenForm>({
   name: "",
@@ -66,6 +74,7 @@ const newToken = ref<ServiceTokenForm>({
   expiresAt: "",
   role: "VISITOR",
   scopeOrganizationId: "",
+  serviceMode: "delegated",
 });
 
 const serviceTokens = ref<TokenDto[]>([]);
@@ -131,6 +140,7 @@ function onPersonalTokenPage(event: DataTablePageEvent) {
 const serviceTokenRows = computed(() =>
   serviceTokens.value.map((token) => ({
     kind: TokenKindWording[token.kind],
+    serviceMode: ServiceTokenModeWording[token.serviceMode],
     name: token.name,
     description: token.description,
     role: token.role ? RolesWording[token.role] : "-",
@@ -159,7 +169,7 @@ const isScopeDisabled = computed(() => newToken.value.role === "VISITOR");
 const labelScope = computed(() => RolesScopes[newToken.value.role] || "Organisation du périmètre");
 
 function resetForm() {
-  newToken.value = { name: "", description: "", expiresAt: "", role: "VISITOR", scopeOrganizationId: "" };
+  newToken.value = { name: "", description: "", expiresAt: "", role: "VISITOR", scopeOrganizationId: "", serviceMode: "delegated" };
 }
 
 function resetMessages() {
@@ -285,6 +295,8 @@ onMounted(() => {
     />
 
     <DsfrAlert v-if="newlyCreatedToken" type="success" title="Token créé avec succès" class="fr-mb-2w" closeable @close="dismissNewToken">
+      <p class="fr-mb-1w"><strong>Mode d’accès :</strong> {{ ServiceTokenModeWording[newlyCreatedToken.serviceMode] }}</p>
+      <p class="fr-mb-1w">{{ ServiceTokenModeHint[newlyCreatedToken.serviceMode] }}</p>
       <p class="fr-mb-1w"><strong>Attention :</strong> Copiez ce token maintenant, il ne sera plus affiché.</p>
       <div class="token-display fr-mb-1w">
         <code class="token-value">{{ newlyCreatedToken.password }}</code>
@@ -304,6 +316,15 @@ onMounted(() => {
       <div v-if="showCreateForm" class="fr-card fr-p-3w fr-mb-3w">
         <h3 class="fr-h5 fr-mb-2w">Nouveau token applicatif</h3>
         <form @submit.prevent="createServiceToken">
+          <DsfrRadioButtonSet
+            v-model="newToken.serviceMode"
+            legend="Mode d’accès"
+            name="service-token-mode"
+            :options="serviceTokenModeOptions"
+            required
+            hint="Ce mode reste identique après régénération. Pour le changer, révoquez ce token et créez-en un nouveau."
+          />
+
           <DsfrInputGroup
             v-model.trim="newToken.name"
             label="Nom"

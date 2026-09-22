@@ -49,7 +49,7 @@ Le backend revérifie systématiquement le jeton dans `backend/src/middlewares/a
 
 - Le JWKS est chargé une fois au constructeur via `createRemoteJWKSet(new URL(this.oidc.jwksUrl))` (`auth.middleware.ts:37`).
 - Deux modes d'authentification (`auth.middleware.ts:42-56`) :
-  - **Jeton API** (en-tête `API_KEY_HEADER`) → résolution via `TokenService.findUserByToken`.
+  - **Jeton API** (en-tête `API_KEY_HEADER`) → résolution via `TokenService.findUserByToken`. Un token personnel utilise l'identité de son propriétaire ; un token de service utilise son mode enregistré (`machine` autonome ou `delegated` avec JWT humain et intersection des droits, §1.5).
   - **Bearer JWT** → vérification `jwtVerify(authorization, this.jwks)`, puis `findOrCreateByEmail(payload.email)` (provisionnement à la volée de l'utilisateur sur la base de son email). L'e-mail est **normalisé en minuscules** avant recherche et création, et la recherche est insensible à la casse (#2501) : deux graphies du même compte ne créent plus deux utilisateurs. L'**email est l'identifiant pivot** : le modèle `User` n'a plus de champ `keycloakId` (l'`id` UUID interne reste la clé de liaison).
 - Échappatoire de développement : seule la valeur exacte `DISABLE_JWT_VALIDATION=true`, avec `NODE_ENV=development` explicitement défini, autorise le décodage sans vérification de signature ni d'expiration. La configuration (`jwt-validation.config.ts`) est validée au démarrage et émet un avertissement quand ce mode est actif. Une activation hors développement, y compris si `NODE_ENV` est absent, empêche le démarrage. Les valeurs `false`, `0`, une chaîne vide ou une variable absente conservent la vérification JWT, quel que soit `AUTH_LEVEL_MODE`.
 - En cas d'absence d'utilisateur, réponse **401**. Sur exception, `UnauthorizedException`.
@@ -76,11 +76,40 @@ Depuis la décision métier du 14 septembre 2026, en `enforce`, une session faib
 
 Le refus ne contient aucune identité, permission, organisation ou valeur brute du claim. Un `401` déclencherait une boucle de connexion SSO ; ce `403` affiche un écran de reconnexion. Aucun rôle n'est modifié en base. Une impersonation active est clôturée hors maintenance et son état navigateur est purgé. Les contrôles défensifs des services (`stepDown`, permissions d'acteur) sont conservés, mais une session faible est arrêtée en amont.
 
-Les jetons API existants (`x-refapp-token`) restent hors du contrôle du niveau SSO. Les routes publiques de configuration et de santé restent disponibles pour démarrer l'application. `off` et `observe` ne bloquent pas l'accès ; ils ne constituent donc pas une protection active.
+Les jetons personnels (`x-refapp-token`) restent hors du contrôle du niveau SSO. Un token de service en mode `machine` reste également autonome ; en mode `delegated`, le JWT humain obligatoire est soumis au même contrôle qu'une connexion directe (§1.5). Les routes publiques de configuration et de santé restent disponibles pour démarrer l'application. `off` et `observe` ne bloquent pas l'accès ; ils ne constituent donc pas une protection active.
 
 `UserConnexionLog` enregistre une ligne par utilisateur, jour et contexte (niveau, mode, fournisseur et source) avec la valeur brute du claim, le fournisseur et la source (`authSource` : `token`, `userinfo`, ou `null` si inconnue). Deux valeurs encore classées faibles sont conservées séparément ; les requêtes répétées et concurrentes du même contexte sont dédoublonnées. Les anciennes lignes gardent une source inconnue, sans attribution rétrospective.
 
 `GET /users/:id/connexion-logs` expose les 30 derniers contextes quotidiens (niveau, mode, fournisseur et source) au rôle administrateur uniquement. Un administrateur de périmètre doit avoir la cible dans son périmètre ; une simple délégation `AdminPanelManage` ne suffit pas. La même règle protège `GET /users/:id/permission-logs`. Une session rétrogradée est refusée. Le diagnostic est accessible via **Administration → Utilisateurs & droits → Gestion des utilisateurs → Consultation → Connexions**, dans une fenêtre dédiée, sans exposer l’empreinte interne de dédoublonnage.
+
+### 1.5. Appels via un système tiers (#1988)
+
+Le type `system` du ticket correspond au type `bot` du compte de service dans le modèle. L'administrateur choisit un mode enregistré sur le token (`Token.serviceMode`, enum `ServiceTokenMode`) :
+
+- `machine` : traitement autonome, authentifié par `x-refapp-token` seul. Le principal reste le compte de service avec les droits globaux et le rôle plafonnés par le token, et son périmètre organisationnel. Un acteur attribué au bot ne relève pas le plafond du token. Un en-tête `Authorization` supplémentaire ne change ni le mode ni l'identité.
+- `delegated` : appel au nom d'un utilisateur, avec token de service **et** JWT humain obligatoires. Retirer le JWT ou demander le mode machine dans un en-tête ou un paramètre ne change pas le mode enregistré.
+
+En mode `delegated`, les deux identités sont vérifiées séparément : token API actif, non expiré, compte de service non bloqué ; JWT SSO vérifié, email valide, compte humain existant et non bloqué. Le JWT d'un inconnu ou d'un compte `bot` ne provisionne aucun utilisateur. Un token délégué présenté sans JWT est refusé, même si le service est administrateur. Les appels directs par JWT et les tokens personnels conservent leurs modes d'authentification.
+
+En mode délégué, les permissions globales sont calculées séparément (rôle et permissions individuelles), puis intersectées. Pour chaque application, les droits de l'humain incluent également ses acteurs email, ses groupes, le type d'acteur par défaut et la projection de son rôle dans son périmètre. Le service les plafonne par ses permissions globales et la projection de son rôle dans son propre périmètre ; ses éventuels acteurs ou le type par défaut ne peuvent pas relever ce plafond. La garde et `my-perms` utilisent le même résultat, puis appliquent le OU entre permissions requises **après** l'intersection.
+
+| Utilisateur humain                   | Token de service | Résultat                                                        |
+| ------------------------------------ | ---------------- | --------------------------------------------------------------- |
+| VISITOR sans droit d'acteur          | READER           | VISITOR, sans accès supplémentaire aux onglets applicatifs      |
+| VISITOR acteur avec droit d'écriture | READER           | Écriture refusée, lecture limitée aux droits communs            |
+| VISITOR acteur avec droit d'écriture | ADMIN            | Écriture d'acteur conservée, aucun droit d'administration gagné |
+| ADMIN                                | READER           | Droits plafonnés au niveau READER                               |
+| Inconnu de RefApp                    | Tout rôle        | 401, aucun compte créé                                          |
+
+Le rôle visible est le minimum des deux rôles. Les périmètres emboîtés retiennent le plus étroit pour les services qui lisent directement le principal ; les deux périmètres originaux sont conservés pour le calcul applicatif. Des périmètres disjoints sont refusés (403), même si une application possède des acteurs dans les deux organisations : aucun périmètre unique commun ne peut être représenté pour les opérations d'administration. Un périmètre enregistré sans relation exploitable est aussi refusé. La réponse `users/me` conserve les permissions effectives, sans exposer l'identité interne du service.
+
+La création et la régénération de tokens sont refusées dans ce contexte délégué, afin de ne pas fabriquer un secret qui échapperait ensuite au plafond du service. Un compte `bot`, même administrateur et autonome, ne peut pas créer ni régénérer de token : il ne peut pas devenir distributeur de secrets ni choisir un nouveau mode via l'API. La création de tokens tiers et leur révocation restent réservées à `GlobalAdminManage` ; un créateur qui perd cette permission ne peut plus révoquer son token tiers. Les tokens personnels restent révocables par leur propriétaire ou un administrateur. Le header d'impersonation et la route de début d'impersonation sont refusés pour une identité déléguée.
+
+**Migration des intégrations :** la migration SQL renseigne `machine` pour les tokens existants, sans modifier leur hash, leur expiration ou leurs droits. Ils continuent à fonctionner sans JWT. L'API de création conserve `machine` comme défaut pour les anciens clients administrateurs ; le formulaire propose les deux modes et présélectionne `delegated`. Les tokens personnels ignorent ce champ et leur DTO refuse qu'il soit fourni. Le mode ne peut être modifié après création, y compris à la régénération : un changement d'usage nécessite révocation et création par un administrateur. Les intégrations agissant au nom d'une personne doivent utiliser un nouveau token `delegated` et transmettre son JWT. Les réglages de validation JWT et de niveau SSO sont conservés.
+
+**Déploiement progressif et retour arrière :** le hash stocké d'un token délégué est préfixé par `delegated:`, y compris après régénération. La contrainte SQL `Token_service_mode_hash_check` impose la correspondance entre le mode et ce préfixe : une régénération tentée par un ancien backend échoue avant de remplacer le secret. Un ancien backend, qui ne cherche que `SHA512(secret)`, ne peut pas reconnaître le token délégué : il répond 401 au lieu d'accorder les droits machine du service. Les tokens machine et personnels conservent leur format de hash. Les appels délégués et leur régénération ne sont disponibles que sur les serveurs exécutant cette version ou une version compatible.
+
+Les régressions sont couvertes par `delegated-auth.spec.ts`, `auth.middleware.spec.ts`, `delegated-auth.e2e-spec.ts` et `token-lifecycle.e2e-spec.ts` : signature JWT, identité inconnue ou bloquée, absence de JWT, intersection des droits, acteurs et périmètres, baisse de rôle à la requête suivante, expiration/révocation, création de secrets et impersonation.
 
 ## 2. Modèle d'autorisation à trois couches
 

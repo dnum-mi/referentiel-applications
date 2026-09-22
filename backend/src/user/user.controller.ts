@@ -111,7 +111,7 @@ export class UserController {
   async updateMe(
     @User() user: Requestor,
     @Body() UpdateUserPreferencesDto: UpdateUserPreferencesDto,
-  ) {
+  ): Promise<UserWithPermissions> {
     const updated = await this.userService.updateOwnPreferences(
       user.id,
       UpdateUserPreferencesDto,
@@ -133,7 +133,10 @@ export class UserController {
     description: "Abonnement pris en compte",
     type: UserWithPermissions,
   })
-  async subscribe(@User() user: Requestor, @Param("appId") appId: string) {
+  async subscribe(
+    @User() user: Requestor,
+    @Param("appId") appId: string,
+  ): Promise<UserWithPermissions> {
     const updated = await this.userService.subscribe(user.id, appId);
     return { ...user, followedApplications: updated.followedApplications };
   }
@@ -150,7 +153,10 @@ export class UserController {
     description: "Désabonnement pris en compte",
     type: UserWithPermissions,
   })
-  async unsubscribe(@User() user: Requestor, @Param("appId") appId: string) {
+  async unsubscribe(
+    @User() user: Requestor,
+    @Param("appId") appId: string,
+  ): Promise<UserWithPermissions> {
     const updated = await this.userService.unsubscribe(user.id, appId);
     return { ...user, followedApplications: updated.followedApplications };
   }

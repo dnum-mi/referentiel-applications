@@ -31,10 +31,12 @@ export class UserPermissionsInterceptor implements NestInterceptor {
     );
   }
 
-  private addPermissionsFromRole(user: UserEntity): UserWithPermissions {
+  private addPermissionsFromRole(
+    user: UserWithPermissions,
+  ): UserWithPermissions {
     return {
       ...user,
-      permissions: principalToPermissions(user),
+      permissions: user.permissions ?? principalToPermissions(user),
     };
   }
 

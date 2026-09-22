@@ -4,7 +4,14 @@ import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { exportJWK, generateKeyPair, SignJWT } from "jose";
 import type { NextFunction, Request, Response } from "express";
-import { AuthLevel, Permission, Roles, UserType } from "@prisma/client";
+import {
+  AuthLevel,
+  Permission,
+  Roles,
+  ServiceTokenMode,
+  UserType,
+} from "@prisma/client";
+import { SERVICE_TOKEN_MODE } from "src/token/domain/token.entity";
 import type { LoggerService } from "src/logger/logger.service";
 import type { MaintenanceService } from "src/maintenance/maintenance.service";
 import type { TokenService } from "src/token/token.service";
@@ -69,6 +76,7 @@ const authLevelObserve: AuthLevelConfigType = {
 };
 
 interface TestUser {
+  [SERVICE_TOKEN_MODE]?: ServiceTokenMode;
   id: string;
   email: string;
   role: Roles;
@@ -120,7 +128,7 @@ interface MiddlewareOptions {
   oidc?: OidcConfig;
   authLevel?: AuthLevelConfigType;
   jwtValidation?: ConfigType<typeof jwtValidationConfig>;
-  user?: TestUser;
+  user?: TestUser | null;
   tokenUser?: TestUser | null;
   maintenanceActive?: boolean;
   logCreated?: boolean;
@@ -277,6 +285,61 @@ describe("AuthMiddleware", () => {
       },
     );
 
+    it("rejects a forged user JWT even when a service token is valid", async () => {
+      const { middleware, userService } = buildMiddleware({
+        oidc: verificationOidc,
+        jwtValidation: { disabled: false },
+        tokenUser: {
+          ...adminUser,
+          type: UserType.bot,
+          [SERVICE_TOKEN_MODE]: ServiceTokenMode.delegated,
+        },
+      });
+      const request = bearerRequest(
+        {},
+        {
+          authorization: `Bearer ${forgedToken}`,
+          "x-refapp-token": "valid-service-token",
+        },
+      );
+      await expect(run(middleware, request)).rejects.toBeInstanceOf(
+        UnauthorizedException,
+      );
+      expect(userService.findByEmailWithRelations).not.toHaveBeenCalled();
+      expect(request.user).toBeUndefined();
+    });
+
+    it("authenticates a machine token independently of a forged Authorization header", async () => {
+      const machine = {
+        ...existingUser,
+        id: "machine-id",
+        type: UserType.bot,
+        [SERVICE_TOKEN_MODE]: ServiceTokenMode.machine,
+      };
+      const { middleware, userService } = buildMiddleware({
+        oidc: verificationOidc,
+        jwtValidation: { disabled: false },
+        authLevel: authLevelEnforce,
+        tokenUser: machine,
+      });
+      const request = bearerRequest(
+        {},
+        {
+          authorization: `Bearer ${forgedToken}`,
+          "x-refapp-token": "valid-machine-token",
+        },
+      );
+      const { next } = await run(middleware, request);
+      expect(next).toHaveBeenCalled();
+      expect(request.user).toMatchObject({
+        id: machine.id,
+        type: UserType.bot,
+      });
+      expect(request.user.authLevel).toBeUndefined();
+      expect(userService.findByEmailWithRelations).not.toHaveBeenCalled();
+      expect(userService.findOrCreateByEmail).not.toHaveBeenCalled();
+    });
+
     it("accepts a token signed by the configured identity provider", async () => {
       process.env.DISABLE_JWT_VALIDATION = "false";
       const token = await new SignJWT({ email: existingUser.email })
@@ -331,6 +394,161 @@ describe("AuthMiddleware", () => {
       );
 
       expect(next).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("service tokens on behalf of a human (#1988)", () => {
+    const serviceUser: TestUser = {
+      ...existingUser,
+      id: "service-id",
+      email: "service@bot.internal",
+      type: UserType.bot,
+      [SERVICE_TOKEN_MODE]: ServiceTokenMode.delegated,
+      role: Roles.ADMIN,
+    };
+    const delegatedRequest = (
+      payload: Record<string, unknown> = { email: visitorUser.email },
+    ) => bearerRequest(payload, { "x-refapp-token": "service-token" });
+
+    it("requires a user JWT for service tokens", async () => {
+      const { middleware, userService } = buildMiddleware({
+        tokenUser: serviceUser,
+      });
+      await expect(
+        run(middleware, {
+          headers: { "x-refapp-token": "service-token" },
+        } as unknown as Request),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+      expect(userService.findOrCreateByEmail).not.toHaveBeenCalled();
+    });
+
+    it("keeps the known human identity and caps rights", async () => {
+      const { middleware, userService, userConnexionLogService } =
+        buildMiddleware({
+          tokenUser: serviceUser,
+          user: visitorUser,
+        });
+      const request = delegatedRequest();
+      const { next } = await run(middleware, request);
+      expect(next).toHaveBeenCalled();
+      expect(userService.findByEmailWithRelations).toHaveBeenCalledWith(
+        visitorUser.email,
+      );
+      expect(userService.findOrCreateByEmail).not.toHaveBeenCalled();
+      expect(request.user).toMatchObject({
+        id: visitorUser.id,
+        role: Roles.VISITOR,
+        type: UserType.human,
+      });
+      expect(request.user.permissions).not.toContain(
+        Permission.GlobalAdminManage,
+      );
+      expect(userConnexionLogService.log).toHaveBeenCalledWith(
+        visitorUser.id,
+        expect.any(Object),
+      );
+      expect(JSON.stringify(request.user)).not.toContain(serviceUser.email);
+    });
+
+    it("does not provision an unknown user", async () => {
+      const { middleware, userService, userConnexionLogService } =
+        buildMiddleware({ tokenUser: serviceUser, user: null });
+      const { response, next } = await run(middleware, delegatedRequest());
+      expect(response.status).toHaveBeenCalledWith(401);
+      expect(next).not.toHaveBeenCalled();
+      expect(userService.findOrCreateByEmail).not.toHaveBeenCalled();
+      expect(userConnexionLogService.log).not.toHaveBeenCalled();
+    });
+
+    it.each([undefined, "", [], { email: "injected@example.test" }])(
+      "rejects a malformed user identity: %p",
+      async (email) => {
+        const { middleware, userService } = buildMiddleware({
+          tokenUser: serviceUser,
+        });
+        await expect(
+          run(middleware, delegatedRequest({ email })),
+        ).rejects.toBeInstanceOf(UnauthorizedException);
+        expect(userService.findByEmailWithRelations).not.toHaveBeenCalled();
+      },
+    );
+
+    it("does not fall back to a valid human JWT when the service token is invalid", async () => {
+      const { middleware, userService } = buildMiddleware({ tokenUser: null });
+      const { response, next } = await run(middleware, delegatedRequest());
+      expect(response.status).toHaveBeenCalledWith(401);
+      expect(next).not.toHaveBeenCalled();
+      expect(userService.findOrCreateByEmail).not.toHaveBeenCalled();
+      expect(userService.findByEmailWithRelations).not.toHaveBeenCalled();
+    });
+
+    it.each(["human", "service"])(
+      "refuses a blocked %s principal",
+      async (blocked) => {
+        const { middleware } = buildMiddleware({
+          tokenUser: { ...serviceUser, isBlocked: blocked === "service" },
+          user: { ...visitorUser, isBlocked: blocked === "human" },
+        });
+        const request = delegatedRequest();
+        const { response, next } = await run(middleware, request);
+        expect(response.status).toHaveBeenCalledWith(403);
+        expect(next).not.toHaveBeenCalled();
+        expect(request.user).toBeUndefined();
+      },
+    );
+
+    it("refuses a bot presented as the human identity", async () => {
+      const { middleware } = buildMiddleware({
+        tokenUser: serviceUser,
+        user: serviceUser,
+      });
+      const { response, next } = await run(middleware, delegatedRequest());
+      expect(response.status).toHaveBeenCalledWith(401);
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it("applies strong authentication to the human behind a service token", async () => {
+      const { middleware } = buildMiddleware({
+        tokenUser: serviceUser,
+        authLevel: authLevelEnforce,
+      });
+      const { response, next } = await run(
+        middleware,
+        delegatedRequest({ email: existingUser.email, auth_mode: "PASSWORD" }),
+      );
+      expect(response.status).toHaveBeenCalledWith(403);
+      expect(response.json).toHaveBeenCalledWith(
+        expect.objectContaining({ strongAuthRequired: true }),
+      );
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it("forbids impersonation even when both principals are admins", async () => {
+      const { middleware, scopedPermissionService } = buildMiddleware({
+        tokenUser: serviceUser,
+        user: adminUser,
+      });
+      const request = delegatedRequest({ email: adminUser.email });
+      request.headers["x-impersonate-user-id"] = "victim";
+      await expect(run(middleware, request)).rejects.toMatchObject({
+        status: 403,
+      });
+      expect(
+        scopedPermissionService.assertCanImpersonate,
+      ).not.toHaveBeenCalled();
+      expect(request.user).toBeUndefined();
+    });
+
+    it("does not write connection logs or provision users in maintenance", async () => {
+      const { middleware, userService, userConnexionLogService } =
+        buildMiddleware({ tokenUser: serviceUser, maintenanceActive: true });
+      const { next } = await run(
+        middleware,
+        delegatedRequest({ email: existingUser.email }),
+      );
+      expect(next).toHaveBeenCalled();
+      expect(userService.findOrCreateByEmail).not.toHaveBeenCalled();
+      expect(userConnexionLogService.log).not.toHaveBeenCalled();
     });
   });
 
