@@ -274,7 +274,7 @@ La permission `AppWritePriority` gouverne la **priorité de redémarrage** (R0�
 
 ### 4.4. Politique de lecture globale (état des lieux)
 
-Certaines lectures ne sont conditionnées à **aucune** permission applicative, seulement à l'authentification : la liste des signalements d'une application, l'historique des modifications (`Metadata`) et la vue transverse des fins de vie (`GET /technologies/end-of-life`). C'est un choix historique (« tout utilisateur authentifié voit le catalogue »), pas une erreur d'implémentation ; sa remise à plat (restreindre, ou assumer et documenter) est tracée dans #2375 et #2509 et relève du métier. Tant qu'elle n'est pas tranchée, **ne pas** ajouter de nouvelle lecture globale sans la faire figurer ici.
+Certaines lectures ne sont conditionnées à **aucune** permission applicative, seulement à l'authentification : la liste des signalements d'une application, l'historique des modifications (`Metadata`), la vue transverse des fins de vie (`GET /technologies/end-of-life`) et l'administrateur à contacter de l'utilisateur courant (`GET /users/me/contact-admin`, qui n'expose que l'e-mail d'un administrateur). C'est un choix historique (« tout utilisateur authentifié voit le catalogue »), pas une erreur d'implémentation ; sa remise à plat (restreindre, ou assumer et documenter) est tracée dans #2375 et #2509 et relève du métier. Tant qu'elle n'est pas tranchée, **ne pas** ajouter de nouvelle lecture globale sans la faire figurer ici.
 
 ## 5. Permissions par type d'acteur
 
@@ -400,13 +400,15 @@ Les composants passent en second argument les permissions applicatives obtenues 
 
 ### 7.4. Contact admin quand l'accès est partiel — `contact-admin` (#2593)
 
-Quand `hasFullReadAppPermissions` renvoie `false`, `ApplicationPage.vue` affiche une alerte et interroge `GET /applications/:applicationId/contact-admin` (même garde `AppRead`, `application.controller.ts:179-201`) pour proposer un lien `mailto:` vers l'administrateur le plus pertinent à contacter. `ApplicationService.getContactAdmin` (`application.service.ts:375-452`) résout, dans l'ordre :
+Quand `hasFullReadAppPermissions` renvoie `false`, `ApplicationPage.vue` affiche une alerte et interroge `GET /applications/:applicationId/contact-admin` (même garde `AppRead`, `application.controller.ts:179-201`) pour proposer un lien `mailto:` vers l'administrateur le plus pertinent à contacter. `ApplicationService.getContactAdmin` déduit les organisations de l'application puis délègue à `ContactAdminService.resolveByOrganizationPaths` (`backend/src/common/service/contact-admin.service.ts`), qui résout, dans l'ordre :
 
 1. **Admin local** le plus récent (`User.lastPermissionChangeAt` desc, nulls en dernier) dont le `scopeOrganization.path` couvre l'organisation d'au moins un acteur ou d'une direction métier de l'application. Le périmètre de l'application (qui n'a pas de scope propre) est déduit de ses `Actor.organizationId` et de ses `BusinessDivision.organizations` ; la correspondance utilise `ancestorPathsOf` (`backend/src/common/utils/organization-scope.utils.ts`), l'inverse d'`organizationWithinScope` (§6 ci-dessus) : un admin est local si son path de scope est l'un des préfixes ancrés du path de l'organisation cible.
 2. Sinon, l'**admin global** le plus récent (`scopeOrganizationId` `null`).
 3. Sinon, une adresse **support** statique (aucun admin en base).
 
 Cette résolution n'est déclenchée qu'à l'ouverture de la fiche application, et seulement pour les utilisateurs à accès partiel (pas sur la page de recherche/liste, qui ne calcule pas `myPerms` par ligne).
+
+**Profil utilisateur.** La même règle sert la page « Mon profil » : `GET /users/me/contact-admin` (`user.controller.ts`, sans permission applicative, comme `GET /users/me`) la déroule à partir de l'organisation de l'utilisateur courant (aucune organisation : admin global, puis support). `UserInfoTab.vue` affiche le résultat en lien `mailto:` et masque la ligne pour un administrateur, qui n'a pas à se contacter lui-même.
 
 > Pour le détail de l'architecture backend (modules, middleware, services), se reporter à [Architecture backend](./08-architecture-backend.md).
 
@@ -440,7 +442,7 @@ Cette résolution n'est déclenchée qu'à l'ouverture de la fiche application, 
 | Transformation matrice → permissions                             | `backend/src/common/utils/types.ts:38-47`                                                           |
 | Garde + décorateur, param `applicationId`                        | `backend/src/common/guards/permission.guard.ts:28-29` + `required-permissions.decorator.ts`         |
 | Endpoint `my-perms`                                              | `backend/src/applications/application.controller.ts:151-176` + `application.service.ts:361-369`     |
-| Endpoint `contact-admin` (#2593)                                 | `application.controller.ts:179-201` + `application.service.ts:375-452`                              |
+| Endpoint `contact-admin` (#2593)                                 | `application.controller.ts:179-201` + `common/service/contact-admin.service.ts`                     |
 | Front `userStore.hasPermissions`                                 | `frontend/src/stores/userStore.ts:79-87`                                                            |
 | Auth backend (JWKS, modes token/JWT, pivot email)                | `backend/src/middlewares/auth.middleware.ts:37-68`                                                  |
 | Config OIDC obligatoire (générique, sans fournisseur en dur)     | `backend/src/config/configs/oidc.config.ts`                                                         |

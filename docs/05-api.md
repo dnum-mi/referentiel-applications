@@ -136,6 +136,7 @@ Inventaire **par module / ressource** (résumé : verbes et chemins principaux, 
 | `GET /applications/count-by-iq`                    | Comptage par indice qualité                                 |
 | `GET /applications/:applicationId/my-perms`        | Permissions de l'utilisateur courant sur l'application      |
 | `GET /applications/:applicationId/contact-admin`   | Admin à contacter si l'accès à la fiche est partiel (#2593) |
+| `GET /users/me/contact-admin`                      | Admin à contacter pour l'utilisateur courant (profil)       |
 | `GET /applications/export/excel`                   | Export Excel (xlsx) — réservé admin                         |
 | `GET /applications/data-quality/update`            | Recalcul global de l'indice qualité                         |
 | `GET /applications/:applicationId`                 | Détail d'une application                                    |
@@ -221,6 +222,7 @@ Inventaire **par module / ressource** (résumé : verbes et chemins principaux, 
 | Verbe & chemin                                                                             | Rôle                                                             |
 | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
 | `GET /users/me` · `PATCH /users/me`                                                        | Profil de l'utilisateur courant                                  |
+| `GET /users/me/contact-admin`                                                              | Administrateur à contacter (résolu par son organisation)         |
 | `POST /users/me/subscribe/:appId` · `DELETE /users/me/subscribe/:appId`                    | Abonnement / désabonnement à une application                     |
 | `POST /users/:id/sync-organization-from-maia` · `POST /users/sync-organizations-from-maia` | Synchronisation des organisations depuis MAIA (unitaire / batch) |
 | `PATCH /users/:id`                                                                         | Mise à jour (dont permissions)                                   |

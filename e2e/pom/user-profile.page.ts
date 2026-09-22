@@ -93,12 +93,29 @@ export class UserProfilePage extends BasePage {
     await expect(this.unsubscribeButtons()).toHaveCount(before - 1);
   }
 
-  // --- PRF: profil utilisateur (PRF-01 to PRF-06) ---
+  // --- PRF: profil utilisateur (PRF-01 to PRF-08) ---
 
   async expectProfileInfos(): Promise<void> {
     await expect(this.byTestId("user-profile-table")).toBeVisible();
     await expect(this.byTestId("user-profile-email")).toBeVisible();
     await expect(this.byTestId("user-profile-email")).not.toBeEmpty();
+  }
+
+  /** #2593 : ligne « Administrateur » du profil, avec un lien mailto vers l'admin résolu. */
+  async expectContactAdmin(): Promise<void> {
+    await expect(this.byTestId("user-profile-contact-admin")).toBeVisible();
+    await expect(
+      this.byTestId("user-profile-contact-admin-link"),
+    ).toHaveAttribute("href", /^mailto:.+@.+/);
+    await expect(
+      this.byTestId("user-profile-contact-admin-source"),
+    ).not.toBeEmpty();
+  }
+
+  /** Un administrateur n'a pas à se contacter lui-même : la ligne est absente. */
+  async expectNoContactAdmin(): Promise<void> {
+    await this.expectProfileInfos();
+    await expect(this.byTestId("user-profile-contact-admin")).toHaveCount(0);
   }
 
   async profileEmail(): Promise<string> {

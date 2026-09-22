@@ -223,6 +223,8 @@ Les contributeurs et administrateurs consultent l'ensemble des signalements, les
 
 **Ce que ça fait.** Depuis une fiche, l'utilisateur **s'abonne** pour être notifié par email à chaque modification, et se désabonne à tout moment. La liste des applications suivies est consultable dans le profil (onglet « Mes abonnements »), et le catalogue peut être filtré sur les applications suivies.
 
+**Administrateur à contacter dans le profil.** L'onglet « Mes informations » affiche, pour un non-administrateur, la ligne « Administrateur » : lien `mailto:` vers l'admin local le plus récent dont le périmètre couvre l'organisation de l'utilisateur, sinon l'admin global, sinon l'adresse support (même règle que le contact admin d'une fiche, cf. [Permissions & sécurité](./06-permissions-et-securite.md) §7.4).
+
 **Où c'est dans le code.**
 
 - Back : `POST /users/me/subscribe/:appId` et `DELETE /users/me/subscribe/:appId` (`backend/src/user/user.controller.ts`, `userService.subscribe` / `unsubscribe`).
@@ -386,6 +388,7 @@ En `observe`, le niveau est visible dans le profil sans effet sur l'accès. L'ac
 | Campagnes de mise en qualité        | `backend/src/quality-campaign` · `AdminQualityCampaignsTab.vue`                 | `QualityCampaignManage`                                                            |
 | Signalements                        | `ReportsPage.vue` · `backend/src/report`                                        | `ReportRead` / `ReportPost` · gestion `ReportManage` · global `CreateGlobalReport` |
 | Abonnements / notifications         | `UserProfilePage.vue` · `POST /users/me/subscribe/:appId`                       | utilisateur connecté                                                               |
+| Profil – administrateur à contacter | `UserInfoTab.vue` · `GET /users/me/contact-admin`                               | utilisateur connecté (ligne masquée pour un admin)                                 |
 | Historique global                   | `MetadataPage.vue` · `backend/src/metadatas`                                    | `MetadataRead`                                                                     |
 | Tableau de bord Qualité             | `QualityPage.vue` · `GET /stats/iq-avg/period`                                  | utilisateur connecté                                                               |
 | Diagramme Time (dette technique)    | `TimePage.vue` · `backend/src/technical-debt-info`                              | `MDITList`                                                                         |

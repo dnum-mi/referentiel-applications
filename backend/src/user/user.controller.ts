@@ -31,6 +31,8 @@ import { RequiredPermissions } from "src/common/decorators/required-permissions.
 import { User } from "src/common/decorators/user.decorator";
 import { PaginatedResponseDto } from "src/common/dto";
 import { PermissionGuard } from "src/common/guards/permission.guard";
+import { ContactAdminService } from "src/common/service/contact-admin.service";
+import { ContactAdminDto } from "src/applications/dto/contact-admin.dto";
 import { UserFilterDto } from "./dto/filters.dto";
 import { MaiaOrganizationSuggestionDto } from "./dto/maia-organization-suggestion.dto";
 import { SyncOrganizationsDto } from "./dto/sync-organizations.dto";
@@ -59,6 +61,7 @@ export class UserController {
     private readonly userService: UserService,
     private readonly userConnexionLogService: UserConnexionLogService,
     private readonly scopedPermissionService: ScopedPermissionService,
+    private readonly contactAdminService: ContactAdminService,
   ) {}
 
   @Get("me")
@@ -70,6 +73,25 @@ export class UserController {
   @ApiNotFoundResponse({ description: "Utilisateur non trouvé" })
   findMe(@User() user: UserEntity) {
     return this.userService.getCurrentUser(user);
+  }
+
+  // Comme `GET me` : aucune permission applicative, seulement l'authentification (cf. docs 06 §7.4).
+  @Get("me/contact-admin")
+  @ApiOperation({
+    summary: "Administrateur à contacter pour l'utilisateur courant",
+    description: `Renvoie l'administrateur le plus pertinent à contacter : l'admin local le plus
+      récent dont le périmètre couvre l'organisation de l'utilisateur, sinon l'admin global le plus
+      récent, sinon une adresse support si aucun administrateur n'existe.`,
+  })
+  @ApiOkResponse({
+    description: "Administrateur à contacter",
+    type: ContactAdminDto,
+  })
+  getMyContactAdmin(@User() user: Requestor): Promise<ContactAdminDto> {
+    const path = user.organization?.path;
+    return this.contactAdminService.resolveByOrganizationPaths(
+      path ? [path] : [],
+    );
   }
 
   @Patch("me")

@@ -12,6 +12,7 @@ jest.mock("src/common/utils/quality.utils", () => ({
 import type { Prisma } from "@prisma/client";
 import { calculateIQ } from "src/common/utils/quality.utils";
 import { CheckPermissions } from "src/common/service/check-permissions.service";
+import { ContactAdminService } from "src/common/service/contact-admin.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Requestor } from "src/user/entities/user.entity";
 import { ApplicationService } from "./application.service";
@@ -94,6 +95,7 @@ describe("ApplicationService.search — recherche full-text (param q)", () => {
       prismaQueryBuilder as unknown as PrismaQueryBuilder,
       checkPermissions as unknown as CheckPermissions,
       applicationSearchService as unknown as ApplicationSearchService,
+      {} as never,
       {} as never,
     );
 
@@ -326,6 +328,7 @@ describe("ApplicationService.updateApplicationQuality", () => {
       {} as never,
       {} as never,
       {} as never,
+      {} as never,
     );
 
     return { service, prisma };
@@ -400,6 +403,7 @@ describe("ApplicationService.getContactAdmin", () => {
       {} as never,
       {} as never,
       {} as never,
+      new ContactAdminService(prisma as unknown as PrismaService),
     );
 
     return { service, prisma };

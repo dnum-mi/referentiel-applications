@@ -6,7 +6,7 @@
 | Légende           |                                                                     |
 | :---------------- | :------------------------------------------------------------------ |
 | **Automatisé** ✅ | tests Playwright dédiés dans `e2e/tests/profil-utilisateur.spec.ts` |
-| **Statut**        | 🟢 automatisé — 6 cas couverts par la CI                            |
+| **Statut**        | 🟢 automatisé — 8 cas couverts par la CI                            |
 
 ---
 
@@ -50,3 +50,18 @@
   → vérifier l'ouverture de la fiche → retour au profil via navigation.
 - **Résultat attendu** : chaque navigation charge la bonne page sans erreur ; le profil reste
   accessible après le retour.
+
+### PRF-07 — Un non-admin voit l'administrateur à contacter ✅
+
+- **Datafeature** : seed QA (`pnpm db:seed:qa`), compte non admin `member-toto` (organisation TOTO).
+- **Action** : se connecter en `member-toto` → « Mon profil » → onglet Informations.
+- **Résultat attendu** : la ligne « Administrateur » (`user-profile-contact-admin`) affiche un lien
+  `mailto:` (`user-profile-contact-admin-link`) et l'origine de la résolution
+  (`user-profile-contact-admin-source` : administrateur de votre périmètre, administrateur global ou
+  support). Règle : admin local le plus récent couvrant l'organisation, sinon admin global, sinon support.
+
+### PRF-08 — Un administrateur ne voit pas la ligne administrateur ✅
+
+- **Action** : connecté en `admin` → « Mon profil » → onglet Informations.
+- **Résultat attendu** : le tableau des informations s'affiche, sans ligne « Administrateur »
+  (`user-profile-contact-admin` absent) : un admin n'a pas à se contacter lui-même.
