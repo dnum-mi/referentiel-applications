@@ -7,7 +7,7 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { ConfigType } from "@nestjs/config";
-import { Roles } from "@prisma/client";
+import { Roles, ServiceTokenMode } from "@prisma/client";
 import { NextFunction, Request, Response } from "express";
 import { JWTPayload, createRemoteJWKSet, decodeJwt, jwtVerify } from "jose";
 import {
@@ -25,6 +25,7 @@ import {
 import { principalToPermissions } from "src/permissions/role-to-permissions";
 import { delegateToService } from "src/permissions/delegated-auth";
 import { TokenService } from "src/token/token.service";
+import { SERVICE_TOKEN_MODE } from "src/token/domain/token.entity";
 import { Requestor, UserEntity, UserType } from "src/user/entities/user.entity";
 import { ScopePermissionsException } from "src/user/errors/scope-permissions.exception";
 import { ScopedPermissionService } from "src/user/scope-permission/scoped-permission.service";
@@ -89,24 +90,27 @@ export class AuthMiddleware implements NestMiddleware {
         throw new UnauthorizedException("Token API invalide.");
       }
 
-      // #2372 : on retient la MÉTHODE d'authentification réellement employée
-      // (`!token`), et non la simple présence du header `Authorization`. Un
-      // porteur de token API pouvait sinon ajouter un `Authorization` bidon
-      // (jamais décodé, car la branche token gagne l'authentification) pour
-      // satisfaire la condition d'impersonation malgré l'interdiction.
+      // #2372/#1988 : seule la connexion JWT directe permet l'impersonation.
+      // Ajouter Authorization à un token machine/personnel ne change pas son
+      // identité ; même le JWT vérifié d'un token délégué ne permet pas d'impersonner.
       const authenticatedByJwt = !token && !!authorization;
 
       let user: UserEntity | null = null;
       let serviceUser: UserEntity | undefined;
       // Le JWT humain reste soumis au contrôle #1985 lorsqu'il accompagne
-      // un token tiers (#1988). Les tokens personnels gardent leur contrat.
+      // un token délégué (#1988). Les modes machine et personnel restent autonomes.
       let evaluation: AuthLevelEvaluation | undefined;
 
       if (typeof token === "string") {
-        user = await this.tokenService.findUserByToken(token, {
+        const tokenUser = await this.tokenService.findUserByToken(token, {
           readOnly: maintenanceMode,
         });
-        if (user?.type === UserType.bot && !user.isBlocked) {
+        user = tokenUser;
+        if (
+          user?.type === UserType.bot &&
+          !user.isBlocked &&
+          tokenUser[SERVICE_TOKEN_MODE] === ServiceTokenMode.delegated
+        ) {
           serviceUser = user;
           if (!authorization) {
             throw new UnauthorizedException(

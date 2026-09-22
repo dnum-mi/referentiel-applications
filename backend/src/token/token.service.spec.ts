@@ -1,4 +1,5 @@
-import { Permission, Roles, UserType } from "@prisma/client";
+import { Permission, Roles, ServiceTokenMode, UserType } from "@prisma/client";
+import { SERVICE_TOKEN_MODE } from "./domain/token.entity";
 import { StepDownException } from "src/auth-level/step-down.exception";
 import type { Requestor } from "src/user/entities/user.entity";
 import { TokenStatus } from "./domain/token-status.entity";
@@ -15,6 +16,7 @@ describe("TokenService.findUserByToken — plafonnement", () => {
     return {
       id: "token-1",
       role: tokenRole,
+      serviceMode: ServiceTokenMode.machine,
       status: TokenStatus.active,
       expiresAt: new Date(Date.now() + 60_000),
       createdBy: { id: "creator" },
@@ -56,6 +58,25 @@ describe("TokenService.findUserByToken — plafonnement", () => {
     findUnique.mockResolvedValue(null);
     expect(await service.findUserByToken("clear")).toBeNull();
   });
+
+  it.each(Object.values(ServiceTokenMode))(
+    "transmet uniquement le mode %s enregistré en base",
+    async (serviceMode) => {
+      const token = {
+        ...tokenRow(Roles.READER, Roles.READER),
+        serviceMode,
+      };
+      findUnique.mockImplementation(
+        async ({ where }: { where: { hash: string } }) =>
+          where.hash === service.generateHash("clear", serviceMode)
+            ? token
+            : null,
+      );
+      const user = await service.findUserByToken("clear");
+      expect(user?.[SERVICE_TOKEN_MODE]).toBe(serviceMode);
+      expect(JSON.stringify(user)).not.toContain("serviceMode");
+    },
+  );
 });
 
 // #1985 : un jeton personnel figerait le rôle rétrogradé (VISITOR à vie) ou, pire, contournerait
@@ -105,32 +126,35 @@ describe("TokenService.create — session rétrogradée (#1985)", () => {
   });
 });
 
-describe("TokenService.create — un compte de service ne crée pas de token personnel (#1988)", () => {
-  it("refuse avant tout contrôle de permission ou accès Prisma, même pour un bot ADMIN", async () => {
-    const prisma = { token: { findMany: jest.fn(), create: jest.fn() } };
-    const checkPermissions = { can: jest.fn().mockResolvedValue(true) };
-    const service = new TokenService(
-      prisma as never,
-      checkPermissions as never,
-      {} as never,
-    );
-    const bot = {
-      id: "service-id",
-      type: UserType.bot,
-      role: Roles.ADMIN,
-      permissions: [],
-      additionalPermissions: [],
-    } as Requestor;
-    await expect(
-      service.create(bot, true, {
-        name: "secret dérivé",
-        description: "contournement /tokens/personal",
-        expiresAt: new Date(Date.now() + 60_000),
+describe("TokenService.create — un compte de service ne distribue pas de tokens (#1988)", () => {
+  it.each([true, false])(
+    "refuse avant tout contrôle de permission ou accès Prisma, même pour un bot ADMIN (personal=%s)",
+    async (personal) => {
+      const prisma = { token: { findMany: jest.fn(), create: jest.fn() } };
+      const checkPermissions = { can: jest.fn().mockResolvedValue(true) };
+      const service = new TokenService(
+        prisma as never,
+        checkPermissions as never,
+        {} as never,
+      );
+      const bot = {
+        id: "service-id",
+        type: UserType.bot,
         role: Roles.ADMIN,
-      }),
-    ).rejects.toMatchObject({ status: 403 });
-    expect(checkPermissions.can).not.toHaveBeenCalled();
-    expect(prisma.token.findMany).not.toHaveBeenCalled();
-    expect(prisma.token.create).not.toHaveBeenCalled();
-  });
+        permissions: [],
+        additionalPermissions: [],
+      } as Requestor;
+      await expect(
+        service.create(bot, personal, {
+          name: "secret dérivé",
+          description: "contournement /tokens/personal",
+          expiresAt: new Date(Date.now() + 60_000),
+          role: Roles.ADMIN,
+        }),
+      ).rejects.toMatchObject({ status: 403 });
+      expect(checkPermissions.can).not.toHaveBeenCalled();
+      expect(prisma.token.findMany).not.toHaveBeenCalled();
+      expect(prisma.token.create).not.toHaveBeenCalled();
+    },
+  );
 });

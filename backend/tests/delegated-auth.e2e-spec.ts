@@ -1,5 +1,11 @@
 import { createHash, randomUUID } from "node:crypto";
-import { Permission, Roles, TokenStatus, UserType } from "@prisma/client";
+import {
+  Permission,
+  Roles,
+  ServiceTokenMode,
+  TokenStatus,
+  UserType,
+} from "@prisma/client";
 import request from "supertest";
 import { ApplicationSearchService } from "src/applications/search/application-search.service";
 import { ActorFaker } from "./fakers/actor.faker";
@@ -43,19 +49,25 @@ describe("Accès d'un utilisateur via un système tiers (#1988)", () => {
       status?: TokenStatus;
       expiresAt?: Date;
       createdById?: string;
+      serviceMode?: ServiceTokenMode;
     } = {},
   ) {
     const password = `e2e-delegated-${randomUUID()}`;
+    const hash = createHash("sha512").update(password).digest("hex");
     const token = await prisma.token.create({
       data: {
         name: password,
         description: "Contrôle des accès délégués #1988",
-        hash: createHash("sha512").update(password).digest("hex"),
+        hash:
+          options.serviceMode === ServiceTokenMode.delegated
+            ? `delegated:${hash}`
+            : hash,
         role: options.role ?? principal.role,
         status: options.status ?? TokenStatus.active,
         expiresAt: options.expiresAt ?? new Date(Date.now() + 3_600_000),
         userIdImpersonate: principal.id,
         createdById: options.createdById ?? admin.id,
+        serviceMode: options.serviceMode,
       },
     });
     return { ...token, password };
@@ -63,17 +75,23 @@ describe("Accès d'un utilisateur via un système tiers (#1988)", () => {
 
   async function createService(
     role: Roles,
-    options: { scopeOrganizationId?: string; isBlocked?: boolean } = {},
+    options: {
+      scopeOrganizationId?: string;
+      isBlocked?: boolean;
+      serviceMode?: ServiceTokenMode;
+    } = {},
   ) {
+    const { serviceMode = ServiceTokenMode.delegated, ...userOptions } =
+      options;
     const user = await prisma.user.create({
       data: {
         email: `e2e-service-${randomUUID()}@bot.internal`,
         type: UserType.bot,
         role,
-        ...options,
+        ...userOptions,
       },
     });
-    return { user, token: await createToken(user) };
+    return { user, token: await createToken(user, { serviceMode }) };
   }
 
   function credentials(
@@ -221,12 +239,135 @@ describe("Accès d'un utilisateur via un système tiers (#1988)", () => {
       .expect(403);
   });
 
-  it("refuse un service seul sans JWT humain", async () => {
+  it("préserve l'accès machine pour un jeton persisté sans mode explicite", async () => {
+    const token = await createToken(readerService.user);
+    expect(token.serviceMode).toBe(ServiceTokenMode.machine);
+
+    const profile = await request(app().getHttpServer())
+      .get("/users/me")
+      .set(API_KEY_HEADER, token.password)
+      .expect(200);
+    expect(profile.body).toMatchObject({
+      id: readerService.user.id,
+      type: UserType.bot,
+      role: Roles.READER,
+    });
+    expect(profile.body.permissions).not.toContain(
+      Permission.GlobalAdminManage,
+    );
+
+    await request(app().getHttpServer())
+      .patch(`/applications/${application.id}`)
+      .set(API_KEY_HEADER, token.password)
+      .send({ description: "Un token machine lecteur ne peut pas écrire" })
+      .expect(403);
+  });
+
+  it.each(["valide", "malformé", "faible"])(
+    "un JWT %s ne change pas l'identité ou les droits d'un jeton machine",
+    async (jwtState) => {
+      const service = await createService(Roles.READER, {
+        serviceMode: ServiceTokenMode.machine,
+      });
+      await linkActor(service.user, application.id);
+      const authorization =
+        jwtState === "malformé"
+          ? "Bearer malformed-jwt"
+          : `Bearer ${getToken(admin, jwtState === "faible" ? { auth_mode: "PASSWORD" } : STRONG)}`;
+      const headers = {
+        [API_KEY_HEADER]: service.token.password,
+        Authorization: authorization,
+      };
+
+      const profile = await request(app().getHttpServer())
+        .get("/users/me")
+        .set(headers)
+        .expect(200);
+      expect(profile.body).toMatchObject({
+        id: service.user.id,
+        type: UserType.bot,
+        role: Roles.READER,
+      });
+      expect(profile.body.permissions).not.toContain(
+        Permission.GlobalAdminManage,
+      );
+
+      await request(app().getHttpServer())
+        .patch(`/applications/${application.id}`)
+        .set(headers)
+        .send({
+          description: "Le JWT administrateur ne relève pas le rôle machine",
+        })
+        .expect(403);
+    },
+  );
+
+  it("un traitement machine respecte son périmètre sans JWT humain", async () => {
+    const inside = await OrganizationFaker.create({
+      path: `E2E/MACHINE/${randomUUID()}/INSIDE`,
+    });
+    const outside = await OrganizationFaker.create({
+      path: `E2E/MACHINE/${randomUUID()}/OUTSIDE`,
+    });
+    const service = await createService(Roles.CONTRIBUTOR, {
+      scopeOrganizationId: inside.id,
+      serviceMode: ServiceTokenMode.machine,
+    });
+    const insideApp = await ApplicationFaker.create(admin);
+    const outsideApp = await ApplicationFaker.create(admin);
+    await linkActor(admin, insideApp.id, writerActorTypeId, inside.id);
+    await linkActor(admin, outsideApp.id, writerActorTypeId, outside.id);
+
+    await request(app().getHttpServer())
+      .patch(`/applications/${insideApp.id}`)
+      .set(API_KEY_HEADER, service.token.password)
+      .send({ description: "Mise à jour machine dans son périmètre" })
+      .expect(200);
+    await request(app().getHttpServer())
+      .patch(`/applications/${outsideApp.id}`)
+      .set(API_KEY_HEADER, service.token.password)
+      .send({ description: "Tentative machine hors de son périmètre" })
+      .expect(403);
+    expect(
+      await prisma.application.findUniqueOrThrow({
+        where: { id: outsideApp.id },
+      }),
+    ).toMatchObject({ description: outsideApp.description });
+    expect(
+      await prisma.metadata.findFirst({
+        where: { applicationId: insideApp.id, action: "update" },
+        orderBy: { createdAt: "desc" },
+      }),
+    ).toMatchObject({ createdById: service.user.id, impersonatorId: null });
+  });
+
+  it("refuse un service délégué seul sans JWT humain", async () => {
     await request(app().getHttpServer())
       .get("/users/me")
       .set(API_KEY_HEADER, readerService.token.password)
       .expect(401);
   });
+
+  it.each(["absent", "malformé"])(
+    "le mode machine envoyé dans la requête ne contourne pas le JWT %s d'un jeton délégué",
+    async (jwtState) => {
+      const call = request(app().getHttpServer())
+        .get("/users/me")
+        .query({ serviceMode: ServiceTokenMode.machine })
+        .set(API_KEY_HEADER, adminService.token.password)
+        .set("serviceMode", ServiceTokenMode.machine)
+        .set("x-refapp-service-mode", ServiceTokenMode.machine);
+      if (jwtState === "malformé") {
+        call.set("Authorization", "Bearer malformed-jwt");
+      }
+      await call.expect(401);
+      expect(
+        await prisma.token.findUniqueOrThrow({
+          where: { id: adminService.token.id },
+        }),
+      ).toMatchObject({ serviceMode: ServiceTokenMode.delegated });
+    },
+  );
 
   it("refuse un utilisateur inconnu sans le provisionner dans RefApp", async () => {
     const unknown = { email: `unknown-${randomUUID()}@example.local` };
@@ -283,6 +424,7 @@ describe("Accès d'un utilisateur via un système tiers (#1988)", () => {
         invalidState === "inconnu"
           ? { password: `unknown-token-${randomUUID()}` }
           : await createToken(readerService.user, {
+              serviceMode: ServiceTokenMode.delegated,
               status:
                 invalidState === "révoqué"
                   ? TokenStatus.revoked

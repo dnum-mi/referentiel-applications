@@ -3,7 +3,7 @@ import { IsDateString, IsEnum, IsOptional, IsString } from "class-validator";
 import { OrganizationDto } from "src/organizations/dto/organizations.dto";
 import { PaginationDto } from "src/common/dto";
 import { TokenStatus } from "../domain/token-status.entity";
-import { Roles } from "@prisma/client";
+import { Roles, ServiceTokenMode } from "@prisma/client";
 
 export const TokenKind = {
   personal: "personal",
@@ -99,6 +99,15 @@ export class TokenDto {
   kind: keyof typeof TokenKind;
 
   @ApiProperty({
+    enum: ServiceTokenMode,
+    enumName: "ServiceTokenMode",
+    description:
+      "Mode du token de service : machine (autonome) ou delegated (JWT utilisateur obligatoire). Fixé à la création ; sans effet pour les tokens personnels.",
+  })
+  @IsEnum(ServiceTokenMode)
+  serviceMode: ServiceTokenMode;
+
+  @ApiProperty({
     type: TokenOwnerDto,
     description: "Utilisateur ayant créé le token",
   })
@@ -145,6 +154,17 @@ export class CreateServiceTokenDto extends PickType(TokenDto, [
     description: "Role attribué a un utilisateur",
   })
   role: Roles;
+
+  @ApiPropertyOptional({
+    enum: ServiceTokenMode,
+    enumName: "ServiceTokenMode",
+    default: ServiceTokenMode.machine,
+    description:
+      "Mode choisi par l'administrateur et immuable : machine pour un traitement autonome, delegated pour agir au nom d'un utilisateur avec son JWT. Par défaut machine pour préserver les clients existants.",
+  })
+  @IsOptional()
+  @IsEnum(ServiceTokenMode)
+  serviceMode?: ServiceTokenMode;
 
   @ApiPropertyOptional({
     required: false,

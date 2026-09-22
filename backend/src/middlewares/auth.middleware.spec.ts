@@ -4,7 +4,14 @@ import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { exportJWK, generateKeyPair, SignJWT } from "jose";
 import type { NextFunction, Request, Response } from "express";
-import { AuthLevel, Permission, Roles, UserType } from "@prisma/client";
+import {
+  AuthLevel,
+  Permission,
+  Roles,
+  ServiceTokenMode,
+  UserType,
+} from "@prisma/client";
+import { SERVICE_TOKEN_MODE } from "src/token/domain/token.entity";
 import type { LoggerService } from "src/logger/logger.service";
 import type { MaintenanceService } from "src/maintenance/maintenance.service";
 import type { TokenService } from "src/token/token.service";
@@ -69,6 +76,7 @@ const authLevelObserve: AuthLevelConfigType = {
 };
 
 interface TestUser {
+  [SERVICE_TOKEN_MODE]?: ServiceTokenMode;
   id: string;
   email: string;
   role: Roles;
@@ -281,7 +289,11 @@ describe("AuthMiddleware", () => {
       const { middleware, userService } = buildMiddleware({
         oidc: verificationOidc,
         jwtValidation: { disabled: false },
-        tokenUser: { ...adminUser, type: UserType.bot },
+        tokenUser: {
+          ...adminUser,
+          type: UserType.bot,
+          [SERVICE_TOKEN_MODE]: ServiceTokenMode.delegated,
+        },
       });
       const request = bearerRequest(
         {},
@@ -295,6 +307,37 @@ describe("AuthMiddleware", () => {
       );
       expect(userService.findByEmailWithRelations).not.toHaveBeenCalled();
       expect(request.user).toBeUndefined();
+    });
+
+    it("authenticates a machine token independently of a forged Authorization header", async () => {
+      const machine = {
+        ...existingUser,
+        id: "machine-id",
+        type: UserType.bot,
+        [SERVICE_TOKEN_MODE]: ServiceTokenMode.machine,
+      };
+      const { middleware, userService } = buildMiddleware({
+        oidc: verificationOidc,
+        jwtValidation: { disabled: false },
+        authLevel: authLevelEnforce,
+        tokenUser: machine,
+      });
+      const request = bearerRequest(
+        {},
+        {
+          authorization: `Bearer ${forgedToken}`,
+          "x-refapp-token": "valid-machine-token",
+        },
+      );
+      const { next } = await run(middleware, request);
+      expect(next).toHaveBeenCalled();
+      expect(request.user).toMatchObject({
+        id: machine.id,
+        type: UserType.bot,
+      });
+      expect(request.user.authLevel).toBeUndefined();
+      expect(userService.findByEmailWithRelations).not.toHaveBeenCalled();
+      expect(userService.findOrCreateByEmail).not.toHaveBeenCalled();
     });
 
     it("accepts a token signed by the configured identity provider", async () => {
@@ -360,6 +403,7 @@ describe("AuthMiddleware", () => {
       id: "service-id",
       email: "service@bot.internal",
       type: UserType.bot,
+      [SERVICE_TOKEN_MODE]: ServiceTokenMode.delegated,
       role: Roles.ADMIN,
     };
     const delegatedRequest = (

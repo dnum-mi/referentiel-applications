@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { Permission } from "@prisma/client";
+import { Permission, UserType } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Requestor } from "src/user/entities/user.entity";
 import {
@@ -58,6 +58,11 @@ export class CheckPermissions {
     applicationId: string,
     user: Requestor,
   ): Promise<APP_PERMISSIONS[]> {
+    if (user.type === UserType.bot) {
+      // Le rôle et le périmètre du token plafonnent aussi un traitement machine.
+      // Un acteur attribué au bot ne doit pas relever le plafond du token.
+      return this.getUserRolePermissions(applicationId, user);
+    }
     const delegated = user[DELEGATED_AUTH];
     if (delegated) {
       const [humanAppPermissions, serviceRolePermissions] = await Promise.all([
