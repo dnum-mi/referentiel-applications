@@ -1,4 +1,4 @@
-import { Permission, Roles } from "@prisma/client";
+import { Permission, Roles, UserType } from "@prisma/client";
 import { StepDownException } from "src/auth-level/step-down.exception";
 import type { Requestor } from "src/user/entities/user.entity";
 import { TokenStatus } from "./domain/token-status.entity";
@@ -101,6 +101,36 @@ describe("TokenService.create — session rétrogradée (#1985)", () => {
     expect((error as Error).message).toBe(
       "Only admins can create service tokens",
     );
+    expect(prisma.token.create).not.toHaveBeenCalled();
+  });
+});
+
+describe("TokenService.create — un compte de service ne crée pas de token personnel (#1988)", () => {
+  it("refuse avant tout contrôle de permission ou accès Prisma, même pour un bot ADMIN", async () => {
+    const prisma = { token: { findMany: jest.fn(), create: jest.fn() } };
+    const checkPermissions = { can: jest.fn().mockResolvedValue(true) };
+    const service = new TokenService(
+      prisma as never,
+      checkPermissions as never,
+      {} as never,
+    );
+    const bot = {
+      id: "service-id",
+      type: UserType.bot,
+      role: Roles.ADMIN,
+      permissions: [],
+      additionalPermissions: [],
+    } as Requestor;
+    await expect(
+      service.create(bot, true, {
+        name: "secret dérivé",
+        description: "contournement /tokens/personal",
+        expiresAt: new Date(Date.now() + 60_000),
+        role: Roles.ADMIN,
+      }),
+    ).rejects.toMatchObject({ status: 403 });
+    expect(checkPermissions.can).not.toHaveBeenCalled();
+    expect(prisma.token.findMany).not.toHaveBeenCalled();
     expect(prisma.token.create).not.toHaveBeenCalled();
   });
 });

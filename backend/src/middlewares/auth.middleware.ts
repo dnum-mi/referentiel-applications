@@ -23,6 +23,7 @@ import {
   oidcConfig,
 } from "src/config/configs";
 import { principalToPermissions } from "src/permissions/role-to-permissions";
+import { delegateToService } from "src/permissions/delegated-auth";
 import { TokenService } from "src/token/token.service";
 import { Requestor, UserEntity, UserType } from "src/user/entities/user.entity";
 import { ScopePermissionsException } from "src/user/errors/scope-permissions.exception";
@@ -81,8 +82,12 @@ export class AuthMiddleware implements NestMiddleware {
     try {
       const maintenanceMode =
         req.maintenanceMode ?? (await this.maintenanceService.isActive());
-      const authorization = req.headers.authorization?.split(" ")[1];
-      const token = req.headers[API_KEY_HEADER] as string | undefined;
+      const authorization =
+        req.headers.authorization?.match(/^Bearer\s+(\S+)$/i)?.[1];
+      const token = req.headers[API_KEY_HEADER];
+      if (token !== undefined && (typeof token !== "string" || !token.trim())) {
+        throw new UnauthorizedException("Token API invalide.");
+      }
 
       // #2372 : on retient la MÉTHODE d'authentification réellement employée
       // (`!token`), et non la simple présence du header `Authorization`. Un
@@ -92,24 +97,39 @@ export class AuthMiddleware implements NestMiddleware {
       const authenticatedByJwt = !token && !!authorization;
 
       let user: UserEntity | null = null;
-      // Niveau d'authentification de la session (#1985), évalué sur la seule
-      // branche JWT : un jeton API est une authentification machine, sans
-      // contexte de connexion — il n'est jamais rétrogradé.
+      let serviceUser: UserEntity | undefined;
+      // Le JWT humain reste soumis au contrôle #1985 lorsqu'il accompagne
+      // un token tiers (#1988). Les tokens personnels gardent leur contrat.
       let evaluation: AuthLevelEvaluation | undefined;
 
-      if (token) {
+      if (typeof token === "string") {
         user = await this.tokenService.findUserByToken(token, {
           readOnly: maintenanceMode,
         });
-      } else if (authorization) {
+        if (user?.type === UserType.bot && !user.isBlocked) {
+          serviceUser = user;
+          if (!authorization) {
+            throw new UnauthorizedException(
+              "Un token de service nécessite le JWT de l'utilisateur.",
+            );
+          }
+        }
+      }
+      if (authorization && (!token || serviceUser)) {
         const payload = this.jwtValidation.disabled
           ? decodeJwt(authorization)
           : (await jwtVerify(authorization, this.jwks)).payload;
         evaluation = await this.evaluateLevel(authorization, payload);
-        const email = payload.email as string;
-        user = maintenanceMode
-          ? await this.userService.findByEmailWithRelations(email)
-          : await this.userService.findOrCreateByEmail(email);
+        const email = payload.email;
+        if (typeof email !== "string" || !email.trim()) {
+          throw new UnauthorizedException("Identité utilisateur absente.");
+        }
+        // Un système tiers ne peut pas inscrire automatiquement ses utilisateurs.
+        user =
+          maintenanceMode || serviceUser
+            ? await this.userService.findByEmailWithRelations(email)
+            : await this.userService.findOrCreateByEmail(email);
+        if (user?.type !== UserType.human) user = null;
       }
 
       if (!user) {
@@ -138,6 +158,11 @@ export class AuthMiddleware implements NestMiddleware {
       const impersonateUserId = req.headers[IMPERSONATE_HEADER] as
         | string
         | undefined;
+      if (serviceUser && impersonateUserId) {
+        throw new ForbiddenException(
+          "L'impersonation nécessite une connexion humaine directe.",
+        );
+      }
       if (downgraded) {
         if (impersonateUserId && authenticatedByJwt) {
           this.logger.warn(
@@ -177,8 +202,9 @@ export class AuthMiddleware implements NestMiddleware {
 
       // L'utilisateur réellement authentifié (avant toute impersonation).
       const authenticatedUser: Requestor = {
-        ...user,
-        permissions: principalToPermissions(user),
+        ...(serviceUser
+          ? delegateToService(user, serviceUser)
+          : { ...user, permissions: principalToPermissions(user) }),
         authLevel:
           evaluation && this.authLevel.mode !== "off"
             ? { level: evaluation.level, downgraded, reason: evaluation.reason }

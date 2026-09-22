@@ -7,6 +7,7 @@ import {
 import { Permission, Prisma, Roles, UserType } from "@prisma/client";
 import { createHash } from "node:crypto";
 import { StepDownException } from "src/auth-level/step-down.exception";
+import { DELEGATED_AUTH } from "src/permissions/delegated-auth";
 import { CheckPermissions } from "src/common/service/check-permissions.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Requestor, UserEntity } from "src/user/entities/user.entity";
@@ -104,6 +105,14 @@ export class TokenService {
     if (!requestor) {
       throw new ForbiddenException(
         "Requestor must be defined to create a token",
+      );
+    }
+    if (
+      requestor[DELEGATED_AUTH] ||
+      (personal && requestor.type === UserType.bot)
+    ) {
+      throw new ForbiddenException(
+        "La création d'un token nécessite une connexion humaine directe.",
       );
     }
     // #1985 : `createPersonal` fige `Token.role = requestor.role`. En session faible, le rôle
@@ -269,6 +278,11 @@ export class TokenService {
     id: string,
     expiresAt: Date,
   ): Promise<ExposedTokenDto> {
+    if (requestor[DELEGATED_AUTH]) {
+      throw new ForbiddenException(
+        "La régénération d'un token nécessite une connexion humaine directe.",
+      );
+    }
     const token = await this.prisma.token.findUnique({
       where: { id },
       include: TOKEN_INCLUDE,
