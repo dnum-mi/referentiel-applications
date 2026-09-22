@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.93.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.92.0...v1.93.0) (2026-09-22)
+
+
+### Features
+
+* add referent admin to profil page ([#2690](https://github.com/dnum-mi/referentiel-applications/issues/2690)) ([cf567c5](https://github.com/dnum-mi/referentiel-applications/commit/cf567c59382576d7bef53e1496fd7e9fdfedbe5e))
+
+
+### Bug Fixes
+
+* prevent privilege escalation via delegated service tokens ([#2687](https://github.com/dnum-mi/referentiel-applications/issues/2687)) ([2e2e219](https://github.com/dnum-mi/referentiel-applications/commit/2e2e2191707d8e80f398b6912b67c3e2d9ee2135))
+
 ## [1.92.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.91.0...v1.92.0) (2026-09-21)
 
 
