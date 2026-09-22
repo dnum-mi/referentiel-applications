@@ -1,6 +1,13 @@
 import type { UserEntity } from "src/user/entities/user.entity";
 import type { TokenStatus } from "./token-status.entity";
-import { Roles } from "@prisma/client";
+import { Roles, ServiceTokenMode } from "@prisma/client";
+
+/** Mode lu en base : interne à l'authentification, jamais sérialisé dans users/me. */
+export const SERVICE_TOKEN_MODE = Symbol("service-token-mode");
+
+export type TokenPrincipal = UserEntity & {
+  [SERVICE_TOKEN_MODE]: ServiceTokenMode;
+};
 
 export class TokenEntity {
   id: string;
@@ -26,4 +33,6 @@ export type NewTokenEntity = Pick<
 > & {
   /** Organisation de périmètre pour le compte de service créé (ignorée pour les tokens personnels). */
   scopeOrganizationId?: string | null;
+  /** Ignoré pour un token personnel. */
+  serviceMode?: ServiceTokenMode;
 };

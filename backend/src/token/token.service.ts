@@ -4,16 +4,27 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { Permission, Prisma, Roles, UserType } from "@prisma/client";
+import {
+  Permission,
+  Prisma,
+  Roles,
+  ServiceTokenMode,
+  UserType,
+} from "@prisma/client";
 import { createHash } from "node:crypto";
 import { StepDownException } from "src/auth-level/step-down.exception";
+import { DELEGATED_AUTH } from "src/permissions/delegated-auth";
 import { CheckPermissions } from "src/common/service/check-permissions.service";
 import { PrismaService } from "src/prisma/prisma.service";
-import { Requestor, UserEntity } from "src/user/entities/user.entity";
+import { Requestor } from "src/user/entities/user.entity";
 import { ScopedPermissionService } from "src/user/scope-permission/scoped-permission.service";
 import { generateRandomPassword, stringToSlug } from "src/utils/functions";
 import { TokenStatus } from "./domain/token-status.entity";
-import { NewTokenEntity } from "./domain/token.entity";
+import {
+  NewTokenEntity,
+  SERVICE_TOKEN_MODE,
+  TokenPrincipal,
+} from "./domain/token.entity";
 import {
   ExposedTokenDto,
   TokenDto,
@@ -106,6 +117,11 @@ export class TokenService {
         "Requestor must be defined to create a token",
       );
     }
+    if (requestor[DELEGATED_AUTH] || requestor.type === UserType.bot) {
+      throw new ForbiddenException(
+        "La création d'un token nécessite une connexion humaine directe.",
+      );
+    }
     // #1985 : `createPersonal` fige `Token.role = requestor.role`. En session faible, le rôle
     // rétrogradé serait figé VISITOR à vie (jeton silencieusement inutile) — et un jeton est un
     // secret durable qui contourne ensuite tout contrôle de niveau d'authentification (canal
@@ -139,8 +155,11 @@ export class TokenService {
       throw invalidReason;
     }
 
+    const serviceMode = personal
+      ? ServiceTokenMode.machine
+      : (data.serviceMode ?? ServiceTokenMode.machine);
     const password = generateRandomPassword(48);
-    const hash = this.generateHash(password);
+    const hash = this.generateHash(password, serviceMode);
 
     let userIdImpersonate = personal ? requestor.id : undefined;
     if (!userIdImpersonate) {
@@ -165,6 +184,7 @@ export class TokenService {
         description: data.description,
         expiresAt: data.expiresAt,
         role: data.role,
+        serviceMode,
         userIdImpersonate,
         status: TokenStatus.active,
         hash,
@@ -207,13 +227,18 @@ export class TokenService {
   async findUserByToken(
     tokenHeader: string,
     options: { readOnly?: boolean } = {},
-  ): Promise<UserEntity | null> {
-    const hash = this.generateHash(tokenHeader);
-    const token = await this.prisma.token.findUnique({
-      where: { hash },
-      include: TOKEN_INCLUDE,
-      omit: { hash: true },
-    });
+  ): Promise<TokenPrincipal | null> {
+    const findByHash = (hash: string) =>
+      this.prisma.token.findUnique({
+        where: { hash },
+        include: TOKEN_INCLUDE,
+        omit: { hash: true },
+      });
+    const token =
+      (await findByHash(this.generateHash(tokenHeader))) ??
+      (await findByHash(
+        this.generateHash(tokenHeader, ServiceTokenMode.delegated),
+      ));
 
     const userImpersonate = token?.userImpersonate ?? null;
     const isInvalid = isTokenInvalid(token);
@@ -261,6 +286,7 @@ export class TokenService {
       additionalPermissions: isCapped
         ? []
         : (userImpersonate?.additionalPermissions ?? []),
+      [SERVICE_TOKEN_MODE]: token.serviceMode,
     };
   }
 
@@ -269,6 +295,11 @@ export class TokenService {
     id: string,
     expiresAt: Date,
   ): Promise<ExposedTokenDto> {
+    if (requestor[DELEGATED_AUTH] || requestor.type === UserType.bot) {
+      throw new ForbiddenException(
+        "La régénération d'un token nécessite une connexion humaine directe.",
+      );
+    }
     const token = await this.prisma.token.findUnique({
       where: { id },
       include: TOKEN_INCLUDE,
@@ -289,7 +320,7 @@ export class TokenService {
     const newToken = await this.prisma.token.update({
       where: { id: token.id },
       data: {
-        hash: this.generateHash(password),
+        hash: this.generateHash(password, token.serviceMode),
         expiresAt,
         updatedAt: new Date(),
       },
@@ -303,8 +334,17 @@ export class TokenService {
     };
   }
 
-  generateHash(token: string): string {
-    return createHash("sha512").update(token).digest("hex");
+  generateHash(
+    token: string,
+    serviceMode: ServiceTokenMode = ServiceTokenMode.machine,
+  ): string {
+    const hash = createHash("sha512").update(token).digest("hex");
+    // Un ancien backend ignore serviceMode et cherche seulement SHA512(secret).
+    // Le préfixe empêche qu'il accepte un jeton délégué pendant un déploiement
+    // progressif ou un retour arrière, y compris après régénération du jeton.
+    return serviceMode === ServiceTokenMode.delegated
+      ? `delegated:${hash}`
+      : hash;
   }
 
   private toDto(

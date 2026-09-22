@@ -24,6 +24,7 @@ import { LoggerService } from "src/logger/logger.service";
 import { EmailService } from "src/email/email.service";
 import { emailEquals, normalizeEmail } from "src/common/utils/email.utils";
 import { MaiaUnavailableException } from "./errors/maia-unavailable.exception";
+import { DELEGATED_AUTH } from "src/permissions/delegated-auth";
 
 @Injectable()
 export class UserService {
@@ -446,6 +447,11 @@ export class UserService {
     admin: Requestor,
     targetId: string,
   ): Promise<UserEntity> {
+    if (admin[DELEGATED_AUTH] || admin.type === UserType.bot) {
+      throw new ForbiddenException(
+        "L'impersonation nécessite une connexion humaine directe.",
+      );
+    }
     if (admin.id === targetId) {
       throw new BadRequestException("Vous ne pouvez pas vous impersonner.");
     }

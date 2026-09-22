@@ -21,6 +21,9 @@ model Token {
   updatedAt   DateTime    @updatedAt
   /// Statut actuel du token
   status      TokenStatus @default(active)
+  /// Mode choisi par l'administrateur pour les tokens de service.
+  /// Les tokens personnels utilisent toujours machine (sans contexte SSO).
+  serviceMode ServiceTokenMode @default(machine)
 
   userIdImpersonate String
   /// Utilisateur que ce token usurpe
@@ -40,4 +43,12 @@ enum TokenStatus {
   expired
   /// Token révoqué
   revoked
+}
+
+/// Mode d'authentification d'un token de service, fixé lors de sa création.
+enum ServiceTokenMode {
+  /// Traitement autonome avec les droits du compte de service.
+  machine
+  /// Appel au nom d'un utilisateur : JWT humain et intersection des droits obligatoires.
+  delegated
 }

@@ -908,6 +908,7 @@ erDiagram
   DateTime createdAt
   DateTime updatedAt
   TokenStatus status
+  ServiceTokenMode serviceMode
   String userIdImpersonate FK
   String createdById FK
 }
@@ -1009,6 +1010,9 @@ Properties as follows:
 - `createdAt`: Quand ce token a été créé
 - `updatedAt`: Quand ce token a été mis à jour pour la dernière fois
 - `status`: Statut actuel du token
+- `serviceMode`
+  > Mode choisi par l'administrateur pour les tokens de service.
+  > Les tokens personnels utilisent toujours machine (sans contexte SSO).
 - `userIdImpersonate`:
 - `createdById`:
 

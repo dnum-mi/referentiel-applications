@@ -1,9 +1,10 @@
 import { Injectable } from "@nestjs/common";
-import { Permission } from "@prisma/client";
+import { Permission, UserType } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Requestor } from "src/user/entities/user.entity";
 import {
   APP_PERMISSIONS,
+  AppPermissionsValues,
   transformAppPermissionsObjectToArray,
 } from "../utils/types";
 import {
@@ -13,6 +14,10 @@ import {
 import { QueryBuilderGroupActor } from "./prisma-query-builder.service";
 import { organizationWithinScope } from "src/common/utils/organization-scope.utils";
 import { emailEquals } from "src/common/utils/email.utils";
+import {
+  DELEGATED_AUTH,
+  globalPermissions,
+} from "src/permissions/delegated-auth";
 
 /** Permissions applicatives conservées par une session rétrogradée (#1985) : lectures seules. */
 const STEP_DOWN_APP_PERMISSIONS: ReadonlySet<string> = READ_APP_PERMISSIONS;
@@ -53,6 +58,33 @@ export class CheckPermissions {
     applicationId: string,
     user: Requestor,
   ): Promise<APP_PERMISSIONS[]> {
+    if (user.type === UserType.bot) {
+      // Le rôle et le périmètre du token plafonnent aussi un traitement machine.
+      // Un acteur attribué au bot ne doit pas relever le plafond du token.
+      return this.getUserRolePermissions(applicationId, user);
+    }
+    const delegated = user[DELEGATED_AUTH];
+    if (delegated) {
+      const [humanAppPermissions, serviceRolePermissions] = await Promise.all([
+        this.resolveAppPermissions(applicationId, delegated.human),
+        this.getUserRolePermissions(applicationId, delegated.service),
+      ]);
+      const humanPermissions = new Set([
+        ...globalPermissions(delegated.human),
+        ...humanAppPermissions,
+      ]);
+      const servicePermissions = new Set([
+        ...globalPermissions(delegated.service),
+        ...serviceRolePermissions,
+      ]);
+      // Le rôle du service est un plafond : ses acteurs éventuels ou le type
+      // d'acteur par défaut ne doivent pas transformer un jeton READER en écrivain.
+      return AppPermissionsValues.filter(
+        (permission) =>
+          humanPermissions.has(permission) &&
+          servicePermissions.has(permission),
+      );
+    }
     const [actorPermissions, userRolePermissions] = await Promise.all([
       this.getUserAppPermissions(applicationId, user),
       this.getUserRolePermissions(applicationId, user),
