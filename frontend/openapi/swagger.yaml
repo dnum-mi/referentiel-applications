@@ -236,6 +236,24 @@ paths:
           description: Utilisateur non trouvé
       summary: Mettre à jour ses propres préférences utilisateur
       tags: *a2
+  /api/v2/users/me/contact-admin:
+    get:
+      description: >-
+        Renvoie l'administrateur le plus pertinent à contacter : l'admin local
+        le plus
+              récent dont le périmètre couvre l'organisation de l'utilisateur, sinon l'admin global le plus
+              récent, sinon une adresse support si aucun administrateur n'existe.
+      operationId: UserController_getMyContactAdmin
+      parameters: []
+      responses:
+        "200":
+          description: Administrateur à contacter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactAdminDto"
+      summary: Administrateur à contacter pour l'utilisateur courant
+      tags: *a2
   /api/v2/users/me/subscribe/{appId}:
     post:
       operationId: UserController_subscribe
@@ -7475,6 +7493,25 @@ components:
         - email
         - organizationId
         - scopeOrganizationId
+    ContactAdminDto:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: admin@interieur.gouv.fr
+          description: Adresse e-mail de l'administrateur à contacter
+        source:
+          enum:
+            - local
+            - global
+            - support
+          type: string
+          description: "Origine de l'adresse : admin local au périmètre de l'application,
+            admin global, ou support si aucun admin n'existe"
+      required:
+        - email
+        - source
     UpdateUserPreferencesDto:
       type: object
       properties:
@@ -8339,25 +8376,6 @@ components:
         - total
         - averageIq
         - technicalDebtPoints
-    ContactAdminDto:
-      type: object
-      properties:
-        email:
-          type: string
-          format: email
-          example: admin@interieur.gouv.fr
-          description: Adresse e-mail de l'administrateur à contacter
-        source:
-          enum:
-            - local
-            - global
-            - support
-          type: string
-          description: "Origine de l'adresse : admin local au périmètre de l'application,
-            admin global, ou support si aucun admin n'existe"
-      required:
-        - email
-        - source
     QualitySummaryActorsDto:
       type: object
       properties:

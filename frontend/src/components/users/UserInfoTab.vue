@@ -1,9 +1,33 @@
 <script setup lang="ts">
+import api from "@/api/index";
+import { Roles, type ContactAdminDto } from "@/client/types.gen";
 import { profileAuthLevelText } from "@/composables/use-auth-level";
 import { useUserStore } from "@/stores/userStore";
 import { computed, ref, onMounted, nextTick, useTemplateRef } from "vue";
 
 const userStore = useUserStore();
+
+const CONTACT_ADMIN_SOURCE_LABELS: Record<ContactAdminDto["source"], string> = {
+  local: "administrateur de votre périmètre",
+  global: "administrateur global",
+  support: "support",
+};
+
+// Administrateur à contacter, résolu à partir de l'organisation de l'utilisateur (même règle que
+// le contact admin d'une fiche, #2593). Un administrateur n'a pas à se contacter lui-même : la
+// ligne ne concerne que les non-admins. Un échec de chargement n'est pas bloquant pour le profil.
+const contactAdmin = ref<ContactAdminDto>();
+const isAdmin = computed(() => userStore.userRole === Roles.ADMIN);
+
+async function loadContactAdmin() {
+  try {
+    const response = await api.userControllerGetMyContactAdmin();
+    contactAdmin.value = response.data;
+  } catch (error) {
+    console.error("Error fetching contact admin:", error);
+    contactAdmin.value = undefined;
+  }
+}
 
 // #1985 : ligne « Niveau d'authentification », même table de motifs que le bandeau.
 const authLevelText = computed(() => profileAuthLevelText(userStore.authLevel));
@@ -42,13 +66,14 @@ async function handleToggleEmailNotifications() {
 
 onMounted(async () => {
   await userStore.fetchUser();
+  if (!isAdmin.value) await loadContactAdmin();
 });
 </script>
 
 <template>
   <div v-if="userStore.user" class="fr-mt-3w" data-testid="user-profile-card">
     <!-- RGAA-072 : tableau clé/valeur à en-têtes de ligne, sans <thead> vide → table native dans le conteneur DSFR. -->
-    <div class="fr-table" data-testid="user-profile-table">
+    <div class="fr-table fr-table--bordered user-profile-table" data-testid="user-profile-table">
       <table>
         <caption class="fr-sr-only">
           Informations personnelles
@@ -64,6 +89,15 @@ onMounted(async () => {
             <th scope="row">Email</th>
             <td data-testid="user-profile-email">
               {{ userStore.user.email }}
+            </td>
+          </tr>
+          <tr v-if="contactAdmin && !isAdmin">
+            <th scope="row">Administrateur</th>
+            <td data-testid="user-profile-contact-admin">
+              <a :href="`mailto:${contactAdmin.email}`" data-testid="user-profile-contact-admin-link">{{ contactAdmin.email }}</a>
+              <span class="fr-text--xs fr-ml-1w" data-testid="user-profile-contact-admin-source"
+                >({{ CONTACT_ADMIN_SOURCE_LABELS[contactAdmin.source] }})</span
+              >
             </td>
           </tr>
           <tr v-if="authLevelText">
@@ -98,3 +132,20 @@ onMounted(async () => {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* `fr-table--bordered` (DSFR) ne trace que des séparateurs horizontaux entre les lignes : on
+   encadre chaque cellule, et on retire ces séparateurs pour ne pas doubler la bordure. */
+.user-profile-table.fr-table--bordered > table {
+  border-collapse: collapse;
+}
+
+.user-profile-table.fr-table--bordered > table tbody tr {
+  background-image: none;
+}
+
+.user-profile-table.fr-table--bordered > table th,
+.user-profile-table.fr-table--bordered > table td {
+  border: 1px solid var(--border-default-grey);
+}
+</style>

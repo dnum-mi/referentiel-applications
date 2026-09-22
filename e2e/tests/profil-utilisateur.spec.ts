@@ -1,5 +1,5 @@
 import { expect, test } from "../fixtures/test";
-import { ApplicationPage, UserProfilePage } from "../pom";
+import { ApplicationPage, loginAs, UserProfilePage } from "../pom";
 
 test.describe("Profil utilisateur", () => {
   test("PRF-01 - accéder à la page profil et vérifier les informations", async ({
@@ -96,5 +96,25 @@ test.describe("Profil utilisateur", () => {
     } finally {
       await data.unsubscribe(app!.id);
     }
+  });
+
+  test("PRF-07 - un non-admin voit l'administrateur à contacter", async ({
+    page,
+  }) => {
+    // `member-toto` : compte scopé non admin du seed QA (organisation TOTO).
+    await loginAs(page, "member-toto");
+    const profile = new UserProfilePage(page);
+    await profile.open();
+    await profile.expectContactAdmin();
+  });
+
+  test("PRF-08 - un administrateur ne voit pas la ligne administrateur", async ({
+    page,
+    data,
+  }) => {
+    void data;
+    const profile = new UserProfilePage(page);
+    await profile.open();
+    await profile.expectNoContactAdmin();
   });
 });
