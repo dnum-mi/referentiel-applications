@@ -416,6 +416,23 @@ describe("DataCatalog", () => {
       expect(response.body).toMatchObject({ updateFrequency: "NEVER" });
     });
 
+    // #2689 : la fréquence « Trimestrielle » (QUARTERLY) fait partie de l'enum de bout en bout —
+    // même précaution que pour NEVER (#2055) afin d'éviter un 500 Prisma non géré.
+    it("accepts the QUARTERLY update frequency and returns it", async () => {
+      const description = await DataDescriptionFaker.create();
+
+      const response = await request(app().getHttpServer())
+        .post(`/data-catalog/applications/${application.id}`)
+        .set("Authorization", `Bearer ${WRITER_TOKEN}`)
+        .send({
+          dataDescriptionId: description.id,
+          updateFrequency: "QUARTERLY",
+        })
+        .expect(201);
+
+      expect(response.body).toMatchObject({ updateFrequency: "QUARTERLY" });
+    });
+
     it("rejects an unknown update frequency with 400 (never a Prisma 500)", async () => {
       const description = await DataDescriptionFaker.create();
 

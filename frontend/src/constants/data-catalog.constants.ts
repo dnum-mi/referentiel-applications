@@ -14,6 +14,7 @@ export const UPDATE_FREQUENCY_LABELS = {
   YEARLY: "Annuelle",
   ON_DEMAND: "À la demande",
   NEVER: "Jamais",
+  QUARTERLY: "Trimestrielle",
 } as const satisfies Record<UpdateFrequency, string>;
 
 export const OPEN_DATA_BADGE_CLASS = {
