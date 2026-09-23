@@ -2209,6 +2209,9 @@ paths:
           description: Application supprimée avec succès.
         "404":
           description: Application non trouvée.
+        "409":
+          description: "Suppression refusée : des données liées empêchent la suppression
+            de l'application."
       summary: Supprimer une application
       tags: *a8
   /api/v2/applications/{applicationId}/quality-summary:

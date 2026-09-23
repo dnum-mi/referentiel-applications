@@ -1,4 +1,9 @@
-import { Injectable, Logger, NotFoundException } from "@nestjs/common";
+import {
+  ConflictException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from "@nestjs/common";
 import {
   Application,
   Permission,
@@ -609,8 +614,32 @@ export class ApplicationService {
       throw new NotFoundException(`Application non trouvée pour l'ID: ${id}`);
     }
 
-    await this.applicationRepository.delete(id);
+    try {
+      await this.applicationRepository.delete(id);
+    } catch (error) {
+      throw this.mapDeleteError(error, id);
+    }
     this.applicationSearchService.scheduleRefresh();
+  }
+
+  // #2542 : la suppression est un effacement définitif porté par les cascades du schéma Prisma.
+  // Une relation obligatoire sans règle `onDelete` (Restrict implicite) bloque la cascade et
+  // remontait en 500 opaque. On nomme la dépendance bloquante (P2003) plutôt que de laisser
+  // fuir l'erreur de contrainte ; une fiche disparue entre le contrôle d'existence et la
+  // suppression (P2025) redevient un 404 ordinaire.
+  private mapDeleteError(error: unknown, id: string): unknown {
+    if (!(error instanceof Prisma.PrismaClientKnownRequestError)) {
+      return error;
+    }
+    if (error.code === "P2025") {
+      return new NotFoundException(`Application non trouvée pour l'ID: ${id}`);
+    }
+    if (error.code === "P2003") {
+      return new ConflictException(
+        `Suppression impossible : des données liées (${describeBlockingDependency(error.meta)}) empêchent la suppression de l'application.`,
+      );
+    }
+    return error;
   }
 
   private applyScalarAndSimpleRelationUpdates(
@@ -753,4 +782,19 @@ export class ApplicationService {
       completedByEmail: log.completedBy?.email ?? null,
     }));
   }
+}
+
+/**
+ * Nomme la dépendance qui bloque une suppression à partir des métadonnées d'une erreur
+ * Prisma P2003 (`field_name` vaut par exemple `ReportHistory_reportId_fkey (index)`).
+ */
+export function describeBlockingDependency(
+  meta: Record<string, unknown> | undefined,
+): string {
+  const raw = meta?.field_name ?? meta?.constraint;
+  if (typeof raw !== "string" || raw === "") {
+    return "dépendance inconnue";
+  }
+  const match = /^(\w+?)_(\w+)_fkey/.exec(raw);
+  return match ? `${match[1]}.${match[2]}` : raw;
 }

@@ -93,8 +93,9 @@ export const useApplicationStore = defineStore("applicationStore", () => {
   const deleteApplication = async (applicationId: string): Promise<void> => {
     const response = await api.applicationControllerRemove({ path: { applicationId } });
     if (!response.response.ok) {
-      toaster.addErrorMessage("Erreur lors de la suppression définitive de l'application.");
-      throw new Error("Erreur lors de la suppression définitive de l'application.");
+      const message = deletionErrorMessage(response.response.status, response.error);
+      toaster.addErrorMessage(message);
+      throw new Error(message);
     }
     router.push({ name: routeNames.SEARCHAPP });
     toaster.addSuccessMessage("Application supprimée définitivement avec succès.");
@@ -153,4 +154,14 @@ function cleanFilters(filters: Filters = {}) {
       return true;
     }),
   );
+}
+
+const GENERIC_DELETION_ERROR = "Erreur lors de la suppression définitive de l'application.";
+
+// Le backend refuse en 409 une suppression bloquée par des données liées et nomme la dépendance
+// en cause (#2542) : ce message vaut mieux que le libellé générique.
+function deletionErrorMessage(status: number, error: unknown): string {
+  if (status !== 409) return GENERIC_DELETION_ERROR;
+  const message = (error as { message?: unknown } | undefined)?.message;
+  return typeof message === "string" && message !== "" ? message : GENERIC_DELETION_ERROR;
 }
