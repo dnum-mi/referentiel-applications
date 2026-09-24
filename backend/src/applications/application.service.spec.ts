@@ -9,13 +9,17 @@ jest.mock("src/common/utils/quality.utils", () => ({
   calculateIQ: jest.fn().mockResolvedValue(75),
 }));
 
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import { ConflictException, NotFoundException } from "@nestjs/common";
 import { calculateIQ } from "src/common/utils/quality.utils";
 import { CheckPermissions } from "src/common/service/check-permissions.service";
 import { ContactAdminService } from "src/common/service/contact-admin.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Requestor } from "src/user/entities/user.entity";
-import { ApplicationService } from "./application.service";
+import {
+  ApplicationService,
+  describeBlockingDependency,
+} from "./application.service";
 import { ApplicationSearchDto } from "./dto/search-application.dto";
 import { ApplicationRepository } from "./infrastructure/repository/application.repository";
 import { PrismaQueryBuilder } from "./prisma-query-builder.service";
@@ -496,5 +500,106 @@ describe("ApplicationService.getContactAdmin", () => {
       email: "support-referentiel-applications@interieur.gouv.fr",
       source: "support",
     });
+  });
+});
+
+describe("ApplicationService.deleteApplication — erreurs de suppression (#2542)", () => {
+  const prismaError = (code: string, meta?: Record<string, unknown>) =>
+    new Prisma.PrismaClientKnownRequestError("constraint failed", {
+      code,
+      clientVersion: "test",
+      meta,
+    });
+
+  const setup = (
+    deleteResult: Promise<void>,
+    existing: unknown = { id: "app-1" },
+  ) => {
+    const applicationRepository = {
+      findById: jest.fn().mockResolvedValue(existing),
+      delete: jest.fn().mockReturnValue(deleteResult),
+    };
+    const applicationSearchService = { scheduleRefresh: jest.fn() };
+    const service = new ApplicationService(
+      {} as unknown as PrismaService,
+      applicationRepository as unknown as ApplicationRepository,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      applicationSearchService as unknown as ApplicationSearchService,
+      {} as never,
+      {} as never,
+    );
+    return { service, applicationRepository, applicationSearchService };
+  };
+
+  it("supprime la fiche puis replanifie l'index de recherche", async () => {
+    const { service, applicationRepository, applicationSearchService } = setup(
+      Promise.resolve(),
+    );
+
+    await service.deleteApplication("app-1");
+
+    expect(applicationRepository.delete).toHaveBeenCalledWith("app-1");
+    expect(applicationSearchService.scheduleRefresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("fiche inconnue : 404 sans tenter la suppression", async () => {
+    const { service, applicationRepository } = setup(Promise.resolve(), null);
+
+    await expect(service.deleteApplication("nope")).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+    expect(applicationRepository.delete).not.toHaveBeenCalled();
+  });
+
+  it("contrainte bloquante (P2003) : 409 qui nomme la dépendance, sans rafraîchir l'index", async () => {
+    const { service, applicationSearchService } = setup(
+      Promise.reject(
+        prismaError("P2003", {
+          modelName: "Application",
+          field_name: "ReportHistory_reportId_fkey (index)",
+        }),
+      ),
+    );
+
+    const failure = service.deleteApplication("app-1");
+    await expect(failure).rejects.toBeInstanceOf(ConflictException);
+    await expect(failure).rejects.toThrow("ReportHistory.reportId");
+    expect(applicationSearchService.scheduleRefresh).not.toHaveBeenCalled();
+  });
+
+  it("fiche disparue entre le contrôle et la suppression (P2025) : 404", async () => {
+    const { service } = setup(Promise.reject(prismaError("P2025")));
+
+    await expect(service.deleteApplication("app-1")).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+
+  it("toute autre erreur est propagée telle quelle", async () => {
+    const boom = new Error("db down");
+    const { service } = setup(Promise.reject(boom));
+
+    await expect(service.deleteApplication("app-1")).rejects.toBe(boom);
+  });
+});
+
+describe("describeBlockingDependency", () => {
+  it("traduit le nom de contrainte Prisma en modèle.champ", () => {
+    expect(
+      describeBlockingDependency({
+        field_name: "ReportHistory_reportId_fkey (index)",
+      }),
+    ).toBe("ReportHistory.reportId");
+  });
+
+  it("retombe sur la valeur brute ou un libellé neutre", () => {
+    expect(describeBlockingDependency({ constraint: "custom_check" })).toBe(
+      "custom_check",
+    );
+    expect(describeBlockingDependency(undefined)).toBe("dépendance inconnue");
   });
 });

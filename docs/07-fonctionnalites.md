@@ -358,6 +358,8 @@ Le panneau d'administration (`frontend/src/views/AdminPage.vue`) est organisé e
 
 **Permission.** Le panneau requiert `AdminPanelManage` (utilisateurs, acteurs) ou `GlobalAdminManage` (tout le reste, #2446). La suppression d'application (`DELETE /applications/:applicationId`) et certaines actions (création de type d'acteur) relèvent également de droits administrateurs.
 
+**Suppression d'une application.** C'est un effacement définitif porté par les cascades du schéma Prisma (`onDelete: Cascade` sur toutes les relations vers `Application`, y compris `Report → ReportHistory` depuis #2542) : la fiche, ses métadonnées d'historique, ses signalements et leurs historiques disparaissent ensemble. Si une contrainte bloque malgré tout la cascade (relation sans règle `onDelete`), l'API répond `409 Conflict` en nommant la dépendance (`ApplicationService.mapDeleteError`) et le front relaie ce message, au lieu d'une erreur 500 opaque. Une suppression logique (conservation de l'historique, restauration) reste une évolution ouverte dans #2542.
+
 ## 10. Niveau d'authentification : carte agent ou double authentification
 
 Le SSO admet plusieurs modes de connexion. Lorsque le contrôle est activé (`AUTH_LEVEL_MODE=enforce`, #1985), une session sans authentification forte reconnue **ne peut consulter aucune donnée du référentiel**. Cela inclut les recherches, fiches, signalements, statistiques, profil, notifications et jetons. Les droits du compte restent enregistrés et redeviennent disponibles après une authentification forte. Voir [Permissions et sécurité](./06-permissions-et-securite.md) et [Qualification IAP](./13-integration-iap.md).

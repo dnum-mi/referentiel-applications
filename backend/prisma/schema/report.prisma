@@ -48,8 +48,11 @@ model ReportHistory {
   /// Quand cette action s'est produite
   date     DateTime     @default(now())
 
-  /// Le signalement auquel cette entrée d'historique appartient
-  report Report @relation(fields: [reportId], references: [id])
+  /// Le signalement auquel cette entrée d'historique appartient.
+  /// `onDelete: Cascade` : sans règle explicite, Prisma pose un Restrict qui bloquait la cascade
+  /// Application → Report et faisait échouer en 500 la suppression d'une fiche dont un
+  /// signalement possède un historique (#2542).
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
 }
 
 /// Statut d'un signalement.
