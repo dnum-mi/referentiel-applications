@@ -48,23 +48,3 @@ export function isPathWithinScope(
     normalizedTarget.startsWith(`${normalizedScope}/`)
   );
 }
-
-/**
- * Inverse d'`organizationWithinScope` : tous les préfixes d'un path, ancrés à un séparateur
- * `/`, qui feraient de `path` un membre de leur périmètre. Un admin dont le `scopeOrganization`
- * a l'un de ces préfixes comme path couvre `path` (ex: `/MI/DNUM/SG` → `/MI`, `/MI/DNUM`,
- * `/MI/DNUM/SG`).
- *
- * Utilisé pour retrouver les administrateurs "locaux" d'une application à partir des
- * organisations de ses acteurs/directions métier (#2593).
- */
-export function ancestorPathsOf(path: string): string[] {
-  const segments = path.split("/").filter(Boolean);
-  const ancestors: string[] = [];
-  let current = "";
-  for (const segment of segments) {
-    current += `/${segment}`;
-    ancestors.push(current);
-  }
-  return ancestors;
-}

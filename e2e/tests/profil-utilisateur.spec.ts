@@ -101,14 +101,17 @@ test.describe("Profil utilisateur", () => {
   test("PRF-07 - un non-admin voit l'administrateur à contacter", async ({
     page,
   }) => {
-    // `member-toto` : compte scopé non admin du seed QA (organisation TOTO).
+    // `member-toto` : compte non admin du seed QA (organisation TOTO) → l'admin scopé le plus
+    // proche est `scope-admin` (périmètre TOTO).
     await loginAs(page, "member-toto");
     const profile = new UserProfilePage(page);
     await profile.open();
     await profile.expectContactAdmin();
+    await profile.expectContactAdminSource("administrateur de votre périmètre");
+    expect(await profile.contactAdminEmail()).toBe("scope-admin@example.com");
   });
 
-  test("PRF-08 - un administrateur ne voit pas la ligne administrateur", async ({
+  test("PRF-08 - un administrateur global ne voit pas la ligne administrateur", async ({
     page,
     data,
   }) => {
@@ -116,5 +119,19 @@ test.describe("Profil utilisateur", () => {
     const profile = new UserProfilePage(page);
     await profile.open();
     await profile.expectNoContactAdmin();
+  });
+
+  test("PRF-09 - un admin scopé voit un autre administrateur à contacter", async ({
+    page,
+  }) => {
+    // `scope-admin` (périmètre TOTO) ne doit pas se voir lui-même : admin scopé plus proche
+    // autre que lui, sinon admin global.
+    await loginAs(page, "scope-admin");
+    const profile = new UserProfilePage(page);
+    await profile.open();
+    await profile.expectContactAdmin();
+    expect(await profile.contactAdminEmail()).not.toBe(
+      "scope-admin@example.com",
+    );
   });
 });

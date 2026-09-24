@@ -93,7 +93,7 @@ export class UserProfilePage extends BasePage {
     await expect(this.unsubscribeButtons()).toHaveCount(before - 1);
   }
 
-  // --- PRF: profil utilisateur (PRF-01 to PRF-08) ---
+  // --- PRF: profil utilisateur (PRF-01 to PRF-09) ---
 
   async expectProfileInfos(): Promise<void> {
     await expect(this.byTestId("user-profile-table")).toBeVisible();
@@ -112,7 +112,19 @@ export class UserProfilePage extends BasePage {
     ).not.toBeEmpty();
   }
 
-  /** Un administrateur n'a pas à se contacter lui-même : la ligne est absente. */
+  async contactAdminEmail(): Promise<string> {
+    return (
+      await this.byTestId("user-profile-contact-admin-link").innerText()
+    ).trim();
+  }
+
+  async expectContactAdminSource(label: string): Promise<void> {
+    await expect(
+      this.byTestId("user-profile-contact-admin-source"),
+    ).toContainText(label);
+  }
+
+  /** Un administrateur global n'a personne au-dessus de lui : la ligne est absente. */
   async expectNoContactAdmin(): Promise<void> {
     await this.expectProfileInfos();
     await expect(this.byTestId("user-profile-contact-admin")).toHaveCount(0);

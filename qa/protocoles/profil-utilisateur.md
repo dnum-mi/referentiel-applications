@@ -58,10 +58,20 @@
 - **Résultat attendu** : la ligne « Administrateur » (`user-profile-contact-admin`) affiche un lien
   `mailto:` (`user-profile-contact-admin-link`) et l'origine de la résolution
   (`user-profile-contact-admin-source` : administrateur de votre périmètre, administrateur global ou
-  support). Règle : admin local le plus récent couvrant l'organisation, sinon admin global, sinon support.
+  support). Règle : admin scopé le plus proche de l'organisation (pour `A/B/C` : `A/B/C`, sinon `A/B`,
+  sinon `A`), sinon admin global, sinon support. Avec le seed QA : `scope-admin@example.com`
+  (administrateur de votre périmètre).
 
-### PRF-08 — Un administrateur ne voit pas la ligne administrateur ✅
+### PRF-08 — Un administrateur global ne voit pas la ligne administrateur ✅
 
 - **Action** : connecté en `admin` → « Mon profil » → onglet Informations.
 - **Résultat attendu** : le tableau des informations s'affiche, sans ligne « Administrateur »
-  (`user-profile-contact-admin` absent) : un admin n'a pas à se contacter lui-même.
+  (`user-profile-contact-admin` absent) : un admin global n'a personne au-dessus de lui.
+
+### PRF-09 — Un admin scopé voit un autre administrateur à contacter ✅
+
+- **Datafeature** : seed QA (`pnpm db:seed:qa`), compte `scope-admin` (admin scopé TOTO).
+- **Action** : se connecter en `scope-admin` → « Mon profil » → onglet Informations.
+- **Résultat attendu** : la ligne « Administrateur » s'affiche avec un lien `mailto:` qui n'est
+  **pas** `scope-admin@example.com` : l'appelant est exclu de la résolution (admin scopé le plus
+  proche autre que lui, sinon admin global).

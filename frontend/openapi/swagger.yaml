@@ -239,10 +239,11 @@ paths:
   /api/v2/users/me/contact-admin:
     get:
       description: >-
-        Renvoie l'administrateur le plus pertinent à contacter : l'admin local
+        Renvoie l'administrateur le plus pertinent à contacter : l'admin scopé
         le plus
-              récent dont le périmètre couvre l'organisation de l'utilisateur, sinon l'admin global le plus
-              récent, sinon une adresse support si aucun administrateur n'existe.
+              proche de l'organisation de l'utilisateur (pour A/B/C : A/B/C, sinon A/B, sinon A), sinon
+              l'admin global le plus récent, sinon une adresse support si aucun administrateur n'existe.
+              L'utilisateur courant n'est jamais renvoyé (un admin scopé obtient un autre administrateur).
       operationId: UserController_getMyContactAdmin
       parameters: []
       responses:
