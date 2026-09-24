@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.93.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.93.0...v1.93.1) (2026-09-24)
+
+
+### Bug Fixes
+
+* add quaterly value ([#2713](https://github.com/dnum-mi/referentiel-applications/issues/2713)) ([0a65c13](https://github.com/dnum-mi/referentiel-applications/commit/0a65c13c85be6f7e60fa94ba2c81b1a73484e6b0))
+* **applications:** cascade report history on delete, map blocking constraints to 409 ([#2542](https://github.com/dnum-mi/referentiel-applications/issues/2542)) ([#2711](https://github.com/dnum-mi/referentiel-applications/issues/2711)) ([153d7f4](https://github.com/dnum-mi/referentiel-applications/commit/153d7f4c1d4d24612dc4b9e36c9538aa57528391))
+* user has correct scoped admin ([#2737](https://github.com/dnum-mi/referentiel-applications/issues/2737)) ([4a7f769](https://github.com/dnum-mi/referentiel-applications/commit/4a7f769ce30021f481a45a982027d2fb0197dfed))
+
 ## [1.93.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.92.0...v1.93.0) (2026-09-22)
 
 
