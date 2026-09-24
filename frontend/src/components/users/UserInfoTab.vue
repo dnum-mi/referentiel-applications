@@ -14,10 +14,11 @@ const CONTACT_ADMIN_SOURCE_LABELS: Record<ContactAdminDto["source"], string> = {
 };
 
 // Administrateur à contacter, résolu à partir de l'organisation de l'utilisateur (même règle que
-// le contact admin d'une fiche, #2593). Un administrateur n'a pas à se contacter lui-même : la
-// ligne ne concerne que les non-admins. Un échec de chargement n'est pas bloquant pour le profil.
+// le contact admin d'une fiche, #2593). Seul un administrateur global n'a personne au-dessus de
+// lui : un admin scopé voit la ligne (le backend l'exclut de la résolution). Un échec de
+// chargement n'est pas bloquant pour le profil.
 const contactAdmin = ref<ContactAdminDto>();
-const isAdmin = computed(() => userStore.userRole === Roles.ADMIN);
+const isGlobalAdmin = computed(() => userStore.userRole === Roles.ADMIN && !userStore.user?.scopeOrganization);
 
 async function loadContactAdmin() {
   try {
@@ -66,7 +67,7 @@ async function handleToggleEmailNotifications() {
 
 onMounted(async () => {
   await userStore.fetchUser();
-  if (!isAdmin.value) await loadContactAdmin();
+  if (!isGlobalAdmin.value) await loadContactAdmin();
 });
 </script>
 
@@ -91,7 +92,7 @@ onMounted(async () => {
               {{ userStore.user.email }}
             </td>
           </tr>
-          <tr v-if="contactAdmin && !isAdmin">
+          <tr v-if="contactAdmin && !isGlobalAdmin">
             <th scope="row">Administrateur</th>
             <td data-testid="user-profile-contact-admin">
               <a :href="`mailto:${contactAdmin.email}`" data-testid="user-profile-contact-admin-link">{{ contactAdmin.email }}</a>

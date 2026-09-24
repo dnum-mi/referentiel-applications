@@ -12,11 +12,14 @@ vi.mock("@/api/index", () => ({
 }));
 
 const role = ref<Roles>(Roles.READER);
+const scopeOrganization = ref<{ path: string } | null>(null);
 const fetchUser = vi.fn().mockResolvedValue(undefined);
 
 vi.mock("@/stores/userStore", () => ({
   useUserStore: () => ({
-    user: { email: "agent@interieur.gouv.fr", organization: { path: "MI/DNUM" } },
+    get user() {
+      return { email: "agent@interieur.gouv.fr", organization: { path: "MI/DNUM" }, scopeOrganization: scopeOrganization.value };
+    },
     // Getter : un vrai store Pinia déroule ses refs, un objet simple exposerait le ComputedRef.
     get userRole() {
       return role.value;
@@ -35,6 +38,7 @@ const localAdmin: ContactAdminDto = { email: "admin.local@interieur.gouv.fr", so
 describe("UserInfoTab — administrateur à contacter", () => {
   beforeEach(() => {
     role.value = Roles.READER;
+    scopeOrganization.value = null;
     fetchUser.mockClear();
     contactAdminMock.mockReset().mockResolvedValue({ data: localAdmin });
   });
@@ -59,8 +63,8 @@ describe("UserInfoTab — administrateur à contacter", () => {
     expect(await screen.findByTestId("user-profile-contact-admin-source")).toHaveTextContent(label);
   });
 
-  // Un administrateur n'a pas à se contacter lui-même : pas de ligne, pas même d'appel réseau.
-  it("masque la ligne et n'appelle pas l'API pour un administrateur", async () => {
+  // Un administrateur global n'a personne au-dessus de lui : pas de ligne, pas même d'appel réseau.
+  it("masque la ligne et n'appelle pas l'API pour un administrateur global", async () => {
     role.value = Roles.ADMIN;
 
     renderTab();
@@ -69,6 +73,18 @@ describe("UserInfoTab — administrateur à contacter", () => {
     await screen.findByTestId("user-profile-email");
     expect(screen.queryByTestId("user-profile-contact-admin")).not.toBeInTheDocument();
     expect(contactAdminMock).not.toHaveBeenCalled();
+  });
+
+  // Un admin scopé a un administrateur à contacter (le backend l'exclut lui-même de la résolution).
+  it("affiche la ligne pour un administrateur scopé", async () => {
+    role.value = Roles.ADMIN;
+    scopeOrganization.value = { path: "MI/DNUM" };
+
+    renderTab();
+
+    const link = await screen.findByTestId("user-profile-contact-admin-link");
+    expect(link).toHaveAttribute("href", "mailto:admin.local@interieur.gouv.fr");
+    expect(contactAdminMock).toHaveBeenCalled();
   });
 
   it("n'empêche pas l'affichage du profil si le chargement échoue", async () => {

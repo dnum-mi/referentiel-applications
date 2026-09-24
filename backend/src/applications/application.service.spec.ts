@@ -376,15 +376,25 @@ describe("ApplicationService.updateApplicationQuality", () => {
 });
 
 describe("ApplicationService.getContactAdmin", () => {
+  type ScopedAdmin = {
+    email: string;
+    lastPermissionChangeAt: Date | null;
+    scopeOrganization: { path: string };
+  };
+
   const setup = ({
     actors = [] as { organization: { path: string } | null }[],
     businessDivision = null as { organizations: { path: string }[] } | null,
-    findFirstUser,
+    scopedAdmins = [] as ScopedAdmin[],
+    globalAdmin = null as { email: string } | null,
   }: {
     actors?: { organization: { path: string } | null }[];
     businessDivision?: { organizations: { path: string }[] } | null;
-    findFirstUser: jest.Mock;
+    scopedAdmins?: ScopedAdmin[];
+    globalAdmin?: { email: string } | null;
   }) => {
+    const findManyUser = jest.fn().mockResolvedValue(scopedAdmins);
+    const findFirstUser = jest.fn().mockResolvedValue(globalAdmin);
     const prisma = {
       actor: {
         findMany: jest.fn().mockResolvedValue(actors),
@@ -393,6 +403,7 @@ describe("ApplicationService.getContactAdmin", () => {
         findFirst: jest.fn().mockResolvedValue(businessDivision),
       },
       user: {
+        findMany: findManyUser,
         findFirst: findFirstUser,
       },
     };
@@ -410,16 +421,22 @@ describe("ApplicationService.getContactAdmin", () => {
       new ContactAdminService(prisma as unknown as PrismaService),
     );
 
-    return { service, prisma };
+    return { service, findManyUser, findFirstUser };
   };
 
-  it("acteur dans le périmètre : renvoie l'admin local le plus récent", async () => {
-    const findFirstUser = jest
-      .fn()
-      .mockResolvedValue({ email: "local-admin@example.com" });
+  const scopedAdmin = (email: string, path: string): ScopedAdmin => ({
+    email,
+    lastPermissionChangeAt: null,
+    scopeOrganization: { path },
+  });
+
+  it("acteur dans le périmètre : renvoie l'admin local le plus proche", async () => {
     const { service } = setup({
       actors: [{ organization: { path: "/MI/DNUM/SG" } }],
-      findFirstUser,
+      scopedAdmins: [
+        scopedAdmin("mi-admin@example.com", "/MI"),
+        scopedAdmin("local-admin@example.com", "/MI/DNUM"),
+      ],
     });
 
     const result = await service.getContactAdmin("app-1");
@@ -428,27 +445,12 @@ describe("ApplicationService.getContactAdmin", () => {
       email: "local-admin@example.com",
       source: "local",
     });
-    const [{ where, orderBy }] = findFirstUser.mock.calls[0];
-    expect(where.role).toBe("ADMIN");
-    expect(where.scopeOrganization.OR).toEqual(
-      expect.arrayContaining([
-        { path: { equals: "/MI", mode: "insensitive" } },
-        { path: { equals: "/MI/DNUM", mode: "insensitive" } },
-        { path: { equals: "/MI/DNUM/SG", mode: "insensitive" } },
-      ]),
-    );
-    expect(orderBy).toEqual({
-      lastPermissionChangeAt: { sort: "desc", nulls: "last" },
-    });
   });
 
   it("directions métier : dérive aussi le périmètre depuis leurs organisations", async () => {
-    const findFirstUser = jest
-      .fn()
-      .mockResolvedValue({ email: "moa-admin@example.com" });
     const { service } = setup({
       businessDivision: { organizations: [{ path: "/MI/DNUM" }] },
-      findFirstUser,
+      scopedAdmins: [scopedAdmin("moa-admin@example.com", "/MI/DNUM")],
     });
 
     const result = await service.getContactAdmin("app-1");
@@ -460,13 +462,10 @@ describe("ApplicationService.getContactAdmin", () => {
   });
 
   it("aucun admin local trouvé : bascule sur l'admin global le plus récent", async () => {
-    const findFirstUser = jest
-      .fn()
-      .mockResolvedValueOnce(null) // recherche locale
-      .mockResolvedValueOnce({ email: "global-admin@example.com" });
     const { service } = setup({
       actors: [{ organization: { path: "/MI/DNUM/SG" } }],
-      findFirstUser,
+      scopedAdmins: [scopedAdmin("other@example.com", "/ABCD")],
+      globalAdmin: { email: "global-admin@example.com" },
     });
 
     const result = await service.getContactAdmin("app-1");
@@ -475,15 +474,12 @@ describe("ApplicationService.getContactAdmin", () => {
       email: "global-admin@example.com",
       source: "global",
     });
-    const [{ where }] = findFirstUser.mock.calls[1];
-    expect(where).toEqual({ role: "ADMIN", scopeOrganizationId: null });
   });
 
   it("application sans acteur ni direction métier : cherche directement un admin global", async () => {
-    const findFirstUser = jest
-      .fn()
-      .mockResolvedValue({ email: "global-admin@example.com" });
-    const { service } = setup({ findFirstUser });
+    const { service, findManyUser, findFirstUser } = setup({
+      globalAdmin: { email: "global-admin@example.com" },
+    });
 
     const result = await service.getContactAdmin("app-1");
 
@@ -491,12 +487,12 @@ describe("ApplicationService.getContactAdmin", () => {
       email: "global-admin@example.com",
       source: "global",
     });
+    expect(findManyUser).not.toHaveBeenCalled();
     expect(findFirstUser).toHaveBeenCalledTimes(1);
   });
 
   it("aucun admin en base : retombe sur l'adresse support statique", async () => {
-    const findFirstUser = jest.fn().mockResolvedValue(null);
-    const { service } = setup({ findFirstUser });
+    const { service } = setup({});
 
     const result = await service.getContactAdmin("app-1");
 

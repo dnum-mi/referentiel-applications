@@ -79,9 +79,10 @@ export class UserController {
   @Get("me/contact-admin")
   @ApiOperation({
     summary: "Administrateur à contacter pour l'utilisateur courant",
-    description: `Renvoie l'administrateur le plus pertinent à contacter : l'admin local le plus
-      récent dont le périmètre couvre l'organisation de l'utilisateur, sinon l'admin global le plus
-      récent, sinon une adresse support si aucun administrateur n'existe.`,
+    description: `Renvoie l'administrateur le plus pertinent à contacter : l'admin scopé le plus
+      proche de l'organisation de l'utilisateur (pour A/B/C : A/B/C, sinon A/B, sinon A), sinon
+      l'admin global le plus récent, sinon une adresse support si aucun administrateur n'existe.
+      L'utilisateur courant n'est jamais renvoyé (un admin scopé obtient un autre administrateur).`,
   })
   @ApiOkResponse({
     description: "Administrateur à contacter",
@@ -91,6 +92,7 @@ export class UserController {
     const path = user.organization?.path;
     return this.contactAdminService.resolveByOrganizationPaths(
       path ? [path] : [],
+      { excludeUserId: user.id },
     );
   }
 
