@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { HttpException, Injectable, NotFoundException } from "@nestjs/common";
 import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ApplicationService } from "src/applications/application.service";
@@ -8,6 +8,7 @@ import { ServiceOptions } from "src/common/utils/types";
 import { CreateComplianceDto } from "./dto/create-compliance.dto";
 import { UpdateComplianceDto } from "./dto/update-compliance.dto";
 import { calculateEcoIndexMetricsFromUrl } from "./utils/ecoindex.utils";
+import { EcoIndexUnavailableException } from "./errors/ecoindex-unavailable.exception";
 
 @Injectable()
 export class CompliancesService extends BaseService<Compliance> {
@@ -107,8 +108,17 @@ export class CompliancesService extends BaseService<Compliance> {
       );
     }
 
-    const { score, ges, water, calculatedAt } =
-      await calculateEcoIndexMetricsFromUrl(targetUrl);
+    // #2292 : l'utilitaire relaie l'erreur brute du site cible (délai dépassé, statut HTTP,
+    // redirection refusée) ; sans ce garde-fou elle sortait en 500 avec son message technique.
+    let metrics: Awaited<ReturnType<typeof calculateEcoIndexMetricsFromUrl>>;
+    try {
+      metrics = await calculateEcoIndexMetricsFromUrl(targetUrl);
+    } catch (error) {
+      // Une URL refusée par le contrôle anti-SSRF est une saisie invalide, pas une panne tierce.
+      if (error instanceof HttpException) throw error;
+      throw new EcoIndexUnavailableException(error);
+    }
+    const { score, ges, water, calculatedAt } = metrics;
 
     const data = {
       eco_index_score: score,

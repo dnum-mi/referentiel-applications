@@ -79,14 +79,10 @@ d'exécution est retourné.`,
       userId: requestor.id,
       action: "import",
     });
-    try {
-      return await this.excelImportService.importFromExcel(
-        file.buffer,
-        requestor,
-      );
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      throw new BadRequestException(message);
-    }
+    // #2292 : plus de `catch` fourre-tout ici. Il renvoyait au client le message de n'importe
+    // quelle erreur interne en 400. Les refus attendus (classeur illisible) sont désormais des
+    // exceptions typées levées par le service ; les erreurs par ligne restent collectées dans le
+    // rapport d'import, et l'imprévu relève du filtre global.
+    return this.excelImportService.importFromExcel(file.buffer, requestor);
   }
 }

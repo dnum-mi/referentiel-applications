@@ -9,12 +9,14 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import {
+  ApiBadGatewayResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
   ApiTags,
 } from "@nestjs/swagger";
 import { Permission } from "@prisma/client";
+import { ApiErrorDto } from "src/common/dto/api-error.dto";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 import { PermissionGuard } from "src/common/guards/permission.guard";
 import { UserId } from "../common/decorators/user-id.decorator";
@@ -135,6 +137,11 @@ export class ApplicationCompliancesController {
   @ApiOkResponse({
     description: "Score EcoIndex calculé et enregistré avec succès",
     type: ComplianceDto,
+  })
+  @ApiBadGatewayResponse({
+    description:
+      "Le site cible est injoignable ou a renvoyé une erreur : le score n'a pas pu être calculé.",
+    type: ApiErrorDto,
   })
   @ApiParam({ name: "applicationId", description: "ID of the application" })
   async scanEcoIndex(@Param("applicationId") applicationId: string) {

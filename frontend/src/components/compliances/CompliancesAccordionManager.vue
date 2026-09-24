@@ -20,6 +20,7 @@ import type { TableColumn } from "@/types/table";
 import type { ApplicationWithPerms } from "@/models/Application";
 import RgaaComplianceSection from "./RgaaComplianceSection.vue";
 import { getEcoIndexGrade } from "@/utils/get-ecoindex-grade.js";
+import { backendErrorMessage } from "@/utils/api-error";
 import { useAppPermission } from "@/composables/use-app-permission";
 
 defineOptions({ inheritAttrs: false });
@@ -245,9 +246,10 @@ async function runEcoIndexScan() {
     const response = await applicationCompliancesControllerScanEcoIndex({
       path: { applicationId },
     });
-    const error = response.error as Error;
-    if (error) {
-      toaster.addErrorMessage("Aucune URL cible EcoIndex valide trouvée.");
+    // #2292 : le backend distingue désormais l'URL cible manquante (404) du site injoignable
+    // (502). Afficher son message plutôt qu'un diagnostic unique, et souvent faux.
+    if (response.error || !response.response.ok) {
+      toaster.addErrorMessage(backendErrorMessage(response.error) ?? "Erreur lors du scan EcoIndex.");
       return;
     }
     compliance.value = response.data ?? compliance.value;

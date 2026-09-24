@@ -1,3 +1,5 @@
+import { AllExceptionsFilter } from "src/common/filters/all-exceptions.filter";
+import { APP_FILTER } from "@nestjs/core";
 import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { ConfigModule as NestConfigModule } from "@nestjs/config";
 import { ScheduleModule } from "@nestjs/schedule";
@@ -96,6 +98,11 @@ import { MaintenanceMiddleware } from "./maintenance/maintenance.middleware";
   ],
   controllers: [AppController],
   providers: [
+    // #2292 : filtre global — traduit les erreurs Prisma en statuts HTTP, masque les détails
+    // internes derrière un message générique et corrèle la réponse aux logs. Déclaré ici (et non
+    // via `app.useGlobalFilters` dans main.ts) pour qu'il bénéficie de l'injection et s'applique
+    // aussi aux tests d'intégration, qui construisent l'application depuis ce module.
+    { provide: APP_FILTER, useClass: AllExceptionsFilter },
     AppService,
     LoggingService,
     AuthMiddleware,

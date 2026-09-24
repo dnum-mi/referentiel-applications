@@ -3761,6 +3761,9 @@ paths:
       responses:
         "204":
           description: Organisation supprimée
+        "409":
+          description: "L'organisation possède des organisations filles : suppression
+            refusée."
       summary: Supprimer une organisation
       tags: *a20
   /api/v2/applications/{applicationId}/actors:
@@ -4430,6 +4433,13 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ComplianceDto"
+        "502":
+          description: "Le site cible est injoignable ou a renvoyé une erreur : le score
+            n'a pas pu être calculé."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorDto"
       summary: Calculer et enregistrer le score EcoIndex pour cette application
       tags: *a24
   /api/v2/compliances/count:
@@ -10018,6 +10028,46 @@ components:
           type: string
           example: https://service.example.com
           description: EcoIndex target URL used for scan
+    ApiErrorDto:
+      type: object
+      properties:
+        statusCode:
+          type: number
+          example: 409
+          description: Statut HTTP de la réponse.
+        message:
+          example: Un enregistrement avec les mêmes valeurs existe déjà.
+          description: Message destiné à l'utilisateur. Tableau de messages pour les
+            erreurs de validation.
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+        error:
+          type: string
+          example: Conflict
+          description: Libellé court du statut.
+        correlationId:
+          type: string
+          example: 1d4f2c8e-0b6a-4f51-9d0e-2a7c5b3e9f10
+          description: Identifiant de corrélation, également renvoyé dans l'en-tête
+            X-Correlation-ID.
+        timestamp:
+          type: string
+          example: 2026-09-24T09:12:33.481Z
+          description: Date ISO 8601 de l'erreur.
+        path:
+          type: string
+          example: /api/v2/organizations/1
+          description: Chemin de la requête à l'origine de l'erreur.
+      required:
+        - statusCode
+        - message
+        - error
+        - correlationId
+        - timestamp
+        - path
     ImportReportSummaryDto:
       type: object
       properties:

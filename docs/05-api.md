@@ -48,6 +48,77 @@ Concrètement :
 - `forbidNonWhitelisted` **rejette** (400) toute requête contenant une propriété inconnue ;
 - `transform` instancie les DTO et convertit les types déclarés ; la conversion implicite est désactivée, les types de query/param doivent donc être explicitement déclarés.
 
+### Format des erreurs
+
+Toute réponse d'erreur — quel que soit le module, la couche ou la cause — traverse le **filtre
+global** `AllExceptionsFilter` (`backend/src/common/filters/all-exceptions.filter.ts`, enregistré
+via `APP_FILTER` dans `app.module.ts`, #2292). Le corps est un objet JSON portant toujours ces
+champs :
+
+| Champ           | Type                 | Description                                                                 |
+| --------------- | -------------------- | --------------------------------------------------------------------------- |
+| `statusCode`    | `number`             | Statut HTTP, identique à celui de la réponse.                               |
+| `message`       | `string \| string[]` | Message destiné à l'utilisateur. Tableau pour les erreurs de validation.    |
+| `error`         | `string`             | Libellé court du statut (`Not Found`, `Conflict`…).                         |
+| `correlationId` | `string`             | Identifiant de la requête, également renvoyé en en-tête `X-Correlation-ID`. |
+| `timestamp`     | `string`             | Date ISO 8601 de l'erreur.                                                  |
+| `path`          | `string`             | Chemin de la requête.                                                       |
+
+```json
+{
+  "statusCode": 409,
+  "message": "Un enregistrement avec les mêmes valeurs existe déjà.",
+  "error": "Conflict",
+  "correlationId": "1d4f2c8e-0b6a-4f51-9d0e-2a7c5b3e9f10",
+  "timestamp": "2026-09-24T09:12:33.481Z",
+  "path": "/api/v2/organizations"
+}
+```
+
+**Corrélation avec les logs.** `correlationId` est celui posé par `RequestLoggingInterceptor` ; il
+est repris de l'en-tête `X-Correlation-ID` de la requête quand l'appelant en fournit un. Citer cet
+identifiant suffit à retrouver la trace complète (message d'origine et pile) dans les logs pino.
+
+**Détails internes.** Une erreur non prévue ne fait jamais sortir son message : le client reçoit un
+500 au texte générique, la cause exacte reste dans les logs. C'est la raison d'être du filtre — un
+message brut y exposait auparavant des noms de tables, des chemins de fichiers ou l'erreur d'un
+service tiers.
+
+**Erreurs Prisma.** Celles qui traduisent une situation métier sont traduites en statut HTTP ; les
+autres (schéma désaligné, requête invalide) restent des 500, car ce sont des anomalies :
+
+| Code Prisma      | Statut | Sens                        |
+| ---------------- | ------ | --------------------------- |
+| `P2000`          | 400    | Valeur trop longue          |
+| `P2001`, `P2025` | 404    | Ressource absente           |
+| `P2002`          | 409    | Violation d'unicité         |
+| `P2003`          | 409    | Contrainte de clé étrangère |
+| `P2011`          | 400    | Champ obligatoire absent    |
+| `P2014`          | 409    | Relation obligatoire rompue |
+
+Une base injoignable (`PrismaClientInitializationError`) donne un **503**.
+
+Ce mapping est un filet de sécurité, pas la voie normale : un service qui sait nommer la cause lève
+son exception explicite, avec un message utile (par exemple la suppression d'une application,
+#2542). Les messages du filtre restent volontairement génériques, un nom de table renseignant un
+appelant sur le schéma interne.
+
+**Champs additionnels.** Le corps d'une exception levée par le code applicatif est conservé
+intégralement, et seulement enrichi des champs d'enveloppe. Les contrats existants sont donc
+inchangés — notamment le refus lié au niveau d'authentification, qui porte `strongAuthRequired`,
+`authLevel` et `stepDown` (#1985), et le tableau `message` produit par la validation.
+
+**Limite connue.** Le refus d'authentification émis sans jeton par `AuthMiddleware` est écrit
+directement sur la réponse (`res.status(401).json(...)`) et court-circuite le pipeline NestJS :
+il ne porte donc ni `correlationId` ni horodatage. Les refus levés sous forme d'exception (jeton
+illisible, expiré, droits insuffisants) passent, eux, par le filtre.
+
+**Ce qui n'est pas un flux HTTP.** Deux familles de `throw new Error` subsistent volontairement
+dans le backend : les vérifications de configuration au démarrage (`backend/src/config/configs/`),
+qui doivent empêcher le démarrage plutôt que répondre à un client, et les erreurs par ligne des
+imports Excel (`backend/src/import/processors/`), collectées dans le rapport d'import restitué à
+l'utilisateur.
+
 ### Pagination
 
 Les grosses listes (catalogue d'environ 2 700 applications) **doivent** être paginées. La pagination est implémentée par une extension Prisma (`backend/src/prisma/extensions/pagination.extension.ts`) et renvoie systématiquement la forme :
