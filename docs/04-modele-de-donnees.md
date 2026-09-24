@@ -238,7 +238,7 @@ Le catalogue (`backend/prisma/schema/data.prisma`) sépare la **description gén
 - `DataExposure` : **mode d'exposition** d'un usage applicatif (`type`, `url`, `endpoint`, `format`, `swaggerUrl`, `authenticationType`), rattaché à `DataApplication` (`Cascade`).
 - `DataSensibility` : niveau de sensibilité (`label`, `color`).
 
-Énumérations : `DataUpdateFrequency` (`DAILY`, `WEEKLY`, `MONTHLY`, `YEARLY`, `ON_DEMAND`), `OpenDataStatus` (`EXPOSED`, `NOT_EXPOSED`, `NOT_EXPOSABLE`).
+Énumérations : `DataUpdateFrequency` (`DAILY`, `WEEKLY`, `MONTHLY`, `QUARTERLY`, `YEARLY`, `ON_DEMAND`, `NEVER`), `OpenDataStatus` (`EXPOSED`, `NOT_EXPOSED`, `NOT_EXPOSABLE`).
 
 ```mermaid
 erDiagram

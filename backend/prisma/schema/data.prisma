@@ -133,6 +133,8 @@ enum DataUpdateFrequency {
   ON_DEMAND
   /// Donnée jamais mise à jour (figée)
   NEVER
+  /// Mise à jour trimestrielle
+  QUARTERLY
 }
 
 /// Statut d'exposition d'une donnée en open data.

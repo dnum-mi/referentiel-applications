@@ -8790,6 +8790,7 @@ components:
         - YEARLY
         - ON_DEMAND
         - NEVER
+        - QUARTERLY
     DataExposureDto:
       type: object
       properties:
