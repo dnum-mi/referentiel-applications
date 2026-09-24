@@ -16,6 +16,7 @@ import {
 import {
   ApiAcceptedResponse,
   ApiBody,
+  ApiConflictResponse,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNoContentResponse,
@@ -376,6 +377,10 @@ Le paramètre **id** doit être fourni dans l'URL.
     description: "Application supprimée avec succès.",
   })
   @ApiNotFoundResponse({ description: "Application non trouvée." })
+  @ApiConflictResponse({
+    description:
+      "Suppression refusée : des données liées empêchent la suppression de l'application.",
+  })
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param("applicationId") id: string) {
     await this.applicationService.deleteApplication(id);
