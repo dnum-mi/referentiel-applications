@@ -14,6 +14,7 @@ import AdminCorrelationsTab from "@/components/admin/AdminCorrelationsTab.vue";
 import AdminEmailLogsTab from "@/components/admin/AdminEmailLogsTab.vue";
 import AdminQualityCampaignsTab from "@/components/admin/AdminQualityCampaignsTab.vue";
 import AdminActionLogsTab from "@/components/admin/AdminActionLogsTab.vue";
+import AdminHostingOptionsTab from "@/components/admin/AdminHostingOptionsTab.vue";
 import { computed } from "vue";
 import { Permission } from "@/client";
 import { useUserStore } from "@/stores/userStore";
@@ -62,7 +63,7 @@ const themes: AdminTheme[] = [
   {
     id: "management",
     title: "Gestion",
-    description: "Sources, tags, tokens, batchs de données et journal des actions.",
+    description: "Tags, sources, plateformes d'hébergement, tokens, batchs de données et journal des actions.",
   },
 ];
 
@@ -161,6 +162,16 @@ const allTabs: DsfrTab[] = [
     panelId: "panel-label-sources",
     component: markRaw(AdminLabelSourcesTab),
     themeId: "management",
+  },
+  {
+    title: "Plateformes d'hébergement",
+    icon: "ri-server-line",
+    tabId: "tab-hosting-options",
+    panelId: "panel-hosting-options",
+    component: markRaw(AdminHostingOptionsTab),
+    themeId: "management",
+    // Pas de `permissions` : catalogue partagé par toutes les applications, dont les écritures
+    // exigent GlobalAdminManage côté API (#2369, #2446).
   },
   {
     title: "Gestion des tokens",

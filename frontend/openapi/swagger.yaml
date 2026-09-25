@@ -4653,6 +4653,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HostingOptionDto"
+        "409":
+          description: Hosting option already exists
       summary: Create a new hosting option
       tags: &a26
         - HostingOptions
@@ -4694,6 +4696,13 @@ paths:
             enum:
               - asc
               - desc
+        - name: search
+          required: false
+          in: query
+          description: Recherche dans le fournisseur, la plateforme, le site, le bâtiment
+            et la pièce
+          schema:
+            type: string
         - name: site
           required: false
           in: query
@@ -4725,7 +4734,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PaginatedHostingOptionDto"
+                $ref: "#/components/schemas/PaginatedHostingOptionWithUsageDto"
       summary: Get all hosting options with optional filtering
       tags: *a26
   /api/v2/hosting-options/{id}:
@@ -4752,6 +4761,8 @@ paths:
                 $ref: "#/components/schemas/HostingOptionDto"
         "404":
           description: Hosting option not found
+        "409":
+          description: Hosting option already exists
       summary: Update hosting option by ID
       tags: *a26
     delete:
@@ -10119,22 +10130,29 @@ components:
       properties:
         site:
           type: string
+          maxLength: 100
           description: Site name (géographique)
           example: CER(RENNES)
         platform:
           type: string
+          maxLength: 100
           description: Platform name
           example: PHYSIQUE
         provider:
           type: string
+          maxLength: 100
           description: Provider name
           example: DTNUM
         building:
           type: string
+          nullable: true
+          maxLength: 100
           description: Building (optional)
           example: B15
         room:
           type: string
+          nullable: true
+          maxLength: 50
           description: Room (optional)
           example: IT2
         id:
@@ -10192,36 +10210,88 @@ components:
       properties:
         site:
           type: string
+          maxLength: 100
           description: Site name (géographique)
           example: CER(RENNES)
         platform:
           type: string
+          maxLength: 100
           description: Platform name
           example: PHYSIQUE
         provider:
           type: string
+          maxLength: 100
           description: Provider name
           example: DTNUM
         building:
           type: string
+          nullable: true
+          maxLength: 100
           description: Building (optional)
           example: B15
         room:
           type: string
+          nullable: true
+          maxLength: 50
           description: Room (optional)
           example: IT2
       required:
         - site
         - platform
         - provider
-    PaginatedHostingOptionDto:
+    HostingOptionWithUsageDto:
+      type: object
+      properties:
+        site:
+          type: string
+          maxLength: 100
+          description: Site name (géographique)
+          example: CER(RENNES)
+        platform:
+          type: string
+          maxLength: 100
+          description: Platform name
+          example: PHYSIQUE
+        provider:
+          type: string
+          maxLength: 100
+          description: Provider name
+          example: DTNUM
+        building:
+          type: string
+          nullable: true
+          maxLength: 100
+          description: Building (optional)
+          example: B15
+        room:
+          type: string
+          nullable: true
+          maxLength: 50
+          description: Room (optional)
+          example: IT2
+        id:
+          type: string
+          description: Unique identifier of the hosting option
+          example: 12345678-1234-1234-1234-123456789012
+        hostingsCount:
+          type: number
+          description: Nombre d'hébergements d'applications rattachés à cette option
+            (détachés en cas de suppression)
+          example: 3
+      required:
+        - site
+        - platform
+        - provider
+        - id
+        - hostingsCount
+    PaginatedHostingOptionWithUsageDto:
       type: object
       properties:
         results:
           description: Array of results
           type: array
           items:
-            $ref: "#/components/schemas/HostingOptionDto"
+            $ref: "#/components/schemas/HostingOptionWithUsageDto"
         total:
           type: number
           description: Total number of items
@@ -10234,22 +10304,29 @@ components:
       properties:
         site:
           type: string
+          maxLength: 100
           description: Site name (géographique)
           example: CER(RENNES)
         platform:
           type: string
+          maxLength: 100
           description: Platform name
           example: PHYSIQUE
         provider:
           type: string
+          maxLength: 100
           description: Provider name
           example: DTNUM
         building:
           type: string
+          nullable: true
+          maxLength: 100
           description: Building (optional)
           example: B15
         room:
           type: string
+          nullable: true
+          maxLength: 50
           description: Room (optional)
           example: IT2
       required:

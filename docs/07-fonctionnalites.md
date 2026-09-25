@@ -117,6 +117,8 @@ La création d'une fiche se fait via `CreateApplicationPage.vue` (`POST /applica
 - **DSFR** : implémentation du Design System de l'État et version ;
 - **EcoIndex** : score environnemental (émissions CO₂, consommation d'eau), URL de mesure.
 
+**Source de référence DIMA/PDMA.** Les valeurs DIMA et PDMA saisies sont celles du **dossier d'homologation** de l'application, et non la valeur exprimée par le métier ni celle négociée entre MOA, MOE et hébergeur (règle confirmée par le BSCO, SDAN, septembre 2026). La consigne de saisie figure dans le [Guide utilisateur](./guide-utilisateur.md).
+
 Un onglet dédié **RGAA** (accessibilité) permet d'enregistrer plusieurs audits (score, URL de déclaration, date). Le détail du dispositif RGAA est traité dans [Accessibilité RGAA](./10-accessibilite-rgaa.md).
 
 **Où c'est dans le code.** Onglet `tab-compliances` → composants `frontend/src/components/compliances/` (`ComplianceForm.vue`, `CompliancesAccordionManager.vue`, `RgaaComplianceSection.vue`) ; modules back `backend/src/compliances/` et `backend/src/rgaa/`. Schémas `compliance.prisma` (six axes) et `rgaa-compliance.prisma` (audits RGAA, traités à part).

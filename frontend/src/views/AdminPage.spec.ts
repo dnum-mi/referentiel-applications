@@ -25,6 +25,7 @@ vi.mock("@/components/admin/AdminQualityCampaignsTab.vue", () => ({ default: stu
 vi.mock("@/components/admin/AdminCorrelationsTab.vue", () => ({ default: stubTab }));
 vi.mock("@/components/admin/AdminTagsTab.vue", () => ({ default: stubTab }));
 vi.mock("@/components/admin/AdminLabelSourcesTab.vue", () => ({ default: stubTab }));
+vi.mock("@/components/admin/AdminHostingOptionsTab.vue", () => ({ default: stubTab }));
 vi.mock("@/components/admin/AdminTokensTab.vue", () => ({ default: stubTab }));
 vi.mock("@/components/admin/AdminBatchData.vue", () => ({ default: stubTab }));
 vi.mock("@/components/admin/AdminEmailLogsTab.vue", () => ({ default: stubTab }));
@@ -173,6 +174,7 @@ describe("adminPage (#2419, regroupement en tuiles thématiques)", () => {
 
     const tabs = screen.getByTestId("admin-tabs");
     expect(within(tabs).getByRole("tab", { name: "Gestions des tags" })).toBeInTheDocument();
+    expect(within(tabs).getByRole("tab", { name: "Plateformes d'hébergement" })).toBeInTheDocument();
     expect(within(tabs).queryByRole("tab", { name: "Gestion des utilisateurs" })).not.toBeInTheDocument();
     // Premier onglet du nouveau thème actif par défaut.
     expect(screen.getByTestId("panel-tags")).toBeInTheDocument();

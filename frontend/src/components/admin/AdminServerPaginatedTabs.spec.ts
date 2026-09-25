@@ -2,6 +2,7 @@ import { flushPromises, shallowMount, type VueWrapper } from "@vue/test-utils";
 import { nextTick } from "vue";
 import AdminActorsTab from "./AdminActorsTab.vue";
 import AdminBusinessDivisionsTab from "./AdminBusinessDivisionsTab.vue";
+import AdminHostingOptionsTab from "./AdminHostingOptionsTab.vue";
 import AdminLabelSourcesTab from "./AdminLabelSourcesTab.vue";
 import AdminOrganizationsTab from "./AdminOrganizationsTab.vue";
 import AdminTagsTab from "./AdminTagsTab.vue";
@@ -11,6 +12,7 @@ const { apiMock, fetchActorTypes } = vi.hoisted(() => ({
   apiMock: {
     actorControllerFindAll: vi.fn(),
     businessDivisionControllerFindAll: vi.fn(),
+    hostingOptionControllerFindAll: vi.fn(),
     labelSourceControllerFindAll: vi.fn(),
     organizationsControllerFindAll: vi.fn(),
     tagsControllerFindAll: vi.fn(),
@@ -40,6 +42,13 @@ const cases = [
   },
   { component: AdminOrganizationsTab, name: "organizations", method: "organizationsControllerFindAll", filter: "search", sort: "path" },
   { component: AdminActorsTab, name: "actors", method: "actorControllerFindAll", filter: "search", sort: "email" },
+  {
+    component: AdminHostingOptionsTab,
+    name: "hosting-options",
+    method: "hostingOptionControllerFindAll",
+    filter: "search",
+    sort: undefined,
+  },
 ] as const;
 
 const wrappers: VueWrapper[] = [];
