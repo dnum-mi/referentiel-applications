@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.94.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.93.1...v1.94.0) (2026-09-25)
+
+
+### Features
+
+* **api:** add a global exception filter and a normalized error contract ([#2292](https://github.com/dnum-mi/referentiel-applications/issues/2292)) ([#2738](https://github.com/dnum-mi/referentiel-applications/issues/2738)) ([b4d57ad](https://github.com/dnum-mi/referentiel-applications/commit/b4d57ad04dd29140011fe3dee7257c4d87e5409f))
+
+
+### Bug Fixes
+
+* add if exist for enum value quaterly ([#2742](https://github.com/dnum-mi/referentiel-applications/issues/2742)) ([da81751](https://github.com/dnum-mi/referentiel-applications/commit/da8175110cd2ba15b7b7953aadbcbf9416625cf8))
+
 ## [1.93.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.93.0...v1.93.1) (2026-09-24)
 
 
