@@ -1,2 +1,2 @@
 -- AlterEnum
-ALTER TYPE "DataUpdateFrequency" ADD VALUE 'QUARTERLY';
+ALTER TYPE "DataUpdateFrequency" ADD VALUE IF NOT EXISTS 'QUARTERLY';
