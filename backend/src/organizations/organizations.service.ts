@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { Organization, Prisma } from "@prisma/client";
 import { BaseService } from "src/common/base.service";
 import { PaginatedResponseDto } from "src/common/dto";
@@ -81,8 +85,9 @@ export class OrganizationsService extends BaseService<
         where: { parentId: id },
       });
       if (children.length > 0) {
-        throw new Error(
-          "Cannot delete organization with children. Use force delete.",
+        // #2292 : une `Error` brute partait en 500. C'est un refus métier attendu.
+        throw new ConflictException(
+          "Cette organisation possède des organisations filles : supprimez-les d'abord ou utilisez la suppression forcée.",
         );
       }
     }

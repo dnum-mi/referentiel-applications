@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import * as ExcelJS from "exceljs";
 import { Requestor } from "src/user/entities/user.entity";
 import { createEmptyReport, ImportReportDto } from "./dto/import-report.dto";
@@ -28,7 +28,11 @@ export class ExcelImportService {
         buffer as unknown as Parameters<typeof workbook.xlsx.load>[0],
       );
     } catch {
-      throw new Error("Le fichier fourni n'est pas un classeur Excel valide.");
+      // #2292 : erreur de saisie utilisateur → 400 typé, plus un message relayé par un catch
+      // fourre-tout du contrôleur.
+      throw new BadRequestException(
+        "Le fichier fourni n'est pas un classeur Excel valide.",
+      );
     }
 
     const report = createEmptyReport();

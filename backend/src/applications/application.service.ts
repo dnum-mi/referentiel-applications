@@ -275,10 +275,20 @@ export class ApplicationService {
 
       this.applicationSearchService.scheduleRefresh();
       return updatedApplication;
-    } catch {
-      throw new NotFoundException(
-        `Application non trouvée pour l'ID: ${applicationId}`,
-      );
+    } catch (error) {
+      // #2292 : ce `catch` couvrait toute la mise à jour (écriture, métadonnées, réindexation) et
+      // annonçait « Application non trouvée » quelle que soit la cause — une contrainte violée, une
+      // base injoignable ou un bug se présentaient au client comme un 404. Seule l'absence de la
+      // ligne visée par l'`update` (P2025) est réellement un 404 ; le reste part au filtre global.
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
+        throw new NotFoundException(
+          `Application non trouvée pour l'ID: ${applicationId}`,
+        );
+      }
+      throw error;
     }
   }
 

@@ -14,6 +14,7 @@ import {
 } from "@nestjs/common";
 import {
   ApiBody,
+  ApiConflictResponse,
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
@@ -144,6 +145,10 @@ Vous devez fournir les informations suivantes :
   @HttpCode(204)
   @ApiNoContentResponse({
     description: "Organisation supprimée",
+  })
+  @ApiConflictResponse({
+    description:
+      "L'organisation possède des organisations filles : suppression refusée.",
   })
   public async delete(@Param("id") id: string) {
     return this.organizationService.deleteSafe(id);
