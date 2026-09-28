@@ -7,7 +7,10 @@ import { Requestor } from "./entities/user.entity";
 import { UserPermissionLogDto } from "./dto/user-permission-log.dto";
 
 @Injectable()
-export class UserPermissionLogService extends BaseService<UserPermissionLog> {
+export class UserPermissionLogService extends BaseService<
+  UserPermissionLog,
+  PrismaService["userPermissionLog"]
+> {
   constructor(protected readonly prisma: PrismaService) {
     super(prisma.userPermissionLog, prisma);
   }

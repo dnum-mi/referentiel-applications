@@ -35,7 +35,7 @@ import {
   isNewTokenInvalid,
   isRequestorAllowedToUpdateToken,
   isTokenInvalid,
-} from "./use-cases.ts/token-control.use-case";
+} from "./use-cases/token-control.use-case";
 
 const ACTIVE_TOKEN_LIMIT = 5;
 

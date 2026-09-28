@@ -6,7 +6,10 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { DataFamilyFiltersDto } from "./dto/data-family.dto";
 
 @Injectable()
-export class DataFamilyService extends BaseService<DataFamily> {
+export class DataFamilyService extends BaseService<
+  DataFamily,
+  PrismaService["dataFamily"]
+> {
   constructor(prisma: PrismaService) {
     super(prisma.dataFamily, prisma);
   }

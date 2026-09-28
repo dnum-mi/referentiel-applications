@@ -22,7 +22,10 @@ export interface CurrentStatusClient {
 }
 
 @Injectable()
-export class StatusesService extends BaseService<ApplicationStatus> {
+export class StatusesService extends BaseService<
+  ApplicationStatus,
+  PrismaService["applicationStatus"]
+> {
   constructor(prisma: PrismaService) {
     super(prisma.applicationStatus, prisma);
   }

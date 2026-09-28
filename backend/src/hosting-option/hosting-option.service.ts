@@ -6,7 +6,10 @@ import { PaginatedResponseDto } from "src/common/dto";
 import { HostingOptionFiltersDto } from "./dto/hosting-option.dto";
 
 @Injectable()
-export class HostingOptionService extends BaseService<HostingOption> {
+export class HostingOptionService extends BaseService<
+  HostingOption,
+  PrismaService["hostingOption"]
+> {
   constructor(prisma: PrismaService) {
     super(prisma.hostingOption, prisma);
   }

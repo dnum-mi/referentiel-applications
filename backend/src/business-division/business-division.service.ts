@@ -8,12 +8,11 @@ import {
   UpdateBusinessDivisionDto,
 } from "./dto/business-division.dto";
 import { PrismaQueryBuilder } from "./prisma-query-builder.service";
-import { Prisma } from "@prisma/client";
 
 @Injectable()
 export class BusinessDivisionService extends BaseService<
   BusinessDivisionDTO,
-  Prisma.BusinessDivisionDelegate
+  PrismaService["businessDivision"]
 > {
   constructor(
     private readonly queryBuilder: PrismaQueryBuilder,

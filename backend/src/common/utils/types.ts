@@ -57,10 +57,10 @@ export type MetadataConfig<T> = {
   gender: string;
   fields?: Record<string, string>;
 };
-export type ServiceOptions<T> = {
+export type ServiceOptions<T, TDelegate> = {
   applicationId?: string;
   triggerQualityUpdate?: boolean;
   metadata?: MetadataConfig<T>;
-  include?: Record<string, boolean | object>;
+  include?: Prisma.Args<TDelegate, "findUnique">["include"];
   existingEntity?: T; // Used to skip duplicate findOne call during update
 };
