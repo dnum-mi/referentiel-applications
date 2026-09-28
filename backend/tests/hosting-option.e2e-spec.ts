@@ -1,7 +1,11 @@
 import type { UserFakerReturnType } from "./fakers/user.faker";
 import { Roles } from "@prisma/client";
 import request from "supertest";
+import { faker } from "@faker-js/faker";
+import { ApplicationFaker } from "./fakers/application.faker";
 import { HostingOptionFaker } from "./fakers/hosting-option.faker";
+import { HostingFaker } from "./fakers/hosting.faker";
+import { getPrismaClient } from "./fakers/prisma";
 import { UserFaker } from "./fakers/user.faker";
 import { getToken } from "./getToken";
 import { setupTestSuite } from "./setup";
@@ -130,5 +134,238 @@ describe("HostingOptions", () => {
     expect(response.body.results.some((ho) => ho.id === hostingOption.id)).toBe(
       true,
     );
+  });
+
+  // #2688 : gestion du catalogue depuis l'onglet d'administration.
+  describe("gestion depuis l'administration (#2688)", () => {
+    const uniqueSite = () => `SITE-${faker.string.alphanumeric(10)}`;
+
+    it("expose le nombre d'hébergements rattachés à chaque option", async () => {
+      const TOKEN = await getToken(admin);
+      const option = await HostingOptionFaker.create({ site: uniqueSite() });
+      const application = await ApplicationFaker.create(admin);
+      await HostingFaker.create({
+        application,
+        hostingOption: option,
+        user: admin,
+      });
+      await HostingFaker.create({
+        application,
+        hostingOption: option,
+        user: admin,
+      });
+
+      const response = await request(app().getHttpServer())
+        .get(`/hosting-options?site=${option.site}`)
+        .set("Authorization", `Bearer ${TOKEN}`)
+        .expect(200);
+
+      expect(response.body.results).toEqual([
+        expect.objectContaining({ id: option.id, hostingsCount: 2 }),
+      ]);
+      expect(response.body.results[0]).not.toHaveProperty("_count");
+    });
+
+    it("recherche sur l'ensemble des champs", async () => {
+      const TOKEN = await getToken(admin);
+      const token = faker.string.alphanumeric(12);
+      const byRoom = await HostingOptionFaker.create({ room: `R-${token}` });
+      const byProvider = await HostingOptionFaker.create({
+        provider: `P-${token.toLowerCase()}`,
+      });
+      await HostingOptionFaker.create({ site: uniqueSite() });
+
+      const response = await request(app().getHttpServer())
+        .get(`/hosting-options?search=${token.toUpperCase()}`)
+        .set("Authorization", `Bearer ${TOKEN}`)
+        .expect(200);
+
+      expect(response.body.results.map((o) => o.id).sort()).toEqual(
+        [byRoom.id, byProvider.id].sort(),
+      );
+    });
+
+    it("trie selon la colonne demandée", async () => {
+      const TOKEN = await getToken(admin);
+      const site = uniqueSite();
+      await HostingOptionFaker.create({ site, provider: "AAA" });
+      await HostingOptionFaker.create({ site, provider: "ZZZ" });
+
+      const response = await request(app().getHttpServer())
+        .get(`/hosting-options?site=${site}&sortBy=provider&order=desc`)
+        .set("Authorization", `Bearer ${TOKEN}`)
+        .expect(200);
+
+      expect(response.body.results.map((o) => o.provider)).toEqual([
+        "ZZZ",
+        "AAA",
+      ]);
+    });
+
+    it("nettoie les espaces et enregistre null pour un bâtiment ou une pièce vide", async () => {
+      const TOKEN = await getToken(admin);
+      const site = uniqueSite();
+
+      const response = await request(app().getHttpServer())
+        .post("/hosting-options")
+        .send({
+          site: `  ${site}  `,
+          platform: " CLOUD ",
+          provider: "OVH",
+          building: "  ",
+          room: "",
+        })
+        .set("Authorization", `Bearer ${TOKEN}`)
+        .expect(201);
+
+      expect(response.body).toMatchObject({
+        site,
+        platform: "CLOUD",
+        building: null,
+        room: null,
+      });
+    });
+
+    it("permet de vider le bâtiment et la pièce d'une option existante", async () => {
+      const TOKEN = await getToken(admin);
+      const option = await HostingOptionFaker.create({
+        site: uniqueSite(),
+        building: "B1",
+        room: "IT1",
+      });
+
+      const response = await request(app().getHttpServer())
+        .patch(`/hosting-options/${option.id}`)
+        .send({
+          site: option.site,
+          platform: option.platform,
+          provider: option.provider,
+          building: "",
+          room: null,
+        })
+        .set("Authorization", `Bearer ${TOKEN}`)
+        .expect(200);
+
+      expect(response.body).toMatchObject({ building: null, room: null });
+    });
+
+    it("refuse une valeur plus longue que la colonne (400 plutôt que 500)", async () => {
+      const TOKEN = await getToken(admin);
+
+      await request(app().getHttpServer())
+        .post("/hosting-options")
+        .send({ site: uniqueSite(), platform: "P", provider: "X".repeat(101) })
+        .set("Authorization", `Bearer ${TOKEN}`)
+        .expect(400);
+      await request(app().getHttpServer())
+        .post("/hosting-options")
+        .send({
+          site: uniqueSite(),
+          platform: "P",
+          provider: "X",
+          room: "R".repeat(51),
+        })
+        .set("Authorization", `Bearer ${TOKEN}`)
+        .expect(400);
+    });
+
+    it("refuse un doublon à la création, casse ignorée (409)", async () => {
+      const TOKEN = await getToken(admin);
+      const option = await HostingOptionFaker.create({
+        site: uniqueSite(),
+        building: "B7",
+        room: null,
+      });
+
+      await request(app().getHttpServer())
+        .post("/hosting-options")
+        .send({
+          site: option.site.toLowerCase(),
+          platform: option.platform,
+          provider: option.provider,
+          building: "b7",
+        })
+        .set("Authorization", `Bearer ${TOKEN}`)
+        .expect(409);
+
+      // Une pièce renseignée distingue l'option : ce n'est plus un doublon.
+      await request(app().getHttpServer())
+        .post("/hosting-options")
+        .send({
+          site: option.site,
+          platform: option.platform,
+          provider: option.provider,
+          building: "B7",
+          room: "IT9",
+        })
+        .set("Authorization", `Bearer ${TOKEN}`)
+        .expect(201);
+    });
+
+    it("refuse une modification qui produirait un doublon, mais pas la ré-enregistrer à l'identique", async () => {
+      const TOKEN = await getToken(admin);
+      const site = uniqueSite();
+      const existing = await HostingOptionFaker.create({
+        site,
+        building: null,
+        room: null,
+      });
+      const other = await HostingOptionFaker.create({
+        site,
+        building: "B2",
+        room: null,
+      });
+      const sameAsExisting = {
+        site,
+        platform: existing.platform,
+        provider: existing.provider,
+      };
+
+      await request(app().getHttpServer())
+        .patch(`/hosting-options/${other.id}`)
+        .send({ ...sameAsExisting, building: "" })
+        .set("Authorization", `Bearer ${TOKEN}`)
+        .expect(409);
+      await request(app().getHttpServer())
+        .patch(`/hosting-options/${existing.id}`)
+        .send(sameAsExisting)
+        .set("Authorization", `Bearer ${TOKEN}`)
+        .expect(200);
+    });
+
+    it("renvoie 404 pour une option inexistante", async () => {
+      const TOKEN = await getToken(admin);
+
+      await request(app().getHttpServer())
+        .patch("/hosting-options/inexistant")
+        .send({ site: uniqueSite(), platform: "P", provider: "X" })
+        .set("Authorization", `Bearer ${TOKEN}`)
+        .expect(404);
+      await request(app().getHttpServer())
+        .delete("/hosting-options/inexistant")
+        .set("Authorization", `Bearer ${TOKEN}`)
+        .expect(404);
+    });
+
+    it("supprime une option utilisée en détachant les hébergements", async () => {
+      const TOKEN = await getToken(admin);
+      const option = await HostingOptionFaker.create({ site: uniqueSite() });
+      const application = await ApplicationFaker.create(admin);
+      const hosting = await HostingFaker.create({
+        application,
+        hostingOption: option,
+        user: admin,
+      });
+
+      await request(app().getHttpServer())
+        .delete(`/hosting-options/${option.id}`)
+        .set("Authorization", `Bearer ${TOKEN}`)
+        .expect(204);
+
+      const detached = await getPrismaClient().hosting.findUnique({
+        where: { id: hosting.id },
+      });
+      expect(detached).toMatchObject({ hostingOptionId: null });
+    });
   });
 });
