@@ -26,6 +26,8 @@ Un ADR est **immuable** : une fois accepté, il n'est pas réécrit. Si une déc
 | 0006 | [Design system DSFR (+ PrimeVue) et client API généré depuis l'OpenAPI](./0006-dsfr-primevue-client-openapi.md)         | Accepté |
 | 0007 | [Modèle de permissions à trois couches et secrets hors du code](./0007-permissions-trois-couches-secrets.md)            | Accepté |
 | 0008 | [Niveau d'authentification : carte agent ou double authentification](./0008-niveau-authentification-carte-agent-2fa.md) | Accepté |
+| 0009 | [Structurer les modules backend par fonctionnalité](./0009-structure-modules-backend.md)                                | Proposé |
+| 0010 | [Porter la limitation de débit de l'APIM dans KrakenD](./0010-rate-limiting-krakend.md)                                 | Proposé |
 
 > Les ADR **0001** et **0002** constituent le **socle ADR partagé** (`record-architecture-decisions`, d'après [adr-tools](https://github.com/npryce/adr-tools), et `dataviz-superset`) : ils posent la démarche ADR et le choix de datavisualisation, en amont des décisions propres au RefApp (à partir de 0003).
 

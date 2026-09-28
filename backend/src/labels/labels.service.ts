@@ -7,7 +7,7 @@ import { ServiceOptions } from "../common/utils/types";
 import { Label } from "./entities/label.entity";
 
 @Injectable()
-export class LabelsService extends BaseService<Label> {
+export class LabelsService extends BaseService<Label, PrismaService["label"]> {
   constructor(prisma: PrismaService, metadataService: MetadatasService) {
     super(prisma.label, prisma, metadataService);
   }
@@ -25,7 +25,9 @@ export class LabelsService extends BaseService<Label> {
   async update(
     id: string,
     data: Prisma.LabelUpdateInput,
-    options: ServiceOptions<Label> & { applicationId: string },
+    options: ServiceOptions<Label, PrismaService["label"]> & {
+      applicationId: string;
+    },
   ) {
     await this.assertBelongsToApplication(id, options.applicationId);
     return super.update(id, data, options);
@@ -33,7 +35,9 @@ export class LabelsService extends BaseService<Label> {
 
   async delete(
     id: string,
-    options: ServiceOptions<Label> & { applicationId: string },
+    options: ServiceOptions<Label, PrismaService["label"]> & {
+      applicationId: string;
+    },
   ) {
     await this.assertBelongsToApplication(id, options.applicationId);
     return super.delete(id, options);

@@ -6,7 +6,10 @@ import { LabelSourceFiltersDto } from "./dto/label-source.dto";
 import { PaginatedResponseDto } from "src/common/dto";
 
 @Injectable()
-export class LabelSourceService extends BaseService<LabelSource> {
+export class LabelSourceService extends BaseService<
+  LabelSource,
+  PrismaService["labelSource"]
+> {
   constructor(prisma: PrismaService) {
     super(prisma.labelSource, prisma);
   }

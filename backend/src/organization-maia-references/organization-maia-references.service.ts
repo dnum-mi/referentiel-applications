@@ -18,7 +18,7 @@ import {
 @Injectable()
 export class OrganizationMaiaReferencesService extends BaseService<
   OrganizationMaiaReference,
-  Prisma.OrganizationMaiaReferenceDelegate
+  PrismaService["organizationMaiaReference"]
 > {
   constructor(prisma: PrismaService) {
     super(prisma.organizationMaiaReference, prisma);

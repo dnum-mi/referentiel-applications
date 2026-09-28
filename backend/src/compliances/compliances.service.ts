@@ -11,7 +11,10 @@ import { calculateEcoIndexMetricsFromUrl } from "./utils/ecoindex.utils";
 import { EcoIndexUnavailableException } from "./errors/ecoindex-unavailable.exception";
 
 @Injectable()
-export class CompliancesService extends BaseService<Compliance> {
+export class CompliancesService extends BaseService<
+  Compliance,
+  PrismaService["compliance"]
+> {
   constructor(
     prisma: PrismaService,
     metadataService: MetadatasService,
@@ -27,7 +30,7 @@ export class CompliancesService extends BaseService<Compliance> {
   async createOrUpdateByApplicationId(
     applicationId: string,
     data: CreateComplianceDto | UpdateComplianceDto,
-    options?: ServiceOptions<Compliance>,
+    options?: ServiceOptions<Compliance, PrismaService["compliance"]>,
   ): Promise<Compliance> {
     const applicationExists = await this.hasApplication(applicationId);
 
@@ -60,7 +63,7 @@ export class CompliancesService extends BaseService<Compliance> {
   updateConformites(
     existing: Compliance,
     data: CreateComplianceDto | UpdateComplianceDto,
-    options?: ServiceOptions<Compliance>,
+    options?: ServiceOptions<Compliance, PrismaService["compliance"]>,
   ): Promise<Compliance> {
     // #2440 : `data` vient d'un PATCH (UpdateComplianceDto est un PartialType) — un champ
     // absent du body vaut `undefined` ici, à ne pas confondre avec une URL explicitement vidée.
@@ -83,7 +86,7 @@ export class CompliancesService extends BaseService<Compliance> {
   async resetEcoIndexScore(
     complianceId: Compliance["id"],
     targetUrl: Compliance["eco_index_target_url"],
-    options?: ServiceOptions<Compliance>,
+    options?: ServiceOptions<Compliance, PrismaService["compliance"]>,
   ) {
     // if we update a new url, we need to reset eco-index score
     const resetEcoIndexScores = {

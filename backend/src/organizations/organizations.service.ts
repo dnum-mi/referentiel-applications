@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { Organization, Prisma } from "@prisma/client";
+import { Organization } from "@prisma/client";
 import { BaseService } from "src/common/base.service";
 import { PaginatedResponseDto } from "src/common/dto";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -17,7 +17,7 @@ import { PrismaQueryBuilder } from "./prisma-query-builder.service";
 @Injectable()
 export class OrganizationsService extends BaseService<
   Organization,
-  Prisma.OrganizationDelegate
+  PrismaService["organization"]
 > {
   constructor(
     prisma: PrismaService,

@@ -9,7 +9,10 @@ import {
 } from "./dto/mdit-campaign.dto";
 
 @Injectable()
-export class MditCampaignService extends BaseService<MditCampaign> {
+export class MditCampaignService extends BaseService<
+  MditCampaign,
+  PrismaService["mditCampaign"]
+> {
   constructor(prisma: PrismaService) {
     super(prisma.mditCampaign, prisma);
   }

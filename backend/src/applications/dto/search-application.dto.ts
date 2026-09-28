@@ -13,7 +13,7 @@ import {
   Min,
 } from "class-validator";
 import { PaginationDto } from "src/common/dto";
-import { RelationTypeFilter } from "src/product/application/dto/relation-type.dto";
+import { RelationTypeFilter } from "src/relationship/application/dto/relation-type.dto";
 import { stringToBoolean } from "src/utils/functions";
 
 /**

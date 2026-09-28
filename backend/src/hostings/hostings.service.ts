@@ -7,7 +7,10 @@ import { CreateHostingDto, UpdateHostingDto } from "./dto/hosting.dto";
 import { Hosting } from "./entities/hosting.entity";
 
 @Injectable()
-export class HostingsService extends BaseService<Hosting> {
+export class HostingsService extends BaseService<
+  Hosting,
+  PrismaService["hosting"]
+> {
   constructor(
     prisma: PrismaService,
     applicationService: ApplicationService,

@@ -10,7 +10,10 @@ import { UserConnexionLogDto } from "./dto/user-connexion-log.dto";
 export const CONNEXION_LOG_HISTORY_LIMIT = 30;
 
 @Injectable()
-export class UserConnexionLogService extends BaseService<UserConnexionLog> {
+export class UserConnexionLogService extends BaseService<
+  UserConnexionLog,
+  PrismaService["userConnexionLog"]
+> {
   constructor(protected readonly prisma: PrismaService) {
     super(prisma.userConnexionLog, prisma);
   }

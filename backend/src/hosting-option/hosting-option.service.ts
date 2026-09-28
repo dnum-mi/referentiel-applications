@@ -25,7 +25,10 @@ const isHostingOptionField = (value?: string): value is HostingOptionField =>
   HOSTING_OPTION_FIELDS.includes(value as HostingOptionField);
 
 @Injectable()
-export class HostingOptionService extends BaseService<HostingOption> {
+export class HostingOptionService extends BaseService<
+  HostingOption,
+  PrismaService["hostingOption"]
+> {
   constructor(prisma: PrismaService) {
     super(prisma.hostingOption, prisma);
   }
