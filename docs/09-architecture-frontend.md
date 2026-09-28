@@ -74,6 +74,9 @@ Organisation des dossiers sous `frontend/src/` :
 
 ## 2. Conventions des composants
 
+Le [formulaire d'application](./application-form.md) illustre le découpage en
+étapes, la validation par schémas et la gestion accessible des erreurs.
+
 - **`<script setup lang="ts">` systématique.** Tous les composants et vues
   utilisent la _Composition API_ en _setup syntax_ TypeScript
   (ex. `frontend/src/App.vue:1`, `frontend/src/components/RefAppTable.vue:1`).
