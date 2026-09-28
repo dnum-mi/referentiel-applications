@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { decodeJwt } from "jose";
-import { LoggerService } from "src/logger/logger.service";
+import { LoggerService } from "./logger.service";
 
 export interface RequestLogContext {
   correlationId: string;

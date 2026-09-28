@@ -12,6 +12,7 @@ import {
 } from "@nestjs/common";
 import { Permission } from "@prisma/client";
 import {
+  ApiConflictResponse,
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
@@ -24,6 +25,7 @@ import {
   CreateHostingOptionDto,
   HostingOptionDto,
   HostingOptionFiltersDto,
+  HostingOptionWithUsageDto,
   UpdateHostingOptionDto,
 } from "./dto/hosting-option.dto";
 import { HostingOptionService } from "./hosting-option.service";
@@ -52,15 +54,18 @@ export class HostingOptionController {
     description: "Hosting option created successfully",
     type: HostingOptionDto,
   })
+  @ApiConflictResponse({ description: "Hosting option already exists" })
   create(@Body() createHostingOptionDto: CreateHostingOptionDto) {
-    return this.hostingOptionService.create(createHostingOptionDto);
+    return this.hostingOptionService.createHostingOption(
+      createHostingOptionDto,
+    );
   }
 
   @Get()
   @ApiOperation({ summary: "Get all hosting options with optional filtering" })
   @ApiOkResponse({
     description: "Paginated list of hosting options",
-    type: PaginatedResponseDto.of(HostingOptionDto),
+    type: PaginatedResponseDto.of(HostingOptionWithUsageDto),
   })
   findAll(@Query() filters: HostingOptionFiltersDto) {
     return this.hostingOptionService.findAllHostingOptions(filters);
@@ -74,11 +79,15 @@ export class HostingOptionController {
     type: HostingOptionDto,
   })
   @ApiNotFoundResponse({ description: "Hosting option not found" })
+  @ApiConflictResponse({ description: "Hosting option already exists" })
   update(
     @Param("id") id: string,
     @Body() updateHostingOptionDto: UpdateHostingOptionDto,
   ) {
-    return this.hostingOptionService.update(id, updateHostingOptionDto);
+    return this.hostingOptionService.updateHostingOption(
+      id,
+      updateHostingOptionDto,
+    );
   }
 
   @Delete(":id")
