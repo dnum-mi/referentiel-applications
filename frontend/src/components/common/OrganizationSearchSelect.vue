@@ -31,6 +31,18 @@ const props = defineProps({
     type: String,
     default: "",
   },
+  inputId: {
+    type: String,
+    default: "",
+  },
+  selectId: {
+    type: String,
+    default: "",
+  },
+  descriptionId: {
+    type: String,
+    default: "",
+  },
 });
 
 const emit = defineEmits<{
@@ -41,6 +53,18 @@ const organizationStore = useOrganizationStore();
 
 // RGAA-039 (11.5) : regrouper le champ de recherche et le select de résultats (même nature).
 const groupLabelId = useId();
+const container = ref<HTMLElement | null>(null);
+const searchInputId = computed(() => props.inputId || `${groupLabelId}-search`);
+const organizationSelectId = computed(() => props.selectId || `${groupLabelId}-select`);
+const errorId = computed(() => props.descriptionId || `${groupLabelId}-error`);
+
+function focus() {
+  const target =
+    container.value?.querySelector<HTMLElement>("select:not(:disabled)") ?? container.value?.querySelector<HTMLInputElement>("input");
+  target?.focus();
+}
+
+defineExpose({ focus });
 
 const searchQuery = ref("");
 const {
@@ -133,15 +157,18 @@ watchDebounced(searchQuery, onQuery, { debounce: 300 });
 </script>
 
 <template>
-  <div role="group" :aria-labelledby="groupLabelId">
+  <div ref="container" role="group" :aria-labelledby="groupLabelId">
     <p :id="groupLabelId" class="fr-sr-only">{{ searchLabel }}</p>
     <div class="fr-form-group">
       <DsfrInputGroup
+        :id="searchInputId"
         v-model.trim="searchQuery"
         :label="searchLabel"
         placeholder="Rechercher une organisation..."
         :description="description"
         :error-message="errorMessage"
+        :description-id="errorId"
+        :aria-invalid="errorMessage ? true : undefined"
         label-visible
       >
         <template v-if="searchQuery" #append>
@@ -153,8 +180,12 @@ watchDebounced(searchQuery, onQuery, { debounce: 300 });
     <div v-if="selectOptions.length > 0" class="fr-mt-1w">
       <DsfrSelect
         v-model="selectedOrganizationId"
+        :select-id="organizationSelectId"
         :options="selectOptions"
         :disabled="isLoading"
+        :aria-describedby="errorMessage ? errorId : undefined"
+        :aria-invalid="errorMessage ? true : undefined"
+        :aria-required="required || undefined"
         label="Choisir une organisation de votre choix"
         label-visible
       />
