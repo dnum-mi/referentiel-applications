@@ -37,7 +37,6 @@ Ce projet est un référentiel centralisé des applications logicielles du minis
 | Frontend        | Vue.js 3 (Composition API)                   |
 | Base de données | PostgreSQL via Prisma ORM                    |
 | Auth            | OIDC / Keycloak                              |
-| API Gateway     | KrakenD                                      |
 | CI/CD           | GitHub Actions, GitLab CI (DSO)              |
 | Conteneurs      | Docker Compose                               |
 | Monitoring      | Matomo (audience), EcoIndex (éco-conception) |
@@ -133,7 +132,6 @@ Ce projet est un référentiel centralisé des applications logicielles du minis
 | Outil              | Usage                                                          |
 | ------------------ | -------------------------------------------------------------- |
 | **Prisma ORM**     | Gestion du schéma et des migrations PostgreSQL                 |
-| **KrakenD**        | Configuration de l'API Gateway (`krakend.json`)                |
 | **Keycloak**       | Authentification OIDC (configuration dans `keycloak/`)         |
 | **Matomo**         | Suivi d'audience (via `docker-compose.matomo.yml`)             |
 | **Grist**          | Gestion de données tabulaires (via `docker-compose.grist.yml`) |
