@@ -57,6 +57,49 @@ describe("ApplicationSearchService", () => {
       expect(result).toEqual([{ id: "app-1", rank: 1 }]);
     });
 
+    it.each([
+      ["PostgreSQL 15", "PostgreSQL:* & (15:*ABC | 15:D)"],
+      ["PostgreSQL 15.5", "PostgreSQL:* & (15.5:*ABC | 15.5:D)"],
+      ["PostgreSQL 15.5.2", "PostgreSQL:* & (15.5.2:*ABC | 15.5.2:D)"],
+      ["15.5", "(15.5:*ABC | 15.5:D)"],
+      [
+        "PostgreSQL (15.5), nginx!",
+        "PostgreSQL:* & (15.5:*ABC | 15.5:D) & nginx:*",
+      ],
+    ])(
+      "respecte les segments de version tout en conservant les préfixes des autres champs : %s",
+      async (query, expectedTsQuery) => {
+        const { service, prisma } = makeService();
+
+        await service.fullTextSearchPrefix(query);
+
+        // « 15:* » inclurait la version 150, « 15.5:* » inclurait 15.50.
+        // Seules les versions (poids D) imposent une correspondance exacte ;
+        // les autres champs conservent leurs préfixes numériques.
+        expect(prisma.$queryRaw.mock.calls[0][1]).toBe(expectedTsQuery);
+      },
+    );
+
+    it("découpe les points des noms de produit sans les confondre avec une version", async () => {
+      const { service, prisma } = makeService();
+
+      await service.fullTextSearchPrefix("Node.js 20.11");
+
+      expect(prisma.$queryRaw.mock.calls[0][1]).toBe(
+        "Node:* & js:* & (20.11:*ABC | 20.11:D)",
+      );
+    });
+
+    it("conserve les préfixes numériques des noms d'application", async () => {
+      const { service, prisma } = makeService();
+
+      await service.fullTextSearchPrefix("Budget 20");
+
+      expect(prisma.$queryRaw.mock.calls[0][1]).toBe(
+        "Budget:* & (20:*ABC | 20:D)",
+      );
+    });
+
     it("DÉCOUPE la ponctuation interne au lieu de coller les morceaux (nom trouvable)", async () => {
       // Non-régression : retirer la ponctuation *en concaténant* (« O'Kon » → « OKon »,
       // « QA-GROUP-CHILD » → « QAGROUPCHILD ») produit un lexème absent de l'index,
@@ -165,6 +208,38 @@ describe("ApplicationSearchService", () => {
       await Promise.resolve();
 
       expect(prisma.$executeRawUnsafe).toHaveBeenCalledTimes(1);
+    });
+
+    it("annule le rafraîchissement en attente à l'arrêt de l'application", async () => {
+      const { service, prisma } = makeService();
+
+      service.scheduleRefresh();
+      service.onModuleDestroy();
+      service.scheduleRefresh();
+      service.handlePeriodicRefresh();
+      await jest.runAllTimersAsync();
+
+      expect(prisma.$executeRawUnsafe).not.toHaveBeenCalled();
+    });
+
+    it("ne relance pas un rafraîchissement en cours après l'arrêt", async () => {
+      const { service, prisma } = makeService();
+      let finishRefresh!: () => void;
+      const pendingRefresh = new Promise<void>((resolve) => {
+        finishRefresh = resolve;
+      });
+      const refresh = jest
+        .spyOn(service, "refreshIndex")
+        .mockReturnValueOnce(pendingRefresh);
+
+      service.handlePeriodicRefresh();
+      service.handlePeriodicRefresh();
+      service.onModuleDestroy();
+      finishRefresh();
+      await jest.runAllTimersAsync();
+
+      expect(refresh).toHaveBeenCalledTimes(1);
+      expect(prisma.$executeRawUnsafe).not.toHaveBeenCalled();
     });
   });
 });

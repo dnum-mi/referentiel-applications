@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger, type OnModuleDestroy } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { PrismaService } from "src/prisma/prisma.service";
 
@@ -40,17 +40,23 @@ const MATERIALIZED_VIEW = "application_search_index";
  */
 const PREFIX_RESULT_LIMIT = 1000;
 
+/** Un segment ou préfixe de version, conservé entier par le parseur PostgreSQL. */
+const NUMERIC_VERSION = /^\d+(?:\.\d+)*$/;
+
 /** Durée de vie du cache des résultats FTS. Courte : elle borne seulement la
  * staleness si l'index est rafraîchi par une autre instance de l'application. */
 const CACHE_TTL_MS = 30_000;
 const CACHE_MAX_ENTRIES = 500;
 
 @Injectable()
-export class ApplicationSearchService implements ApplicationSearchEngine {
+export class ApplicationSearchService
+  implements ApplicationSearchEngine, OnModuleDestroy
+{
   private readonly logger = new Logger(ApplicationSearchService.name);
   private refreshTimer?: ReturnType<typeof setTimeout>;
   private isRefreshing = false;
   private refreshQueued = false;
+  private isShuttingDown = false;
   /**
    * Cache mémoire des résultats par requête normalisée. L'index ne change
    * qu'au REFRESH de la vue matérialisée : le cache est vidé à ce moment-là
@@ -63,6 +69,12 @@ export class ApplicationSearchService implements ApplicationSearchEngine {
   >();
 
   constructor(private readonly prisma: PrismaService) {}
+
+  public onModuleDestroy(): void {
+    this.isShuttingDown = true;
+    if (this.refreshTimer) clearTimeout(this.refreshTimer);
+    this.refreshQueued = false;
+  }
 
   private getCached(key: string): RankedApplication[] | undefined {
     const entry = this.resultCache.get(key);
@@ -133,7 +145,13 @@ export class ApplicationSearchService implements ApplicationSearchEngine {
    * « QA-GROUP-CHILD » → `qa`,`group`,`child`). Retirer la ponctuation *en
    * collant* les morceaux (« OKon », « QAGROUPCHILD ») produirait un lexème
    * absent de l'index : l'application devenait alors introuvable en tapant son
-   * propre nom. Le découpage garantit qu'un nom se retrouve toujours lui-même.
+   * propre nom. Les versions numériques pointées restent toutefois entières :
+   * PostgreSQL indexe « 15.5 » comme un seul lexème.
+   *
+   * Les versions techniques (poids D) sont indexées par préfixes de segments :
+   * « 15.5.2 » contient aussi « 15 » et « 15.5 ». Les nombres doivent y matcher
+   * exactement pour exclure « 150 » de « 15 ». Le préfixe reste autorisé sur
+   * les autres champs (poids A/B/C), notamment « Budget 20 » -> « Budget 2026 ».
    *
    * Résultats plafonnés à {@link PREFIX_RESULT_LIMIT} : un préfixe très court
    * matcherait toute la base, or l'autocomplétion n'en affiche qu'une poignée.
@@ -143,12 +161,20 @@ export class ApplicationSearchService implements ApplicationSearchEngine {
   ): Promise<RankedApplication[]> {
     const tokens = query
       ?.trim()
-      .split(/[^\p{L}\p{N}]+/u)
-      .filter(Boolean);
+      .match(/[\p{L}\p{N}]+(?:\.[\p{L}\p{N}]+)*/gu)
+      ?.flatMap((token) =>
+        NUMERIC_VERSION.test(token) ? [token] : token.split("."),
+      );
 
     if (!tokens?.length) return [];
 
-    const tsQuery = tokens.map((token) => `${token}:*`).join(" & ");
+    const tsQuery = tokens
+      .map((token) =>
+        NUMERIC_VERSION.test(token)
+          ? `(${token}:*ABC | ${token}:D)`
+          : `${token}:*`,
+      )
+      .join(" & ");
 
     const cacheKey = `p:${tsQuery.toLowerCase()}`;
     const cached = this.getCached(cacheKey);
@@ -192,8 +218,10 @@ export class ApplicationSearchService implements ApplicationSearchEngine {
    * rafraîchissement effectif.
    */
   public scheduleRefresh(delayMs = 2000): void {
+    if (this.isShuttingDown) return;
     if (this.refreshTimer) clearTimeout(this.refreshTimer);
     this.refreshTimer = setTimeout(() => {
+      this.refreshTimer = undefined;
       void this.runRefreshSafely();
     }, delayMs);
   }
@@ -210,6 +238,7 @@ export class ApplicationSearchService implements ApplicationSearchEngine {
 
   /** Sérialise les rafraîchissements pour éviter qu'ils ne se chevauchent. */
   private async runRefreshSafely(): Promise<void> {
+    if (this.isShuttingDown) return;
     if (this.isRefreshing) {
       this.refreshQueued = true;
       return;
