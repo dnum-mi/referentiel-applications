@@ -38,6 +38,7 @@ import { ApplicationViewService } from "./view.service";
     ApplicationExportService,
     ApplicationRepository,
     ApplicationService,
+    ApplicationSearchService,
   ],
 })
 export class ApplicationModule {}

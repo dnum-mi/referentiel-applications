@@ -16,9 +16,17 @@ jest.mock("./utils/endoflife.utils", () => ({
 import { BadRequestException, ConflictException } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { ApplicationService } from "src/applications/application.service";
+import { ApplicationSearchService } from "src/applications/search/application-search.service";
 import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { TechnologyService } from "./technology.service";
+
+const makeSearchServiceMock = () => ({
+  scheduleRefresh: jest.fn<
+    ReturnType<ApplicationSearchService["scheduleRefresh"]>,
+    Parameters<ApplicationSearchService["scheduleRefresh"]>
+  >(),
+});
 
 // Saisir une technologie dont le couple technologie/produit est déjà présent
 // dans la fiche doit mettre à jour la ligne existante (version, lien
@@ -40,6 +48,9 @@ describe("TechnologyService — upsert de la stack technique", () => {
       findUnique: jest.fn().mockResolvedValue(existing),
       create: jest.fn().mockResolvedValue(existing),
       update: jest.fn().mockResolvedValue(existing),
+      delete: jest
+        .fn<Promise<typeof existing>, [unknown]>()
+        .mockResolvedValue(existing),
       updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     };
     const prisma = {
@@ -48,17 +59,27 @@ describe("TechnologyService — upsert de la stack technique", () => {
         findUnique: jest.fn().mockResolvedValue({ id: "app-1" }),
       },
     };
-    const applicationService = { updateApplicationQuality: jest.fn() };
+    const applicationService = {
+      updateApplicationQuality: jest.fn(),
+      recordQualityCampaignActions: jest
+        .fn<
+          ReturnType<ApplicationService["recordQualityCampaignActions"]>,
+          Parameters<ApplicationService["recordQualityCampaignActions"]>
+        >()
+        .mockResolvedValue(undefined),
+    };
+    const searchService = makeSearchServiceMock();
     const service = new TechnologyService(
       prisma as unknown as PrismaService,
       {} as MetadatasService,
       applicationService as unknown as ApplicationService,
+      searchService as unknown as ApplicationSearchService,
     );
-    return { service, prisma };
+    return { service, prisma, searchService };
   };
 
   it("crée une nouvelle ligne quand le couple technologie/produit est absent", async () => {
-    const { service, prisma } = makeService();
+    const { service, prisma, searchService } = makeService();
     prisma.technologyStack.findFirst.mockResolvedValue(null);
 
     await service.createTechnology("app-1", {
@@ -69,10 +90,11 @@ describe("TechnologyService — upsert de la stack technique", () => {
 
     expect(prisma.technologyStack.create).toHaveBeenCalledTimes(1);
     expect(prisma.technologyStack.update).not.toHaveBeenCalled();
+    expect(searchService.scheduleRefresh).toHaveBeenCalledTimes(1);
   });
 
   it("met à jour la ligne existante (pas de doublon) quand on saisit une nouvelle version d'un couple déjà présent", async () => {
-    const { service, prisma } = makeService();
+    const { service, prisma, searchService } = makeService();
     prisma.technologyStack.findFirst.mockResolvedValue(existing);
 
     await service.createTechnology("app-1", {
@@ -90,6 +112,7 @@ describe("TechnologyService — upsert de la stack technique", () => {
     // technologie ni le produit de la ligne existante.
     expect(updateArgs.data.technology).toBeUndefined();
     expect(updateArgs.data.product).toBeUndefined();
+    expect(searchService.scheduleRefresh).toHaveBeenCalledTimes(1);
   });
 
   it("rapproche le couple technologie/produit sans tenir compte de la casse", async () => {
@@ -114,7 +137,7 @@ describe("TechnologyService — upsert de la stack technique", () => {
   });
 
   it("PATCH : rejette en conflit un renommage vers un couple déjà présent, à la casse près", async () => {
-    const { service, prisma } = makeService();
+    const { service, prisma, searchService } = makeService();
     const other = { ...existing, id: "tech-2", product: "MySQL" };
     prisma.technologyStack.findUnique.mockResolvedValue(other);
     prisma.technologyStack.findFirst.mockResolvedValue(existing);
@@ -123,10 +146,11 @@ describe("TechnologyService — upsert de la stack technique", () => {
       service.updateTechnology("tech-2", "app-1", { product: "postgresql" }),
     ).rejects.toBeInstanceOf(ConflictException);
     expect(prisma.technologyStack.update).not.toHaveBeenCalled();
+    expect(searchService.scheduleRefresh).not.toHaveBeenCalled();
   });
 
   it("PATCH : changer uniquement la casse d'un produit sur la même ligne n'est pas un conflit", async () => {
-    const { service, prisma } = makeService();
+    const { service, prisma, searchService } = makeService();
     prisma.technologyStack.findUnique.mockResolvedValue(existing);
 
     await service.updateTechnology("tech-1", "app-1", {
@@ -136,7 +160,96 @@ describe("TechnologyService — upsert de la stack technique", () => {
     // Pas de recherche de conflit : le couple (à la casse près) est inchangé.
     expect(prisma.technologyStack.findFirst).not.toHaveBeenCalled();
     expect(prisma.technologyStack.update).toHaveBeenCalledTimes(1);
+    expect(searchService.scheduleRefresh).toHaveBeenCalledTimes(1);
   });
+
+  it("rafraîchit l'index après une suppression, même sans options de métadonnées", async () => {
+    const { service, prisma, searchService } = makeService();
+
+    await service.deleteTechnology("tech-1", "app-1");
+
+    expect(prisma.technologyStack.delete).toHaveBeenCalledWith({
+      where: { id: "tech-1" },
+    });
+    expect(searchService.scheduleRefresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("rafraîchit l'index quand une fusion POST efface la version omise", async () => {
+    const { service, prisma, searchService } = makeService();
+    prisma.technologyStack.findFirst.mockResolvedValue(existing);
+
+    await service.createTechnology("app-1", {
+      technology: existing.technology,
+      product: existing.product,
+    });
+
+    expect(
+      prisma.technologyStack.update.mock.calls[0][0].data.version,
+    ).toBeNull();
+    expect(searchService.scheduleRefresh).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    { manualEolDate: "2027-06-30" },
+    { docUrl: "https://example.com/documentation" },
+  ])(
+    "ne réindexe pas une modification hors produit/version : %p",
+    async (dto) => {
+      const { service, prisma, searchService } = makeService();
+
+      await service.updateTechnology("tech-1", "app-1", dto);
+
+      expect(prisma.technologyStack.update).toHaveBeenCalledTimes(1);
+      expect(searchService.scheduleRefresh).not.toHaveBeenCalled();
+    },
+  );
+
+  it("ne réindexe pas une fusion POST qui conserve les champs indexés", async () => {
+    const { service, prisma, searchService } = makeService();
+    prisma.technologyStack.findFirst.mockResolvedValue(existing);
+
+    await service.createTechnology("app-1", {
+      technology: existing.technology,
+      product: existing.product,
+      version: existing.version,
+      manualEolDate: "2027-06-30",
+    });
+
+    expect(prisma.technologyStack.update).toHaveBeenCalledTimes(1);
+    expect(searchService.scheduleRefresh).not.toHaveBeenCalled();
+  });
+
+  it.each(["création", "fusion", "modification", "suppression"] as const)(
+    "ne réindexe pas après un échec de %s",
+    async (operation) => {
+      const { service, prisma, searchService } = makeService();
+      const error = new Error("écriture refusée");
+      const dto = {
+        technology: existing.technology,
+        product: existing.product,
+        version: "16",
+      };
+      let result: Promise<unknown>;
+      if (operation === "création") {
+        prisma.technologyStack.findFirst.mockResolvedValue(null);
+        prisma.technologyStack.create.mockRejectedValue(error);
+        result = service.createTechnology("app-1", dto);
+      } else if (operation === "fusion") {
+        prisma.technologyStack.findFirst.mockResolvedValue(existing);
+        prisma.technologyStack.update.mockRejectedValue(error);
+        result = service.createTechnology("app-1", dto);
+      } else if (operation === "modification") {
+        prisma.technologyStack.update.mockRejectedValue(error);
+        result = service.updateTechnology("tech-1", "app-1", dto);
+      } else {
+        prisma.technologyStack.delete.mockRejectedValue(error);
+        result = service.deleteTechnology("tech-1", "app-1");
+      }
+
+      await expect(result).rejects.toThrow(error);
+      expect(searchService.scheduleRefresh).not.toHaveBeenCalled();
+    },
+  );
 
   // #2379 : effacer la version (null) ne doit pas recalculer l'EOL avec l'ancienne version.
   it("recalcule l'EOL avec version=null quand la version est effacée", async () => {
@@ -196,6 +309,7 @@ describe("TechnologyService — champs de fin de vie persistés", () => {
       {} as PrismaService,
       {} as MetadatasService,
       {} as ApplicationService,
+      makeSearchServiceMock() as unknown as ApplicationSearchService,
     ) as unknown as EolFields;
 
   it("persiste le cycle apparié avec les dates d'une version reconnue", () => {
@@ -299,6 +413,7 @@ describe("TechnologyService — fin de vie saisie à la main (#2454)", () => {
       prisma as unknown as PrismaService,
       {} as MetadatasService,
       { updateApplicationQuality: jest.fn() } as unknown as ApplicationService,
+      makeSearchServiceMock() as unknown as ApplicationSearchService,
     );
     const resolveEol = jest
       .spyOn(service as unknown as ResolveEol, "resolveEol")
@@ -552,6 +667,7 @@ describe("TechnologyService — changement de produit pendant une panne (#2516)"
       prisma as unknown as PrismaService,
       {} as MetadatasService,
       { updateApplicationQuality: jest.fn() } as unknown as ApplicationService,
+      makeSearchServiceMock() as unknown as ApplicationSearchService,
     );
     jest
       .spyOn(service as unknown as ResolveEol, "resolveEol")
@@ -649,12 +765,14 @@ describe("TechnologyService — hygiène (#2527)", () => {
       technologyStack,
       application: { findUnique: jest.fn().mockResolvedValue({ id: "app-1" }) },
     };
+    const searchService = makeSearchServiceMock();
     const service = new TechnologyService(
       prisma as unknown as PrismaService,
       {} as MetadatasService,
       { updateApplicationQuality: jest.fn() } as unknown as ApplicationService,
+      searchService as unknown as ApplicationSearchService,
     );
-    return { service, technologyStack };
+    return { service, technologyStack, searchService };
   };
 
   it("rend 409 quand l'index unique refuse un doublon de casse en course (P2002)", async () => {
@@ -691,7 +809,7 @@ describe("TechnologyService — hygiène (#2527)", () => {
   });
 
   it("conditionne l'écriture paresseuse à une origine automatique", async () => {
-    const { service, technologyStack } = makeService();
+    const { service, technologyStack, searchService } = makeService();
     // Appels endoflife.date coupés en test : rétablis pour ce seul cas.
     jest
       .spyOn(
@@ -712,5 +830,6 @@ describe("TechnologyService — hygiène (#2527)", () => {
       id: "tech-1",
       eolSource: "endoflife",
     });
+    expect(searchService.scheduleRefresh).not.toHaveBeenCalled();
   });
 });
