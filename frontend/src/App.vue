@@ -145,8 +145,7 @@ const navItemsComputed = computed(() => {
 const logoText = ["Ministère", "de l'intérieur"];
 const serviceDescription = "Une application pour les réunir toutes";
 const serviceTitle = "Référentiel des Applications";
-const homeTo = "/applications";
-const operatorTo = "/applications";
+const homeLink = { name: routeNames.ACCUEIL };
 const ecosystemLinks = computed(() => {
   const links = [
     {
@@ -171,8 +170,8 @@ const ecosystemLinks = computed(() => {
   }));
 });
 const mandatoryLinks = computed(() => [
-  { label: accessibilityDeclaration.complianceMention, title: "Aller à la page d'accessibilité", to: "accessibilite" },
-  { label: "Plan du site", title: "Aller au plan du site", to: "plan-du-site" },
+  { label: accessibilityDeclaration.complianceMention, title: "Aller à la page d'accessibilité", to: { name: routeNames.ACCESSIBILITE } },
+  { label: "Plan du site", title: "Aller au plan du site", to: { name: routeNames.SITEMAP } },
   {
     // RGAA-015 : ouverture dans un nouvel onglet mentionnée dans l'intitulé.
     label: "Contact Tchap",
@@ -285,11 +284,11 @@ useAppUpdate();
     :operator-img-src="operatorImgSrc"
     :operator-img-alt="operatorImgAlt"
     :operator-img-style="operatorImgStyle"
-    :home-to="homeTo"
+    :home-link="homeLink"
     :ecosystem-links="ecosystemLinks"
     :mandatory-links="mandatoryLinks"
     :after-mandatory-links="afterMandatoryLinks"
-    :operator-to="operatorTo"
+    :operator-to="homeLink"
     data-testid="footer"
   />
 
