@@ -25,11 +25,13 @@
 - **Résultat attendu** : la section « Objectifs » et ses 5 tuiles (centralisation, accès,
   dépendances, maintenance, exploitabilité) sont visibles.
 
-### ACC-03 — Le lien de contact pointe vers Tchap ✅
+### ACC-03 — L'invitation beta est absente et le contact Tchap reste disponible dans le footer ✅
 
 - **Datafeature** : aucune (page statique).
-- **Action** : ouvrir `/` et inspecter le lien de contact de la section beta.
-- **Résultat attendu** : la section beta est visible ; le lien de contact pointe vers `tchap.gouv.fr`.
+- **Action** : ouvrir `/`, vérifier le contenu de l'accueil et inspecter le contact du pied de page.
+- **Résultat attendu** : le titre « Envie de devenir beta testeur ? » et son bouton de contact
+  dédié sont absents ; le lien « Contact Tchap » reste visible dans le pied de page et pointe
+  vers un salon sur `https://www.tchap.gouv.fr/#/room/`.
 
 ### ACC-04 — Header public : seul « Se connecter » est proposé ✅
 

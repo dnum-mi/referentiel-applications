@@ -82,7 +82,10 @@ async function conflictAsHttp<T>(promise: Promise<T>): Promise<T> {
 }
 
 @Injectable()
-export class TechnologyService extends BaseService<TechnologyStack> {
+export class TechnologyService extends BaseService<
+  TechnologyStack,
+  PrismaService["technologyStack"]
+> {
   constructor(
     readonly prisma: PrismaService,
     metadataService: MetadatasService,
@@ -294,7 +297,7 @@ export class TechnologyService extends BaseService<TechnologyStack> {
   async createTechnology(
     applicationId: string,
     dto: CreateTechnologyDto,
-    options?: ServiceOptions<TechnologyStack>,
+    options?: ServiceOptions<TechnologyStack, PrismaService["technologyStack"]>,
   ): Promise<TechnologyStack> {
     const applicationExists = await this.prisma.application.findUnique({
       where: { id: applicationId },
@@ -363,7 +366,7 @@ export class TechnologyService extends BaseService<TechnologyStack> {
     id: string,
     applicationId: string,
     dto: Partial<CreateTechnologyDto>,
-    options?: ServiceOptions<TechnologyStack>,
+    options?: ServiceOptions<TechnologyStack, PrismaService["technologyStack"]>,
   ): Promise<TechnologyStack> {
     const existing = await this.prisma.technologyStack.findUnique({
       where: { id },
@@ -419,7 +422,7 @@ export class TechnologyService extends BaseService<TechnologyStack> {
   async deleteTechnology(
     id: string,
     applicationId: string,
-    options?: ServiceOptions<TechnologyStack>,
+    options?: ServiceOptions<TechnologyStack, PrismaService["technologyStack"]>,
   ): Promise<void> {
     const existing = await this.prisma.technologyStack.findUnique({
       where: { id },

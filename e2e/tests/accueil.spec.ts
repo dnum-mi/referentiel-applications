@@ -33,12 +33,15 @@ test.describe("Accueil & chrome", () => {
       },
     );
 
-    base("ACC-03 - le lien de contact pointe vers Tchap", async ({ page }) => {
-      const home = new HomePage(page);
-      await home.open();
-      await home.expectBetaSectionVisible();
-      expect(await home.contactLinkHref()).toContain("tchap.gouv.fr");
-    });
+    base(
+      "ACC-03 - l'invitation beta est absente et le contact Tchap reste disponible dans le footer",
+      async ({ page }) => {
+        const home = new HomePage(page);
+        await home.open();
+        await home.expectBetaSectionAbsent();
+        await new ChromePage(page).expectFooterContactTchap();
+      },
+    );
 
     base(
       "ACC-04 - header public : seul « Se connecter » est proposé",

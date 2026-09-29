@@ -28,7 +28,7 @@ import { OrganizationsModule } from "./organizations/organizations.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { ApplicationModule } from "./applications/application.module";
 import { RelationModule } from "./relationship/relation.module";
-import { LoggingService } from "./services/logging.service";
+import { LoggingService } from "./logger/logging.service";
 import { StatsModule } from "./stats/stats.module";
 import { StatusesModule } from "./statuses/statuses.module";
 import { TagsModule } from "./tag/tags.module";
@@ -85,8 +85,6 @@ import { MaintenanceMiddleware } from "./maintenance/maintenance.middleware";
     TechnicalDebtInfoModule,
     RgaaModule,
     TechnologyModule,
-    PrismaModule,
-    ConfigModule,
     StatusesModule,
     StatsModule,
     ReportModule,

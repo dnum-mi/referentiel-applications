@@ -78,6 +78,18 @@ export class ChromePage extends BasePage {
     await expect(this.footer().getByRole("link", { name })).toBeVisible();
   }
 
+  /** Le contact Tchap reste accessible depuis le footer et pointe vers un salon. */
+  async expectFooterContactTchap(): Promise<void> {
+    const contactLink = this.footer().getByRole("link", {
+      name: /^Contact Tchap/,
+    });
+    await expect(contactLink).toBeVisible();
+    await expect(contactLink).toHaveAttribute(
+      "href",
+      /^https:\/\/www\.tchap\.gouv\.fr\/#\/room\/.+/,
+    );
+  }
+
   // --- Recherche rapide du header ---
   /** En mode public, la recherche rapide n'est pas rendue. */
   async expectQuickSearchAbsent(): Promise<void> {

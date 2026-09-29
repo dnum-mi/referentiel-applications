@@ -68,26 +68,5 @@
         </div>
       </div>
     </section>
-
-    <section class="fr-py-3w">
-      <div class="fr-grid-row">
-        <div class="fr-col">
-          <h2 data-testid="home-beta-title">Envie de devenir beta testeur ?</h2>
-        </div>
-      </div>
-      <div class="fr-grid-row">
-        <a
-          class="fr-col fr-btn fr-btn--secondary fr-btn--md"
-          data-testid="home-contact-link"
-          title="Contacter l’équipe sur Tchap – nouvelle fenêtre"
-          aria-label="Contacter l’équipe sur Tchap – nouvelle fenêtre"
-          href="https://www.tchap.gouv.fr/#/room/!ydoKqFOXRAQPQYFvqa:agent.interieur.tchap.gouv.fr?via=agent.interieur.tchap.gouv.fr"
-          target="_blank"
-          rel="noopener"
-          ><span class="fr-icon-mail-open-line fr-icon--sm fr-mr-1w"></span>
-          Nous Contacter sur Tchap
-        </a>
-      </div>
-    </section>
   </div>
 </template>

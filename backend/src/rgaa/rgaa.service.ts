@@ -12,7 +12,10 @@ import { ServiceOptions } from "src/common/utils/types";
 import { ApplicationService } from "src/applications/application.service";
 
 @Injectable()
-export class RgaaService extends BaseService<RgaaCompliance> {
+export class RgaaService extends BaseService<
+  RgaaCompliance,
+  PrismaService["rgaaCompliance"]
+> {
   constructor(
     readonly prisma: PrismaService,
     metadataService: MetadatasService,
@@ -33,7 +36,7 @@ export class RgaaService extends BaseService<RgaaCompliance> {
   async createRgaa(
     applicationId: string,
     dto: CreateRgaaComplianceDto,
-    options?: ServiceOptions<RgaaCompliance>,
+    options?: ServiceOptions<RgaaCompliance, PrismaService["rgaaCompliance"]>,
   ): Promise<RgaaCompliance> {
     const applicationExists = await this.prisma.application.findUnique({
       where: { id: applicationId },
@@ -68,7 +71,7 @@ export class RgaaService extends BaseService<RgaaCompliance> {
     id: string,
     applicationId: string,
     dto: Partial<CreateRgaaComplianceDto>,
-    options?: ServiceOptions<RgaaCompliance>,
+    options?: ServiceOptions<RgaaCompliance, PrismaService["rgaaCompliance"]>,
   ): Promise<RgaaCompliance> {
     const existing = await this.prisma.rgaaCompliance.findUnique({
       where: { id },
@@ -99,7 +102,7 @@ export class RgaaService extends BaseService<RgaaCompliance> {
   async deleteRgaa(
     id: string,
     applicationId: string,
-    options?: ServiceOptions<RgaaCompliance>,
+    options?: ServiceOptions<RgaaCompliance, PrismaService["rgaaCompliance"]>,
   ): Promise<void> {
     const existing = await this.prisma.rgaaCompliance.findUnique({
       where: { id },

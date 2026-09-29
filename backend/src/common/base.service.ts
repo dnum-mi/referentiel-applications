@@ -1,53 +1,64 @@
 import type { ApplicationService } from "src/applications/application.service";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import type { Prisma } from "@prisma/client";
-import { MetadatasService } from "src/metadatas/metadatas.service";
-import { PrismaService } from "src/prisma/prisma.service";
+import type { MetadatasService } from "src/metadatas/metadatas.service";
+import type { PrismaService } from "src/prisma/prisma.service";
 import { ServiceOptions } from "./utils/types";
 import { PaginatedResponseDto, PaginationDto } from "./dto";
 
 /**
- * Surface minimale d'un délégué de modèle Prisma utilisée par BaseService.
- * Les signatures génériques des délégués générés ne sont pas exprimables
- * structurellement sans un paramètre de type par modèle : les arguments
- * restent volontairement larges, seuls les retours sont typés.
+ * Adaptateur des délégués Prisma étendus : les arguments restent propres au
+ * modèle, tandis que T représente le résultat normalisé (notamment Decimal).
  */
-export interface BaseModelDelegate<T> {
+export interface BaseModelDelegate<T, TDelegate> {
   readonly name?: string;
   findUnique(args: {
     where: { id: string };
-    include?: Record<string, boolean | object>;
+    include?: Prisma.Args<TDelegate, "findUnique">["include"];
   }): Prisma.PrismaPromise<T | null>;
-  findFirst(args?: unknown): Prisma.PrismaPromise<T | null>;
-  findMany(args?: unknown): Prisma.PrismaPromise<T[]>;
-  count(args?: unknown): Prisma.PrismaPromise<number>;
-  create(args: { data: unknown; include?: unknown }): Prisma.PrismaPromise<T>;
+  findFirst(
+    args?: Prisma.Args<TDelegate, "findFirst">,
+  ): Prisma.PrismaPromise<T | null>;
+  findMany(
+    args?: Prisma.Args<TDelegate, "findMany">,
+  ): Prisma.PrismaPromise<T[]>;
+  count(args?: Prisma.Args<TDelegate, "count">): Prisma.PrismaPromise<number>;
+  create(args: {
+    data: Prisma.Args<TDelegate, "create">["data"];
+    include?: Prisma.Args<TDelegate, "create">["include"];
+  }): Prisma.PrismaPromise<T>;
   update(args: {
     where: { id: string };
-    data: unknown;
-    include?: unknown;
+    data: Prisma.Args<TDelegate, "update">["data"];
+    include?: Prisma.Args<TDelegate, "update">["include"];
   }): Prisma.PrismaPromise<T>;
   delete(args: { where: { id: string } }): Prisma.PrismaPromise<T>;
-  paginate(args?: unknown): Promise<PaginatedResponseDto<T>>;
+  paginate(
+    args?: Prisma.Args<TDelegate, "findMany"> &
+      Pick<PaginationDto, "page" | "pageSize">,
+  ): Promise<PaginatedResponseDto<T>>;
 }
 
 @Injectable()
-export class BaseService<T, TDelegate = unknown> {
-  protected readonly model: BaseModelDelegate<T>;
+export class BaseService<T extends { id: string }, TDelegate extends object> {
+  protected readonly model: BaseModelDelegate<T, TDelegate>;
 
   constructor(
-    model: object,
+    model: TDelegate,
     protected readonly prisma: PrismaService,
     private readonly metadataService?: MetadatasService,
     private readonly applicationService?: ApplicationService,
   ) {
-    // Les délégués Prisma (étendus par les extensions du client) ne sont pas
-    // assignables structurellement à BaseModelDelegate : on ne conserve ici
-    // que la surface réellement utilisée par BaseService et ses sous-classes.
-    this.model = model as BaseModelDelegate<T>;
+    // Les extensions normalisent les résultats sans modifier les arguments.
+    // Cette adaptation est limitée à la frontière du client Prisma ; chaque
+    // service doit fournir explicitement son délégué pour conserver ses types.
+    this.model = model as unknown as BaseModelDelegate<T, TDelegate>;
   }
 
-  async findOne(id: string, include = {}): Promise<T> {
+  async findOne(
+    id: string,
+    include?: Prisma.Args<TDelegate, "findUnique">["include"],
+  ): Promise<T> {
     const object = await this.model.findUnique({ where: { id }, include });
     if (!object) {
       throw new NotFoundException(`${this.model.name} with ID ${id} not found`);
@@ -68,7 +79,7 @@ export class BaseService<T, TDelegate = unknown> {
 
   async create(
     data: Prisma.Args<TDelegate, "create">["data"],
-    options?: ServiceOptions<T>,
+    options?: ServiceOptions<T, TDelegate>,
   ): Promise<T> {
     const created = await this.model.create({
       data,
@@ -76,19 +87,14 @@ export class BaseService<T, TDelegate = unknown> {
     });
 
     if (options)
-      await this.handleMetadataAndQuality(
-        created,
-        "add",
-        options,
-        (created as unknown as { id: string }).id,
-      );
+      await this.handleMetadataAndQuality(created, "add", options, created.id);
     return created;
   }
 
   async update(
     id: string,
     data: Prisma.Args<TDelegate, "update">["data"],
-    options?: ServiceOptions<T>,
+    options?: ServiceOptions<T, TDelegate>,
   ): Promise<T> {
     const oldEntity =
       options?.existingEntity ?? (await this.findOne(id, options?.include));
@@ -109,8 +115,8 @@ export class BaseService<T, TDelegate = unknown> {
     return updated;
   }
 
-  async delete(id: string, options?: ServiceOptions<T>): Promise<T> {
-    const deleted = await this.findOne(id, options?.include ?? {});
+  async delete(id: string, options?: ServiceOptions<T, TDelegate>): Promise<T> {
+    const deleted = await this.findOne(id, options?.include);
     const applicationId = this.getApplicationId(deleted, options);
 
     await this.createMetadataEntry({
@@ -133,7 +139,7 @@ export class BaseService<T, TDelegate = unknown> {
   private async handleMetadataAndQuality(
     entity: T,
     type: "add" | "update" | "delete",
-    options: ServiceOptions<T>,
+    options: ServiceOptions<T, TDelegate>,
     entityId: string,
     oldEntity?: T,
   ) {
@@ -154,10 +160,12 @@ export class BaseService<T, TDelegate = unknown> {
     });
   }
 
-  private getApplicationId(entity: T, options?: ServiceOptions<T>) {
+  private getApplicationId(entity: T, options?: ServiceOptions<T, TDelegate>) {
     return (
       options?.applicationId ??
-      (entity as unknown as { applicationId?: string }).applicationId
+      ("applicationId" in entity && typeof entity.applicationId === "string"
+        ? entity.applicationId
+        : undefined)
     );
   }
 
@@ -171,7 +179,7 @@ export class BaseService<T, TDelegate = unknown> {
     newData,
   }: {
     applicationId?: string;
-    options?: ServiceOptions<T>;
+    options?: ServiceOptions<T, TDelegate>;
     entity: T;
     entityId: string;
     type: "add" | "update" | "delete";

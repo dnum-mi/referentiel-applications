@@ -13,7 +13,7 @@ import { ALL_ENUM_LABELS } from "src/applications/constants/enum-label";
 @Injectable()
 export class MetadatasService extends BaseService<
   Metadata,
-  Prisma.MetadataDelegate
+  PrismaService["metadata"]
 > {
   constructor(
     protected readonly prisma: PrismaService,

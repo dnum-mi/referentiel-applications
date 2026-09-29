@@ -14,7 +14,10 @@ import {
 import { Link } from "./entities/link.entity";
 
 @Injectable()
-export class LinksService extends BaseService<Link> {
+export class LinksService extends BaseService<
+  Link,
+  PrismaService["externalRessource"]
+> {
   constructor(
     prisma: PrismaService,
     metadataService: MetadatasService,

@@ -7,7 +7,7 @@ import {
 } from "@nestjs/common";
 import { Observable, tap } from "rxjs";
 import { v4 as uuidv4 } from "uuid";
-import { LoggingService } from "../services/logging.service";
+import { LoggingService } from "./logging.service";
 import { sanitizeHeaders } from "../utils/sanitize-headers.util";
 
 @Injectable()
