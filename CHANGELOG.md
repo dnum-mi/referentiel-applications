@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.95.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.94.0...v1.95.0) (2026-09-29)
+
+
+### Features
+
+* add admin panel for managing hosting options ([#2763](https://github.com/dnum-mi/referentiel-applications/issues/2763)) ([5d5f9cc](https://github.com/dnum-mi/referentiel-applications/commit/5d5f9ccb1f4ab5d818ee1e3fcd2f18e37afa8558))
+* add replacement tag for non commisionned app ([#2771](https://github.com/dnum-mi/referentiel-applications/issues/2771)) ([5791b17](https://github.com/dnum-mi/referentiel-applications/commit/5791b177c18a606016dd3c1c7d3074e37e987d8f))
+* update doc with user guide and remove krakend ([#2764](https://github.com/dnum-mi/referentiel-applications/issues/2764)) ([21d0514](https://github.com/dnum-mi/referentiel-applications/commit/21d05147a02b8e84f0fa7307580f8d0eb86b8248))
+
+
+### Bug Fixes
+
+* index technology stacks in application search ([#2770](https://github.com/dnum-mi/referentiel-applications/issues/2770)) ([c9798d4](https://github.com/dnum-mi/referentiel-applications/commit/c9798d48a9ae8d4bd927bbbf8f8ec8d23b8f5f46))
+* remove beta tester invitation from home ([#2769](https://github.com/dnum-mi/referentiel-applications/issues/2769)) ([f0ee95f](https://github.com/dnum-mi/referentiel-applications/commit/f0ee95f0a9fbc95cf902126a41446c48441d367d))
+* restore MAIA suggestions after lookup failures ([#2774](https://github.com/dnum-mi/referentiel-applications/issues/2774)) ([cc2b916](https://github.com/dnum-mi/referentiel-applications/commit/cc2b9162f48e36df6dd1ffb83161fff77262ea00))
+
 ## [1.94.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.93.1...v1.94.0) (2026-09-25)
 
 
