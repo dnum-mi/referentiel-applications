@@ -38,7 +38,7 @@ services:
     command: sh -c "pnpm db:generate:client && pnpm start:dev"
     environment:
       - DATABASE_URL=postgresql://postgres:password@postgres:5432/postgres
-      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:8080,http://krakend:8080
+      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:8080
       - OIDC_CONFIG_URL=http://localhost:8082/realms/referentiel-applications/.well-known/openid-configuration
       - OIDC_JWKS_URL=http://keycloak:8080/realms/referentiel-applications/protocol/openid-connect/certs
       - OIDC_CLIENT_ID=referentiel-applications
