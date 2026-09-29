@@ -305,3 +305,62 @@ jobs:
             e2e/test-results/
           retention-days: 14
           if-no-files-found: error
+
+  test-correlation-e2e:
+    name: Correlation E2E
+    needs: build-backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      IMAGE_TAG: ${{ needs.build-backend.outputs.image_tag }}
+      CI: "true"
+      API_BASE_URL: http://localhost:3500
+      E2E_DATABASE_URL: postgresql://postgres:password@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Start correlation test stack
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d backend postgres keycloak
+      - name: Wait for backend and identity provider
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS -o /dev/null http://localhost:3500/api/v2/health-check &&
+               curl -fsS -o /dev/null http://localhost:8082/realms/referentiel-applications/.well-known/openid-configuration; then
+              exit 0
+            fi
+            sleep 3
+          done
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml logs --tail=100 backend keycloak
+          exit 1
+      - name: Seed correlation fixtures twice
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml exec -T backend pnpm db:seed
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml exec -T backend pnpm db:seed:qa
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml exec -T backend pnpm db:seed:qa
+      - name: Install frontend and generate API client
+        working-directory: frontend
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm api:generate
+      - name: Install correlation test dependencies
+        working-directory: e2e
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm exec playwright install --with-deps chromium
+      - name: Replay correlation scenarios twice without retries
+        working-directory: e2e
+        run: pnpm exec playwright test tests/correlations.spec.ts --project=chromium --workers=1 --repeat-each=2 --retries=0 --trace=retain-on-failure --reporter=line,html
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: correlation-playwright-report
+          path: |
+            e2e/playwright-report/
+            e2e/test-results/
+          retention-days: 14
+          if-no-files-found: error
