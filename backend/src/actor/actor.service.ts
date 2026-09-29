@@ -33,7 +33,7 @@ import { Requestor } from "src/user/entities/user.entity";
 export class ActorService {
   private readonly baseService: BaseService<
     ActorWithRelations,
-    Prisma.ActorDelegate
+    PrismaService["actor"]
   >;
   private readonly actorInclude = {
     actorType: true,
@@ -51,7 +51,7 @@ export class ActorService {
   ) {
     this.baseService = new BaseService<
       ActorWithRelations,
-      Prisma.ActorDelegate
+      PrismaService["actor"]
     >(prisma.actor, prisma, metadataService, applicationService);
   }
 

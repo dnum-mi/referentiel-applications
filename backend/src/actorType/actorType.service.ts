@@ -69,7 +69,10 @@ const PERM_FIELDS: Record<string, string> = {
 };
 
 @Injectable()
-export class ActorTypeService extends BaseService<ActorType> {
+export class ActorTypeService extends BaseService<
+  ActorType,
+  PrismaService["actorType"]
+> {
   constructor(prisma: PrismaService) {
     super(prisma.actorType, prisma);
   }

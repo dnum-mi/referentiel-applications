@@ -6,7 +6,10 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { DataSensibilityFiltersDto } from "./dto/data-sensibility.dto";
 
 @Injectable()
-export class DataSensibilityService extends BaseService<DataSensibility> {
+export class DataSensibilityService extends BaseService<
+  DataSensibility,
+  PrismaService["dataSensibility"]
+> {
   constructor(prisma: PrismaService) {
     super(prisma.dataSensibility, prisma);
   }

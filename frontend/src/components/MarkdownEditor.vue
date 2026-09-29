@@ -3,7 +3,7 @@ import { ref, watch, computed, nextTick } from "vue";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 
-const props = defineProps<{ modelValue: string; disabled: boolean; ariaLabel?: string; describedby?: string }>();
+const props = defineProps<{ modelValue: string; disabled: boolean; ariaLabel?: string; describedby?: string; invalid?: boolean }>();
 const emit = defineEmits<{ (e: "update:modelValue", value: string): void }>();
 
 const localValue = ref(props.modelValue);
@@ -14,6 +14,14 @@ watch(
 
 const currentTab = ref<"edit" | "preview">("edit");
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
+
+async function focus() {
+  currentTab.value = "edit";
+  await nextTick();
+  textareaRef.value?.focus();
+}
+
+defineExpose({ focus });
 
 const emitChange = () => emit("update:modelValue", localValue.value);
 
@@ -171,6 +179,7 @@ const renderedHtml = computed(() => DOMPurify.sanitize(marked.parse(localValue.v
           :disabled
           :aria-label="ariaLabel"
           :aria-describedby="describedby"
+          :aria-invalid="invalid ? true : undefined"
           :title="ariaLabel"
           rows="10"
           data-testid="markdown-textarea"

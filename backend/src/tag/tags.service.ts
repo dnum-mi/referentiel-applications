@@ -7,7 +7,7 @@ import { Tag } from "./entities/tag.entity";
 import { PrismaQueryBuilder } from "./prisma-query-builder.service";
 
 @Injectable()
-export class TagsService extends BaseService<Tag> {
+export class TagsService extends BaseService<Tag, PrismaService["tag"]> {
   constructor(
     prisma: PrismaService,
     private readonly queryBuilder: PrismaQueryBuilder,

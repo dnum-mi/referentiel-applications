@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import type { RelationType } from "@prisma/client";
-import { RelationTypeFilter } from "../product/application/dto/relation-type.dto";
+import { RelationTypeFilter } from "../relationship/application/dto/relation-type.dto";
 import { ApplicationSearchFilters } from "src/applications/infrastructure/repository/application.repository.interface";
 import { Requestor } from "src/user/entities/user.entity";
 import { PrismaService } from "src/prisma/prisma.service";

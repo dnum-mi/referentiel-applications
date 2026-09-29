@@ -5,8 +5,10 @@ import { BasePage } from "./base.page";
 export class HomePage extends BasePage {
   private title = () => this.byTestId("home-title");
   private objectivesTitle = () => this.byTestId("home-objectives-title");
-  private betaTitle = () => this.byTestId("home-beta-title");
-  private contactLink = () => this.byTestId("home-contact-link");
+  private betaTitle = () =>
+    this.page.getByRole("heading", { name: "Envie de devenir beta testeur ?" });
+  private betaContactLink = () =>
+    this.page.getByRole("link", { name: /Contacter l’équipe sur Tchap/ });
   private readonly tileTestIds = [
     "home-tile-centralisation",
     "home-tile-access",
@@ -35,13 +37,9 @@ export class HomePage extends BasePage {
     }
   }
 
-  /** La section « beta testeur » est visible. */
-  async expectBetaSectionVisible(): Promise<void> {
-    await expect(this.betaTitle()).toBeVisible();
-  }
-
-  /** `href` du lien de contact (la spec vérifie qu'il pointe vers Tchap). */
-  contactLinkHref(): Promise<string | null> {
-    return this.contactLink().getAttribute("href");
+  /** L'invitation obsolète à devenir beta testeur et son lien dédié sont absents. */
+  async expectBetaSectionAbsent(): Promise<void> {
+    await expect(this.betaTitle()).toHaveCount(0);
+    await expect(this.betaContactLink()).toHaveCount(0);
   }
 }
