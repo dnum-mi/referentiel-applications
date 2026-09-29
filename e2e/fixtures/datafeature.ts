@@ -645,6 +645,21 @@ export class DataFeature {
     return this.api.relations(appId);
   }
 
+  async correlationSuggestions(sourceId: string, targetId: string) {
+    const response = await this.api.correlationSuggestions();
+    if (!response)
+      throw new Error("Impossible de lire les suggestions de corrélation");
+    return response.results.filter(
+      (suggestion) =>
+        suggestion.applicationSourceId === sourceId &&
+        suggestion.applicationTargetId === targetId,
+    );
+  }
+
+  relationGraph(appId: string) {
+    return this.api.relationGraph(appId);
+  }
+
   createLink(appId: string, body: Record<string, unknown>) {
     return this.api.createLink(appId, body);
   }

@@ -30,6 +30,27 @@ export interface Paginated<T> {
   total: number;
 }
 
+export interface CorrelationSuggestion {
+  id: string;
+  applicationSourceId: string;
+  applicationTargetId: string;
+  status: "PENDING" | "ACCEPTED" | "REJECTED";
+  score: number;
+  signals: {
+    nameSimilarity: number;
+    sharedDataCount: number;
+    sharedActorCount: number;
+  };
+  reviewedById: string | null;
+  reviewedAt: string | null;
+}
+
+export interface RelationGraph {
+  rootId: string;
+  nodes: { id: string; label: string }[];
+  edges: { sourceId: string; targetId: string; type: string }[];
+}
+
 /**
  * Client API minimal pour la datafeature : lit `/api/v2` en réutilisant le contexte réseau de la
  * page (proxy Vite) avec le Bearer token OIDC courant. Lecture seule.
@@ -455,6 +476,18 @@ export class ApiClient {
 
   relations(appId: string): Promise<{ id: string }[] | null> {
     return this.get<{ id: string }[]>(`/applications/${appId}/relations`);
+  }
+
+  correlationSuggestions(status?: CorrelationSuggestion["status"]) {
+    return this.get<Paginated<CorrelationSuggestion>>(
+      `/correlation-suggestions?pageSize=0${status ? `&status=${status}` : ""}`,
+    );
+  }
+
+  relationGraph(appId: string) {
+    return this.get<RelationGraph>(
+      `/applications/${appId}/relations/graph?depth=1`,
+    );
   }
 
   createLink(
