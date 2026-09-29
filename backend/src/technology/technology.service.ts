@@ -12,6 +12,7 @@ import { CreateTechnologyDto } from "./dto/technology.dto";
 import { TechnologyStack } from "./entities/technology.entity";
 import { ServiceOptions } from "src/common/utils/types";
 import { ApplicationService } from "src/applications/application.service";
+import { ApplicationSearchService } from "src/applications/search/application-search.service";
 import {
   fetchProductCatalog,
   isEndoflifeDisabled,
@@ -90,6 +91,7 @@ export class TechnologyService extends BaseService<
     readonly prisma: PrismaService,
     metadataService: MetadatasService,
     applicationService: ApplicationService,
+    private readonly applicationSearchService: ApplicationSearchService,
   ) {
     super(prisma.technologyStack, prisma, metadataService, applicationService);
   }
@@ -338,28 +340,30 @@ export class TechnologyService extends BaseService<
         data.version ?? null,
         true,
       );
-      return withEolStatus(
-        await super.update(
-          existing.id,
-          {
-            version: data.version ?? null,
-            docUrl: data.docUrl ?? null,
-            ...eol,
-          },
-          options,
-        ),
+      const updated = await super.update(
+        existing.id,
+        {
+          version: data.version ?? null,
+          docUrl: data.docUrl ?? null,
+          ...eol,
+        },
+        options,
       );
+      if ((data.version ?? null) !== existing.version) {
+        this.applicationSearchService.scheduleRefresh();
+      }
+      return withEolStatus(updated);
     }
 
     const eol =
       typeof manualEolDate === "string"
         ? this.manualEolFields(manualEolDate)
         : await this.resolveEol(data.product, data.version);
-    return withEolStatus(
-      await conflictAsHttp(
-        super.create({ ...data, ...eol, applicationId }, options),
-      ),
+    const created = await conflictAsHttp(
+      super.create({ ...data, ...eol, applicationId }, options),
     );
+    this.applicationSearchService.scheduleRefresh();
+    return withEolStatus(created);
   }
 
   async updateTechnology(
@@ -414,9 +418,13 @@ export class TechnologyService extends BaseService<
       eolInputChanged,
     );
 
-    return withEolStatus(
-      await conflictAsHttp(super.update(id, { ...data, ...eol }, options)),
+    const updated = await conflictAsHttp(
+      super.update(id, { ...data, ...eol }, options),
     );
+    if (newProduct !== existing.product || newVersion !== existing.version) {
+      this.applicationSearchService.scheduleRefresh();
+    }
+    return withEolStatus(updated);
   }
 
   async deleteTechnology(
@@ -431,5 +439,6 @@ export class TechnologyService extends BaseService<
       throw new NotFoundException("Technologie introuvable");
     }
     await super.delete(id, options);
+    this.applicationSearchService.scheduleRefresh();
   }
 }

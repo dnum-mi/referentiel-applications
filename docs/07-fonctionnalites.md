@@ -49,6 +49,10 @@ Le présent document a été rédigé en confrontant la vue produit aux sources 
 - **indice de qualité** : bornes minimale et maximale (`iqGte`, `iqLte`) ;
 - **liens** externes (`link`).
 
+**Recherche par technologie.** La recherche plein texte (`q`) et les suggestions du bandeau (`qPrefix`) incluent les produits de la stack technique, même sans version renseignée. Par exemple, `PostgreSQL 15` retrouve une fiche utilisant PostgreSQL 15, 15.5 ou 15.5.2, sans faire correspondre sa version 150 ou 1.5. La saisie `15.5` correspond aux versions 15.5 et 15.5.x, sans inclure 15.50. Les noms ponctués comme `Node.js` sont également recherchables. L'index est actualisé peu après l'ajout, la modification ou la suppression d'une technologie.
+
+La recherche reste globale : tous les mots doivent être présents sur la fiche, mais peuvent provenir de champs ou de lignes de technologies différents. Elle ne remplace pas un filtre portant sur un couple produit/version précis. Les noms d'applications gardent leur autocomplétion habituelle : `Budget 20` peut retrouver `Budget 2026`.
+
 **Où c'est dans le code.**
 
 - Front : `frontend/src/views/ApplicationSearchPage.vue` ; vues `ApplicationTableView.vue`, `ApplicationCardView.vue` ; personnalisation `ColumnCustomization.vue` ; barre d'actions `ApplicationSearchActions.vue`.
