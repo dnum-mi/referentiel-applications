@@ -795,6 +795,15 @@ paths:
             enum:
               - asc
               - desc
+        - name: isRead
+          required: false
+          in: query
+          description: "Filtrer sur l'état de lecture : false pour les notifications non
+            lues, true pour les notifications lues. Sans ce paramètre, les deux
+            états sont renvoyés."
+          schema:
+            example: false
+            type: boolean
       responses:
         "200":
           description: Liste paginée des notifications
@@ -861,6 +870,14 @@ paths:
   /api/v2/notifications/read-all:
     patch:
       operationId: NotificationController_markAllAsRead
+      parameters: []
+      responses:
+        "204":
+          description: Notifications marquées comme lues
+      summary: Marquer toutes ses notifications comme lues
+      tags: *a5
+    post:
+      operationId: NotificationController_markAllAsReadPost
       parameters: []
       responses:
         "204":
