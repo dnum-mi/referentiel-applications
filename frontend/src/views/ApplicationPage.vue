@@ -73,15 +73,19 @@ const canReadMetadata = useAppPermission(() => application.value?.myPerms, [Perm
 const canDeleteApplication = useAppPermission(() => application.value?.myPerms, [Permission.DELETE_APPLICATION]);
 const canReadRelation = useAppPermission(() => application.value?.myPerms, [Permission.RELATION_READ]);
 
-// Tag "remplacée par" affiché avec les autres tags (statut/IQ/type) : uniquement pertinent
-// pour une application décommissionnée ayant une relation entrante "in_replacement_of".
+// Tag "remplacée par" affiché avec les autres tags (statut/IQ/type) : pertinent dès qu'une
+// application est à décommissionner ou décommissionnée, si une relation entrante
+// "in_replacement_of" existe.
 const relationStore = useRelationStore();
 const replacementApplications = ref<{ id: string; label: string }[]>([]);
-const isDecommissioned = computed(() => application.value?.currentStatus?.status === Status.DECOMMISSIONED);
+const DECOMMISSIONING_STATUSES: Status[] = [Status.IN_PRODUCTION_DECOMMISSIONING, Status.DECOMMISSIONED];
+const isDecommissioning = computed(
+  () => !!application.value?.currentStatus?.status && DECOMMISSIONING_STATUSES.includes(application.value.currentStatus.status),
+);
 
 async function loadReplacementApplications() {
   replacementApplications.value = [];
-  if (!isDecommissioned.value || !canReadRelation.value) return;
+  if (!isDecommissioning.value || !canReadRelation.value) return;
   try {
     await relationStore.fetchRelationsByApplication(id);
     replacementApplications.value = relationStore.relationsAsTarget
@@ -91,6 +95,16 @@ async function loadReplacementApplications() {
     console.error("Failed to load replacement relations:", err);
   }
 }
+
+// L'onglet Statuts modifie le statut directement via `applicationStore.fetchApplication`
+// sans émettre `update:application` (cf. StatusTab.vue) : sans ce watcher, le tag "remplacée
+// par" resterait affiché/masqué avec l'ancien statut après un changement fait depuis cet onglet.
+watch(
+  () => application.value?.currentStatus?.status,
+  () => {
+    loadReplacementApplications();
+  },
+);
 
 // Les metadatas de fiche ne s'affichent que si le store porte bien CELLES de
 // l'application affichée. Le store survit à la navigation : sans ce garde-fou,
@@ -112,12 +126,19 @@ async function fetchApplicationMetadata() {
   }
 }
 
+// Regroupe le rafraîchissement des metadatas et du tag "remplacée par" : appelé au
+// chargement initial ET à chaque mise à jour de la fiche (ex : changement de statut
+// dans l'onglet Statuts), pour que le tag apparaisse/disparaisse sans recharger la page.
+async function refreshApplication() {
+  await fetchApplicationMetadata();
+  await loadReplacementApplications();
+}
+
 async function loadApplication() {
   isLoading.value = true;
   errorMessage.value = "";
   try {
-    await fetchApplicationMetadata();
-    await loadReplacementApplications();
+    await refreshApplication();
   } catch (err) {
     console.error("Failed to load application:", err);
     errorMessage.value = "Impossible de charger les données de l'application.";
@@ -281,7 +302,7 @@ function formatMetadataAuthor(metadata: MetadataDto): string {
         />
       </div>
 
-      <ApplicationOverview :application="application" data-testid="application-overview" @update:application="fetchApplicationMetadata" />
+      <ApplicationOverview :application="application" data-testid="application-overview" @update:application="refreshApplication" />
 
       <DsfrButton
         v-if="canDeleteApplication"
