@@ -12,7 +12,6 @@ import { useToasterStore } from "@/stores/toasterStore";
 import { useUserStore } from "@/stores/userStore";
 import { RolesOptions, RolesScopes } from "@/utils/roles-utils";
 import type { DsfrCheckboxProps } from "@gouvminint/vue-dsfr";
-import { useMemoize } from "@vueuse/core";
 import { computed, nextTick, ref } from "vue";
 import OrganizationSearchSelect from "../common/OrganizationSearchSelect.vue";
 
@@ -97,7 +96,8 @@ const editingOrganizationId = ref<string>("");
 const editingAdditionalPermissions = ref<Permission[]>([]);
 const editingScopePermissions = ref<string>("");
 const maiaSuggestion = ref<MaiaOrganizationSuggestionDto | null>(null);
-const isFetchingMaiaSuggestion = ref(false);
+const maiaSuggestionState = ref<"idle" | "loading" | "ready" | "error">("idle");
+let maiaSuggestionRequest = 0;
 
 async function openEditModal() {
   if (!canEditUser.value) return;
@@ -112,31 +112,39 @@ async function openEditModal() {
   fetchMaiaSuggestion();
 }
 
-const fetchMaiaSuggestionCached = useMemoize(async (email: string) => {
-  const response = await api.userControllerSyncOrganizationFromMaiaByEmail({ path: { email } });
-  if (response.response.ok && response.data) return response.data;
-  return null;
-});
-
 async function fetchMaiaSuggestion() {
-  if (!props.user.email) return;
-  isFetchingMaiaSuggestion.value = true;
+  const target = editingUser.value;
+  if (!target || !isEditModalOpen.value) return;
+
+  // Une nouvelle ouverture doit retenter MAIA, même après une indisponibilité.
+  // Une réponse tardive d'une précédente ouverture ne doit pas remplacer la suggestion courante.
+  const requestId = ++maiaSuggestionRequest;
+  maiaSuggestion.value = null;
+  maiaSuggestionState.value = "loading";
   try {
-    maiaSuggestion.value = await fetchMaiaSuggestionCached(props.user.email);
+    const response = await api.userControllerSyncOrganizationFromMaiaByEmail({ path: { email: target.email } });
+    if (requestId !== maiaSuggestionRequest) return;
+
+    if (!response.response.ok || !response.data) {
+      maiaSuggestionState.value = "error";
+      return;
+    }
+    maiaSuggestion.value = response.data;
+    maiaSuggestionState.value = "ready";
   } catch {
-    // On ignore les erreurs pour la suggestion MAIA, ce n'est pas critique pour l'édition de l'utilisateur
-  } finally {
-    isFetchingMaiaSuggestion.value = false;
+    if (requestId === maiaSuggestionRequest) maiaSuggestionState.value = "error";
   }
 }
 
 function closeEditModal() {
+  maiaSuggestionRequest++;
   isEditModalOpen.value = false;
   editingUser.value = null;
   editingUserRole.value = Roles.VISITOR;
   editingOrganizationId.value = "";
   editingScopePermissions.value = "";
   maiaSuggestion.value = null;
+  maiaSuggestionState.value = "idle";
 }
 
 // RGAA-088 (7.5 / 12.8) : confirmation restituée aux TA + focus rendu au bouton « Modifier ».
@@ -365,8 +373,16 @@ const isScopeDisabled = computed(() => {
           data-testid="user-organization-search"
         />
 
-        <div class="fr-mb-2w">
-          <p v-if="isFetchingMaiaSuggestion" class="fr-text--sm fr-text-mention--grey fr-mb-0">Récupération de la suggestion MAIA…</p>
+        <div class="fr-mb-2w" aria-live="polite" aria-atomic="true" data-testid="user-maia-suggestion">
+          <p v-if="maiaSuggestionState === 'loading'" class="fr-text--sm fr-text-mention--grey fr-mb-0">
+            Récupération de la suggestion MAIA…
+          </p>
+          <template v-else-if="maiaSuggestionState === 'error'">
+            <p role="alert" class="fr-error-text fr-mb-1w">
+              Impossible de récupérer la suggestion MAIA. Vous pouvez réessayer ou poursuivre la modification.
+            </p>
+            <DsfrButton label="Réessayer la recherche MAIA" size="sm" tertiary @click="fetchMaiaSuggestion" />
+          </template>
           <template v-else-if="maiaSuggestion?.organizationPath">
             <p class="fr-text--sm fr-mb-1v">
               <span class="fr-text-mention--grey">Organisation MAIA : </span>
@@ -377,6 +393,9 @@ const isScopeDisabled = computed(() => {
             </p>
             <p v-else class="fr-badge fr-badge--success fr-badge--no-icon fr-mb-0" data-testid="user-org-not-validated-badge">VALIDÉE</p>
           </template>
+          <p v-else-if="maiaSuggestionState === 'ready'" class="fr-text--sm fr-text-mention--grey fr-mb-0">
+            Aucune organisation trouvée dans MAIA pour cet utilisateur.
+          </p>
         </div>
 
         <OrganizationSearchSelect
