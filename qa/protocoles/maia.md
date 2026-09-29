@@ -4,10 +4,10 @@
 > (organisation mock « …SEINE-ET-MARNE… ») : les appels MAIA sont déterministes, sans dépendance
 > réseau externe. Utilisateur par défaut : `admin` / `pass`.
 
-| Légende           |                                                       |
-| :---------------- | :---------------------------------------------------- |
-| **Automatisé** ✅ | `e2e/tests/maia.spec.ts`                              |
-| **Statut**        | ✅ 100 % des cas automatisés (POM strict + mock MAIA) |
+| Couverture          | Automatisation                                                                                                                        |
+| :------------------ | :------------------------------------------------------------------------------------------------------------------------------------ |
+| **MAI-01 à MAI-04** | E2E : `e2e/tests/maia.spec.ts` (POM strict + mock MAIA)                                                                               |
+| **MAI-05**          | Tests du composant : `frontend/src/components/admin/UserActions.spec.ts` ; contrôle manuel à réaliser en qualification avec MAIA réel |
 
 ---
 
@@ -33,3 +33,13 @@
 - **Datafeature** : utilisateur `admin`.
 - **Action** : administration → onglet « Batch de données » → cliquer « Synchroniser les acteurs MAIA ».
 - **Résultat attendu** : toast « Batch MAIA lancé en tâche de fond » (traitement asynchrone déclenché). Ne pas spammer le bouton.
+
+### MAI-05 — Suggestion MAIA dans « Modifier l'utilisateur »
+
+- **Datafeature** : compte administrateur autorisé à modifier un utilisateur dont l'organisation est connue dans MAIA.
+- **Action** : administration → utilisateurs → « Modifier ».
+- **Résultat attendu** : après le chargement, la ligne « Organisation MAIA » affiche le chemin proposé. Le badge est « VALIDÉE » si l'organisation sélectionnée correspond à la suggestion, sinon « NON VALIDÉE ».
+- **Indisponibilité temporaire** : si la recherche échoue, un message et le bouton « Réessayer la recherche MAIA » apparaissent. La modification de l'utilisateur reste possible. Réessayer ou fermer puis rouvrir la fenêtre déclenche une nouvelle recherche ; une réponse réussie réaffiche le chemin et son badge.
+- **Absence de résultat** : une réponse MAIA sans organisation affiche « Aucune organisation trouvée dans MAIA pour cet utilisateur. », sans badge de validation.
+- **Réponses tardives** : une réponse reçue après la fermeture d'une fenêtre ne doit pas remplacer la suggestion d'une nouvelle ouverture, y compris pour un autre utilisateur.
+- **Limite de la preuve automatisée** : ces variantes utilisent des réponses simulées dans les tests du composant ; elles ne valident pas la disponibilité ni les données de l'annuaire réel en qualification.
