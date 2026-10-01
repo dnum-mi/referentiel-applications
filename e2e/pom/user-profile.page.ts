@@ -16,6 +16,11 @@ export class UserProfilePage extends BasePage {
   /** Ouvre l'URL du profil sans présumer que la session a accès au référentiel. */
   async goToProfile(): Promise<void> {
     await this.goto("/profil");
+    // Le refus global peut apparaître avant le chargement du composant de route.
+    // Le titre posé par afterEach confirme que la navigation est terminée avant un reload.
+    await expect(this.page).toHaveTitle(
+      "Profil utilisateur - Référentiel des applications",
+    );
   }
 
   async openFollowTab(): Promise<void> {
