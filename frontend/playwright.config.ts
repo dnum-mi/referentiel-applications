@@ -14,9 +14,9 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     baseURL: "http://localhost:5173",
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+    /* Retain traces of failed attempts, including the first. See https://playwright.dev/docs/trace-viewer */
     headless: true,
-    trace: "on-first-retry",
+    trace: "retain-on-failure",
     video: "retain-on-failure",
     actionTimeout: 15_000,
     navigationTimeout: 30_000,

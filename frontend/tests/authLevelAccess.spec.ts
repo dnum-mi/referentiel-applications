@@ -69,6 +69,8 @@ test("ne monte aucune vue protégée pendant la vérification, ni après le refu
   await expect(page.getByTestId("main-navigation")).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Mon profil", exact: true })).toHaveCount(0);
   await expect(page.getByTestId("weak-auth-reauth-btn")).toBeVisible();
+  // Le refus global peut apparaître avant la fin de la navigation ; afterEach pose ce titre.
+  await expect(page).toHaveTitle("Recherche d'applications - Référentiel des applications");
   await page.screenshot({ path: testInfo.outputPath("authentification-forte.png"), fullPage: true });
   await page.evaluate(() => sessionStorage.setItem("strongReauthAttempt", "prompt"));
   await page.reload();
