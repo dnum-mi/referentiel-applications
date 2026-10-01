@@ -39,13 +39,14 @@ RUN pnpm build-only
 FROM nginxinc/nginx-unprivileged@sha256:ed04ec1ff34502c339ee5c3ae3f855442398edc1d05591e2b98981dcbbd20b1e AS prod
 
 USER 0
-RUN apk upgrade --no-cache
 
 # OpenShift (et tout runtime "arbitrary UID") lance le conteneur avec un UID
 # aléatoire mais toujours dans le groupe 0. L'entrypoint réécrit /app et recopie
 # vers /usr/share/nginx/html à chaque démarrage : ces deux dossiers doivent donc
 # être inscriptibles par le groupe 0. On reste NON world-writable (Sonar S2612 OK).
-RUN chown -R 1001:0 /usr/share/nginx/html && chmod -R g=u /usr/share/nginx/html
+RUN apk upgrade --no-cache \
+    && chown -R 1001:0 /usr/share/nginx/html \
+    && chmod -R g=u /usr/share/nginx/html
 COPY --chown=1001:0 --chmod=444 nginx.conf /etc/nginx/nginx.conf
 COPY --chown=1001:0 --chmod=775 --from=build /app/dist /app
 
