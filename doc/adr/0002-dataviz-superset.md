@@ -2,7 +2,7 @@
 
 ## Statut
 
-Accepted
+Accepté
 
 ## Date
 
@@ -14,8 +14,6 @@ Mathieu Pichon (DTNUM/SDID)
 Hassan DRISS (DTNUM/SDID)
 
 ## Contexte et Problème
-
-(Context and Problem Statement)
 
 Le référentiel des applications vise à constituer un point de vérité unique pour recenser et gérer les métadonnées des applications.
 
@@ -38,7 +36,7 @@ La décision à prendre est donc de déterminer si les fonctions de datavisualis
 
 ## Options Considérées
 
-(Decision Drivers)
+(Critères de décision)
 
 - Réduire le couplage entre le référentiel applicatif et les besoins de pilotage.
 - Permettre l’évolution des indicateurs sans développement spécifique systématique.
@@ -112,8 +110,6 @@ Inconvénients :
 - besoin de justification supplémentaire si une alternative non open source est choisie.
 
 ## Décision
-
-(Decision Outcome)
 
 Nous retenons l’utilisation d’Apache Superset comme solution de datavisualisation dédiée pour le référentiel des applications.
 
