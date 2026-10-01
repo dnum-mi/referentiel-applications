@@ -1,4 +1,4 @@
-import { Permission, Roles } from "@prisma/client";
+import { Roles } from "@prisma/client";
 import request from "supertest";
 import { ApplicationFaker } from "./fakers/application.faker";
 import { getPrismaClient } from "./fakers/prisma";
@@ -29,7 +29,7 @@ describe("Technologies — contrat HTTP (#2526, #2527)", () => {
   beforeAll(async () => {
     admin = await UserFaker.create({
       role: Roles.ADMIN,
-      additionalPermissions: [Permission.TechnologyList],
+      additionalPermissions: [],
     });
     TOKEN = getToken(admin);
     applicationA = await ApplicationFaker.create(admin);
@@ -146,7 +146,7 @@ describe("Technologies — contrat HTTP (#2526, #2527)", () => {
     });
   });
 
-  describe("vue transverse : filtre de statut et pagination", () => {
+  describe("vue transverse : administrateur sans délégation, filtres et pagination", () => {
     beforeAll(async () => {
       await prisma.technologyStack.create({
         data: {

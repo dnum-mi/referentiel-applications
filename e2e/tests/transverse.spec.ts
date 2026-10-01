@@ -87,45 +87,34 @@ test.describe("Pages transverses", () => {
     page,
     data,
   }) => {
-    const admin = await data.getUser("admin@example.com");
-    if (!admin) throw new Error("Utilisateur admin absent des fixtures QA");
-    const previousPermissions = admin.additionalPermissions ?? [];
-    await data.setUserAdditionalPermissionsKeepRole("admin@example.com", [
-      ...new Set([...previousPermissions, "TechnologyList"]),
-    ]);
-    try {
-      // `QA-EOL` porte les trois statuts et une technologie saine (seed QA).
-      const endOfLife = new EndOfLifePage(page);
-      await endOfLife.open();
-      await endOfLife.expectLoaded();
-      await endOfLife.expectResultsAnnounced();
-      await endOfLife.expectApplicationListed("QA-EOL", "Fin de vie");
-      // #2801 : toutes les technologies sont visibles dès l'ouverture, y compris saines.
-      await endOfLife.expectApplicationHasTechnology("QA-EOL", "Vue.js");
+    void data;
+    // Le rôle administrateur porte TechnologyList sans délégation individuelle.
+    // `QA-EOL` porte les trois statuts et une technologie saine (seed QA).
+    const endOfLife = new EndOfLifePage(page);
+    await endOfLife.open();
+    await endOfLife.expectLoaded();
+    await endOfLife.expectResultsAnnounced();
+    await endOfLife.expectApplicationListed("QA-EOL", "Fin de vie");
+    // #2801 : toutes les technologies sont visibles dès l'ouverture, y compris saines.
+    await endOfLife.expectApplicationHasTechnology("QA-EOL", "Vue.js");
 
-      // Les statuts PARTITIONNENT la liste : filtrer sur « fin de support actif »
-      // ne doit pas ramener la technologie déjà en fin de vie, sans quoi les trois
-      // filtres se chevaucheraient au lieu de découper la liste.
-      await endOfLife.filterByStatus("eoas-passed");
-      await endOfLife.expectApplicationListed("QA-EOL", "Fin de support actif");
+    // Les statuts PARTITIONNENT la liste : filtrer sur « fin de support actif »
+    // ne doit pas ramener la technologie déjà en fin de vie, sans quoi les trois
+    // filtres se chevaucheraient au lieu de découper la liste.
+    await endOfLife.filterByStatus("eoas-passed");
+    await endOfLife.expectApplicationListed("QA-EOL", "Fin de support actif");
 
-      await endOfLife.filterByStatus("eol");
-      await endOfLife.expectApplicationListed("QA-EOL", "Fin de vie");
+    await endOfLife.filterByStatus("eol");
+    await endOfLife.expectApplicationListed("QA-EOL", "Fin de vie");
 
-      // Seul filtre non partitionnant : « Toutes les technologies » lève la
-      // restriction et ramène aussi la ligne saine (Vue.js) de la fixture, sans
-      // pastille de gravité.
-      await endOfLife.filterByStatus("all");
-      await endOfLife.expectApplicationHasTechnology("QA-EOL", "Vue.js");
+    // Seul filtre non partitionnant : « Toutes les technologies » lève la
+    // restriction et ramène aussi la ligne saine (Vue.js) de la fixture, sans
+    // pastille de gravité.
+    await endOfLife.filterByStatus("all");
+    await endOfLife.expectApplicationHasTechnology("QA-EOL", "Vue.js");
 
-      // Le trajet qui donne son intérêt à la vue : de la liste vers l'onglet
-      // Technologies de la fiche.
-      await endOfLife.openApplicationTechnologyTab("QA-EOL");
-    } finally {
-      await data.setUserAdditionalPermissionsKeepRole(
-        "admin@example.com",
-        previousPermissions,
-      );
-    }
+    // Le trajet qui donne son intérêt à la vue : de la liste vers l'onglet
+    // Technologies de la fiche.
+    await endOfLife.openApplicationTechnologyTab("QA-EOL");
   });
 });

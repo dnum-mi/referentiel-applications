@@ -222,24 +222,24 @@ L'énumération `Permission` (`backend/prisma/schema/permissions.prisma:59-105`)
 
 ### 4.1. Permissions globales
 
-| Permission              | Rôle                                                                                                                                |
-| :---------------------- | :---------------------------------------------------------------------------------------------------------------------------------- |
-| `CreateApplication`     | Créer de nouvelles applications                                                                                                     |
-| `DeleteApplication`     | Supprimer une application                                                                                                           |
-| `CreateGlobalReport`    | Créer des signalements globaux                                                                                                      |
-| `MDITList`              | Voir la liste des applications sur le TIME / MDIT                                                                                   |
-| `AppList`               | Voir la liste des applications                                                                                                      |
-| `DataExport`            | Exporter les données (export Excel)                                                                                                 |
-| `AdminPanelManage`      | Administrer les utilisateurs et les acteurs (dans son périmètre s'il en a)                                                          |
-| `GlobalAdminManage`     | Administrer les réglages transverses — administrateur sans périmètre uniquement                                                     |
-| `ActorTypePost`         | Créer un type d'acteur                                                                                                              |
-| `ActorTypeManage`       | Éditer un type d'acteur                                                                                                             |
-| `ActorTypeDelete`       | Supprimer un type d'acteur                                                                                                          |
-| `OrganizationManage`    | Gérer les organisations (créer, modifier, supprimer)                                                                                |
-| `ColumnRead`            | Voir les colonnes de synthèse (socle Lecteur)                                                                                       |
-| `QualityCampaignManage` | Gérer les campagnes de mise en qualité (jamais par défaut, même pour un ADMIN global — déléguable, #2608)                           |
-| `MditCampaignManage`    | Gérer les campagnes de dette IT / millésimes (jamais par défaut, même pour un ADMIN global — déléguable, #2608)                     |
-| `TechnologyList`        | Consulter la vue transverse Technologies dans son périmètre fonctionnel (capacité explicite, y compris pour un ADMIN global, #2801) |
+| Permission              | Rôle                                                                                                                                   |
+| :---------------------- | :------------------------------------------------------------------------------------------------------------------------------------- |
+| `CreateApplication`     | Créer de nouvelles applications                                                                                                        |
+| `DeleteApplication`     | Supprimer une application                                                                                                              |
+| `CreateGlobalReport`    | Créer des signalements globaux                                                                                                         |
+| `MDITList`              | Voir la liste des applications sur le TIME / MDIT                                                                                      |
+| `AppList`               | Voir la liste des applications                                                                                                         |
+| `DataExport`            | Exporter les données (export Excel)                                                                                                    |
+| `AdminPanelManage`      | Administrer les utilisateurs et les acteurs (dans son périmètre s'il en a)                                                             |
+| `GlobalAdminManage`     | Administrer les réglages transverses — administrateur sans périmètre uniquement                                                        |
+| `ActorTypePost`         | Créer un type d'acteur                                                                                                                 |
+| `ActorTypeManage`       | Éditer un type d'acteur                                                                                                                |
+| `ActorTypeDelete`       | Supprimer un type d'acteur                                                                                                             |
+| `OrganizationManage`    | Gérer les organisations (créer, modifier, supprimer)                                                                                   |
+| `ColumnRead`            | Voir les colonnes de synthèse (socle Lecteur)                                                                                          |
+| `QualityCampaignManage` | Gérer les campagnes de mise en qualité (jamais par défaut, même pour un ADMIN global — déléguable, #2608)                              |
+| `MditCampaignManage`    | Gérer les campagnes de dette IT / millésimes (jamais par défaut, même pour un ADMIN global — déléguable, #2608)                        |
+| `TechnologyList`        | Consulter la vue Technologies dans son périmètre fonctionnel (automatique pour ADMIN, déléguable aux lecteurs et contributeurs, #2801) |
 
 Quatre valeurs sont à la fois **globales** (socle Visiteur, cf. §3) et **applicatives** (colonnes de la matrice §4.2) : `AppRead`, `DataRead`, `ReportRead`, `ReportPost`. Comme le socle les accorde à tout utilisateur authentifié, leur colonne dans la matrice des types d'acteur est **sans effet** — la matrice ne les propose plus en retrait (#2510). Depuis #2506, `DeleteApplication` protège bien la route `DELETE /applications/:id` (auparavant `AdminPanelManage`).
 
@@ -279,13 +279,17 @@ Certaines lectures ne sont conditionnées à **aucune** permission applicative, 
 
 ### 4.5. Accès à la vue transverse Technologies (#2801)
 
-La capacité `TechnologyList`, libellée **Consulter les technologies** dans les capacités d'un utilisateur, est attribuée explicitement par un administrateur global. Aucun rôle ne l'obtient automatiquement, y compris un administrateur global. La migration ajoute uniquement la permission : les utilisateurs existants doivent recevoir la capacité pour accéder à cette vue.
+La capacité `TechnologyList`, libellée **Consulter les technologies** dans les capacités d'un utilisateur, est accordée automatiquement par le rôle `ADMIN`, avec ou sans périmètre. Les administrateurs existants y accèdent donc sans attribution individuelle. Pour les profils lecture et écriture, elle doit être attribuée explicitement par un administrateur global. La migration ajoute uniquement la permission ; les droits automatiques sont calculés à partir du rôle, sans modifier `additionalPermissions`.
 
-| Capacité | Profil                              | Périmètre fonctionnel  | Accès à la vue                                           |
-| :------- | :---------------------------------- | :--------------------- | :------------------------------------------------------- |
-| Absente  | Tout profil, y compris ADMIN global | Avec ou sans périmètre | Refusé                                                   |
-| Présente | READER, CONTRIBUTOR, ADMIN          | Organisation définie   | Applications de cette organisation et de ses descendants |
-| Présente | READER, CONTRIBUTOR, ADMIN          | Aucun                  | Toutes les applications éligibles du référentiel         |
+| Capacité                | Profil              | Périmètre fonctionnel  | Accès à la vue                                           |
+| :---------------------- | :------------------ | :--------------------- | :------------------------------------------------------- |
+| Automatique par le rôle | ADMIN               | Organisation définie   | Applications de cette organisation et de ses descendants |
+| Automatique par le rôle | ADMIN               | Aucun                  | Toutes les applications éligibles du référentiel         |
+| Absente                 | READER, CONTRIBUTOR | Avec ou sans périmètre | Refusé                                                   |
+| Attribuée explicitement | READER, CONTRIBUTOR | Organisation définie   | Applications de cette organisation et de ses descendants |
+| Attribuée explicitement | READER, CONTRIBUTOR | Aucun                  | Toutes les applications éligibles du référentiel         |
+
+Dans le formulaire de droits, la capacité est cochée et non modifiable pour un administrateur. Changer son rôle ne copie pas ce droit automatique dans ses capacités individuelles : une rétrogradation vers lecture ou écriture retire l'accès, sauf délégation explicite conservée.
 
 Le périmètre fonctionnel est `scopeOrganization`, distinct de l'organisation de rattachement `organization`. Une application appartient au périmètre si un de ses acteurs **ou une de ses directions métier** est rattaché à une organisation de ce périmètre. Une application partagée avec une autre organisation reste visible lorsqu'elle appartient aussi au périmètre autorisé. Un périmètre renseigné mais inexploitable est refusé, jamais assimilé à un accès global.
 

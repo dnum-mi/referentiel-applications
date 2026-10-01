@@ -4,7 +4,8 @@ import { expect, test, type Page } from "@playwright/test";
 // Ici, le navigateur vérifie menu, adresse directe, plan du site et filtre initial.
 const authority = "https://sso.example.test";
 
-async function prepareSession(page: Page, role: string, capacity: boolean) {
+async function prepareSession(page: Page, role: string, capacity: boolean, scope: string | null = null) {
+  const profile = { role, capacity, scope };
   await page.addInitScript(
     ({ authority }) => {
       sessionStorage.setItem(
@@ -37,12 +38,12 @@ async function prepareSession(page: Page, role: string, capacity: boolean) {
         json: {
           id: "technology-test-user",
           email: "technologies@example.test",
-          role,
+          role: profile.role,
           type: "human",
-          permissions: ["AppRead", "AppList"],
-          additionalPermissions: capacity ? ["TechnologyList"] : [],
-          scopeOrganizationId: null,
-          scopeOrganization: null,
+          permissions: ["AppRead", "AppList", ...(profile.role === "ADMIN" ? ["TechnologyList"] : [])],
+          additionalPermissions: profile.capacity ? ["TechnologyList"] : [],
+          scopeOrganizationId: profile.scope ? "scope-org" : null,
+          scopeOrganization: profile.scope ? { id: "scope-org", path: profile.scope } : null,
           followedApplications: [],
           isBlocked: false,
         },
@@ -69,12 +70,12 @@ async function prepareSession(page: Page, role: string, capacity: boolean) {
       await route.fulfill({ json: url.pathname.endsWith("/unread-count") ? { count: 0 } : [] });
     }
   });
-  return technologyRequests;
+  return { requests: technologyRequests, profile };
 }
 
-for (const role of ["READER", "CONTRIBUTOR", "ADMIN"]) {
+for (const role of ["READER", "CONTRIBUTOR"]) {
   test(`${role} sans capacité : menu, adresse directe et plan du site refusent Technologies`, async ({ page }) => {
-    const requests = await prepareSession(page, role, false);
+    const { requests } = await prepareSession(page, role, false);
     await page.goto("/fins-de-vie");
     await expect(page).toHaveURL(/\/$/);
     await expect(page.getByTestId("main-navigation")).toBeVisible();
@@ -86,7 +87,7 @@ for (const role of ["READER", "CONTRIBUTOR", "ADMIN"]) {
   });
 
   test(`${role} avec capacité : toutes les technologies sont sélectionnées dès l'ouverture`, async ({ page }) => {
-    const requests = await prepareSession(page, role, true);
+    const { requests } = await prepareSession(page, role, true);
     await page.goto("/fins-de-vie");
     await expect(page.getByTestId("end-of-life-page-title")).toHaveText("Technologies");
     await expect(page.getByTestId("main-navigation").getByRole("link", { name: "Technologies", exact: true })).toBeVisible();
@@ -101,8 +102,48 @@ for (const role of ["READER", "CONTRIBUTOR", "ADMIN"]) {
   });
 }
 
+for (const scope of [null, "MI/DNUM"]) {
+  test(`ADMIN ${scope ? "de périmètre" : "global"} sans délégation : accès hérité aux Technologies`, async ({ page }) => {
+    const { requests } = await prepareSession(page, "ADMIN", false, scope);
+    await page.goto("/fins-de-vie");
+    await expect(page.getByTestId("end-of-life-page-title")).toHaveText("Technologies");
+    await expect(page.getByTestId("main-navigation").getByRole("link", { name: "Technologies", exact: true })).toBeVisible();
+    await expect(page.getByTestId("end-of-life-filter-status")).toHaveValue("all");
+    await expect(page.getByTestId("end-of-life-table")).toContainText("Node.js 22");
+    expect(requests[0]).toBe("all");
+    await page.goto("/plan-du-site");
+    await expect(page.getByTestId("sitemap-protected-links").getByRole("link", { name: "Technologies", exact: true })).toBeVisible();
+  });
+}
+
+test("la rétrogradation d'un ADMIN sans délégation retire l'accès après actualisation des droits", async ({ page }) => {
+  const { requests, profile } = await prepareSession(page, "ADMIN", false);
+  await page.goto("/fins-de-vie");
+  await expect(page.getByTestId("end-of-life-table")).toContainText("Node.js 22");
+  const requestCount = requests.length;
+  profile.role = "READER";
+
+  await page.reload();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByTestId("main-navigation").getByRole("link", { name: "Technologies", exact: true })).toHaveCount(0);
+  expect(requests).toHaveLength(requestCount);
+});
+
+test("le retrait de la délégation d'un contributeur retire l'accès après actualisation des droits", async ({ page }) => {
+  const { requests, profile } = await prepareSession(page, "CONTRIBUTOR", true);
+  await page.goto("/fins-de-vie");
+  await expect(page.getByTestId("end-of-life-table")).toContainText("Node.js 22");
+  const requestCount = requests.length;
+  profile.capacity = false;
+
+  await page.reload();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByTestId("main-navigation").getByRole("link", { name: "Technologies", exact: true })).toHaveCount(0);
+  expect(requests).toHaveLength(requestCount);
+});
+
 test("un profil standard avec capacité n'obtient pas de vue globale", async ({ page }) => {
-  const requests = await prepareSession(page, "VISITOR", true);
+  const { requests } = await prepareSession(page, "VISITOR", true);
   await page.goto("/fins-de-vie");
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByTestId("end-of-life-page-title")).toHaveCount(0);

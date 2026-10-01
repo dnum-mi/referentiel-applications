@@ -177,16 +177,80 @@ describe("UserActions", () => {
     );
   });
 
-  it("n'accorde pas automatiquement la capacité à un administrateur", async () => {
+  it.each([null, "MI/DNUM"])("affiche l'accès hérité d'un administrateur (%s) sans enregistrer de délégation", async (scope) => {
     hasPermissionsMock.mockReturnValue(true);
+    const admin = {
+      ...targetUser,
+      role: Roles.ADMIN,
+      scopeOrganizationId: scope,
+      scopeOrganization: scope ? createOrganization(scope) : null,
+    };
+    updateUserMock.mockResolvedValue({ data: admin });
     render(UserActions, {
-      props: { user: { ...targetUser, role: Roles.ADMIN } },
+      props: { user: admin },
       global: { ...global, stubs: { ...global.stubs, DsfrCheckboxSet: false } },
     });
     await fireEvent.click(screen.getByTestId("admin-user-edit-btn"));
     const capability = screen.getByRole("checkbox", { name: /Consulter les technologies/ });
+    expect(capability).toBeDisabled();
+    expect(capability).toBeChecked();
+    expect(screen.getByText("Accès inclus dans le rôle Administrateur, dans son périmètre.")).toBeInTheDocument();
+
+    await fireEvent.click(screen.getByRole("checkbox", { name: "Créer une application" }));
+    await fireEvent.click(screen.getByTestId("admin-save-perms-btn"));
+    expect(updateUserMock).toHaveBeenCalledWith({
+      path: { id: admin.id },
+      body: { role: Roles.ADMIN, organizationId: null, scopeOrganizationId: scope, additionalPermissions: [Permission.CREATE_APPLICATION] },
+    });
+  });
+
+  it.each([Roles.ADMIN, Roles.CONTRIBUTOR])(
+    "ne crée pas de délégation lors d'un passage par le rôle Administrateur vers %s",
+    async (role) => {
+      hasPermissionsMock.mockReturnValue(true);
+      const reader = { ...targetUser, role: Roles.READER };
+      updateUserMock.mockResolvedValue({ data: { ...reader, role } });
+      render(UserActions, {
+        props: { user: reader },
+        global: { ...global, stubs: { ...global.stubs, DsfrCheckboxSet: false, DsfrRadioButtonSet: false } },
+      });
+      await fireEvent.click(screen.getByTestId("admin-user-edit-btn"));
+      await fireEvent.click(screen.getByRole("radio", { name: /Administrateur/ }));
+      expect(screen.getByRole("checkbox", { name: /Consulter les technologies/ })).toBeChecked();
+
+      if (role === Roles.CONTRIBUTOR) {
+        await fireEvent.click(screen.getByRole("radio", { name: /Écriture totale/ }));
+        expect(screen.getByRole("checkbox", { name: /Consulter les technologies/ })).not.toBeChecked();
+        expect(screen.getByRole("checkbox", { name: /Consulter les technologies/ })).toBeEnabled();
+      }
+
+      await fireEvent.click(screen.getByTestId("admin-save-perms-btn"));
+      expect(updateUserMock).toHaveBeenCalledWith({
+        path: { id: reader.id },
+        body: { role, organizationId: null, scopeOrganizationId: null, additionalPermissions: [] },
+      });
+    },
+  );
+
+  it("conserve la délégation explicite lors d'une rétrogradation et permet son retrait", async () => {
+    hasPermissionsMock.mockReturnValue(true);
+    const admin = { ...targetUser, role: Roles.ADMIN, additionalPermissions: [Permission.TECHNOLOGY_LIST] };
+    updateUserMock.mockResolvedValue({ data: { ...admin, role: Roles.READER, additionalPermissions: [] } });
+    render(UserActions, {
+      props: { user: admin },
+      global: { ...global, stubs: { ...global.stubs, DsfrCheckboxSet: false, DsfrRadioButtonSet: false } },
+    });
+    await fireEvent.click(screen.getByTestId("admin-user-edit-btn"));
+    await fireEvent.click(screen.getByRole("radio", { name: /Lecture totale/ }));
+    const capability = screen.getByRole("checkbox", { name: /Consulter les technologies/ });
+    expect(capability).toBeChecked();
     expect(capability).toBeEnabled();
-    expect(capability).not.toBeChecked();
+    await fireEvent.click(capability);
+    await fireEvent.click(screen.getByTestId("admin-save-perms-btn"));
+    expect(updateUserMock).toHaveBeenCalledWith({
+      path: { id: admin.id },
+      body: { role: Roles.READER, organizationId: null, scopeOrganizationId: null, additionalPermissions: [] },
+    });
   });
 
   it("réserve cette capacité aux profils de lecture, écriture et administration", async () => {

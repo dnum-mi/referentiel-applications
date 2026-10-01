@@ -154,6 +154,9 @@ describe("delegateToService — intersection des identités (#1988)", () => {
       expect(await check.can([Permission.GlobalAdminManage], user)).toBe(
         expectedRank === 3,
       );
+      expect(await check.can([Permission.TechnologyList], user)).toBe(
+        expectedRank === 3,
+      );
       expect(await check.can([Permission.TechnologyRead], user, "app-id")).toBe(
         expectedRank >= 1,
       );

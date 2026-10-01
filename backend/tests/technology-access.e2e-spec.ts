@@ -12,6 +12,7 @@ describe("Vue Technologies — capacité et périmètre (#2801)", () => {
   const prisma = getPrismaClient();
   const prefix = `technology-access-${randomUUID()}`;
   const supportedRoles = [Roles.READER, Roles.CONTRIBUTOR, Roles.ADMIN];
+  const delegatedRoles = [Roles.READER, Roles.CONTRIBUTOR];
   let scopeId: string;
   let outsideId: string;
   let emptyScopeId: string;
@@ -37,10 +38,11 @@ describe("Vue Technologies — capacité et périmètre (#2801)", () => {
   function list(
     user: { email: string },
     query: Record<string, string | number> = {},
+    token = getToken(user),
   ) {
     return request(app().getHttpServer())
       .get("/technologies/end-of-life")
-      .set("Authorization", `Bearer ${getToken(user)}`)
+      .set("Authorization", `Bearer ${token}`)
       .query({ status: "all", search: prefix, pageSize: 100, ...query });
   }
 
@@ -139,8 +141,8 @@ describe("Vue Technologies — capacité et périmètre (#2801)", () => {
       .expect(401);
   });
 
-  it.each(supportedRoles)(
-    "%s sans capacité ne peut accéder à la vue, même sans périmètre",
+  it.each([...delegatedRoles, Roles.VISITOR])(
+    "%s sans délégation ne peut accéder à la vue, avec ou sans périmètre",
     async (role) => {
       await list(await makeUser(role, false, false)).expect(403);
       await list(await makeUser(role, false, true)).expect(403);
@@ -148,9 +150,11 @@ describe("Vue Technologies — capacité et périmètre (#2801)", () => {
   );
 
   it.each(supportedRoles)(
-    "%s avec capacité et périmètre ne voit que les applications autorisées",
+    "%s autorisé ne voit que son périmètre (ADMIN sans délégation)",
     async (role) => {
-      const response = await list(await makeUser(role, true, true)).expect(200);
+      const user = await makeUser(role, role !== Roles.ADMIN, true);
+      if (role === Roles.ADMIN) expect(user.additionalPermissions).toEqual([]);
+      const response = await list(user).expect(200);
       expect(response.body.total).toBe(inScopeIds.length);
       expect(
         response.body.results.map((row: { id: string }) => row.id).sort(),
@@ -164,11 +168,11 @@ describe("Vue Technologies — capacité et périmètre (#2801)", () => {
   );
 
   it.each(supportedRoles)(
-    "%s avec capacité et sans périmètre voit toutes les applications",
+    "%s autorisé sans périmètre voit toutes les applications (ADMIN sans délégation)",
     async (role) => {
-      const response = await list(await makeUser(role, true, false)).expect(
-        200,
-      );
+      const user = await makeUser(role, role !== Roles.ADMIN, false);
+      if (role === Roles.ADMIN) expect(user.additionalPermissions).toEqual([]);
+      const response = await list(user).expect(200);
       expect(response.body.total).toBe(allIds.length);
       expect(
         response.body.results.map((row: { id: string }) => row.id).sort(),
@@ -176,47 +180,67 @@ describe("Vue Technologies — capacité et périmètre (#2801)", () => {
     },
   );
 
+  it.each([false, true])(
+    "expose TechnologyList dans les droits du rôle ADMIN, sans délégation (périmètre : %s)",
+    async (scoped) => {
+      const user = await makeUser(Roles.ADMIN, false, scoped);
+      const response = await request(app().getHttpServer())
+        .get("/users/me")
+        .set("Authorization", `Bearer ${getToken(user)}`)
+        .expect(200);
+      expect(response.body.additionalPermissions).toEqual([]);
+      expect(response.body.permissions).toContain(Permission.TechnologyList);
+    },
+  );
+
   it("n'accorde pas une vue globale au profil standard même si la capacité lui a été attribuée", async () => {
     await list(await makeUser(Roles.VISITOR, true, false)).expect(403);
+    await list(await makeUser(Roles.VISITOR, true, true)).expect(403);
   });
 
-  it("les filtres de recherche, organisation et statut ne peuvent élargir le périmètre", async () => {
-    const user = await makeUser(Roles.CONTRIBUTOR, true, true);
-    const outside = await list(user, { search: `${prefix}-outside` }).expect(
-      200,
-    );
-    expect(outside.body).toMatchObject({ total: 0, results: [] });
+  it.each(supportedRoles)(
+    "les filtres ne peuvent élargir le périmètre de %s",
+    async (role) => {
+      const user = await makeUser(role, role !== Roles.ADMIN, true);
+      const outside = await list(user, { search: `${prefix}-outside` }).expect(
+        200,
+      );
+      expect(outside.body).toMatchObject({ total: 0, results: [] });
 
-    const organization = await list(user, {
-      organization: `/${prefix}/B`,
-    }).expect(200);
-    expect(
-      organization.body.results.map((row: { id: string }) => row.id),
-    ).toEqual([sharedAppId]);
-    expect(organization.body.total).toBe(1);
+      const organization = await list(user, {
+        organization: `/${prefix}/B`,
+      }).expect(200);
+      expect(
+        organization.body.results.map((row: { id: string }) => row.id),
+      ).toEqual([sharedAppId]);
+      expect(organization.body.total).toBe(1);
 
-    const eol = await list(user, { status: "eol" }).expect(200);
-    expect(
-      eol.body.results.map((row: { id: string }) => row.id).sort(),
-    ).toEqual(inScopeIds);
-    expect(
-      eol.body.results.every(
-        (row: { technologies: unknown[] }) => row.technologies.length === 1,
-      ),
-    ).toBe(true);
-  });
+      const eol = await list(user, { status: "eol" }).expect(200);
+      expect(
+        eol.body.results.map((row: { id: string }) => row.id).sort(),
+      ).toEqual(inScopeIds);
+      expect(
+        eol.body.results.every(
+          (row: { technologies: unknown[] }) => row.technologies.length === 1,
+        ),
+      ).toBe(true);
+    },
+  );
 
-  it("le total et chaque page portent uniquement sur le périmètre autorisé", async () => {
-    const user = await makeUser(Roles.READER, true, true);
-    const ids: string[] = [];
-    for (let page = 0; page < inScopeIds.length; page++) {
-      const response = await list(user, { pageSize: 1, page }).expect(200);
-      expect(response.body.total).toBe(inScopeIds.length);
-      expect(response.body.results).toHaveLength(1);
-      ids.push(response.body.results[0].id);
-    }
-    expect(ids.sort()).toEqual(inScopeIds);
-  });
+  it.each(supportedRoles)(
+    "le total et chaque page respectent le périmètre de %s",
+    async (role) => {
+      const user = await makeUser(role, role !== Roles.ADMIN, true);
+      const ids: string[] = [];
+      for (let page = 0; page < inScopeIds.length; page++) {
+        const response = await list(user, { pageSize: 1, page }).expect(200);
+        expect(response.body.total).toBe(inScopeIds.length);
+        expect(response.body.results).toHaveLength(1);
+        ids.push(response.body.results[0].id);
+      }
+      expect(ids.sort()).toEqual(inScopeIds);
+    },
+  );
 
   it("un périmètre sans application donne une liste vide", async () => {
     const user = await makeUser(Roles.READER, true, true);
@@ -225,18 +249,89 @@ describe("Vue Technologies — capacité et périmètre (#2801)", () => {
     expect(response.body).toMatchObject({ total: 0, results: [] });
   });
 
-  it("réévalue le retrait de capacité et le changement de périmètre à chaque requête", async () => {
-    const user = await makeUser(Roles.ADMIN, true, false);
-    await list(user).expect(200);
-    await user.update({ additionalPermissions: [] });
-    await list(user).expect(403);
-    await user.update({
-      additionalPermissions: [Permission.TechnologyList],
-      scopeOrganization: { connect: { id: scopeId } },
-    });
-    const response = await list(user).expect(200);
-    expect(response.body.total).toBe(inScopeIds.length);
+  it.each(delegatedRoles)(
+    "réévalue le retrait de délégation et le périmètre de %s avec le même jeton",
+    async (role) => {
+      const user = await makeUser(role, true, false);
+      const token = getToken(user);
+      await list(user, {}, token).expect(200);
+      await user.update({ additionalPermissions: [] });
+      await list(user, {}, token).expect(403);
+      await user.update({
+        additionalPermissions: [Permission.TechnologyList],
+        scopeOrganization: { connect: { id: scopeId } },
+      });
+      const response = await list(user, {}, token).expect(200);
+      expect(response.body.total).toBe(inScopeIds.length);
+      expect(
+        response.body.results.map((row: { id: string }) => row.id).sort(),
+      ).toEqual(inScopeIds);
+    },
+  );
+
+  it.each([false, true])(
+    "un ADMIN conserve la capacité du rôle après retrait de sa délégation (périmètre : %s)",
+    async (scoped) => {
+      const user = await makeUser(Roles.ADMIN, true, scoped);
+      const token = getToken(user);
+      await list(user, {}, token).expect(200);
+      await user.update({ additionalPermissions: [] });
+
+      const response = await list(user, {}, token).expect(200);
+      const expectedIds = scoped ? inScopeIds : allIds;
+      expect(response.body.total).toBe(expectedIds.length);
+      expect(
+        response.body.results.map((row: { id: string }) => row.id).sort(),
+      ).toEqual(expectedIds);
+    },
+  );
+
+  it("réévalue le périmètre d'un ADMIN sans délégation avec le même jeton", async () => {
+    const user = await makeUser(Roles.ADMIN, false, false);
+    const token = getToken(user);
+    const globalResponse = await list(user, {}, token).expect(200);
+    expect(globalResponse.body.total).toBe(allIds.length);
+
+    await user.update({ scopeOrganization: { connect: { id: scopeId } } });
+    const scoped = await list(user, {}, token).expect(200);
+    expect(scoped.body.total).toBe(inScopeIds.length);
+    expect(
+      scoped.body.results.map((row: { id: string }) => row.id).sort(),
+    ).toEqual(inScopeIds);
+
+    await user.update({ scopeOrganization: { connect: { id: emptyScopeId } } });
+    const empty = await list(user, {}, token).expect(200);
+    expect(empty.body).toMatchObject({ total: 0, results: [] });
   });
+
+  it.each([...delegatedRoles, Roles.VISITOR])(
+    "révoque la capacité issue du rôle dès la rétrogradation ADMIN vers %s",
+    async (role) => {
+      const user = await makeUser(Roles.ADMIN, false, true);
+      const token = getToken(user);
+      await list(user, {}, token).expect(200);
+      await user.update({ role });
+      await list(user, {}, token).expect(403);
+    },
+  );
+
+  it.each(delegatedRoles)(
+    "la rétrogradation ADMIN vers %s conserve uniquement une délégation explicite encore présente",
+    async (role) => {
+      const user = await makeUser(Roles.ADMIN, true, true);
+      const token = getToken(user);
+      await list(user, {}, token).expect(200);
+      await user.update({ role });
+      const response = await list(user, {}, token).expect(200);
+      expect(response.body.total).toBe(inScopeIds.length);
+      expect(
+        response.body.results.map((row: { id: string }) => row.id).sort(),
+      ).toEqual(inScopeIds);
+
+      await user.update({ additionalPermissions: [] });
+      await list(user, {}, token).expect(403);
+    },
+  );
 
   it("les droits d'acteur hors périmètre n'élargissent pas la vue transverse", async () => {
     const user = await makeUser(Roles.READER, true, true);

@@ -33,7 +33,7 @@ export class EndOfLifeController {
   @ApiOperation({
     summary: "Technologies utilisées par les applications, fins de vie ou non",
     description:
-      "Vue transverse accessible avec la capacité TechnologyList aux lecteurs, contributeurs et administrateurs. Les applications sont limitées au périmètre fonctionnel de l'utilisateur lorsqu'il en possède un. Par défaut, la liste retient celles dont au moins une technologie est en fin de vie, proche de sa fin de vie (moins de 6 mois) ou sortie du support actif. Filtrable par statut (`eol`, `eol-soon`, `eoas-passed`, partitionnant), par organisation et par recherche libre. Le filtre `all` inclut les technologies saines sans élargir le périmètre autorisé.",
+      "Vue transverse accessible avec la capacité TechnologyList aux lecteurs, contributeurs et administrateurs. Cette capacité est accordée par défaut aux administrateurs, avec ou sans périmètre, et doit être attribuée explicitement aux lecteurs et contributeurs. Les applications sont limitées au périmètre fonctionnel de l'utilisateur lorsqu'il en possède un. Par défaut, la liste retient celles dont au moins une technologie est en fin de vie, proche de sa fin de vie (moins de 6 mois) ou sortie du support actif. Filtrable par statut (`eol`, `eol-soon`, `eoas-passed`, partitionnant), par organisation et par recherche libre. Le filtre `all` inclut les technologies saines sans élargir le périmètre autorisé.",
   })
   @ApiOkResponse({
     description: "Liste paginée des applications concernées",

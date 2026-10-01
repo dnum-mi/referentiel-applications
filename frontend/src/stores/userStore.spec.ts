@@ -38,7 +38,7 @@ const userWithScope = (path: string | null): UserWithPermissions =>
   ({
     id: "admin-1",
     role: "ADMIN",
-    permissions: [],
+    permissions: [Permission.TECHNOLOGY_LIST],
     additionalPermissions: [],
     scopeOrganization: path ? { id: "scope-org", path } : null,
   }) as unknown as UserWithPermissions;
@@ -47,19 +47,55 @@ describe("userStore.canListTechnologies", () => {
   beforeEach(() => setActivePinia(createPinia()));
 
   it.each(Object.values(Roles).flatMap((role) => [true, false].map((capability) => ({ role, capability }))))(
-    "exige un profil pris en charge et une capacité explicite : $role, capacité = $capability",
+    "respecte les permissions effectives du profil $role, délégation = $capability",
     ({ role, capability }) => {
       const store = useUserStore();
       store.authenticated = true;
       store.user = {
         ...userWithScope(null),
         role,
+        permissions: role === Roles.ADMIN ? [Permission.TECHNOLOGY_LIST] : [],
         additionalPermissions: capability ? [Permission.TECHNOLOGY_LIST] : [],
       };
 
-      expect(store.canListTechnologies).toBe(capability && role !== Roles.VISITOR);
+      expect(store.canListTechnologies).toBe(role === Roles.ADMIN || (capability && role !== Roles.VISITOR));
     },
   );
+
+  it.each([null, "MI/DNUM"])("accepte la permission héritée d'un ADMIN sans délégation (périmètre %s)", (scope) => {
+    const store = useUserStore();
+    store.authenticated = true;
+    store.user = userWithScope(scope);
+    expect(store.user.additionalPermissions).toEqual([]);
+    expect(store.canListTechnologies).toBe(true);
+  });
+
+  it("n'invente pas de permission pour un ADMIN dont l'API ne l'accorde pas", () => {
+    const store = useUserStore();
+    store.authenticated = true;
+    store.user = { ...userWithScope(null), permissions: [] };
+    expect(store.canListTechnologies).toBe(false);
+  });
+
+  it.each([false, true])("applique la rétrogradation d'un administrateur en lecteur, délégation = %s", (delegated) => {
+    const store = useUserStore();
+    store.authenticated = true;
+    store.user = { ...userWithScope(null), additionalPermissions: delegated ? [Permission.TECHNOLOGY_LIST] : [] };
+    expect(store.canListTechnologies).toBe(true);
+
+    store.user = { ...store.user, role: Roles.READER, permissions: [] };
+    expect(store.canListTechnologies).toBe(delegated);
+    store.user.additionalPermissions = [];
+    expect(store.canListTechnologies).toBe(false);
+  });
+
+  it("le retrait d'une délégation ne retire pas la permission héritée d'un administrateur", () => {
+    const store = useUserStore();
+    store.authenticated = true;
+    store.user = { ...userWithScope(null), additionalPermissions: [Permission.TECHNOLOGY_LIST] };
+    store.user.additionalPermissions = [];
+    expect(store.canListTechnologies).toBe(true);
+  });
 
   it("un droit de fiche ne donne pas accès à la vue transverse", () => {
     const store = useUserStore();
@@ -71,7 +107,7 @@ describe("userStore.canListTechnologies", () => {
   it("la capacité ne donne aucun droit de lecture ou d'écriture sur une fiche", () => {
     const store = useUserStore();
     store.authenticated = true;
-    store.user = { ...userWithScope(null), additionalPermissions: [Permission.TECHNOLOGY_LIST] };
+    store.user = { ...userWithScope(null), role: Roles.READER, permissions: [], additionalPermissions: [Permission.TECHNOLOGY_LIST] };
     expect(store.canListTechnologies).toBe(true);
     expect(store.hasPermissions([Permission.TECHNOLOGY_READ, Permission.TECHNOLOGY_WRITE])).toBe(false);
   });
@@ -79,7 +115,7 @@ describe("userStore.canListTechnologies", () => {
   it("retire l'accès dès la révocation, la déconnexion ou le refus d'authentification", () => {
     const store = useUserStore();
     store.authenticated = true;
-    store.user = { ...userWithScope(null), additionalPermissions: [Permission.TECHNOLOGY_LIST] };
+    store.user = { ...userWithScope(null), role: Roles.READER, permissions: [], additionalPermissions: [Permission.TECHNOLOGY_LIST] };
     expect(store.canListTechnologies).toBe(true);
     store.user.additionalPermissions = [];
     expect(store.canListTechnologies).toBe(false);

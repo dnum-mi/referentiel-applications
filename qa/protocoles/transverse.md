@@ -56,7 +56,7 @@
 
 ### TRV-08 — La page « Technologies » liste les applications concernées, et toutes leurs technologies avec le filtre « Toutes » ✅
 
-- **Datafeature** : session `admin` avec capacité `TechnologyList` explicitement accordée, seed QA (`pnpm db:seed:qa`) — l'application `QA-EOL` porte une
+- **Datafeature** : session `admin` avec capacité `TechnologyList` accordée par le rôle, seed QA (`pnpm db:seed:qa`) — l'application `QA-EOL` porte une
   technologie dont la fin de vie est dépassée, une proche, une hors support actif, une saisie à la
   main, et une **saine** (Vue.js, aucune fin de vie connue).
 - **Action** : ouvrir `/fins-de-vie` depuis le menu « Technologies » ; filtrer sur « Fin de vie
@@ -72,16 +72,18 @@
 
 ### TRV-09 — La capacité et le périmètre bornent la vue Technologies (#2801)
 
-- **Datafeature** : profils lecture, écriture et administration ; chacun avec puis sans capacité
-  `TechnologyList`, avec un périmètre A puis sans périmètre. Applications rattachées à A, à un
+- **Datafeature** : profils lecture et écriture avec puis sans capacité individuelle `TechnologyList` ;
+  administrateurs sans capacité individuelle, avec un périmètre A puis sans périmètre. Applications rattachées à A, à un
   descendant, à une direction métier de A, à une organisation extérieure et à un faux préfixe de A.
 - **Action** : ouvrir le menu, le plan du site et `/fins-de-vie` directement ; rechercher une
-  application extérieure, filtrer sur son organisation puis paginer. Retirer la capacité ou modifier
-  le périmètre et actualiser les droits de la session.
-- **Résultat attendu** : sans capacité, aucun accès, même pour un administrateur global ; l'API
-  renvoie 403. Avec capacité et périmètre, seuls A et ses descendants sont retenus via les acteurs
+  application extérieure, filtrer sur son organisation puis paginer. Retirer une capacité individuelle,
+  rétrograder un administrateur ou modifier le périmètre et actualiser les droits de la session.
+- **Résultat attendu** : les administrateurs reçoivent automatiquement la capacité, avec ou sans
+  périmètre. Les profils lecture et écriture sans capacité n'ont aucun accès ; l'API renvoie 403.
+  Avec capacité et périmètre, seuls A et ses descendants sont retenus via les acteurs
   ou les directions métier. Sans périmètre, les trois profils voient toutes les applications
   éligibles. Les filtres et les compteurs n'élargissent pas les droits. Les anciennes données et
-  réponses en attente ne réapparaissent pas après un changement de droits.
+  réponses en attente ne réapparaissent pas après un changement de droits. Rétrograder un administrateur
+  sans délégation individuelle retire l'accès ; modifier son périmètre restreint la vue.
 - **Limites de cette version** : aucun accès pour `VISITOR` ; les droits d'acteur hors périmètre
   n'élargissent pas la vue. Les droits de l'onglet Technologies des fiches restent inchangés.

@@ -94,6 +94,21 @@ const editingUser = ref<Required<UserEntity> | null>(null);
 const editingUserRole = ref<RolesType>(Roles.VISITOR);
 const editingOrganizationId = ref<string>("");
 const editingAdditionalPermissions = ref<Permission[]>([]);
+// L'accès hérité du rôle ADMIN est visible dans le formulaire, mais ne devient
+// pas une délégation persistante lors d'un changement de rôle ou d'une autre case.
+const displayedAdditionalPermissions = computed<Permission[]>({
+  get: () =>
+    editingUserRole.value === Roles.ADMIN
+      ? [...new Set([...editingAdditionalPermissions.value, Permission.TECHNOLOGY_LIST])]
+      : editingAdditionalPermissions.value,
+  set: (permissions) => {
+    const hasExplicitTechnologyAccess = editingAdditionalPermissions.value.includes(Permission.TECHNOLOGY_LIST);
+    editingAdditionalPermissions.value =
+      editingUserRole.value === Roles.ADMIN && !hasExplicitTechnologyAccess
+        ? permissions.filter((permission) => permission !== Permission.TECHNOLOGY_LIST)
+        : permissions;
+  },
+});
 const editingScopePermissions = ref<string>("");
 const maiaSuggestion = ref<MaiaOrganizationSuggestionDto | null>(null);
 const maiaSuggestionState = ref<"idle" | "loading" | "ready" | "error">("idle");
@@ -253,8 +268,11 @@ const additionalPermissionsOptions = computed<Omit<DsfrCheckboxProps, "modelValu
     label: "Consulter les technologies",
     value: Permission.TECHNOLOGY_LIST,
     name: "capability-technology-list",
-    disabled: editingUserRole.value === Roles.VISITOR,
-    hint: "Disponible pour les niveaux Lecture totale, Écriture totale et Administrateur, dans leur périmètre.",
+    disabled: editingUserRole.value === Roles.VISITOR || editingUserRole.value === Roles.ADMIN,
+    hint:
+      editingUserRole.value === Roles.ADMIN
+        ? "Accès inclus dans le rôle Administrateur, dans son périmètre."
+        : "Disponible pour les niveaux Lecture totale, Écriture totale et Administrateur, dans leur périmètre.",
   },
 ]);
 
@@ -416,7 +434,7 @@ const isScopeDisabled = computed(() => {
       </fieldset>
 
       <DsfrCheckboxSet
-        v-model="editingAdditionalPermissions"
+        v-model="displayedAdditionalPermissions"
         legend="Capacités"
         :options="additionalPermissionsOptions"
         name="additional-permissions-checkbox"
