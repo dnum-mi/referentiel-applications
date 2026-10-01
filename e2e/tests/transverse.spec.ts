@@ -1,5 +1,5 @@
 import { test as base } from "@playwright/test";
-import { test } from "../fixtures/test";
+import { expect, test } from "../fixtures/test";
 import {
   AccessibilityPage,
   EndOfLifePage,
@@ -113,5 +113,38 @@ test.describe("Pages transverses", () => {
     // Le trajet qui donne son intérêt à la vue : de la liste vers l'onglet
     // Technologies de la fiche.
     await endOfLife.openApplicationTechnologyTab("QA-EOL");
+  });
+
+  test("TRV-09 - la page Technologies sélectionne toutes les technologies par défaut (#2798)", async ({
+    page,
+    data,
+  }) => {
+    void data;
+    const endOfLife = new EndOfLifePage(page);
+    const initialStatus = await endOfLife.openAndReadInitialStatusQuery();
+
+    expect(initialStatus).toBe("all");
+    await endOfLife.expectStatusFilterSelected("all");
+    await endOfLife.expectLoaded();
+    await endOfLife.expectResultsAnnounced();
+    // Sans changer de filtre, la technologie saine (Vue.js) de `QA-EOL` est déjà visible.
+    await endOfLife.expectApplicationHasTechnology("QA-EOL", "Vue.js");
+  });
+
+  test("TRV-10 - « Effacer les filtres » ramène la page Technologies à toutes les technologies (#2798)", async ({
+    page,
+    data,
+  }) => {
+    void data;
+    const endOfLife = new EndOfLifePage(page);
+    await endOfLife.open();
+    await endOfLife.expectLoaded();
+
+    await endOfLife.filterByStatus("eol");
+    await endOfLife.expectApplicationWithoutTechnology("QA-EOL", "Vue.js");
+
+    await endOfLife.clearAllFilters();
+    await endOfLife.expectStatusFilterSelected("all");
+    await endOfLife.expectApplicationHasTechnology("QA-EOL", "Vue.js");
   });
 });

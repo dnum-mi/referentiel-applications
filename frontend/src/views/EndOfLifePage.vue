@@ -30,7 +30,9 @@ type EolStatus = EndOfLifeTechnologyDto["status"];
 const store = useEndOfLifeStore();
 const { applications, total, isLoading } = storeToRefs(store);
 
-const statusFilter = ref<EolStatus | "all" | "">("");
+// #2798 : par défaut, toutes les technologies (y compris à jour) sont affichées.
+const DEFAULT_STATUS_FILTER = "all";
+const statusFilter = ref<EolStatus | "all" | "">(DEFAULT_STATUS_FILTER);
 const organizationFilter = ref("");
 const searchFilter = ref("");
 const pageSize = ref(15);
@@ -122,7 +124,7 @@ function handlePageSizeChange(limit: number) {
 
 /** La remise à zéro suffit : le watcher débouncé déclenche l'unique rechargement. */
 function clearFilters() {
-  statusFilter.value = "";
+  statusFilter.value = DEFAULT_STATUS_FILTER;
   organizationFilter.value = "";
   searchFilter.value = "";
 }

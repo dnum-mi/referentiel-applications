@@ -1,4 +1,4 @@
-import { expect } from "@playwright/test";
+import { expect, type Response } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 /**
@@ -24,6 +24,35 @@ export class EndOfLifePage extends BasePage {
     await expect(this.title()).toHaveText("Technologies");
   }
 
+  /**
+   * Ouvre la page et renvoie le paramètre `status` de la requête de chargement initiale
+   * (`null` s'il est omis) : #2798 exige que le chargement initial porte déjà `status=all`,
+   * et non qu'un second appel vienne corriger un premier fait sans filtre.
+   */
+  async openAndReadInitialStatusQuery(): Promise<string | null> {
+    const initialFetch = this.waitForListFetch();
+    await this.open();
+    const response = await initialFetch;
+    return new URL(response.url()).searchParams.get("status");
+  }
+
+  /** Requête GET de la liste, attendue plutôt qu'un délai : les filtres sont débouncés (300 ms). */
+  private waitForListFetch(): Promise<Response> {
+    return this.page.waitForResponse(
+      (response) =>
+        /\/technologies\/end-of-life\?/.test(response.url()) &&
+        response.request().method() === "GET",
+      { timeout: 10_000 },
+    );
+  }
+
+  /** Le filtre Statut affiche la valeur attendue (#2798 : « all » par défaut). */
+  async expectStatusFilterSelected(
+    status: "" | "eol" | "eol-soon" | "eoas-passed" | "all",
+  ): Promise<void> {
+    await expect(this.statusFilter()).toHaveValue(status);
+  }
+
   /** La page a chargé : soit un tableau, soit l'état vide explicite — jamais ni l'un ni l'autre. */
   async expectLoaded(): Promise<void> {
     await expect(this.table().or(this.empty()).first()).toBeVisible();
@@ -43,21 +72,17 @@ export class EndOfLifePage extends BasePage {
   async filterByStatus(
     status: "eol" | "eol-soon" | "eoas-passed" | "all",
   ): Promise<void> {
-    const refetch = this.page
-      .waitForResponse(
-        (response) =>
-          /\/technologies\/end-of-life\?/.test(response.url()) &&
-          response.request().method() === "GET",
-        { timeout: 10_000 },
-      )
-      .catch(() => null);
+    const refetch = this.waitForListFetch().catch(() => null);
     // Le `data-testid` de `DsfrSelect` atterrit sur le `<select>` lui-même.
     await this.statusFilter().selectOption(status);
     await refetch;
   }
 
+  /** Efface les filtres et attend l'unique rechargement débouncé qui s'ensuit. */
   async clearAllFilters(): Promise<void> {
+    const refetch = this.waitForListFetch().catch(() => null);
     await this.clearFilters().click();
+    await refetch;
   }
 
   /** Vérifie que l'application `label` est listée, avec le statut attendu sur l'une de ses technologies. */
@@ -82,6 +107,19 @@ export class EndOfLifePage extends BasePage {
     const row = this.table().locator("tbody tr").filter({ hasText: label });
     await expect(row).toHaveCount(1);
     await expect(row).toContainText(productText);
+  }
+
+  /**
+   * Vérifie que l'application `label` est listée SANS la technologie `productText` : une
+   * technologie saine n'apparaît pas hors du filtre « all ».
+   */
+  async expectApplicationWithoutTechnology(
+    label: string,
+    productText: string,
+  ): Promise<void> {
+    const row = this.table().locator("tbody tr").filter({ hasText: label });
+    await expect(row).toHaveCount(1);
+    await expect(row).not.toContainText(productText);
   }
 
   /**

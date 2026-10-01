@@ -91,6 +91,7 @@ describe("EndOfLifePage", () => {
       pageSize: 15,
       sortBy: "label",
       order: "asc",
+      status: "all",
     });
   });
 
@@ -175,14 +176,23 @@ describe("EndOfLifePage", () => {
     expect(query).not.toHaveProperty("search");
   });
 
-  it("envoie le filtre « all » pour afficher aussi les technologies saines", async () => {
+  // #2798 : toutes les technologies (y compris à jour) sont sélectionnées par défaut.
+  it("envoie le filtre « all » par défaut pour afficher aussi les technologies saines", async () => {
+    render_();
+
+    await waitFor(() => expect(storeMock.fetchApplications).toHaveBeenCalledTimes(1));
+    expect(storeMock.fetchApplications.mock.calls[0][0].status).toBe("all");
+    expect(screen.getByTestId("end-of-life-filter-status")).toHaveValue("all");
+  });
+
+  it("omet le statut quand « Fins de vie (tous statuts) » est choisi", async () => {
     render_();
     await waitFor(() => expect(storeMock.fetchApplications).toHaveBeenCalledTimes(1));
 
-    await fireEvent.update(screen.getByTestId("end-of-life-filter-status"), "all");
+    await fireEvent.update(screen.getByTestId("end-of-life-filter-status"), "");
 
     await waitFor(() => expect(storeMock.fetchApplications).toHaveBeenCalledTimes(2));
-    expect(storeMock.fetchApplications.mock.calls[1][0].status).toBe("all");
+    expect(storeMock.fetchApplications.mock.calls[1][0]).not.toHaveProperty("status");
   });
 
   // Rester page 3 d'un résultat qui n'en compte plus qu'une afficherait une
@@ -227,7 +237,7 @@ describe("EndOfLifePage", () => {
 
     await waitFor(() => expect(storeMock.fetchApplications).toHaveBeenCalledTimes(3));
     const query = storeMock.fetchApplications.mock.calls[2][0];
-    expect(query).not.toHaveProperty("status");
+    expect(query.status).toBe("all");
   });
 
   it("affiche la date de fin de support actif pour une technologie sortie du support", async () => {
