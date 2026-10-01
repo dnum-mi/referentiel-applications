@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
-import { IsOptional, IsString, ValidateIf } from "class-validator";
+import { IsOptional, IsString, Matches, ValidateIf } from "class-validator";
 import { BusinessDivisionDTO } from "src/business-division/dto/business-division.dto";
 import { OrganizationMaiaReferenceDto } from "src/organization-maia-references/dto/organization-maia-references.dto";
 
@@ -10,6 +10,9 @@ export class CreateOrganizationDto {
     required: true,
   })
   @IsString()
+  @Matches(/\S/, {
+    message: "Le chemin de l'organisation ne peut pas être vide",
+  })
   path: string;
 
   @ApiProperty({
@@ -51,7 +54,9 @@ export class CreateOrganizationDto {
   businessDivisionId?: string | null;
 }
 
-export class PatchOrganizationDto extends PartialType(CreateOrganizationDto) {}
+export class PatchOrganizationDto extends PartialType(CreateOrganizationDto, {
+  skipNullProperties: false,
+}) {}
 
 export class OrganizationDto {
   @ApiProperty({

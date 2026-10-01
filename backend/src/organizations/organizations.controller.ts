@@ -55,7 +55,7 @@ export class OrganizationsController {
    * @throws BadRequestException Si le token est invalide ou l'identifiant utilisateur est manquant
    */
   @Post()
-  @RequiredPermissions([Permission.OrganizationManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiBody({ type: CreateOrganizationDto })
   @ApiOperation({
     summary: "Créer une nouvelle organisation",
@@ -124,7 +124,7 @@ Vous devez fournir les informations suivantes :
   }
 
   @Patch("/:id")
-  @RequiredPermissions([Permission.OrganizationManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({
     summary: "Mettre à jour une organisation",
   })
@@ -140,7 +140,7 @@ Vous devez fournir les informations suivantes :
   }
 
   @Delete("/:id")
-  @RequiredPermissions([Permission.OrganizationManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({ summary: "Supprimer une organisation" })
   @HttpCode(204)
   @ApiNoContentResponse({
@@ -148,7 +148,7 @@ Vous devez fournir les informations suivantes :
   })
   @ApiConflictResponse({
     description:
-      "L'organisation possède des organisations filles : suppression refusée.",
+      "L'organisation possède des organisations filles ou définit un périmètre utilisateur : suppression refusée.",
   })
   public async delete(@Param("id") id: string) {
     return this.organizationService.deleteSafe(id);
