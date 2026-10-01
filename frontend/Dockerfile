@@ -15,6 +15,7 @@ RUN npm install --ignore-scripts -g npm@12.2.0 \
 # pnpm-workspace.yaml porte les overrides de sécurité (pnpm 10 ne les lit plus
 # depuis package.json) : il doit être présent avant `pnpm install --frozen-lockfile`.
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY patches ./patches
 
 FROM base AS dev
 RUN pnpm install
@@ -38,6 +39,7 @@ RUN pnpm build-only
 FROM nginxinc/nginx-unprivileged@sha256:ed04ec1ff34502c339ee5c3ae3f855442398edc1d05591e2b98981dcbbd20b1e AS prod
 
 USER 0
+RUN apk upgrade --no-cache
 
 # OpenShift (et tout runtime "arbitrary UID") lance le conteneur avec un UID
 # aléatoire mais toujours dans le groupe 0. L'entrypoint réécrit /app et recopie

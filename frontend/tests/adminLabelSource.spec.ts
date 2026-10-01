@@ -24,12 +24,26 @@ test.describe("Admin - Label Sources", () => {
   });
 
   test("creates a label source", async ({ page }) => {
+    const now = Date.now();
+    await page.clock.install({ time: now });
+    await page.clock.pauseAt(now + 1000);
+
     const createBtn = page.getByTestId("admin-create-label-source-btn");
     await createBtn.click();
 
+    const sourceInput = page.getByTestId("label-source-source");
+    await sourceInput.focus();
+    // Le focus différé d'ouverture ne doit pas quitter un champ déjà sélectionné.
+    await page.clock.runFor(1000);
+    await expect(sourceInput).toBeFocused();
+    await page.clock.resume();
+
+    const source = `E2E_TEST_SOURCE_${Date.now()}`;
+    await sourceInput.fill(source);
+    await expect(sourceInput).toHaveValue(source);
+
     const [response] = await Promise.all([
       page.waitForResponse((resp) => resp.url().includes("/api/v2/label-sources") && resp.request().method() === "POST"),
-      page.getByTestId("label-source-source").fill(`E2E_TEST_SOURCE_${Date.now()}`),
       page.getByTestId("admin-save-perms-btn").click(),
     ]);
 

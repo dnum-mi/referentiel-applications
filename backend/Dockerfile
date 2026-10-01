@@ -1,4 +1,4 @@
-FROM node:24-trixie-slim AS base
+FROM node:24-alpine3.24@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS base
 
 ARG VERSION
 ENV VERSION=${VERSION:-main}
@@ -9,10 +9,8 @@ WORKDIR /app
 RUN chown -R node:root /app
 ENV PORT=3500
 
-RUN apt-get update -y \
-    && apt-get upgrade -y \
-    && apt-get install -y --no-install-recommends libssl-dev openssl procps \
-    && rm -rf /var/lib/apt/lists/* \
+RUN apk upgrade --no-cache \
+    && apk add --no-cache openssl procps-ng \
     && npm install --ignore-scripts --prefix /usr/local --location=global npm@12.2.0 \
     && npm install --ignore-scripts --location=global pnpm@10.34.6
 
