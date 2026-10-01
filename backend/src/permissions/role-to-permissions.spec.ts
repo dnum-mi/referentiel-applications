@@ -6,6 +6,47 @@ import {
   roleToPermissions,
 } from "./role-to-permissions";
 
+describe("TechnologyList — rôle administrateur et délégation (#2801)", () => {
+  it.each([false, true])(
+    "ADMIN reçoit la capacité par son rôle (périmètre : %s)",
+    (scoped) => {
+      expect(roleToPermissions(Roles.ADMIN, { scoped })).toContain(
+        Permission.TechnologyList,
+      );
+      expect(
+        principalToPermissions({
+          role: Roles.ADMIN,
+          scopeOrganizationId: scoped ? "org-1" : null,
+        }),
+      ).toContain(Permission.TechnologyList);
+    },
+  );
+
+  it.each([Roles.READER, Roles.CONTRIBUTOR, Roles.VISITOR])(
+    "%s ne reçoit pas automatiquement la capacité",
+    (role) => {
+      for (const scoped of [false, true]) {
+        expect(roleToPermissions(role, { scoped })).not.toContain(
+          Permission.TechnologyList,
+        );
+      }
+    },
+  );
+
+  it.each(Object.values(Roles))(
+    "%s ne reçoit pas la capacité globale dans ses permissions applicatives",
+    (role) => {
+      expect(roleToAppPermissions(role)).not.toContain(
+        Permission.TechnologyList,
+      );
+    },
+  );
+
+  it("conserve son attribution individuelle pour les non-administrateurs", () => {
+    expect(DELEGABLE_PERMISSIONS).toContain(Permission.TechnologyList);
+  });
+});
+
 // #2088 — l'onglet Technologies suit le schéma des autres onglets : pas de « lecture pour
 // tous » globale (défait #2027). La lecture vient de la projection de rôle par application
 // (READER+) ou de la matrice du type d'acteur ; un VISITOR non-acteur ne voit pas l'onglet.

@@ -7,13 +7,13 @@ describe("navItems — menu principal", () => {
     // Non-régression de #2496 : la résolution de conflit d'une branche antérieure à
     // #2448 avait réécrit ce libellé en « Fin de vie », alors que le h1 de la page,
     // le titre de route (donc le plan du site) et l'onglet de fiche disent « Technologies ».
-    const item = buildNavItems(false).find((navItem) => navItem.to.name === routeNames.ENDOFLIFE);
+    const item = buildNavItems(false, true).find((navItem) => navItem.to.name === routeNames.ENDOFLIFE);
 
     expect(item?.text).toBe("Technologies");
   });
 
   it("expose les entrées du socle dans l'ordre attendu", () => {
-    expect(buildNavItems(false).map((navItem) => navItem.text)).toEqual([
+    expect(buildNavItems(false, true).map((navItem) => navItem.text)).toEqual([
       "Accueil",
       "Applications",
       "Time",
@@ -24,11 +24,15 @@ describe("navItems — menu principal", () => {
   });
 
   it("n'ajoute « Modifications » qu'avec la permission d'administration (#2440)", () => {
-    expect(buildNavItems(false).map((navItem) => navItem.text)).not.toContain("Modifications");
+    expect(buildNavItems(false, false).map((navItem) => navItem.text)).not.toContain("Modifications");
 
-    const adminItems = buildNavItems(true);
+    const adminItems = buildNavItems(true, false);
     expect(adminItems.map((navItem) => navItem.text)).toContain("Modifications");
     expect(adminItems.at(-1)).toEqual({ to: { name: routeNames.HISTORY }, text: "Modifications" });
+  });
+
+  it.each([false, true])("masque Technologies sans capacité, administration globale = %s", (canManageGlobalAdmin) => {
+    expect(buildNavItems(canManageGlobalAdmin, false).map((item) => item.to.name)).not.toContain(routeNames.ENDOFLIFE);
   });
 
   it("réduit le menu d'un visiteur non authentifié à l'accueil", () => {

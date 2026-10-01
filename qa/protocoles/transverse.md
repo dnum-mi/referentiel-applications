@@ -56,15 +56,34 @@
 
 ### TRV-08 — La page « Technologies » liste les applications concernées, et toutes leurs technologies avec le filtre « Toutes » ✅
 
-- **Datafeature** : session `admin`, seed QA (`pnpm db:seed:qa`) — l'application `QA-EOL` porte une
+- **Datafeature** : session `admin` avec capacité `TechnologyList` accordée par le rôle, seed QA (`pnpm db:seed:qa`) — l'application `QA-EOL` porte une
   technologie dont la fin de vie est dépassée, une proche, une hors support actif, une saisie à la
   main, et une **saine** (Vue.js, aucune fin de vie connue).
 - **Action** : ouvrir `/fins-de-vie` depuis le menu « Technologies » ; filtrer sur « Fin de vie
   dépassée », puis sur « Sortie du support actif », puis sur « Toutes les technologies (y compris à
   jour) » ; cliquer le nom d'une application de la liste.
-- **Résultat attendu** : la page s'intitule « Technologies » (h1 aligné sur le menu, #2413) ; le
-  tableau liste les applications concernées, chacune avec ses technologies en fin de vie (badge de
+- **Résultat attendu** : la page s'intitule « Technologies » (h1 aligné sur le menu, #2413) ; le filtre
+  « Toutes les technologies (y compris à jour) » est sélectionné dès l'ouverture et la technologie
+  saine Vue.js est visible. Le tableau liste les applications autorisées, avec leurs technologies (badge de
   statut, produit, version, date) ; le filtre de statut restreint la liste et le compteur de
   résultats est annoncé ; avec « Toutes les technologies », `QA-EOL` reste listée et sa technologie
   saine (Vue.js) apparaît dans le tableau, sans badge de gravité ; le lien ouvre l'onglet
   « Technologies » de la fiche.
+
+### TRV-09 — La capacité et le périmètre bornent la vue Technologies (#2801)
+
+- **Datafeature** : profils lecture et écriture avec puis sans capacité individuelle `TechnologyList` ;
+  administrateurs sans capacité individuelle, avec un périmètre A puis sans périmètre. Applications rattachées à A, à un
+  descendant, à une direction métier de A, à une organisation extérieure et à un faux préfixe de A.
+- **Action** : ouvrir le menu, le plan du site et `/fins-de-vie` directement ; rechercher une
+  application extérieure, filtrer sur son organisation puis paginer. Retirer une capacité individuelle,
+  rétrograder un administrateur ou modifier le périmètre et actualiser les droits de la session.
+- **Résultat attendu** : les administrateurs reçoivent automatiquement la capacité, avec ou sans
+  périmètre. Les profils lecture et écriture sans capacité n'ont aucun accès ; l'API renvoie 403.
+  Avec capacité et périmètre, seuls A et ses descendants sont retenus via les acteurs
+  ou les directions métier. Sans périmètre, les trois profils voient toutes les applications
+  éligibles. Les filtres et les compteurs n'élargissent pas les droits. Les anciennes données et
+  réponses en attente ne réapparaissent pas après un changement de droits. Rétrograder un administrateur
+  sans délégation individuelle retire l'accès ; modifier son périmètre restreint la vue.
+- **Limites de cette version** : aucun accès pour `VISITOR` ; les droits d'acteur hors périmètre
+  n'élargissent pas la vue. Les droits de l'onglet Technologies des fiches restent inchangés.

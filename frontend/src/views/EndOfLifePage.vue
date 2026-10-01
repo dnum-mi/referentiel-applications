@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useEndOfLifeStore, type EndOfLifeQuery } from "@/stores/endOfLifeStore";
 import { useDebounceFn } from "@vueuse/core";
@@ -9,6 +9,8 @@ import { routeNames } from "@/router/route-names";
 import type { TableColumn, TableSortEvent } from "@/types/table";
 import type { EndOfLifeApplicationDto, EndOfLifeTechnologyDto } from "@/client/types.gen";
 import { EOL_STATUS_BADGE_TYPE, EOL_STATUS_LABELS } from "@/utils/eol-status";
+import { useUserStore } from "@/stores/userStore";
+import { useRouter } from "vue-router";
 
 type EolStatus = EndOfLifeTechnologyDto["status"];
 // Le client généré ne restitue pas le `| null` d'un enum marqué `nullable: true`
@@ -28,9 +30,11 @@ type EolStatus = EndOfLifeTechnologyDto["status"];
  * de vie, est dit par le paragraphe d'introduction.
  */
 const store = useEndOfLifeStore();
+const userStore = useUserStore();
+const router = useRouter();
 const { applications, total, isLoading } = storeToRefs(store);
 
-const statusFilter = ref<EolStatus | "all" | "">("");
+const statusFilter = ref<EolStatus | "all" | "">("all");
 const organizationFilter = ref("");
 const searchFilter = ref("");
 const pageSize = ref(15);
@@ -47,13 +51,11 @@ const STATUS_LABELS = EOL_STATUS_LABELS;
 
 /** Le libellé du filtre dit ce que le statut recouvre, l'intitulé seul étant ambigu. */
 const statusOptions = [
+  { value: "all", text: "Toutes les technologies (y compris à jour)" },
   { value: "", text: "Fins de vie (tous statuts)" },
   { value: "eol", text: "Fin de vie dépassée" },
   { value: "eol-soon", text: "Fin de vie dans moins de 6 mois" },
   { value: "eoas-passed", text: "Sortie du support actif" },
-  // Seule valeur non partitionnante : lève la restriction et restitue aussi les
-  // technologies saines, pour répondre à « que tourne cette application ? ».
-  { value: "all", text: "Toutes les technologies (y compris à jour)" },
 ];
 
 const columns: TableColumn[] = [
@@ -74,6 +76,7 @@ const statusMessage = computed(() => {
 });
 
 function fetchApplications() {
+  if (!userStore.canListTechnologies) return;
   const query: EndOfLifeQuery = {
     page: currentPage.value,
     pageSize: pageSize.value,
@@ -122,7 +125,7 @@ function handlePageSizeChange(limit: number) {
 
 /** La remise à zéro suffit : le watcher débouncé déclenche l'unique rechargement. */
 function clearFilters() {
-  statusFilter.value = "";
+  statusFilter.value = "all";
   organizationFilter.value = "";
   searchFilter.value = "";
 }
@@ -153,15 +156,26 @@ const tableRows = computed(() =>
   })),
 );
 
-onMounted(fetchApplications);
+watch(
+  () => store.accessContext,
+  () => {
+    if (!userStore.canListTechnologies) {
+      void router.replace({ name: routeNames.ACCUEIL });
+      return;
+    }
+    currentPage.value = 0;
+    void fetchApplications();
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
-  <div class="fr-container--fluid fr-px-2w" data-testid="end-of-life-page">
+  <div v-if="userStore.canListTechnologies" class="fr-container--fluid fr-px-2w" data-testid="end-of-life-page">
     <h1 data-testid="end-of-life-page-title">Technologies</h1>
     <p class="fr-text--sm fr-mb-3w">
-      Suivi des fins de vie des technologies : applications dont au moins une technologie est en fin de vie, le sera dans moins de 6 mois,
-      ou n'est plus couverte par le support actif. Les dates proviennent d'endoflife.date, sauf mention « saisie manuelle ».
+      Technologies utilisées par les applications de votre périmètre. Le filtre de statut permet de suivre les fins de vie et les sorties du
+      support actif. Les dates proviennent d'endoflife.date, sauf mention « saisie manuelle ».
     </p>
 
     <form class="fr-mb-3w" @submit.prevent="onFilterChange">

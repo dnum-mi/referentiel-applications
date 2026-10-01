@@ -1,4 +1,8 @@
+import { ForbiddenException } from "@nestjs/common";
+import { Permission, Roles } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
+import { delegateToService } from "src/permissions/delegated-auth";
+import type { Requestor } from "src/user/entities/user.entity";
 import { EndOfLifeService } from "./end-of-life.service";
 import { EOL_SOON_MS } from "./utils/eol-status";
 
@@ -6,6 +10,37 @@ const day = 24 * 60 * 60 * 1000;
 const past = new Date(Date.now() - 10 * day);
 const soon = new Date(Date.now() + 30 * day);
 const far = new Date(Date.now() + EOL_SOON_MS + 30 * day);
+
+const organization = (path: string) => ({
+  id: `org-${path}`,
+  path,
+  sigle: null,
+  url: null,
+  parentId: null,
+  businessDivisionId: null,
+});
+
+const makeRequestor = (overrides: Partial<Requestor> = {}): Requestor => ({
+  id: "user-1",
+  email: "user@example.com",
+  role: Roles.ADMIN,
+  organizationId: null,
+  scopeOrganizationId: null,
+  type: "human",
+  isBlocked: false,
+  additionalPermissions: [Permission.TechnologyList],
+  permissions: [],
+  ...overrides,
+});
+
+const scopedRequestor = (role: Roles, path: string) => {
+  const scopeOrganization = organization(path);
+  return makeRequestor({
+    role,
+    scopeOrganizationId: scopeOrganization.id,
+    scopeOrganization,
+  });
+};
 
 const makeService = () => {
   const paginate = jest.fn().mockResolvedValue({ results: [], total: 0 });
@@ -16,7 +51,7 @@ const makeService = () => {
 describe("EndOfLifeService — construction de la requête", () => {
   it("ne retient que les applications portant au moins une technologie concernée", async () => {
     const { service, paginate } = makeService();
-    await service.findApplications({});
+    await service.findApplications({}, makeRequestor());
     const { where, include } = paginate.mock.calls[0][0];
     expect(where.technologies.some).toBeDefined();
     // Les technologies restituées sont filtrées comme la sélection : afficher
@@ -26,7 +61,10 @@ describe("EndOfLifeService — construction de la requête", () => {
 
   it("filtre sur le chemin ou le sigle de l'organisation d'un acteur", async () => {
     const { service, paginate } = makeService();
-    await service.findApplications({ organization: "MI/DNUM" });
+    await service.findApplications(
+      { organization: "MI/DNUM" },
+      makeRequestor(),
+    );
     const { where } = paginate.mock.calls[0][0];
     expect(where.actors.some.organization.OR).toEqual([
       { path: { contains: "MI/DNUM", mode: "insensitive" } },
@@ -42,7 +80,7 @@ describe("EndOfLifeService — construction de la requête", () => {
    */
   it("combine la recherche produit et le statut dans une seule condition", async () => {
     const { service, paginate } = makeService();
-    await service.findApplications({ search: "PostgreSQL" });
+    await service.findApplications({ search: "PostgreSQL" }, makeRequestor());
     const { where } = paginate.mock.calls[0][0];
     const productClause = where.OR.find(
       (clause: Record<string, unknown>) => "technologies" in clause,
@@ -55,7 +93,7 @@ describe("EndOfLifeService — construction de la requête", () => {
 
   it("cherche aussi dans le libellé et le sigle de l'application", async () => {
     const { service, paginate } = makeService();
-    await service.findApplications({ search: "refapp" });
+    await service.findApplications({ search: "refapp" }, makeRequestor());
     const { where } = paginate.mock.calls[0][0];
     expect(where.OR).toEqual(
       expect.arrayContaining([
@@ -67,9 +105,12 @@ describe("EndOfLifeService — construction de la requête", () => {
 
   it("trie par libellé par défaut, et honore un tri explicite", async () => {
     const { service, paginate } = makeService();
-    await service.findApplications({});
+    await service.findApplications({}, makeRequestor());
     expect(paginate.mock.calls[0][0].orderBy).toEqual({ label: "asc" });
-    await service.findApplications({ sortBy: "shortName", order: "desc" });
+    await service.findApplications(
+      { sortBy: "shortName", order: "desc" },
+      makeRequestor(),
+    );
     expect(paginate.mock.calls[1][0].orderBy).toEqual({ shortName: "desc" });
   });
 
@@ -77,7 +118,7 @@ describe("EndOfLifeService — construction de la requête", () => {
   // technologies saines — cf. eol-status.spec.ts.
   it("lève la restriction sur les technologies avec le filtre « all »", async () => {
     const { service, paginate } = makeService();
-    await service.findApplications({ status: "all" });
+    await service.findApplications({ status: "all" }, makeRequestor());
     const { where, include } = paginate.mock.calls[0][0];
     expect(where.technologies.some).toEqual({});
     expect(include.technologies.where).toEqual({});
@@ -132,7 +173,7 @@ describe("EndOfLifeService — restitution", () => {
   const run = async () => {
     const { service, paginate } = makeService();
     paginate.mockResolvedValue({ results: [application], total: 1 });
-    const page = await service.findApplications({});
+    const page = await service.findApplications({}, makeRequestor());
     return page.results[0];
   };
 
@@ -177,7 +218,7 @@ describe("EndOfLifeService — restitution", () => {
   it("sérialise les dates en ISO et préserve le total", async () => {
     const { service, paginate } = makeService();
     paginate.mockResolvedValue({ results: [application], total: 42 });
-    const page = await service.findApplications({});
+    const page = await service.findApplications({}, makeRequestor());
     expect(page.total).toBe(42);
     expect(page.results[0].technologies[0].eolDate).toBe(past.toISOString());
     expect(page.results[0].technologies[0].eoasDate).toBeNull();
@@ -212,7 +253,10 @@ describe("EndOfLifeService — technologies saines (filtre « all »)", () => {
       ],
       total: 1,
     });
-    const page = await service.findApplications({ status: "all" });
+    const page = await service.findApplications(
+      { status: "all" },
+      makeRequestor(),
+    );
     expect(page.results[0].technologies[0].status).toBeNull();
     expect(page.results[0].worstStatus).toBeNull();
   });
@@ -243,7 +287,10 @@ describe("EndOfLifeService — technologies saines (filtre « all »)", () => {
       ],
       total: 1,
     });
-    const page = await service.findApplications({ status: "all" });
+    const page = await service.findApplications(
+      { status: "all" },
+      makeRequestor(),
+    );
     expect(page.results[0].technologies.map((t) => t.id)).toEqual([
       "t-eol",
       "t-healthy",
@@ -255,9 +302,131 @@ describe("EndOfLifeService — technologies saines (filtre « all »)", () => {
 describe("EndOfLifeService — applications supprimées (#2515)", () => {
   it("exclut les applications marquées supprimées de la vue transverse et de son total", async () => {
     const { service, paginate } = makeService();
-    await service.findApplications({});
+    await service.findApplications({}, makeRequestor());
     const { where } = paginate.mock.calls[0][0];
     expect(where.currentStatus).toEqual({ status: { not: "deleted" } });
     expect(where.technologies.some).toBeDefined();
   });
+});
+
+describe("EndOfLifeService — périmètre fonctionnel (#2801)", () => {
+  it.each([Roles.READER, Roles.CONTRIBUTOR, Roles.ADMIN])(
+    "%s sans périmètre conserve une vue globale",
+    async (role) => {
+      const { service, paginate } = makeService();
+      await service.findApplications({}, makeRequestor({ role }));
+      const { where } = paginate.mock.calls[0][0];
+      expect(where.AND).toBeUndefined();
+      expect(where.currentStatus).toEqual({ status: { not: "deleted" } });
+    },
+  );
+
+  it.each([Roles.READER, Roles.CONTRIBUTOR, Roles.ADMIN])(
+    "%s avec périmètre limite acteurs et directions métier à l'organisation exacte et ses descendants",
+    async (role) => {
+      const { service, paginate } = makeService();
+      await service.findApplications({}, scopedRequestor(role, "MI/DNUM/"));
+      const scopedOrganization = {
+        OR: [
+          { path: { equals: "MI/DNUM", mode: "insensitive" } },
+          { path: { startsWith: "MI/DNUM/", mode: "insensitive" } },
+        ],
+      };
+      expect(paginate.mock.calls[0][0].where.AND).toEqual([
+        {
+          OR: [
+            { actors: { some: { organization: scopedOrganization } } },
+            {
+              businessDivisions: {
+                some: { organizations: { some: scopedOrganization } },
+              },
+            },
+          ],
+        },
+      ]);
+    },
+  );
+
+  it("les filtres libres et les droits d'acteur ne peuvent pas élargir le périmètre", async () => {
+    const { service, paginate } = makeService();
+    const requestor = scopedRequestor(Roles.CONTRIBUTOR, "MI/DNUM");
+    await service.findApplications({}, requestor);
+    const scope = paginate.mock.calls[0][0].where.AND;
+
+    await service.findApplications(
+      { status: "all", organization: "AUTRE", search: "PostgreSQL" },
+      {
+        ...requestor,
+        organizationId: "org-AUTRE",
+        organization: organization("AUTRE"),
+        appPerms: [Permission.TechnologyRead, Permission.TechnologyWrite],
+      },
+    );
+
+    const { where } = paginate.mock.calls[1][0];
+    expect(where.AND).toEqual(scope);
+    expect(where.actors.some.organization.OR).toContainEqual({
+      path: { contains: "AUTRE", mode: "insensitive" },
+    });
+    expect(where.OR).toContainEqual({
+      label: { contains: "PostgreSQL", mode: "insensitive" },
+    });
+    expect(where.technologies.some).toEqual({});
+  });
+
+  it.each([undefined, null, organization("")])(
+    "refuse un périmètre enregistré dont la relation ou le chemin manque (%p)",
+    async (scopeOrganization) => {
+      const { service, paginate } = makeService();
+      const requestor = makeRequestor({
+        scopeOrganizationId: "org-scope",
+        scopeOrganization,
+      });
+      await expect(service.findApplications({}, requestor)).rejects.toThrow(
+        ForbiddenException,
+      );
+      expect(paginate).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    makeRequestor({ role: Roles.VISITOR }),
+    scopedRequestor(Roles.VISITOR, "MI/DNUM"),
+  ])("refuse un visiteur même avec la capacité (%p)", async (requestor) => {
+    const { service, paginate } = makeService();
+    await expect(service.findApplications({}, requestor)).rejects.toThrow(
+      ForbiddenException,
+    );
+    expect(paginate).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["MI", "MI/DNUM", "MI/DNUM"],
+    ["MI/DNUM", "MI", "MI/DNUM"],
+    [null, "MI/DNUM", "MI/DNUM"],
+    ["MI/DNUM", null, "MI/DNUM"],
+  ])(
+    "respecte le périmètre effectif d'un accès délégué (humain %s, service %s)",
+    async (humanScope, serviceScope, expectedScope) => {
+      const { service, paginate } = makeService();
+      const human = humanScope
+        ? scopedRequestor(Roles.ADMIN, humanScope)
+        : makeRequestor();
+      const serviceUser = {
+        ...(serviceScope
+          ? scopedRequestor(Roles.READER, serviceScope)
+          : makeRequestor({ role: Roles.READER })),
+        type: "bot" as const,
+      };
+      const effectiveRequestor = delegateToService(human, serviceUser);
+
+      await service.findApplications({ status: "all" }, effectiveRequestor);
+
+      const scope = paginate.mock.calls[0][0].where.AND[0];
+      expect(scope.OR[0].actors.some.organization.OR).toEqual([
+        { path: { equals: expectedScope, mode: "insensitive" } },
+        { path: { startsWith: `${expectedScope}/`, mode: "insensitive" } },
+      ]);
+    },
+  );
 });
