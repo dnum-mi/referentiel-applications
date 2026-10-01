@@ -2814,7 +2814,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateDataDescriptionDto"
+              $ref: "#/components/schemas/UpdateDataDescriptionDto"
       responses:
         "200":
           description: ""
@@ -2881,7 +2881,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateDataApplicationDto"
+              $ref: "#/components/schemas/UpdateDataApplicationDto"
       responses:
         "200":
           description: ""
@@ -3043,7 +3043,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateDataExposureDto"
+              $ref: "#/components/schemas/UpdateDataExposureDto"
       responses:
         "200":
           description: ""
@@ -8789,6 +8789,35 @@ components:
       required:
         - id
         - name
+    UpdateDataDescriptionDto:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        familyIds:
+          description: Familles de données parentes (une donnée peut appartenir à
+            plusieurs familles)
+          type: array
+          items:
+            type: string
+            format: uuid
+        officialUrl:
+          type: string
+          format: uri
+        tagIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        applicationSourceIds:
+          description: Applications sources de cette donnée (celles qui la produisent sur
+            RefApp)
+          type: array
+          items:
+            type: string
+            format: uuid
     DataSensibilityDto:
       type: object
       properties:
@@ -8944,7 +8973,57 @@ components:
           maxLength: 255
       required:
         - dataDescriptionId
+    UpdateDataApplicationDto:
+      type: object
+      properties:
+        dataDescriptionId:
+          type: string
+          format: uuid
+        sensibilityId:
+          type: string
+          format: uuid
+        example:
+          type: string
+        openDataStatus:
+          allOf:
+            - $ref: "#/components/schemas/OpenDataStatus"
+        isReference:
+          type: boolean
+        businessUsage:
+          type: string
+        documentationUrl:
+          type: array
+          items:
+            type: string
+            format: uri
+        volumetry:
+          type: number
+          minimum: 0
+        monthlyVolumetry:
+          type: number
+          minimum: 0
+        updateFrequency:
+          allOf:
+            - $ref: "#/components/schemas/UpdateFrequency"
+        conservation:
+          type: string
+          maxLength: 255
     CreateDataExposureDto:
+      type: object
+      properties:
+        type:
+          type: string
+        endpoint:
+          type: string
+        url:
+          type: string
+        format:
+          type: string
+        swaggerUrl:
+          type: string
+        authenticationType:
+          type: string
+    UpdateDataExposureDto:
       type: object
       properties:
         type:
