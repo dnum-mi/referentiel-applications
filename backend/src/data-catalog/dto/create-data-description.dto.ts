@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
 import { IsArray, IsOptional, IsString, IsUrl, IsUUID } from "class-validator";
 import { PaginationDto } from "../../common/dto";
 
@@ -27,6 +27,7 @@ export class CreateDataDescriptionDto {
       "Familles de données parentes (une donnée peut appartenir à plusieurs familles)",
   })
   @IsOptional()
+  @IsArray()
   @IsUUID("4", { each: true })
   familyIds?: string[];
 
@@ -37,6 +38,7 @@ export class CreateDataDescriptionDto {
 
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()
+  @IsArray()
   @IsUUID("4", { each: true })
   tagIds?: string[];
 
@@ -46,9 +48,14 @@ export class CreateDataDescriptionDto {
       "Applications sources de cette donnée (celles qui la produisent sur RefApp)",
   })
   @IsOptional()
+  @IsArray()
   @IsUUID("4", { each: true })
   applicationSourceIds?: string[];
 }
+
+export class UpdateDataDescriptionDto extends PartialType(
+  CreateDataDescriptionDto,
+) {}
 
 export class DataFamilyDto {
   @ApiProperty()

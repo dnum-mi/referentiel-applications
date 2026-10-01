@@ -139,6 +139,23 @@ describe("DataCatalog", () => {
 
       expect(response.body).toMatchObject({ name: "Updated data name" });
     });
+
+    // Le PATCH validait un `Partial<Dto>` (type effacé à l'exécution) : le corps n'était pas
+    // validé et un `familyIds` non tableau faisait planter le service (500).
+    it.each([
+      ["familyIds non tableau", { familyIds: "x" }],
+      ["tagIds avec un id non UUID", { tagIds: ["pas-un-uuid"] }],
+      ["officialUrl invalide", { officialUrl: "pas-une-url" }],
+      ["champ inconnu", { unknownField: "x" }],
+    ])("rejects an invalid body (%s) with 400", async (_label, body) => {
+      const description = await DataDescriptionFaker.create();
+
+      await request(app().getHttpServer())
+        .patch(`/data-catalog/descriptions/${description.id}`)
+        .set("Authorization", `Bearer ${WRITER_TOKEN}`)
+        .send(body)
+        .expect(400);
+    });
   });
 
   describe("DELETE /data-catalog/descriptions/:id", () => {
@@ -480,6 +497,27 @@ describe("DataCatalog", () => {
       });
     });
 
+    // Même garde que sur le POST (#2689) : le PATCH ne doit jamais renvoyer un 500 Prisma.
+    it.each([
+      ["updateFrequency inconnue", { updateFrequency: "QUATERLY" }],
+      ["volumetry non numérique", { volumetry: "abc" }],
+      ["volumetry négative", { volumetry: -5 }],
+      ["documentationUrl invalide", { documentationUrl: ["pas-une-url"] }],
+      ["champ inconnu", { unknownField: "x" }],
+    ])("rejects an invalid body (%s) with 400", async (_label, body) => {
+      const description = await DataDescriptionFaker.create();
+      const dataApp = await DataApplicationFaker.create({
+        applicationId: application.id,
+        dataDescriptionId: description.id,
+      });
+
+      await request(app().getHttpServer())
+        .patch(`/data-catalog/applications/${application.id}/${dataApp.id}`)
+        .set("Authorization", `Bearer ${WRITER_TOKEN}`)
+        .send(body)
+        .expect(400);
+    });
+
     it("returns 404 for non-existent data application", async () => {
       const nonExistentId = "00000000-0000-0000-0000-000000000000";
 
@@ -603,6 +641,25 @@ describe("DataCatalog", () => {
         .expect(200);
 
       expect(response.body).toMatchObject({ format: "XML" });
+    });
+
+    it("rejects an invalid body with 400", async () => {
+      const description = await DataDescriptionFaker.create();
+      const dataApp = await DataApplicationFaker.create({
+        applicationId: application.id,
+        dataDescriptionId: description.id,
+      });
+      const exposure = await DataExposureFaker.create({
+        dataApplicationId: dataApp.id,
+      });
+
+      await request(app().getHttpServer())
+        .patch(
+          `/data-catalog/applications/${application.id}/${dataApp.id}/exposures/${exposure.id}`,
+        )
+        .set("Authorization", `Bearer ${WRITER_TOKEN}`)
+        .send({ format: 42, unknownField: "x" })
+        .expect(400);
     });
 
     it("returns 404 for non-existent exposure", async () => {
