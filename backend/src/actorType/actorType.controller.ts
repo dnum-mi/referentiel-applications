@@ -6,6 +6,7 @@ import {
   HttpCode,
   Logger,
   Param,
+  ParseArrayPipe,
   Patch,
   Post,
   Query,
@@ -150,7 +151,14 @@ Vous devez fournir les informations suivantes :
       "Liste des permissions à mettre à jour pour les types d’acteurs",
   })
   public async updateMatrix(
-    @Body() appPermsMatrix: AppPermsDto[],
+    @Body(
+      new ParseArrayPipe({
+        items: AppPermsDto,
+        whitelist: true,
+        forbidNonWhitelisted: true,
+      }),
+    )
+    appPermsMatrix: AppPermsDto[],
     @UserId() requestorId: string,
   ): Promise<AppPermsDto[]> {
     return this.actorTypeService.updatePermsMatrix(appPermsMatrix, requestorId);

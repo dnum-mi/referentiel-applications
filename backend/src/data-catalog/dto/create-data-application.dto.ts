@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
 import {
   IsArray,
   IsBoolean,
@@ -79,6 +79,10 @@ export class CreateDataApplicationDto {
   conservation?: string;
 }
 
+export class UpdateDataApplicationDto extends PartialType(
+  CreateDataApplicationDto,
+) {}
+
 export class DataSensibilityDto {
   @ApiProperty()
   @IsUUID()
@@ -124,6 +128,8 @@ export class CreateDataExposureDto {
   @IsString()
   authenticationType?: string;
 }
+
+export class UpdateDataExposureDto extends PartialType(CreateDataExposureDto) {}
 
 export class DataExposureDto extends CreateDataExposureDto {
   @ApiProperty()

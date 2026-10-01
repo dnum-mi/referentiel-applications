@@ -26,12 +26,15 @@ import {
   CreateDataDescriptionDto,
   DataDescriptionDto,
   DataDescriptionFiltersDto,
+  UpdateDataDescriptionDto,
 } from "./dto/create-data-description.dto";
 import {
   CreateDataApplicationDto,
   CreateDataExposureDto,
   DataApplicationDto,
   DataExposureDto,
+  UpdateDataApplicationDto,
+  UpdateDataExposureDto,
 } from "./dto/create-data-application.dto";
 import { UserId } from "../common/decorators/user-id.decorator";
 import { PaginatedResponseDto, PaginationDto } from "../common/dto";
@@ -74,12 +77,12 @@ export class DataCatalogController {
 
   @Patch("descriptions/:id")
   @ApiOperation({ summary: "Mettre à jour une data description" })
-  @ApiBody({ type: CreateDataDescriptionDto })
+  @ApiBody({ type: UpdateDataDescriptionDto })
   @ApiOkResponse({ type: DataDescriptionDto })
   @RequiredPermissions([Permission.DataWrite])
   updateDescription(
     @Param("id") id: string,
-    @Body() dto: Partial<CreateDataDescriptionDto>,
+    @Body() dto: UpdateDataDescriptionDto,
     @UserId() userId: string,
   ) {
     return this.dataCatalogService.updateDescription(id, dto, userId);
@@ -149,13 +152,13 @@ export class DataCatalogController {
 
   @Patch("applications/:applicationId/:dataApplicationId")
   @ApiOperation({ summary: "Mettre à jour une donnée applicative" })
-  @ApiBody({ type: CreateDataApplicationDto })
+  @ApiBody({ type: UpdateDataApplicationDto })
   @ApiOkResponse({ type: DataApplicationDto })
   @RequiredPermissions([Permission.DataWrite])
   updateApplicationData(
     @Param("applicationId") applicationId: string,
     @Param("dataApplicationId") dataApplicationId: string,
-    @Body() dto: Partial<CreateDataApplicationDto>,
+    @Body() dto: UpdateDataApplicationDto,
     @UserId() userId: string,
   ) {
     return this.dataCatalogService.updateApplicationData(
@@ -209,14 +212,14 @@ export class DataCatalogController {
 
   @Patch("applications/:applicationId/:dataApplicationId/exposures/:exposureId")
   @ApiOperation({ summary: "Mettre à jour une exposition" })
-  @ApiBody({ type: CreateDataExposureDto })
+  @ApiBody({ type: UpdateDataExposureDto })
   @ApiOkResponse({ type: DataExposureDto })
   @RequiredPermissions([Permission.DataWrite])
   updateExposure(
     @Param("applicationId") applicationId: string,
     @Param("dataApplicationId") dataApplicationId: string,
     @Param("exposureId") exposureId: string,
-    @Body() dto: Partial<CreateDataExposureDto>,
+    @Body() dto: UpdateDataExposureDto,
     @UserId() userId: string,
   ) {
     return this.dataCatalogService.updateExposure(
