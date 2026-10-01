@@ -92,7 +92,7 @@ services:
   prisma-studio:
     build:
       context: ./backend
-    command: npx prisma studio
+    command: pnpm exec prisma studio
     environment:
       - DATABASE_URL=postgresql://postgres:password@postgres:5432/postgres
       - OIDC_CONFIG_URL=http://localhost:8082/realms/referentiel-applications/.well-known/openid-configuration
@@ -134,7 +134,7 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    command: sh -c "npm install -g pnpm && pnpm install && pnpm dev"
+    command: sh -c "pnpm install --frozen-lockfile && pnpm dev"
     environment:
       - VITE_RDA_MATOMO_URL=http://localhost:8083
       - VITE_RDA_MATOMO_SITE_ID=1

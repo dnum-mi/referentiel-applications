@@ -1,4 +1,4 @@
-FROM node:24-slim AS base
+FROM node:24-trixie-slim AS base
 
 ARG VERSION
 ENV VERSION=${VERSION:-main}
@@ -36,5 +36,10 @@ RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY --chown=node:root . .
 RUN pnpm db:generate \
     && pnpm build
+# Seul pnpm est utilisé à l'exécution, y compris pour Prisma et les tests.
+# Ne pas conserver les dépendances npm/npx embarquées dans l'image livrée.
+USER root
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx /root/.npm
+USER node
 EXPOSE 8080
 CMD [ "pnpm", "start:prod" ]

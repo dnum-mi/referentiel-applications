@@ -8,7 +8,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "cmd": "ts-node src/cmd/index.ts",
-    "gen": "npm run db:generate",
+    "gen": "pnpm db:generate",
     "db:generate": "prisma generate",
     "db:generate:client": "prisma generate --generator client",
     "db:reset": "prisma migrate reset",
