@@ -37,6 +37,8 @@ const ADMIN_PERMISSIONS = new Set([
   Permission.DataExport,
   Permission.DeleteApplication,
   Permission.ActorTypePost,
+  // #2801 : le rôle administrateur ouvre la vue, toujours filtrée par son périmètre.
+  Permission.TechnologyList,
   // QualityCampaignManage et MditCampaignManage ne sont PAS incluses ici (#2608) : contrairement
   // aux autres permissions de ce socle, la gestion des campagnes (qualité ou dette IT) n'est
   // jamais accordée par défaut à un administrateur, y compris global. Elle doit être indiquée
@@ -80,6 +82,7 @@ export const DELEGABLE_PERMISSIONS: readonly Permission[] = [
   Permission.MDITList,
   Permission.QualityCampaignManage,
   Permission.MditCampaignManage,
+  Permission.TechnologyList,
 ];
 
 /**

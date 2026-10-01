@@ -1,7 +1,7 @@
 import Aura from "@primevue/themes/aura";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/vue";
 import PrimeVue from "primevue/config";
-import { ref } from "vue";
+import { reactive, ref } from "vue";
 import { createMemoryHistory, createRouter } from "vue-router";
 import type { EndOfLifeApplicationDto } from "@/client/types.gen";
 import { routeNames } from "@/router/route-names";
@@ -22,7 +22,19 @@ const storeMock = {
   total: ref(0),
   isLoading: ref(false),
   fetchApplications: vi.fn(),
+  get accessContext() {
+    return JSON.stringify([userStoreMock.user.id, userStoreMock.canListTechnologies]);
+  },
 };
+
+const userStoreMock = reactive({ canListTechnologies: true, user: { id: "user-1" } });
+
+vi.mock("@/stores/userStore", () => ({ useUserStore: () => userStoreMock }));
+
+beforeEach(() => {
+  userStoreMock.canListTechnologies = true;
+  userStoreMock.user.id = "user-1";
+});
 
 vi.mock("@/stores/endOfLifeStore", () => ({
   useEndOfLifeStore: () => storeMock,
@@ -34,6 +46,7 @@ function makeRouter() {
   return createRouter({
     history: createMemoryHistory(),
     routes: [
+      { name: routeNames.ACCUEIL, path: "/", component: StubPage },
       { name: routeNames.PROFILEAPP, path: "/applications/:id/:tab?", component: StubPage },
       { name: routeNames.ENDOFLIFE, path: "/fins-de-vie", component: StubPage },
     ],
@@ -68,10 +81,15 @@ function applicationFixture(overrides: Partial<EndOfLifeApplicationDto> = {}): E
 
 // `RefAppTable` s'appuie sur la DataTable de PrimeVue : sans le plugin, les
 // lignes ne sont pas rendues et les slots de cellule restent vides.
-const render_ = () =>
-  render(EndOfLifePage, {
-    global: { plugins: [makeRouter(), [PrimeVue, { theme: { preset: Aura } }]] },
-  });
+const render_ = () => {
+  const router = makeRouter();
+  return {
+    ...render(EndOfLifePage, {
+      global: { plugins: [router, [PrimeVue, { theme: { preset: Aura } }]] },
+    }),
+    router,
+  };
+};
 
 describe("EndOfLifePage", () => {
   beforeEach(() => {
@@ -83,7 +101,35 @@ describe("EndOfLifePage", () => {
 
   afterEach(cleanup);
 
-  it("charge la liste au montage, page 0 et triée par libellé", async () => {
+  it("ne charge aucune donnée lorsque l'accès est refusé", async () => {
+    userStoreMock.canListTechnologies = false;
+    const { router } = render_();
+    await waitFor(() => expect(router.currentRoute.value.name).toBe(routeNames.ACCUEIL));
+    expect(storeMock.fetchApplications).not.toHaveBeenCalled();
+    expect(screen.queryByTestId("end-of-life-page")).not.toBeInTheDocument();
+  });
+
+  it("masque les données et quitte la page dès le retrait de la capacité", async () => {
+    storeMock.applications.value = [applicationFixture()];
+    storeMock.total.value = 1;
+    const { router } = render_();
+    await screen.findByTestId("end-of-life-table");
+
+    userStoreMock.canListTechnologies = false;
+
+    await waitFor(() => expect(screen.queryByTestId("end-of-life-page")).not.toBeInTheDocument());
+    await waitFor(() => expect(router.currentRoute.value.name).toBe(routeNames.ACCUEIL));
+    expect(storeMock.fetchApplications).toHaveBeenCalledTimes(1);
+  });
+
+  it("recharge la vue quand l'identité change sans quitter la page", async () => {
+    render_();
+    await waitFor(() => expect(storeMock.fetchApplications).toHaveBeenCalledTimes(1));
+    userStoreMock.user.id = "user-2";
+    await waitFor(() => expect(storeMock.fetchApplications).toHaveBeenCalledTimes(2));
+  });
+
+  it("charge toutes les technologies au montage, page 0 et triées par libellé", async () => {
     render_();
     await waitFor(() => expect(storeMock.fetchApplications).toHaveBeenCalledTimes(1));
     expect(storeMock.fetchApplications).toHaveBeenCalledWith({
@@ -91,7 +137,9 @@ describe("EndOfLifePage", () => {
       pageSize: 15,
       sortBy: "label",
       order: "asc",
+      status: "all",
     });
+    expect(screen.getByTestId("end-of-life-filter-status")).toHaveValue("all");
   });
 
   // #2413 : le titre de la page reprend l'entrée de menu « Technologies ».
@@ -179,10 +227,12 @@ describe("EndOfLifePage", () => {
     render_();
     await waitFor(() => expect(storeMock.fetchApplications).toHaveBeenCalledTimes(1));
 
+    await fireEvent.update(screen.getByTestId("end-of-life-filter-status"), "eol");
+    await waitFor(() => expect(storeMock.fetchApplications).toHaveBeenCalledTimes(2));
     await fireEvent.update(screen.getByTestId("end-of-life-filter-status"), "all");
 
-    await waitFor(() => expect(storeMock.fetchApplications).toHaveBeenCalledTimes(2));
-    expect(storeMock.fetchApplications.mock.calls[1][0].status).toBe("all");
+    await waitFor(() => expect(storeMock.fetchApplications).toHaveBeenCalledTimes(3));
+    expect(storeMock.fetchApplications.mock.calls[2][0].status).toBe("all");
   });
 
   // Rester page 3 d'un résultat qui n'en compte plus qu'une afficherait une
@@ -227,7 +277,7 @@ describe("EndOfLifePage", () => {
 
     await waitFor(() => expect(storeMock.fetchApplications).toHaveBeenCalledTimes(3));
     const query = storeMock.fetchApplications.mock.calls[2][0];
-    expect(query).not.toHaveProperty("status");
+    expect(query.status).toBe("all");
   });
 
   it("affiche la date de fin de support actif pour une technologie sortie du support", async () => {
@@ -268,7 +318,7 @@ describe("EndOfLifePage — pastille de synthèse et tri (#2528, #2522)", () => 
   });
   afterEach(cleanup);
 
-  // Atteignable uniquement avec le filtre `all` : une technologie/application saine
+  // Le filtre initial `all` inclut les technologies saines : une technologie/application saine
   // n'a pas de statut de fin de vie, donc pas de pastille de gravité.
   it("n'affiche aucune pastille pour une application et une technologie sans fin de vie connue", async () => {
     // Le client généré ne restitue pas le `| null` d'un statut marqué `nullable:

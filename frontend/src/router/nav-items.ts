@@ -15,14 +15,14 @@ export interface NavItem {
  * qu'aucun filet ne s'en aperçoive — le reste du produit (h1, titre de route,
  * plan du site, onglet de fiche) disant toujours « Technologies ».
  */
-export function buildNavItems(canManageGlobalAdmin: boolean): NavItem[] {
+export function buildNavItems(canManageGlobalAdmin: boolean, canListTechnologies: boolean): NavItem[] {
   return [
     { to: { name: routeNames.ACCUEIL }, text: "Accueil" },
     { to: { name: routeNames.SEARCHAPP }, text: "Applications" },
     { to: { name: routeNames.TIMEPAGE }, text: "Time" },
     { to: { name: routeNames.QUALITYPAGE }, text: "Qualité Générale" },
     // #2413 : l'entrée s'intitule « Technologies » (demande PO) ; la route reste `/fins-de-vie`.
-    { to: { name: routeNames.ENDOFLIFE }, text: "Technologies" },
+    ...(canListTechnologies ? [{ to: { name: routeNames.ENDOFLIFE }, text: "Technologies" }] : []),
     { to: { name: routeNames.REPORTS }, text: "Signalements" },
     // #2440 : l'historique global expose les valeurs de champs (emails d'acteurs, dates de
     // conformité…) de toutes les applications, réservé aux administrateurs (cf. router meta

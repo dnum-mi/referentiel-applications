@@ -88,12 +88,15 @@ test.describe("Pages transverses", () => {
     data,
   }) => {
     void data;
-    // `QA-EOL` porte trois technologies couvrant les trois statuts (seed QA).
+    // Le rôle administrateur porte TechnologyList sans délégation individuelle.
+    // `QA-EOL` porte les trois statuts et une technologie saine (seed QA).
     const endOfLife = new EndOfLifePage(page);
     await endOfLife.open();
     await endOfLife.expectLoaded();
     await endOfLife.expectResultsAnnounced();
     await endOfLife.expectApplicationListed("QA-EOL", "Fin de vie");
+    // #2801 : toutes les technologies sont visibles dès l'ouverture, y compris saines.
+    await endOfLife.expectApplicationHasTechnology("QA-EOL", "Vue.js");
 
     // Les statuts PARTITIONNENT la liste : filtrer sur « fin de support actif »
     // ne doit pas ramener la technologie déjà en fin de vie, sans quoi les trois

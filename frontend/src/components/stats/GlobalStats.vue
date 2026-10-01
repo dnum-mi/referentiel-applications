@@ -1,18 +1,22 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from "vue";
+import { onBeforeUnmount, onMounted, ref, computed, watch } from "vue";
 import { useHostingStore } from "@/stores/hostingStore";
 import { useStatisticsStore } from "@/stores/statisticsStore";
+import { useUserStore } from "@/stores/userStore";
 import api from "@/api/index";
 
 const actorsNb = ref(0);
 const compliancesNb = ref(0);
 const hostingsNb = ref(0);
-const endOfLifeAppsNb = ref(0);
+const endOfLifeAppsNb = ref<number | null>(null);
+const endOfLifeError = ref(false);
 const isLoading = ref(false);
 const errorMessage = ref("");
 
 const statisticStore = useStatisticsStore();
 const hostingStore = useHostingStore();
+const userStore = useUserStore();
+let endOfLifeRequestSequence = 0;
 
 const datasGroup = computed(() => [
   // Ce total couvre désormais toutes les fiches, quel que soit leur statut : c'est
@@ -23,7 +27,11 @@ const datasGroup = computed(() => [
   `Nombre d'acteurs : ${actorsNb.value}`,
   `Nombre de conformités : ${compliancesNb.value}`,
   `Nombre d'hébergements : ${hostingsNb.value}`,
-  `Applications concernées par une fin de vie : ${endOfLifeAppsNb.value}`,
+  ...(userStore.canListTechnologies
+    ? [
+        `Applications concernées par une fin de vie dans votre périmètre : ${endOfLifeAppsNb.value ?? (endOfLifeError.value ? "indisponible" : "chargement…")}`,
+      ]
+    : []),
 ]);
 
 async function loadStats() {
@@ -35,19 +43,48 @@ async function loadStats() {
     actorsNb.value = actorsResponse.data ?? 0;
     compliancesNb.value = await statisticStore.countCompliances();
     hostingsNb.value = await hostingStore.countHostings();
-    // On réutilise la vue transverse en ne demandant qu'une ligne : c'est son
-    // `total` qui nous intéresse, pas les résultats. Un endpoint de comptage
-    // dédié ferait doublon avec un filtre déjà écrit et testé.
-    const endOfLifeResponse = await api.endOfLifeControllerFindEndOfLifeApplications({
-      query: { page: 0, pageSize: 1 },
-    });
-    endOfLifeAppsNb.value = endOfLifeResponse.data?.total ?? 0;
   } catch (error) {
     errorMessage.value = `Erreur lors du chargement des données : ${error}`;
   } finally {
     isLoading.value = false;
   }
 }
+
+async function loadEndOfLifeStats() {
+  const request = ++endOfLifeRequestSequence;
+  endOfLifeAppsNb.value = null;
+  endOfLifeError.value = false;
+  if (!userStore.canListTechnologies) return;
+
+  const isCurrentRequest = () => request === endOfLifeRequestSequence && userStore.canListTechnologies;
+  try {
+    // Le total couvre les fins de vie du périmètre autorisé. L'absence de statut
+    // conserve ce filtre API historique ; `all` compterait aussi les technologies saines.
+    const response = await api.endOfLifeControllerFindEndOfLifeApplications({ query: { page: 0, pageSize: 1 } });
+    if (!isCurrentRequest()) return;
+    if (!response.response.ok || !response.data) {
+      endOfLifeError.value = true;
+      return;
+    }
+    endOfLifeAppsNb.value = response.data.total;
+  } catch {
+    if (isCurrentRequest()) endOfLifeError.value = true;
+  }
+}
+
+watch(
+  () => [
+    userStore.canListTechnologies,
+    userStore.user?.id,
+    userStore.user?.role,
+    userStore.user?.scopeOrganizationId,
+    userStore.user?.scopeOrganization?.path,
+  ],
+  loadEndOfLifeStats,
+  { immediate: true, flush: "sync" },
+);
+
+onBeforeUnmount(() => endOfLifeRequestSequence++);
 
 onMounted(() => {
   loadStats();

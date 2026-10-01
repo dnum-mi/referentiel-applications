@@ -27,7 +27,10 @@ describe("Technologies — contrat HTTP (#2526, #2527)", () => {
       .set("Authorization", `Bearer ${TOKEN}`);
 
   beforeAll(async () => {
-    admin = await UserFaker.create({ role: Roles.ADMIN });
+    admin = await UserFaker.create({
+      role: Roles.ADMIN,
+      additionalPermissions: [],
+    });
     TOKEN = getToken(admin);
     applicationA = await ApplicationFaker.create(admin);
     applicationB = await ApplicationFaker.create(admin);
@@ -143,7 +146,7 @@ describe("Technologies — contrat HTTP (#2526, #2527)", () => {
     });
   });
 
-  describe("vue transverse : filtre de statut et pagination", () => {
+  describe("vue transverse : administrateur sans délégation, filtres et pagination", () => {
     beforeAll(async () => {
       await prisma.technologyStack.create({
         data: {
