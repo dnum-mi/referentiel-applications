@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.96.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.95.0...v1.96.0) (2026-10-01)
+
+
+### Features
+
+* restrict technology access by capability and scope ([#2803](https://github.com/dnum-mi/referentiel-applications/issues/2803)) ([2a22352](https://github.com/dnum-mi/referentiel-applications/commit/2a223529055281bb52dd3c5898e23e070b7a3ee6))
+
+
+### Bug Fixes
+
+* **api:** validate PATCH bodies for data-catalog and perms matrix ([#2799](https://github.com/dnum-mi/referentiel-applications/issues/2799)) ([20e342b](https://github.com/dnum-mi/referentiel-applications/commit/20e342b3b51e2706f638f6f1d5346c62e8a82099))
+
 ## [1.95.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.94.0...v1.95.0) (2026-09-29)
 
 
