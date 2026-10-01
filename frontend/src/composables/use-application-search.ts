@@ -248,6 +248,10 @@ function cleanFilters(filters: Filters): Filters {
   return cleaned;
 }
 
+function normalizeAverageIq(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
 export function useApplicationSearch() {
   const route = useRoute();
   const router = useRouter();
@@ -332,13 +336,11 @@ export function useApplicationSearch() {
       if (store && isCurrent()) {
         statsStore.countTechnicalDebtPoints(response.data.technicalDebtPoints.length ?? 0);
 
-        const dataWithAverage = response.data;
         results.value = response.data.results;
         technicalDebtPoints.value = response.data.technicalDebtPoints;
 
         total.value = response.data.total;
-        averageIq.value =
-          typeof dataWithAverage.averageIq === "number" && Number.isFinite(dataWithAverage.averageIq) ? dataWithAverage.averageIq : 0;
+        averageIq.value = normalizeAverageIq(response.data.averageIq);
       }
 
       return response.data;

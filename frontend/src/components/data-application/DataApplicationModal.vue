@@ -346,14 +346,18 @@ async function updateDescriptionFields(dataDescriptionId: string): Promise<void>
   if (!isApiSuccess(response)) throw new Error("description update failed");
 }
 
-async function handleSubmit() {
+function validateDescription() {
   if (props.initialItem || isCreatingNewDescription.value) {
     newDescriptionError.value = isDescriptionFieldsValid.value ? undefined : "Veuillez renseigner un nom.";
-    if (newDescriptionError.value) return;
-  } else {
-    descriptionError.value = isFormValid.value ? undefined : "Veuillez sélectionner une donnée existante dans la liste.";
-    if (descriptionError.value) return;
+    return !newDescriptionError.value;
   }
+
+  descriptionError.value = isFormValid.value ? undefined : "Veuillez sélectionner une donnée existante dans la liste.";
+  return !descriptionError.value;
+}
+
+async function handleSubmit() {
+  if (!validateDescription()) return;
 
   isSubmitting.value = true;
   try {

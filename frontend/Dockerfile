@@ -34,7 +34,8 @@ RUN pnpm api:generate
 # Le type-check tourne via `pnpm type-check` (dev / job CI dédié), pas dans l'image.
 RUN pnpm build-only
 
-FROM nginxinc/nginx-unprivileged:1.30.5-alpine@sha256:ed04ec1ff34502c339ee5c3ae3f855442398edc1d05591e2b98981dcbbd20b1e AS prod
+# nginx-unprivileged 1.30.5-alpine
+FROM nginxinc/nginx-unprivileged@sha256:ed04ec1ff34502c339ee5c3ae3f855442398edc1d05591e2b98981dcbbd20b1e AS prod
 
 USER 0
 

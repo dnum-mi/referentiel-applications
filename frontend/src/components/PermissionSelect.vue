@@ -42,7 +42,8 @@ const permIndex = ref(0);
 watch(
   [() => props.read, () => props.write],
   ([read, write]) => {
-    const currentPermission = write ? "Write" : read ? "Read" : "none";
+    const readPermission = read ? "Read" : "none";
+    const currentPermission = write ? "Write" : readPermission;
     const foundIndex = permOrder.indexOf(currentPermission);
     permIndex.value = foundIndex === -1 ? 0 : foundIndex;
   },
