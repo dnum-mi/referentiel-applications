@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   release:
     name: Create new release
@@ -77,6 +80,7 @@ jobs:
     if: needs.release.outputs.release-created == 'true'
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       issues: write
     steps:
       - name: Checkout repository
