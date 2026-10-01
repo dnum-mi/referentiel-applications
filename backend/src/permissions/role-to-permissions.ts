@@ -80,6 +80,7 @@ export const DELEGABLE_PERMISSIONS: readonly Permission[] = [
   Permission.MDITList,
   Permission.QualityCampaignManage,
   Permission.MditCampaignManage,
+  Permission.TechnologyList,
 ];
 
 /**

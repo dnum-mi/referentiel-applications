@@ -4,9 +4,9 @@ import { BasePage } from "./base.page";
 /**
  * Page Object — Technologies, suivi des fins de vie (`/fins-de-vie`, #2236 ; intitulé #2413).
  *
- * La page est alimentée par les dates endoflife.date déjà persistées : elle n'affiche donc rien
- * tant qu'aucune technologie du jeu de données n'est concernée. Les assertions distinguent ce cas
- * légitime d'un échec de chargement, plutôt que de présumer des résultats.
+ * La page affiche par défaut toutes les technologies du périmètre autorisé, y compris saines.
+ * Les filtres de fin de vie utilisent les dates déjà persistées ; les assertions distinguent
+ * une sélection vide d'un échec de chargement.
  */
 export class EndOfLifePage extends BasePage {
   private title = () => this.byTestId("end-of-life-page-title");

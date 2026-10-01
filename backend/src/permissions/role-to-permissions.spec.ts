@@ -6,6 +6,26 @@ import {
   roleToPermissions,
 } from "./role-to-permissions";
 
+describe("TechnologyList — capacité explicite (#2801)", () => {
+  it.each(Object.values(Roles))(
+    "%s ne reçoit pas la capacité par son rôle",
+    (role) => {
+      for (const scoped of [false, true]) {
+        expect(roleToPermissions(role, { scoped })).not.toContain(
+          Permission.TechnologyList,
+        );
+        expect(roleToAppPermissions(role)).not.toContain(
+          Permission.TechnologyList,
+        );
+      }
+    },
+  );
+
+  it("autorise son attribution individuelle", () => {
+    expect(DELEGABLE_PERMISSIONS).toContain(Permission.TechnologyList);
+  });
+});
+
 // #2088 — l'onglet Technologies suit le schéma des autres onglets : pas de « lecture pour
 // tous » globale (défait #2027). La lecture vient de la projection de rôle par application
 // (READER+) ou de la matrice du type d'acteur ; un VISITOR non-acteur ne voit pas l'onglet.

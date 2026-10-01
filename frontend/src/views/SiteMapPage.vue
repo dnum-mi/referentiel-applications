@@ -84,7 +84,8 @@ const protectedPages = computed(() => {
     // l'historique global est réservé à l'administration globale.
     const passesGlobalAdminCheck =
       currentRoute.meta.requiresGlobalAdmin !== true || userStore.hasPermissions([Permission.GLOBAL_ADMIN_MANAGE]);
-    return passesBaseFilter && isProtectedRoute && passesAdminCheck && passesGlobalAdminCheck;
+    const passesTechnologyCheck = currentRoute.meta.requiresTechnologyList !== true || userStore.canListTechnologies;
+    return passesBaseFilter && isProtectedRoute && passesAdminCheck && passesGlobalAdminCheck && passesTechnologyCheck;
   });
 
   const formattedPages = filteredProtectedRoutes.map((routeDetails) => {

@@ -6085,14 +6085,15 @@ paths:
       tags: *a34
   /api/v2/technologies/end-of-life:
     get:
-      description: "Vue transverse des technologies (#2236) : liste paginée des
-        applications, avec par défaut celles dont au moins une technologie est
-        en fin de vie, proche de sa fin de vie (moins de 6 mois) ou sortie du
-        support actif. Filtrable par statut (`eol`, `eol-soon`, `eoas-passed`,
-        partitionnant), par organisation et par recherche libre. Le filtre `all`
-        lève la restriction et retourne toutes les applications ayant au moins
-        une technologie déclarée, avec l'ensemble de leur stack — y compris les
-        technologies saines."
+      description: "Vue transverse accessible avec la capacité TechnologyList aux
+        lecteurs, contributeurs et administrateurs. Les applications sont
+        limitées au périmètre fonctionnel de l'utilisateur lorsqu'il en possède
+        un. Par défaut, la liste retient celles dont au moins une technologie
+        est en fin de vie, proche de sa fin de vie (moins de 6 mois) ou sortie
+        du support actif. Filtrable par statut (`eol`, `eol-soon`,
+        `eoas-passed`, partitionnant), par organisation et par recherche libre.
+        Le filtre `all` inclut les technologies saines sans élargir le périmètre
+        autorisé."
       operationId: EndOfLifeController_findEndOfLifeApplications
       parameters:
         - name: page
@@ -6168,6 +6169,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedEndOfLifeApplicationDto"
+        "403":
+          description: Capacité Technologie absente, rôle ou périmètre non autorisé
       summary: Technologies utilisées par les applications, fins de vie ou non
       tags:
         - Technologies
@@ -7398,6 +7401,7 @@ components:
         - ColumnRead
         - QualityCampaignManage
         - MditCampaignManage
+        - TechnologyList
         - AppRead
         - AppWrite
         - ActorRead

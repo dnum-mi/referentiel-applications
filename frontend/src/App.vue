@@ -132,7 +132,9 @@ const quickLinks = computed<QuickLink[]>(() => {
   return authenticatedQuickLinks.value;
 });
 
-const baseNavItems = computed(() => buildNavItems(userStore.hasPermissions([Permission.GLOBAL_ADMIN_MANAGE])));
+const baseNavItems = computed(() =>
+  buildNavItems(userStore.hasPermissions([Permission.GLOBAL_ADMIN_MANAGE]), userStore.canListTechnologies),
+);
 
 const publicNavItems = computed(() => buildPublicNavItems());
 

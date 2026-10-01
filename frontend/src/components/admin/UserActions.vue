@@ -218,7 +218,7 @@ async function syncFromMaia() {
   }
 }
 
-const additionalPermissionsOptions: Omit<DsfrCheckboxProps, "modelValue">[] = [
+const additionalPermissionsOptions = computed<Omit<DsfrCheckboxProps, "modelValue">[]>(() => [
   {
     label: "Créer une application",
     value: Permission.CREATE_APPLICATION,
@@ -249,7 +249,14 @@ const additionalPermissionsOptions: Omit<DsfrCheckboxProps, "modelValue">[] = [
     value: Permission.MDIT_CAMPAIGN_MANAGE,
     name: "capability-mdit-campaign-manage",
   },
-];
+  {
+    label: "Consulter les technologies",
+    value: Permission.TECHNOLOGY_LIST,
+    name: "capability-technology-list",
+    disabled: editingUserRole.value === Roles.VISITOR,
+    hint: "Disponible pour les niveaux Lecture totale, Écriture totale et Administrateur, dans leur périmètre.",
+  },
+]);
 
 const isNotValidated = computed(() => {
   if (!maiaSuggestion.value?.organizationId) return false;

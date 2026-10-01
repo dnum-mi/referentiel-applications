@@ -1,7 +1,9 @@
-import { Injectable } from "@nestjs/common";
-import { Prisma, type TechnologyEolSource } from "@prisma/client";
+import { ForbiddenException, Injectable } from "@nestjs/common";
+import { Prisma, Roles, type TechnologyEolSource } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { PaginatedResponseDto } from "src/common/dto";
+import { organizationWithinScope } from "src/common/utils/organization-scope.utils";
+import type { Requestor } from "src/user/entities/user.entity";
 import {
   EndOfLifeApplicationDto,
   EndOfLifeFiltersDto,
@@ -45,7 +47,9 @@ export class EndOfLifeService {
 
   async findApplications(
     filters: EndOfLifeFiltersDto,
+    requestor: Requestor,
   ): Promise<PaginatedResponseDto<EndOfLifeApplicationDto>> {
+    const scopeWhere = this.buildScopeWhere(requestor);
     const now = new Date();
     const technologyWhere = eolStatusWhere(filters.status, now);
 
@@ -54,6 +58,10 @@ export class EndOfLifeService {
       ...ACTIVE_APPLICATION_WHERE,
       technologies: { some: technologyWhere },
     };
+
+    // Le périmètre imposé par le serveur est indépendant des filtres du client :
+    // ni sa recherche (OR), ni son organisation, ni status=all ne peuvent l'élargir.
+    if (scopeWhere) where.AND = [scopeWhere];
 
     if (filters.organization) {
       // Même lecture que la recherche d'applications : le rattachement passe par
@@ -109,6 +117,40 @@ export class EndOfLifeService {
       results: paginated.results.map((application) =>
         this.toDto(application, now),
       ),
+    };
+  }
+
+  private buildScopeWhere(
+    requestor: Requestor,
+  ): Prisma.ApplicationWhereInput | undefined {
+    if (
+      requestor.role !== Roles.READER &&
+      requestor.role !== Roles.CONTRIBUTOR &&
+      requestor.role !== Roles.ADMIN
+    ) {
+      throw new ForbiddenException(
+        "L'accès aux technologies nécessite un rôle lecteur, contributeur ou administrateur.",
+      );
+    }
+
+    // AuthMiddleware fournit le principal effectif : en délégation, ce périmètre
+    // est déjà l'intersection de ceux de l'utilisateur et du service.
+    const scope = requestor.scopeOrganization?.path;
+    if (requestor.scopeOrganizationId && !scope) {
+      throw new ForbiddenException("Périmètre d'authentification invalide.");
+    }
+    if (!scope) return undefined;
+
+    const organization = organizationWithinScope(scope);
+    return {
+      OR: [
+        { actors: { some: { organization } } },
+        {
+          businessDivisions: {
+            some: { organizations: { some: organization } },
+          },
+        },
+      ],
     };
   }
 

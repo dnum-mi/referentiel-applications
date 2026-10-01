@@ -128,7 +128,7 @@ const routes = [
     path: "/fins-de-vie",
     component: () => import("@/views/EndOfLifePage.vue"),
     // #2413 : titre aligné sur l'entrée de menu « Technologies » ; le plan du site en dérive son libellé.
-    meta: { requiresAuth: true, title: "Technologies - Référentiel des applications" },
+    meta: { requiresAuth: true, requiresTechnologyList: true, title: "Technologies - Référentiel des applications" },
   },
   {
     name: routeNames.TIMEPAGE,
@@ -191,6 +191,10 @@ router.beforeEach(async (to) => {
     }
     // Conserver l'URL demandée pour la reconnexion ; App affiche le refus global.
     if (userStore.isAuthDowngraded) return;
+
+    if (to.meta.requiresTechnologyList && !userStore.canListTechnologies) {
+      return { name: routeNames.ACCUEIL };
+    }
 
     if (to.meta.requiresAdmin) {
       // QualityCampaignManage et MditCampaignManage peuvent être déléguées à un non-admin

@@ -103,6 +103,9 @@ enum Permission {
   QualityCampaignManage
   /// Gérer les campagnes de dette IT / millésimes (créer, modifier, supprimer) (#2608)
   MditCampaignManage
+  /// Consulter la vue transverse Technologies dans son périmètre fonctionnel (#2801).
+  /// Capacité attribuée explicitement, y compris aux administrateurs globaux.
+  TechnologyList
 
   // --- Permissions applicatives (par app) ---
   // Couple read/write classique

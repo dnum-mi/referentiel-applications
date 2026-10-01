@@ -1,8 +1,8 @@
 import client from "@/api/index";
 import {
   Roles,
+  Permission,
   type AuthLevelDto,
-  type Permission,
   type UserEntity,
   type UserFollowedApplicationDto,
   type UserWithPermissions,
@@ -47,6 +47,14 @@ export const useUserStore = defineStore("userStore", () => {
   const authLevel = computed(() => deniedAuthLevel.value ?? user.value?.authLevel);
   const isAuthDowngraded = computed(() => authLevel.value?.downgraded === true);
   const hasApplicationAccess = computed(() => authenticated.value && !!user.value && !isAuthDowngraded.value);
+  // #2801 : la capacité ouvre la vue transverse pour les profils à périmètre.
+  // Les droits sur les fiches (notamment ceux d'acteur) ne l'accordent pas.
+  const canListTechnologies = computed(
+    () =>
+      hasApplicationAccess.value &&
+      [Roles.READER, Roles.CONTRIBUTOR, Roles.ADMIN].some((role) => role === user.value?.role) &&
+      hasPermissions([Permission.TECHNOLOGY_LIST]),
+  );
 
   function requireStrongAuth(level: AuthLevelDto) {
     invalidateSession();
@@ -270,6 +278,7 @@ export const useUserStore = defineStore("userStore", () => {
     authLevel,
     isAuthDowngraded,
     hasApplicationAccess,
+    canListTechnologies,
     sessionInitialized,
     requireStrongAuth,
   };

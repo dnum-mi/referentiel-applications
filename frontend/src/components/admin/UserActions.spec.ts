@@ -153,6 +153,56 @@ describe("UserActions", () => {
 
   afterEach(cleanup);
 
+  it("permet d'attribuer explicitement la consultation des technologies à un lecteur", async () => {
+    hasPermissionsMock.mockReturnValue(true);
+    const reader = { ...targetUser, role: Roles.READER };
+    updateUserMock.mockResolvedValue({ data: { ...reader, additionalPermissions: [Permission.TECHNOLOGY_LIST] } });
+    render(UserActions, {
+      props: { user: reader },
+      global: { ...global, stubs: { ...global.stubs, DsfrCheckboxSet: false, DsfrRadioButtonSet: false } },
+    });
+
+    await fireEvent.click(screen.getByTestId("admin-user-edit-btn"));
+    const capability = screen.getByRole("checkbox", { name: /Consulter les technologies/ });
+    expect(capability).not.toBeChecked();
+    expect(capability).toBeEnabled();
+    await fireEvent.click(capability);
+    await fireEvent.click(screen.getByTestId("admin-save-perms-btn"));
+
+    await waitFor(() =>
+      expect(updateUserMock).toHaveBeenCalledWith({
+        path: { id: reader.id },
+        body: { role: Roles.READER, organizationId: null, scopeOrganizationId: null, additionalPermissions: [Permission.TECHNOLOGY_LIST] },
+      }),
+    );
+  });
+
+  it("n'accorde pas automatiquement la capacité à un administrateur", async () => {
+    hasPermissionsMock.mockReturnValue(true);
+    render(UserActions, {
+      props: { user: { ...targetUser, role: Roles.ADMIN } },
+      global: { ...global, stubs: { ...global.stubs, DsfrCheckboxSet: false } },
+    });
+    await fireEvent.click(screen.getByTestId("admin-user-edit-btn"));
+    const capability = screen.getByRole("checkbox", { name: /Consulter les technologies/ });
+    expect(capability).toBeEnabled();
+    expect(capability).not.toBeChecked();
+  });
+
+  it("réserve cette capacité aux profils de lecture, écriture et administration", async () => {
+    hasPermissionsMock.mockReturnValue(true);
+    render(UserActions, {
+      props: { user: targetUser },
+      global: { ...global, stubs: { ...global.stubs, DsfrCheckboxSet: false, DsfrRadioButtonSet: false } },
+    });
+    await fireEvent.click(screen.getByTestId("admin-user-edit-btn"));
+    expect(screen.getByRole("checkbox", { name: /Consulter les technologies/ })).toBeDisabled();
+    expect(screen.getByText(/Disponible pour les niveaux Lecture totale, Écriture totale et Administrateur/)).toBeInTheDocument();
+
+    await fireEvent.click(screen.getByRole("radio", { name: /Lecture totale/ }));
+    expect(screen.getByRole("checkbox", { name: /Consulter les technologies/ })).toBeEnabled();
+  });
+
   it("refait la recherche MAIA à la réouverture après un refus HTTP", async () => {
     hasPermissionsMock.mockReturnValue(true);
     syncOrganizationMock

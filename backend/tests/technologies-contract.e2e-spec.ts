@@ -1,4 +1,4 @@
-import { Roles } from "@prisma/client";
+import { Permission, Roles } from "@prisma/client";
 import request from "supertest";
 import { ApplicationFaker } from "./fakers/application.faker";
 import { getPrismaClient } from "./fakers/prisma";
@@ -27,7 +27,10 @@ describe("Technologies — contrat HTTP (#2526, #2527)", () => {
       .set("Authorization", `Bearer ${TOKEN}`);
 
   beforeAll(async () => {
-    admin = await UserFaker.create({ role: Roles.ADMIN });
+    admin = await UserFaker.create({
+      role: Roles.ADMIN,
+      additionalPermissions: [Permission.TechnologyList],
+    });
     TOKEN = getToken(admin);
     applicationA = await ApplicationFaker.create(admin);
     applicationB = await ApplicationFaker.create(admin);
