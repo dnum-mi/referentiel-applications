@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import api from "@/api/index";
 import type { AuthLevel, UserConnexionLogDto } from "@/client/types.gen";
 import AppLoader from "@/components/AppLoader.vue";
@@ -53,7 +54,7 @@ async function fetchLogs() {
   errorMessage.value = "";
   try {
     const response = await api.userControllerFindConnexionLogs({ path: { id: props.userId } });
-    if (response.response.ok && response.data) {
+    if (isApiSuccess(response) && response.data) {
       logs.value = response.data;
     } else {
       throw new Error("Failed to fetch connexion logs");

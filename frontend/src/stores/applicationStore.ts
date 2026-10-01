@@ -1,3 +1,4 @@
+import { isApiSuccess } from "@/api/api-result";
 import type { ContactAdminDto, PatchApplicationDto } from "@/client/types.gen";
 import type { Filters } from "@/composables/use-application-search";
 import type { APP_PERMISSIONS, ApplicationWithPerms } from "@/models/Application";
@@ -27,7 +28,7 @@ export const useApplicationStore = defineStore("applicationStore", () => {
         currentAppId.value = applicationId;
       }
       const response = await api.applicationControllerFindOne({ path: { applicationId } });
-      if (!response.data || !response.response.ok) {
+      if (!response.data || !isApiSuccess(response)) {
         throw new Error("Erreur lors de la récupération de l'application.");
       }
       const myPerms = await getMyPerms(applicationId);
@@ -70,7 +71,7 @@ export const useApplicationStore = defineStore("applicationStore", () => {
       path: { applicationId: app.id },
       body: payload,
     });
-    if (!response.response.ok || !response.data) {
+    if (!isApiSuccess(response) || !response.data) {
       throw response.error;
     }
     const myPerms: Set<APP_PERMISSIONS> | undefined = applicationsById.value[app.id]?.myPerms ?? (await getMyPerms(app.id));
@@ -92,8 +93,8 @@ export const useApplicationStore = defineStore("applicationStore", () => {
 
   const deleteApplication = async (applicationId: string): Promise<void> => {
     const response = await api.applicationControllerRemove({ path: { applicationId } });
-    if (!response.response.ok) {
-      const message = deletionErrorMessage(response.response.status, response.error);
+    if (!isApiSuccess(response)) {
+      const message = deletionErrorMessage(response.response?.status, response.error);
       toaster.addErrorMessage(message);
       throw new Error(message);
     }
@@ -108,7 +109,7 @@ export const useApplicationStore = defineStore("applicationStore", () => {
       query: cleanedFilters,
     });
 
-    if (!response.response.ok || !response.data) {
+    if (!isApiSuccess(response) || !response.data) {
       throw new Error("Erreur lors de l'export Excel.");
     }
 
@@ -160,7 +161,7 @@ const GENERIC_DELETION_ERROR = "Erreur lors de la suppression définitive de l'a
 
 // Le backend refuse en 409 une suppression bloquée par des données liées et nomme la dépendance
 // en cause (#2542) : ce message vaut mieux que le libellé générique.
-function deletionErrorMessage(status: number, error: unknown): string {
+function deletionErrorMessage(status: number | undefined, error: unknown): string {
   if (status !== 409) return GENERIC_DELETION_ERROR;
   const message = (error as { message?: unknown } | undefined)?.message;
   return typeof message === "string" && message !== "" ? message : GENERIC_DELETION_ERROR;

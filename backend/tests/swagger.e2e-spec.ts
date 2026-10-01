@@ -79,6 +79,7 @@ describe("Test Swagger documentation", () => {
         } catch (error) {
           throw new Error(
             `Missing responses: ${method.toUpperCase()} ${path}: ${error}`,
+            { cause: error },
           );
         }
 
@@ -89,6 +90,7 @@ describe("Test Swagger documentation", () => {
         } catch (error) {
           throw new Error(
             `Missing description or summary: ${method.toUpperCase()} ${path}: ${error}`,
+            { cause: error },
           );
         }
 
@@ -101,6 +103,7 @@ describe("Test Swagger documentation", () => {
           } catch (error) {
             throw new Error(
               `Missing object: ${method.toUpperCase()} ${path} ${code}: ${error}`,
+              { cause: error },
             );
           }
           if (

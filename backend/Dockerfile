@@ -10,9 +10,11 @@ RUN chown -R node:root /app
 ENV PORT=3500
 
 RUN apt-get update -y \
-    && apt-get install -y libssl-dev openssl procps \
-    && apt-get clean
-RUN npm install --ignore-scripts --location=global pnpm@10.14.0
+    && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends libssl-dev openssl procps \
+    && rm -rf /var/lib/apt/lists/*
+RUN npm install --ignore-scripts --prefix /usr/local --location=global npm@12.2.0 \
+    && npm install --ignore-scripts --location=global pnpm@10.34.6
 
 # pnpm-workspace.yaml porte les overrides de sécurité (pnpm 10 ne les lit plus
 # depuis package.json) : il doit être présent avant `pnpm install`.

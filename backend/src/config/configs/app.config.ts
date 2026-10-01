@@ -15,7 +15,7 @@ export interface AppConfig {
   maintenanceCacheTtlMs: number;
 }
 export default registerAs("app", (): AppConfig => {
-  let footerLinks: FooterLink[] = [];
+  let footerLinks: FooterLink[];
   try {
     footerLinks = JSON.parse(process.env.FOOTER_LINKS ?? "[]");
   } catch {

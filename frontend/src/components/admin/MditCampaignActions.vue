@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import { ref } from "vue";
 import type { MditCampaignDto } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
@@ -64,13 +65,13 @@ async function saveCampaign() {
     ? await api.mditCampaignControllerUpdate({ path: { id: props.campaign.id }, body })
     : await api.mditCampaignControllerCreate({ body });
 
-  if (response.response.ok) {
+  if (isApiSuccess(response)) {
     toaster.addSuccessMessage(props.campaign?.id ? "Campagne mise à jour avec succès" : "Campagne créée avec succès");
     closeEditModal();
     emit("fetchCampaigns");
-  } else if (response.response.status === 409) {
+  } else if (response.response?.status === 409) {
     errorMessage.value = "Une campagne existe déjà pour ce millésime.";
-  } else if (response.response.status === 400) {
+  } else if (response.response?.status === 400) {
     errorMessage.value = "Les informations saisies sont incorrectes.";
   } else {
     errorMessage.value = "Erreur lors de la sauvegarde de la campagne.";
@@ -84,7 +85,7 @@ async function deleteCampaign() {
   isDeleting.value = true;
 
   const response = await api.mditCampaignControllerRemove({ path: { id: props.campaign.id } });
-  if (response.response.ok) {
+  if (isApiSuccess(response)) {
     toaster.addSuccessMessage("Campagne supprimée avec succès");
     closeDeleteModal();
     emit("fetchCampaigns");

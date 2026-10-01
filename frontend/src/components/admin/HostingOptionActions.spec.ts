@@ -107,6 +107,22 @@ describe("hostingOptionActions (#2688)", () => {
     expect(emitted().fetchHostingOptions).toBeUndefined();
   });
 
+  it.each([
+    { failure: "réseau sans réponse", response: undefined, error: new TypeError("Failed to fetch") },
+    { failure: "décodage après un HTTP 200", response: { ok: true, status: 200 }, error: new SyntaxError("Invalid JSON") },
+  ])("signale une erreur $failure et laisse la modification disponible", async ({ response, error }) => {
+    updateMock.mockResolvedValueOnce({ response, error });
+    const { emitted } = renderActions(option);
+
+    await fireEvent.click(screen.getByRole("button", { name: "Modifier" }));
+    await fireEvent.click(saveButton());
+
+    expect(await screen.findByText("Erreur lors de la sauvegarde de la plateforme d'hébergement.")).toBeInTheDocument();
+    expect(saveButton()).toBeEnabled();
+    expect(addSuccessMessage).not.toHaveBeenCalled();
+    expect(emitted().fetchHostingOptions).toBeUndefined();
+  });
+
   it("annonce le nombre d'hébergements détachés avant suppression", async () => {
     removeMock.mockResolvedValue({ response: { ok: true, status: 204 } });
     const { emitted } = renderActions(option);

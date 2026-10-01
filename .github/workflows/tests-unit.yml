@@ -32,7 +32,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Start stack using docker compose
         run: IMAGE_TAG=${{ inputs.backend_image_tag }} docker compose -f docker-compose.yml -f docker-compose.ci.yml up backend keycloak postgres -d
       - name: Wait for backend to be ready
@@ -72,7 +72,7 @@ jobs:
       - name: Run test coverage
         run: IMAGE_TAG=${{ inputs.backend_image_tag }} docker compose -f docker-compose.yml -f docker-compose.ci.yml exec backend pnpm test:cov
       - name: Upload backend coverage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: unit-tests-coverage
           path: ./backend/coverage/
@@ -90,13 +90,13 @@ jobs:
       group: backend-coverage-storage
       queue: max
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: unit-tests-coverage
           path: ./backend/coverage
       - name: Produce coverage report
-        uses: insightsengineering/coverage-action@v2
+        uses: insightsengineering/coverage-action@43a6afd6801c3936903b40fb7474b4f870abcd62 # v2
         with:
           coverage-summary-title: Backend Coverage Summary
           path: ./backend/coverage/cobertura-coverage.xml
@@ -138,21 +138,21 @@ jobs:
       contents: read
     steps:
       - name: Checks-out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
       - name: Download artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: unit-tests-coverage
           path: ./coverage/backend
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with:
-          version: 10.14.0
-      - uses: actions/setup-node@v4
+          version: 10.34.6
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 22
+          node-version-file: .nvmrc
       - name: Install dependencies
         run: |
           pnpm install --frozen-lockfile
@@ -162,7 +162,7 @@ jobs:
         run: cd frontend && pnpm install --frozen-lockfile && pnpm api:generate
       - name: Download frontend coverage
         if: inputs.frontend_coverage_artifact != ''
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: ${{ inputs.frontend_coverage_artifact }}
           path: frontend/coverage
@@ -186,7 +186,7 @@ jobs:
           printf 'SONAR_ARGS_PR=%s\n' "-Dsonar.pullrequest.provider=github -Dsonar.pullrequest.key=$PR_NUMBER -Dsonar.pullrequest.branch=$PR_HEAD_REF -Dsonar.pullrequest.base=$PR_BASE_REF -Dsonar.pullrequest.github.repository=$REPOSITORY" >> "$GITHUB_OUTPUT"
           printf 'SONAR_ARGS_BRANCH=%s\n' "-Dsonar.branch.name=$REF_NAME" >> "$GITHUB_OUTPUT"
 
-      - uses: SonarSource/sonarqube-scan-action@v6
+      - uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6
         with:
           args: >
             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}

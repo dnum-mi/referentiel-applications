@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import api from "@/api/index";
 import { Permission, type ApplicationStatusDto, type CreateApplicationStatusDto } from "@/client/types.gen";
 import { formatDateFR } from "@/composables/use-date";
@@ -63,7 +64,7 @@ async function fetchStatuses() {
     const response = await api.statusesControllerFind({
       path: { applicationId: props.application.id },
     });
-    if (response.response.ok && response.data) {
+    if (isApiSuccess(response) && response.data) {
       statuses.value = Array.isArray(response.data) ? response.data : [];
     } else {
       statuses.value = [];
@@ -173,7 +174,7 @@ async function createStatus(formData: StatusFormData) {
       path: { applicationId: props.application.id },
       body: payload,
     });
-    if (response.response.ok) {
+    if (isApiSuccess(response)) {
       toaster.addSuccessMessage("Statut créé avec succès");
       formModal.closeModal();
       await fetchStatuses();
@@ -209,7 +210,7 @@ async function updateStatus(formData: StatusFormData) {
       body: payload,
     });
 
-    if (response.response.ok) {
+    if (isApiSuccess(response)) {
       toaster.addSuccessMessage("Statut modifié avec succès");
       formModal.closeModal();
       await fetchStatuses();
@@ -242,7 +243,7 @@ async function deleteStatus() {
       },
     });
 
-    if (response.response.ok) {
+    if (isApiSuccess(response)) {
       toaster.addSuccessMessage("Statut supprimé avec succès");
       deleteModal.closeModal();
       await fetchStatuses();

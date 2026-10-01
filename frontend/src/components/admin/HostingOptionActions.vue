@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import { computed, reactive, ref } from "vue";
 import type { CreateHostingOptionDto, HostingOptionWithUsageDto } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
@@ -75,15 +76,15 @@ async function saveHostingOption() {
     ? await api.hostingOptionControllerUpdate({ path: { id: props.hostingOption.id }, body })
     : await api.hostingOptionControllerCreate({ body });
 
-  if (response.response.ok) {
+  if (isApiSuccess(response)) {
     toaster.addSuccessMessage(
       isEditing.value ? "Plateforme d'hébergement mise à jour avec succès" : "Plateforme d'hébergement créée avec succès",
     );
     closeEditModal();
     emit("fetchHostingOptions");
-  } else if (response.response.status === 409) {
+  } else if (response.response?.status === 409) {
     errorMessage.value = "Cette plateforme d'hébergement existe déjà.";
-  } else if (response.response.status === 400) {
+  } else if (response.response?.status === 400) {
     errorMessage.value = "Les valeurs saisies sont incorrectes.";
   } else {
     errorMessage.value = "Erreur lors de la sauvegarde de la plateforme d'hébergement.";
@@ -96,7 +97,7 @@ async function deleteHostingOption() {
 
   isDeleting.value = true;
   const response = await api.hostingOptionControllerRemove({ path: { id: props.hostingOption.id } });
-  if (response.response.ok) {
+  if (isApiSuccess(response)) {
     toaster.addSuccessMessage("Plateforme d'hébergement supprimée avec succès");
     isDeleteModalOpen.value = false;
     emit("fetchHostingOptions");

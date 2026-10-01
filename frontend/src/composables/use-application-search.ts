@@ -1,3 +1,4 @@
+import { isApiSuccess } from "@/api/api-result";
 import type { LocationQueryValue } from "vue-router";
 import type {
   ApplicationControllerSearchData,
@@ -319,7 +320,7 @@ export function useApplicationSearch() {
 
       const response = await api.applicationControllerSearch({ query });
 
-      if (!response.response.ok || !response.data) {
+      if (!isApiSuccess(response) || !response.data) {
         throw new Error("Erreur lors de la recherche d'applications");
       }
 

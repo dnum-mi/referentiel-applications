@@ -1,3 +1,4 @@
+import { isApiSuccess } from "@/api/api-result";
 import type { SavedFilterDto } from "@/client/types.gen";
 import { defineStore } from "pinia";
 import { ref } from "vue";
@@ -26,7 +27,7 @@ export const useSavedFilterStore = defineStore("savedFilterStore", () => {
     const toaster = useToasterStore();
     try {
       const response = await api.savedFilterControllerCreate({ body: { name, filters } });
-      if (!response.response.ok || !response.data) {
+      if (!isApiSuccess(response) || !response.data) {
         throw new Error("Erreur lors de la sauvegarde du filtre");
       }
       const saved = response.data;
@@ -43,7 +44,7 @@ export const useSavedFilterStore = defineStore("savedFilterStore", () => {
     const toaster = useToasterStore();
     try {
       const response = await api.savedFilterControllerRemove({ path: { id } });
-      if (!response.response.ok) {
+      if (!isApiSuccess(response)) {
         throw new Error("Erreur lors de la suppression du filtre");
       }
       savedFilters.value = savedFilters.value.filter((f) => f.id !== id);

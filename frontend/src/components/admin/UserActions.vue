@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import api from "@/api/index";
 import {
   type MaiaOrganizationSuggestionDto,
@@ -125,7 +126,7 @@ async function fetchMaiaSuggestion() {
     const response = await api.userControllerSyncOrganizationFromMaiaByEmail({ path: { email: target.email } });
     if (requestId !== maiaSuggestionRequest) return;
 
-    if (!response.response.ok || !response.data) {
+    if (!isApiSuccess(response) || !response.data) {
       maiaSuggestionState.value = "error";
       return;
     }
@@ -203,7 +204,7 @@ async function syncFromMaia() {
   isSyncingFromMaia.value = true;
   try {
     const response = await api.userControllerSyncOrganizationFromMaia({ path: { id: props.user.id } });
-    if (response.response.ok && response.data) {
+    if (isApiSuccess(response) && response.data) {
       toaster.addSuccessMessage("Organisation synchronisée depuis MAIA");
       emit("userUpdated", response.data);
     } else {

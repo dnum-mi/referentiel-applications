@@ -1,3 +1,4 @@
+import { isApiSuccess } from "@/api/api-result";
 import type { EndOfLifeApplicationDto, EndOfLifeControllerFindEndOfLifeApplicationsData } from "@/client/types.gen";
 import { defineStore } from "pinia";
 import { ref } from "vue";
@@ -17,7 +18,7 @@ export const useEndOfLifeStore = defineStore("endOfLifeStore", () => {
     isLoading.value = true;
     try {
       const response = await api.endOfLifeControllerFindEndOfLifeApplications({ query });
-      if (!response.response.ok) {
+      if (!isApiSuccess(response)) {
         toaster.addErrorMessage("Erreur lors de la récupération des fins de vie.");
         console.error("Error fetching end-of-life applications:", response.error);
         return;

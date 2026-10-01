@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/api/index";
@@ -54,7 +55,7 @@ async function fetchOne() {
     const response = await api.dataCatalogControllerFindOneApplicationData({
       path: { applicationId: props.applicationId, dataApplicationId: props.dataApplicationId },
     });
-    if (!response.response.ok) {
+    if (!isApiSuccess(response)) {
       toaster.addErrorMessage("Donnée introuvable.");
       return;
     }
@@ -102,7 +103,7 @@ async function confirmExposureDeletion() {
     const response = await api.dataCatalogControllerDeleteExposure({
       path: { applicationId: props.applicationId, dataApplicationId: props.dataApplicationId, exposureId: exposureToDelete.value.id },
     });
-    if (!response.response.ok) throw new Error("delete failed");
+    if (!isApiSuccess(response)) throw new Error("delete failed");
     toaster.addSuccessMessage("Exposition supprimée avec succès");
     await fetchOne();
   } catch (error) {
@@ -126,7 +127,7 @@ async function confirmDeletion() {
     const response = await api.dataCatalogControllerDeleteApplicationData({
       path: { applicationId: props.applicationId, dataApplicationId: props.dataApplicationId },
     });
-    if (!response.response.ok) throw new Error("delete failed");
+    if (!isApiSuccess(response)) throw new Error("delete failed");
     toaster.addSuccessMessage("Donnée détachée avec succès");
     goToProfileApp(props.applicationId);
   } catch (error) {

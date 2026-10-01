@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import { ref } from "vue";
 import type { BusinessDivisionDto } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
@@ -56,15 +57,15 @@ async function saveBusinessDivision() {
     ? await api.businessDivisionControllerUpdate({ path: { id: props.businessDivision.id }, body })
     : await api.businessDivisionControllerCreate({ body });
 
-  if (response.response.ok) {
+  if (isApiSuccess(response)) {
     toaster.addSuccessMessage(
       props.businessDivision?.id ? "Direction métier mise à jour avec succès" : "Direction métier créée avec succès",
     );
     closeEditModal();
     emit("fetchBusinessDivisions");
-  } else if (response.response.status === 409) {
+  } else if (response.response?.status === 409) {
     errorMessage.value = "Une direction métier existe déjà avec ce nom.";
-  } else if (response.response.status === 400) {
+  } else if (response.response?.status === 400) {
     errorMessage.value = "Les informations saisies sont incorrectes.";
   } else {
     errorMessage.value = "Erreur lors de la sauvegarde de la direction métier.";
@@ -78,7 +79,7 @@ async function deleteBusinessDivision() {
   isDeleting.value = true;
 
   const response = await api.businessDivisionControllerRemove({ path: { id: props.businessDivision.id } });
-  if (response.response.ok) {
+  if (isApiSuccess(response)) {
     toaster.addSuccessMessage("Direction métier supprimée avec succès");
     closeDeleteModal();
     emit("fetchBusinessDivisions");

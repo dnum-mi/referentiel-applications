@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import { nextTick, onMounted, ref, watch } from "vue";
 import api from "@/api/index";
 import type { DataExposureDto } from "@/client/types.gen";
@@ -68,7 +69,7 @@ async function handleSubmit() {
         path: { applicationId: props.applicationId, dataApplicationId: props.dataApplicationId, exposureId: props.initialExposure.id },
         body,
       });
-      if (!response.response.ok) throw new Error("update failed");
+      if (!isApiSuccess(response)) throw new Error("update failed");
       toaster.addSuccessMessage("Exposition mise à jour avec succès");
       emit("exposureUpdated");
     } else {
@@ -76,7 +77,7 @@ async function handleSubmit() {
         path: { applicationId: props.applicationId, dataApplicationId: props.dataApplicationId },
         body,
       });
-      if (!response.response.ok) throw new Error("create failed");
+      if (!isApiSuccess(response)) throw new Error("create failed");
       toaster.addSuccessMessage("Exposition créée avec succès");
       emit("exposureCreated");
     }

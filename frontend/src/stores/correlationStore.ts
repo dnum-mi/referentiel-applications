@@ -1,3 +1,4 @@
+import { isApiSuccess } from "@/api/api-result";
 import type { CorrelationSuggestionDto, CorrelationSuggestionStatus, RunCorrelationDetectionResultDto } from "@/client/types.gen";
 import { defineStore } from "pinia";
 import { ref } from "vue";
@@ -44,15 +45,15 @@ export const useCorrelationStore = defineStore("correlationStore", () => {
       const response = await api.correlationSuggestionControllerAccept({ path: { id } });
       // Un autre administrateur a pu revoir la suggestion entre l'affichage
       // et le clic : le dire plutôt que d'afficher une erreur générique.
-      if (response.response.status === 409) {
+      if (response.response?.status === 409) {
         toaster.addErrorMessage("Cette suggestion vient d'être revue par ailleurs. La liste est rafraîchie.");
         return undefined;
       }
-      if (response.response.status === 404) {
+      if (response.response?.status === 404) {
         toaster.addErrorMessage("Cette suggestion n'existe plus. La liste est rafraîchie.");
         return undefined;
       }
-      if (!response.response.ok || !response.data) {
+      if (!isApiSuccess(response) || !response.data) {
         throw new Error("Erreur lors de l'acceptation de la suggestion");
       }
       toaster.addSuccessMessage("Suggestion acceptée : la relation de corrélation est visible sur les deux fiches.");
@@ -68,15 +69,15 @@ export const useCorrelationStore = defineStore("correlationStore", () => {
     const toaster = useToasterStore();
     try {
       const response = await api.correlationSuggestionControllerReject({ path: { id } });
-      if (response.response.status === 409) {
+      if (response.response?.status === 409) {
         toaster.addErrorMessage("Cette suggestion vient d'être revue par ailleurs. La liste est rafraîchie.");
         return undefined;
       }
-      if (response.response.status === 404) {
+      if (response.response?.status === 404) {
         toaster.addErrorMessage("Cette suggestion n'existe plus. La liste est rafraîchie.");
         return undefined;
       }
-      if (!response.response.ok || !response.data) {
+      if (!isApiSuccess(response) || !response.data) {
         throw new Error("Erreur lors du rejet de la suggestion");
       }
       toaster.addSuccessMessage("Suggestion rejetée : cette paire ne sera plus proposée.");
@@ -95,11 +96,11 @@ export const useCorrelationStore = defineStore("correlationStore", () => {
     isDetectionRunning.value = true;
     try {
       const response = await api.correlationSuggestionControllerRun();
-      if (response.response.status === 409) {
+      if (response.response?.status === 409) {
         toaster.addErrorMessage("Une détection est déjà en cours, réessayez dans un instant.");
         return undefined;
       }
-      if (!response.response.ok || !response.data) {
+      if (!isApiSuccess(response) || !response.data) {
         throw new Error("Erreur lors du lancement de la détection");
       }
       const { createdCount, updatedCount } = response.data;

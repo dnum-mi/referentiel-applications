@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@10.14.0",
+  "packageManager": "pnpm@10.34.6",
   "description": "Tests end-to-end de non-régression (Playwright, POM strict + datafeature). Voir qa/README.md.",
   "scripts": {
     "test:unit": "playwright test --config=playwright.unit.config.ts",
@@ -14,11 +14,14 @@
     "type-check": "tsc --noEmit"
   },
   "devDependencies": {
-    "@playwright/test": "^1.58.2",
-    "@types/node": "^22.10.0",
-    "@types/pg": "^8.20.0",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^24.19.0",
+    "@types/pg": "^8.23.1",
     "exceljs": "^4.4.0",
-    "pg": "^8.21.0",
-    "typescript": "^5.7.2"
+    "pg": "^8.23.1",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": "^22.18.0 || ^24.0.0"
   }
 }

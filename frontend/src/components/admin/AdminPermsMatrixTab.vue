@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import { ref, onMounted } from "vue";
 import api from "@/api";
 import type { AppPermsDto } from "@/client/types.gen";
@@ -15,7 +16,7 @@ async function load() {
   error.value = null;
   try {
     const res = await api.actorTypeControllerGetMatrix();
-    if (!res.response.ok || !res.data) throw res.error ?? new Error("HTTP error");
+    if (!isApiSuccess(res) || !res.data) throw res.error ?? new Error("HTTP error");
     appPermsMatrix.value = res.data;
   } catch (e) {
     error.value = "Erreur lors du chargement de la matrice des permissions";
@@ -28,7 +29,7 @@ async function save(body: AppPermsDto[]) {
   loading.value = true;
   try {
     const res = await api.actorTypeControllerUpdateMatrix({ body });
-    if (!res.response.ok) throw res.error ?? new Error("HTTP error");
+    if (!isApiSuccess(res)) throw res.error ?? new Error("HTTP error");
     toaster.addSuccessMessage("Matrice des permissions mise à jour avec succès");
     await load();
   } catch (e) {

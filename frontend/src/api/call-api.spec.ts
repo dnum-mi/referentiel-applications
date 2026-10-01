@@ -52,6 +52,18 @@ describe("callApi", () => {
     expect(toaster.addErrorMessage).toHaveBeenCalledExactlyOnceWith(errorMessage);
   });
 
+  it.each([
+    { failure: "réseau sans réponse", response: undefined, error: new TypeError("Failed to fetch") },
+    { failure: "décodage après un HTTP 200", response: { ok: true, statusText: "OK" }, error: new SyntaxError("Invalid JSON") },
+  ])("propage une erreur $failure renvoyée par le SDK et libère le chargement", async ({ response, error }) => {
+    const isLoading = ref(false);
+    const pending = callApi(async () => ({ response, error }), { isLoading, toaster, errorMessage });
+
+    await expect(pending).rejects.toBe(error);
+    expect(isLoading.value).toBe(false);
+    expect(toaster.addErrorMessage).toHaveBeenCalledExactlyOnceWith(errorMessage);
+  });
+
   it("attend la fin de tous les appels partageant la même ref", async () => {
     const isLoading = ref(false);
     let finishLast = () => {};

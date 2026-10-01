@@ -1,3 +1,4 @@
+import { isApiSuccess } from "@/api/api-result";
 import type { EmailLogDto, NotificationDto } from "@/client/types.gen";
 import { defineStore } from "pinia";
 import { ref } from "vue";
@@ -41,7 +42,7 @@ export const useNotificationStore = defineStore("notificationStore", () => {
     }
     try {
       const response = await api.notificationControllerMarkAsRead({ path: { id } });
-      if (!response.response.ok) {
+      if (!isApiSuccess(response)) {
         throw new Error("Erreur lors du marquage de la notification comme lue");
       }
       if (notification) {
@@ -57,7 +58,7 @@ export const useNotificationStore = defineStore("notificationStore", () => {
     const toaster = useToasterStore();
     try {
       const response = await api.notificationControllerMarkAllAsRead();
-      if (!response.response.ok) {
+      if (!isApiSuccess(response)) {
         throw new Error("Erreur lors du marquage des notifications comme lues");
       }
       notifications.value = notifications.value.map((n) => ({ ...n, isRead: true }));
@@ -71,7 +72,7 @@ export const useNotificationStore = defineStore("notificationStore", () => {
     const toaster = useToasterStore();
     try {
       const response = await api.notificationControllerDelete({ path: { id } });
-      if (!response.response.ok) {
+      if (!isApiSuccess(response)) {
         throw new Error("Erreur lors de la suppression de la notification");
       }
       const removed = notifications.value.find((n) => n.id === id);
@@ -89,7 +90,7 @@ export const useNotificationStore = defineStore("notificationStore", () => {
     const toaster = useToasterStore();
     try {
       const response = await api.notificationControllerDeleteMany({ body: { ids } });
-      if (!response.response.ok) {
+      if (!isApiSuccess(response)) {
         throw new Error("Erreur lors de la suppression des notifications");
       }
       const idSet = new Set(ids);

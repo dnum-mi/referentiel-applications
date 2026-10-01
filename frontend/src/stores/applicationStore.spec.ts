@@ -49,6 +49,21 @@ describe("applicationStore.deleteApplication — retour d'erreur (#2542)", () =>
     expect(addErrorMessage).toHaveBeenCalledWith("Erreur lors de la suppression définitive de l'application.");
   });
 
+  it.each([
+    { failure: "réseau sans réponse", response: undefined, error: new TypeError("Failed to fetch") },
+    { failure: "décodage après un HTTP 200", response: { ok: true, status: 200 }, error: new SyntaxError("Invalid JSON") },
+  ])("ne confirme pas la suppression après une erreur $failure", async ({ response, error }) => {
+    removeMock.mockResolvedValueOnce({ response, error });
+
+    await expect(useApplicationStore().deleteApplication("app-1")).rejects.toThrow(
+      "Erreur lors de la suppression définitive de l'application.",
+    );
+
+    expect(addErrorMessage).toHaveBeenCalledExactlyOnceWith("Erreur lors de la suppression définitive de l'application.");
+    expect(addSuccessMessage).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
+  });
+
   it("redirige vers la recherche et confirme après une suppression réussie", async () => {
     removeMock.mockResolvedValueOnce({ response: { ok: true, status: 204 } });
 

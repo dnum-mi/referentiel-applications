@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import api from "@/api/index";
 import type { EmailLogDto, PaginatedEmailLogDto } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
@@ -32,7 +33,7 @@ async function fetchLogs() {
     const response = await api.emailControllerFindLogs({
       query: { page: currentPage.value, pageSize: itemsPerPage.value },
     });
-    if (response.response.ok && response.data) {
+    if (isApiSuccess(response) && response.data) {
       data.value = response.data;
       hasLoadedOnce.value = true;
     } else {

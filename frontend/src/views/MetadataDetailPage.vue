@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import DOMPurify from "dompurify";
 import { onMounted, ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -28,7 +29,7 @@ async function fetchMetadata() {
     const response = await api.metadatasControllerFindOne({ path: { id } });
     isLoading.value = false;
 
-    if (!response.response.ok) {
+    if (!isApiSuccess(response)) {
       error.value = "Erreur lors de la récupération de la metadata.";
       console.error("Error fetching metadata:", response.error);
       return;
