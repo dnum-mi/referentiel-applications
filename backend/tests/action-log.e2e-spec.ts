@@ -49,12 +49,12 @@ describe("ActionLog — middleware de traçabilité (#2224)", () => {
   it("journalise une requête mutante avec l'identité effective", async () => {
     await request(app().getHttpServer())
       .post("/organizations")
-      .set("Authorization", `Bearer ${CONTRIBUTOR_TOKEN}`)
+      .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
       .send({ path: `E2E/ACTIONLOG/${Date.now()}` })
       .expect(201);
 
     const log = await waitForActionLog({
-      userId: contributor.id,
+      userId: admin.id,
       method: "POST",
       path: "/organizations",
     });

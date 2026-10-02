@@ -110,3 +110,21 @@ export class OrganizationDto {
   })
   maiaReferences?: OrganizationMaiaReferenceDto[];
 }
+
+/**
+ * Administrateur dont le périmètre est une organisation donnée : sa suppression lui retire ce
+ * périmètre (FK `ON DELETE SET NULL`), ce qui en fait un administrateur global.
+ */
+export class OrganizationScopedAdminDto {
+  @ApiProperty({
+    example: "f09ed26a-8415-476a-be3b-ada479291c34",
+    description: "L'identifiant de l'utilisateur",
+  })
+  id: string;
+
+  @ApiProperty({
+    example: "jean.dupont@interieur.gouv.fr",
+    description: "L'adresse email de l'utilisateur",
+  })
+  email: string;
+}
