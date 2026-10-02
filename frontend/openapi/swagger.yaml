@@ -3627,6 +3627,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OrganizationDto"
+        "403":
+          description: Réservé aux administrateurs globaux.
       summary: Créer une nouvelle organisation
       tags: &a20
         - organizations
@@ -3705,6 +3707,28 @@ paths:
                 $ref: "#/components/schemas/PaginatedOrganizationDto"
       summary: Récupérer toutes les organisations
       tags: *a20
+  /api/v2/organizations/{id}/scoped-admins:
+    get:
+      operationId: OrganizationsController_findScopedAdmins
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Administrateurs scopés sur l'organisation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OrganizationScopedAdminDto"
+        "404":
+          description: Organisation non trouvée
+      summary: Lister les administrateurs ayant cette organisation pour périmètre
+      tags: *a20
   /api/v2/organizations/{id}:
     get:
       description: Ce endpoint permet de récupérer les détails complets d'une
@@ -3748,6 +3772,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OrganizationDto"
+        "403":
+          description: Réservé aux administrateurs globaux.
       summary: Mettre à jour une organisation
       tags: *a20
     delete:
@@ -3761,6 +3787,8 @@ paths:
       responses:
         "204":
           description: Organisation supprimée
+        "403":
+          description: Réservé aux administrateurs globaux.
         "409":
           description: "L'organisation possède des organisations filles : suppression
             refusée."
@@ -6085,7 +6113,7 @@ paths:
       tags: *a34
   /api/v2/technologies/end-of-life:
     get:
-      description: "Vue transverse accessible avec la capacité TechnologyList aux
+      description: Vue transverse accessible avec la capacité TechnologyList aux
         lecteurs, contributeurs et administrateurs. Cette capacité est accordée
         par défaut aux administrateurs, avec ou sans périmètre, et doit être
         attribuée explicitement aux lecteurs et contributeurs. Les applications
@@ -6095,7 +6123,7 @@ paths:
         ou sortie du support actif. Filtrable par statut (`eol`, `eol-soon`,
         `eoas-passed`, partitionnant), par organisation et par recherche libre.
         Le filtre `all` inclut les technologies saines sans élargir le périmètre
-        autorisé."
+        autorisé.
       operationId: EndOfLifeController_findEndOfLifeApplications
       parameters:
         - name: page
@@ -9371,6 +9399,20 @@ components:
           description: L'identifiant de la direction métier associée (null pour détacher)
       required:
         - path
+    OrganizationScopedAdminDto:
+      type: object
+      properties:
+        id:
+          type: string
+          example: f09ed26a-8415-476a-be3b-ada479291c34
+          description: L'identifiant de l'utilisateur
+        email:
+          type: string
+          example: jean.dupont@interieur.gouv.fr
+          description: L'adresse email de l'utilisateur
+      required:
+        - id
+        - email
     PaginatedOrganizationDto:
       type: object
       properties:

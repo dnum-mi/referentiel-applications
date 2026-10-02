@@ -6,6 +6,7 @@ import type {
   CreateOrganizationMaiaReferenceDto,
   OrganizationDto,
   OrganizationMaiaReferenceDto,
+  OrganizationScopedAdminDto,
   PaginatedOrganizationMaiaReferenceDto,
   PatchOrganizationDto,
 } from "@/client/types.gen";
@@ -38,6 +39,9 @@ const isAddingReference = ref(false);
 const referencesErrorMessage = ref("");
 
 const maiaReferences = ref<OrganizationMaiaReferenceDto[]>([]);
+// Admins ayant cette organisation pour périmètre : la suppression le leur retire (FK
+// `ON DELETE SET NULL`) et en fait des admins globaux — on prévient avant de confirmer.
+const scopedAdmins = ref<OrganizationScopedAdminDto[]>([]);
 const newMaiaReference = ref("");
 
 // "" = aucune direction métier (détachement à l'enregistrement).
@@ -107,7 +111,17 @@ function closeEditModal() {
   resetForm();
 }
 
-function openDeleteModal() {
+async function openDeleteModal() {
+  const response = await api.organizationsControllerFindScopedAdmins({
+    path: { id: props.organization!.id },
+  });
+
+  if (!response.response.ok || !response.data) {
+    toaster.addErrorMessage("Erreur lors de la récupération des administrateurs de l'organisation");
+    return;
+  }
+
+  scopedAdmins.value = response.data;
   isDeleteModalOpen.value = true;
 }
 
@@ -216,6 +230,10 @@ async function deleteOrganization() {
       toaster.addSuccessMessage("Organisation supprimée avec succès");
       closeDeleteModal();
       emit("fetchOrganizations");
+    } else if (response.response.status === 403) {
+      toaster.addErrorMessage("Seul un administrateur global peut supprimer une organisation");
+    } else if (response.response.status === 409) {
+      toaster.addErrorMessage("Cette organisation possède des organisations filles : supprimez-les d'abord");
     } else {
       toaster.addErrorMessage("Erreur lors de la suppression de l'organisation");
     }
@@ -364,6 +382,20 @@ async function deleteOrganization() {
       class="fr-mb-3w alert-multiline"
       data-testid="organization-delete-alert"
     />
+
+    <div v-if="scopedAdmins.length" data-testid="organization-delete-scoped-admins-alert">
+      <DsfrAlert
+        title="Des administrateurs ont cette organisation pour périmètre"
+        description="La suppression retirera leur périmètre : ils deviendront administrateurs globaux."
+        type="error"
+        class="fr-mb-2w alert-multiline"
+      />
+      <ul class="fr-mb-3w">
+        <li v-for="admin in scopedAdmins" :key="admin.id" data-testid="organization-delete-scoped-admin-item">
+          {{ admin.email }}
+        </li>
+      </ul>
+    </div>
 
     <template #footer>
       <DsfrButton
