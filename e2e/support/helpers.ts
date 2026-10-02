@@ -1,6 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 
-export const BASE_URL = "http://localhost:5173";
+export const BASE_URL = process.env.E2E_BASE_URL ?? "http://localhost:5173";
 
 export interface Credentials {
   user: string;
