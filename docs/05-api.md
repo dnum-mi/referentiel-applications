@@ -335,11 +335,18 @@ Seules les technologies retenues par le filtre sont restituées, triées par gra
 
 ### Notifications in-app (#2280)
 
-| Verbe & chemin                                                    | Rôle                                                                                |
-| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `GET /notifications`                                              | Liste paginée des notifications de l'utilisateur courant (plus récentes en premier) |
-| `GET /notifications/unread-count`                                 | Nombre de notifications non lues                                                    |
-| `PATCH /notifications/:id/read` · `PATCH /notifications/read-all` | Marquer une notification (ou toutes) comme lue(s)                                   |
+| Verbe & chemin                                                    | Rôle                                                                                     |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `GET /notifications`                                              | Liste paginée des notifications de l'utilisateur courant, filtre optionnel `isRead`      |
+| `GET /notifications/unread-count`                                 | Nombre de notifications non lues                                                         |
+| `PATCH /notifications/:id/read` · `PATCH /notifications/read-all` | Marquer une notification (ou toutes) comme lue(s)                                        |
+| `POST /notifications/read-all`                                    | Marquer toutes ses notifications comme lues ; le verbe `PATCH` existant reste disponible |
+
+Ces routes sont accessibles à tout utilisateur authentifié, sans permission métier supplémentaire. Elles utilisent exclusivement l'identité de la requête : aucun identifiant de destinataire fourni par le client ne peut élargir la liste, le compteur ou les écritures. Marquer une notification absente ou appartenant à un autre utilisateur renvoie `404`.
+
+`GET /notifications?isRead=false` ne renvoie que les notifications non lues ; `isRead=true` ne renvoie que les lues. L'absence du filtre conserve les deux états ; une valeur autre que `true` ou `false` est refusée (`400`). Le total de pagination tient compte du filtre. Les résultats sont triés par date de création décroissante par défaut (`order=asc` pour inverser), puis par identifiant pour départager les dates identiques. `page` commence à zéro et `pageSize` vaut 15 par défaut.
+
+Le compteur non lu est calculé directement en base par `userId` et `isRead`, couverts par l'index `(userId, isRead, createdAt)`, sans charger les notifications. Les actions de marquage renvoient `204` et sont idempotentes : répéter une action ne modifie ni les notifications d'un autre utilisateur ni le nombre de lignes.
 
 ### Tokens (clés d'API)
 

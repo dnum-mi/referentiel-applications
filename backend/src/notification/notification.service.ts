@@ -54,10 +54,10 @@ export class NotificationService {
   }
 
   async findAllForUser(userId: string, filters: NotificationFiltersDto) {
-    const { page = 0, pageSize = 15, order = "desc" } = filters;
+    const { page = 0, pageSize = 15, order = "desc", isRead } = filters;
     return this.prisma.notification.paginate({
-      where: { userId },
-      orderBy: { createdAt: order },
+      where: { userId, ...(isRead === undefined ? {} : { isRead }) },
+      orderBy: [{ createdAt: order }, { id: order }],
       page,
       pageSize,
     });

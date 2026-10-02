@@ -1,6 +1,10 @@
 import { NotFoundException } from "@nestjs/common";
+import type { Prisma } from "@prisma/client";
 import { NotificationType, Permission, Roles } from "@prisma/client";
-import type { PrismaService } from "src/prisma/prisma.service";
+import type {
+  PrismaPaginationArgs,
+  PrismaService,
+} from "src/prisma/prisma.service";
 import { NotificationService } from "./notification.service";
 
 describe("NotificationService", () => {
@@ -73,13 +77,13 @@ describe("NotificationService", () => {
 
     expect(paginate).toHaveBeenCalledWith({
       where: { userId: "user-1" },
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       page: 1,
       pageSize: 10,
     });
   });
 
-  it("honors an explicit sort order for the date column", async () => {
+  it("uses the same explicit sort order for the date and ID tie-breaker", async () => {
     const paginate = jest.fn().mockResolvedValue({ results: [], total: 0 });
     const service = new NotificationService({
       notification: { paginate },
@@ -93,11 +97,39 @@ describe("NotificationService", () => {
 
     expect(paginate).toHaveBeenCalledWith({
       where: { userId: "user-1" },
-      orderBy: { createdAt: "asc" },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
       page: 0,
       pageSize: 10,
     });
   });
+
+  it.each([true, false])(
+    "filters a user's notifications by isRead=%s without dropping false",
+    async (isRead) => {
+      const paginate = jest
+        .fn<
+          ReturnType<NotificationService["findAllForUser"]>,
+          [Prisma.NotificationFindManyArgs & PrismaPaginationArgs]
+        >()
+        .mockResolvedValue({ results: [], total: 0 });
+      const service = new NotificationService({
+        notification: { paginate },
+      } as unknown as PrismaService);
+
+      await service.findAllForUser("user-1", {
+        page: 0,
+        pageSize: 2,
+        isRead,
+      });
+
+      expect(paginate).toHaveBeenCalledWith({
+        where: { userId: "user-1", isRead },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        page: 0,
+        pageSize: 2,
+      });
+    },
+  );
 
   it("counts unread notifications for a user", async () => {
     const count = jest.fn().mockResolvedValue(3);
