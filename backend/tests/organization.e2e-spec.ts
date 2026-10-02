@@ -283,7 +283,7 @@ describe("Organizations - MAIA references", () => {
   let TOKEN: string;
 
   beforeAll(async () => {
-    const user = await UserFaker.create({ role: Roles.CONTRIBUTOR });
+    const user = await UserFaker.create({ role: Roles.ADMIN });
     TOKEN = await getToken(user);
   });
 

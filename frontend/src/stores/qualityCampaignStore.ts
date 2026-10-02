@@ -1,3 +1,4 @@
+import { isApiSuccess } from "@/api/api-result";
 import type { CreateQualityCampaignDto, QualityCampaignDto, UpdateQualityCampaignStatusDto } from "@/client/types.gen";
 import { defineStore } from "pinia";
 import { ref } from "vue";
@@ -35,7 +36,7 @@ export const useQualityCampaignStore = defineStore("qualityCampaignStore", () =>
     const toaster = useToasterStore();
     try {
       const response = await api.qualityCampaignControllerCreate({ body });
-      if (!response.response.ok || !response.data) {
+      if (!isApiSuccess(response) || !response.data) {
         throw new Error("Erreur lors de la création de la campagne");
       }
       toaster.addSuccessMessage(`Campagne « ${response.data.name} » créée.`);
@@ -56,7 +57,7 @@ export const useQualityCampaignStore = defineStore("qualityCampaignStore", () =>
         path: { id },
         body: body as Partial<CreateQualityCampaignDto>,
       });
-      if (!response.response.ok || !response.data) {
+      if (!isApiSuccess(response) || !response.data) {
         throw new Error("Erreur lors de la mise à jour de la campagne");
       }
       toaster.addSuccessMessage("Campagne mise à jour.");
@@ -71,7 +72,7 @@ export const useQualityCampaignStore = defineStore("qualityCampaignStore", () =>
     const toaster = useToasterStore();
     try {
       const response = await api.qualityCampaignControllerUpdateStatus({ path: { id }, body: { status } });
-      if (!response.response.ok || !response.data) {
+      if (!isApiSuccess(response) || !response.data) {
         throw new Error("Erreur lors du changement de statut de la campagne");
       }
       toaster.addSuccessMessage("Statut de la campagne mis à jour.");
@@ -86,7 +87,7 @@ export const useQualityCampaignStore = defineStore("qualityCampaignStore", () =>
     const toaster = useToasterStore();
     try {
       const response = await api.qualityCampaignControllerRemove({ path: { id } });
-      if (!response.response.ok) {
+      if (!isApiSuccess(response)) {
         throw new Error("Erreur lors de la suppression de la campagne");
       }
       campaigns.value = campaigns.value.filter((c) => c.id !== id);
@@ -99,7 +100,7 @@ export const useQualityCampaignStore = defineStore("qualityCampaignStore", () =>
     const toaster = useToasterStore();
     try {
       const response = await api.qualityCampaignControllerSendSponsorReport({ path: { id } });
-      if (!response.response.ok || !response.data) {
+      if (!isApiSuccess(response) || !response.data) {
         throw new Error("Erreur lors de l'envoi du rapport au sponsor");
       }
       toaster.addSuccessMessage("Rapport de résultats envoyé au sponsor.");
@@ -114,7 +115,7 @@ export const useQualityCampaignStore = defineStore("qualityCampaignStore", () =>
     const toaster = useToasterStore();
     try {
       const response = await api.qualityCampaignControllerPreview({ path: { id } });
-      if (!response.response.ok || !response.data) {
+      if (!isApiSuccess(response) || !response.data) {
         throw new Error("Erreur lors de l'aperçu de la campagne");
       }
       return response.data;

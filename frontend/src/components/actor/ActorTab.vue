@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import api from "@/api/index";
 import { type ActorDto, type CreateActorDto, Permission } from "@/client/types.gen";
 import OrgaLink from "@/components/organization/OgaLink.vue";
@@ -87,7 +88,7 @@ async function updateActor({ id: _id, ...actor }: CreateActorDto & { id?: string
     path: { applicationId, id: actorId },
     body: actor,
   });
-  if (!response.response.ok) {
+  if (!isApiSuccess(response)) {
     throw new Error(`Failed to update actor for application ${applicationId}`);
   }
   return response.data;

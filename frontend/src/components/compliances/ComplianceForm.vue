@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import { ref, onMounted, computed } from "vue";
 import {
   dimaDurationHoursOptions,
@@ -118,7 +119,7 @@ async function save() {
         ? await api.applicationCompliancesControllerUpdate({ path: { applicationId: props.applicationId }, body: payload })
         : await api.applicationCompliancesControllerCreate({ path: { applicationId: props.applicationId }, body: payload });
 
-    if (!response.response.ok || !response.data) {
+    if (!isApiSuccess(response) || !response.data) {
       throw new Error(
         props.mode === "edit" ? "Erreur lors de la mise à jour de la conformité." : "Erreur lors de la création de la conformité.",
       );

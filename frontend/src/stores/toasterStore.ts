@@ -30,7 +30,7 @@ export interface Message {
   class?: string | Record<string, string> | Array<string | Record<string, string>>;
 }
 
-const timeouts: Record<string, NodeJS.Timeout> = {};
+const timeouts: Record<string, ReturnType<typeof setTimeout>> = {};
 
 // function taking a Message or a string and return a well formatted Message
 export function formatMessage(message: Message | string): Message {

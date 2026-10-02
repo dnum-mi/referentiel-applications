@@ -1,3 +1,4 @@
+import { isApiSuccess } from "@/api/api-result";
 import type { RelationDto } from "@/client/types.gen";
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
@@ -13,7 +14,7 @@ export const useRelationStore = defineStore("relationStore", () => {
     const response = await api.relationControllerFindAll({
       path: { applicationId },
     });
-    if (!response.response.ok) {
+    if (!isApiSuccess(response)) {
       throw new Error("Failed to fetch relations");
     }
     if (!response.data) {
@@ -38,7 +39,7 @@ export const useRelationStore = defineStore("relationStore", () => {
         mediationServiceId: createRelation.mediationServiceId,
       },
     });
-    if (!response.response.ok) {
+    if (!isApiSuccess(response)) {
       throw new Error("Failed to create relation");
     }
     await fetchRelationsByApplication(createRelation.applicationSourceId);
@@ -57,7 +58,7 @@ export const useRelationStore = defineStore("relationStore", () => {
         mediationServiceId: updated.mediationServiceId,
       },
     });
-    if (!response.response.ok) {
+    if (!isApiSuccess(response)) {
       throw new Error("Failed to update relation");
     }
     return fetchRelationsByApplication(currentApplicationId);
@@ -69,7 +70,7 @@ export const useRelationStore = defineStore("relationStore", () => {
     const response = await api.relationControllerDelete({
       path: { applicationId: currentApplicationId, id: deleted.id },
     });
-    if (!response.response.ok) {
+    if (!isApiSuccess(response)) {
       throw new Error("Failed to delete relation");
     }
     return fetchRelationsByApplication(currentApplicationId);

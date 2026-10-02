@@ -1,0 +1,13 @@
+diff --git a/dist/vue-dsfr.js b/dist/vue-dsfr.js
+index a437ecea2645779b318954776838c39739b1610c..57c10e5dbcbaab5341c98eb01d1189bf2a867894 100644
+--- a/dist/vue-dsfr.js
++++ b/dist/vue-dsfr.js
+@@ -3284,7 +3284,7 @@ var FocusTrapProps = defineFocusTrapProps({
+ 		}, f = computed(() => r.isAlert ? "alertdialog" : "dialog"), p = ref(null), m = ref();
+ 		watch(() => r.opened, (e) => {
+ 			e ? (m.value?.showModal(), setTimeout(() => {
+-				p.value?.focus();
++				if (!p.value?.closest("dialog")?.contains(document.activeElement)) p.value?.focus();
+ 			}, 100)) : m.value?.close(), h(e);
+ 		});
+ 		function h(e) {

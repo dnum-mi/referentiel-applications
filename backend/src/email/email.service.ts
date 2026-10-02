@@ -41,7 +41,7 @@ export class EmailService {
       port,
       secure,
       tls: {
-        rejectUnauthorized: false,
+        rejectUnauthorized: true,
       },
     });
 

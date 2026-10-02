@@ -357,7 +357,7 @@ export class UserService {
       ];
     }
 
-    let orderBy: Prisma.UserOrderByWithRelationInput = {};
+    let orderBy: Prisma.UserOrderByWithRelationInput;
 
     if (filters.sortBy === "organisation") {
       orderBy = {

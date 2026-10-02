@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import api from "@/api/index";
 import { backendErrorMessage } from "@/utils/api-error";
 import { EOL_STATUS_BADGE_TYPE, EOL_STATUS_LABELS, endoflifeProductUrl, type EolStatus } from "@/utils/eol-status";
@@ -102,7 +103,7 @@ const loadError = ref(false);
 async function fetchTechnologies(applicationId: string) {
   try {
     const response = await api.technologyControllerFindAll({ path: { applicationId } });
-    if (!response.response.ok) throw new Error(response.response.statusText);
+    if (!isApiSuccess(response)) throw response.error ?? new Error("Erreur lors du chargement des technologies.");
     technologies.value = response.data ?? [];
     loadError.value = false;
   } catch {
@@ -135,8 +136,8 @@ async function ensureEolProducts(applicationId: string) {
   if (eolProductsLoaded) return;
   try {
     const response = await api.technologyControllerListEolProducts({ path: { applicationId } });
-    eolProducts.value = response.response.ok ? (response.data ?? []) : [];
-    eolProductsLoaded = response.response.ok;
+    eolProducts.value = isApiSuccess(response) ? (response.data ?? []) : [];
+    eolProductsLoaded = isApiSuccess(response);
   } catch {
     eolProducts.value = [];
   }
@@ -155,7 +156,7 @@ onBeforeMount(async () => {
   }
 });
 
-// Le client généré ne lève pas sur un 4xx/5xx (#2512) : c'est `response.response.ok` qui fait
+// Le client généré ne lève pas sur un 4xx/5xx (#2512) : c'est `isApiSuccess(response)` qui fait
 // foi — avant, un 409 se soldait par un toast vert et une liste rechargée « intacte ».
 async function handleSave(technology: {
   id?: string;
@@ -186,7 +187,7 @@ async function handleSave(technology: {
           path: { applicationId: props.application.id },
           body,
         });
-    if (!response.response.ok) {
+    if (!isApiSuccess(response)) {
       const message = backendErrorMessage(response.error) ?? "Erreur lors de la sauvegarde de la technologie.";
       statusMessage.value = message;
       toaster.addErrorMessage(message);
@@ -218,7 +219,7 @@ async function confirmDelete() {
     const response = await api.technologyControllerDelete({
       path: { applicationId: props.application.id, id: technologyToDelete.value.id },
     });
-    if (!response.response.ok) {
+    if (!isApiSuccess(response)) {
       const message = backendErrorMessage(response.error) ?? "Erreur lors de la suppression de la technologie.";
       statusMessage.value = message;
       toaster.addErrorMessage(message);

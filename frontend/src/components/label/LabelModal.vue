@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import { ref, watch, onMounted, nextTick } from "vue";
 import api from "@/api/index";
 import { useToasterStore } from "@/stores/toasterStore";
@@ -75,9 +76,9 @@ async function handleSubmit() {
         path: { applicationId: props.applicationId, id: props.initialLabel.id },
         body: labelForm.value,
       });
-      if (!response.response.ok) {
+      if (!isApiSuccess(response)) {
         toaster.addErrorMessage("Erreur lors de la mise à jour du nom alternatif");
-        throw new Error(`Failed to update label: ${response.response.statusText}`);
+        throw response.error ?? new Error("Erreur lors de la mise à jour du nom alternatif.");
       }
       toaster.addSuccessMessage("Nom alternatif mis à jour avec succès");
       emit("labelUpdated");
@@ -86,9 +87,9 @@ async function handleSubmit() {
         path: { applicationId: props.applicationId },
         body: labelForm.value,
       });
-      if (!response.response.ok) {
+      if (!isApiSuccess(response)) {
         toaster.addErrorMessage("Erreur lors de la création du nom alternatif");
-        throw new Error(`Failed to create label: ${response.response.statusText}`);
+        throw response.error ?? new Error("Erreur lors de la création du nom alternatif.");
       }
       toaster.addSuccessMessage("Nom alternatif créé avec succès");
       emit("labelCreated");

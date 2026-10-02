@@ -1,3 +1,4 @@
+import { isApiSuccess } from "@/api/api-result";
 import { ref } from "vue";
 import api from "@/api";
 import { withLoading } from "@/api/call-api";
@@ -35,7 +36,7 @@ export function useApplicationFormActions(
         applicationId,
       },
     });
-    if (!response.response.ok) throw response.error;
+    if (!isApiSuccess(response)) throw response.error;
   }
 
   async function save(): Promise<ApplicationDto | undefined> {
@@ -58,7 +59,7 @@ export function useApplicationFormActions(
         }
 
         const response = await api.applicationControllerCreate({ body });
-        if (!response.response.ok || !response.data) throw response.error;
+        if (!isApiSuccess(response) || !response.data) throw response.error;
         const created = response.data;
         try {
           await createActor(created.id, moa);
@@ -90,7 +91,7 @@ export function useApplicationFormActions(
     await withLoading(isSyncing, async () => {
       try {
         const response = await api.userControllerSyncOrganizationFromMaiaByEmail({ path: { email } });
-        if (!response.response.ok || !response.data) {
+        if (!isApiSuccess(response) || !response.data) {
           toaster.addErrorMessage("Erreur lors de la synchronisation MAIA (email non trouvé)");
           return;
         }

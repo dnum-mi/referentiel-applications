@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { watchDebounced } from "@vueuse/core";
 import api from "@/api/index";
@@ -134,7 +135,7 @@ async function createAndAddFamily() {
   }
   try {
     const response = await api.dataFamilyControllerCreate({ body: { path: newFamilyPath.value.trim() } });
-    if (!response.response.ok || !response.data) throw new Error("family creation failed");
+    if (!isApiSuccess(response) || !response.data) throw new Error("family creation failed");
     familiesList.value = [...familiesList.value, response.data];
     addDescriptionFamily(response.data);
     toggleCreateNewFamily(false);
@@ -324,7 +325,7 @@ async function resolveDataDescriptionId(): Promise<string> {
       applicationSourceIds: descriptionApplicationsSource.value.map((app) => app.id),
     },
   });
-  if (!descriptionResponse.response.ok || !descriptionResponse.data) throw new Error("description creation failed");
+  if (!isApiSuccess(descriptionResponse) || !descriptionResponse.data) throw new Error("description creation failed");
   return descriptionResponse.data.id;
 }
 
@@ -342,17 +343,21 @@ async function updateDescriptionFields(dataDescriptionId: string): Promise<void>
       applicationSourceIds: descriptionApplicationsSource.value.map((app) => app.id),
     },
   });
-  if (!response.response.ok) throw new Error("description update failed");
+  if (!isApiSuccess(response)) throw new Error("description update failed");
+}
+
+function validateDescription() {
+  if (props.initialItem || isCreatingNewDescription.value) {
+    newDescriptionError.value = isDescriptionFieldsValid.value ? undefined : "Veuillez renseigner un nom.";
+    return !newDescriptionError.value;
+  }
+
+  descriptionError.value = isFormValid.value ? undefined : "Veuillez sélectionner une donnée existante dans la liste.";
+  return !descriptionError.value;
 }
 
 async function handleSubmit() {
-  if (props.initialItem || isCreatingNewDescription.value) {
-    newDescriptionError.value = isDescriptionFieldsValid.value ? undefined : "Veuillez renseigner un nom.";
-    if (newDescriptionError.value) return;
-  } else {
-    descriptionError.value = isFormValid.value ? undefined : "Veuillez sélectionner une donnée existante dans la liste.";
-    if (descriptionError.value) return;
-  }
+  if (!validateDescription()) return;
 
   isSubmitting.value = true;
   try {
@@ -382,7 +387,7 @@ async function handleSubmit() {
         path: { applicationId: props.applicationId, dataApplicationId: props.initialItem.id },
         body,
       });
-      if (!response.response.ok) throw new Error("update failed");
+      if (!isApiSuccess(response)) throw new Error("update failed");
       toaster.addSuccessMessage("Donnée mise à jour avec succès");
       emit("dataUpdated");
     } else {
@@ -390,7 +395,7 @@ async function handleSubmit() {
         path: { applicationId: props.applicationId },
         body,
       });
-      if (!response.response.ok) throw new Error("create failed");
+      if (!isApiSuccess(response)) throw new Error("create failed");
       toaster.addSuccessMessage(
         isCreatingNewDescription.value
           ? "Nouvelle donnée créée et rattachée à l'application avec succès"

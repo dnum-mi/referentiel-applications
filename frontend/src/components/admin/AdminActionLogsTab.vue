@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import api from "@/api/index";
 import type { ActionLogDto, PaginatedActionLogDto } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
@@ -46,7 +47,7 @@ async function fetchLogs() {
         createdAtLte: createdAtLte.value ? convertLocalToUTC(createdAtLte.value) : undefined,
       },
     });
-    if (response.response.ok && response.data) {
+    if (isApiSuccess(response) && response.data) {
       data.value = response.data;
       hasLoadedOnce.value = true;
     } else {

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import api from "@/api/index.js";
 import type { ActorTypeDto, CreateActorDto, OrganizationDto } from "@/client/types.gen.js";
 import type { Application } from "@/models/Application";
@@ -37,7 +38,7 @@ async function syncFromMaiaByEmail() {
   }
   try {
     const response = await api.userControllerSyncOrganizationFromMaiaByEmail({ path: { email: form.value.email } });
-    if (response.response.ok && response.data) {
+    if (isApiSuccess(response) && response.data) {
       const { organizationId: newOrgId, firstName, lastName } = response.data;
       form.value.firstname = firstName;
       form.value.lastname = lastName;

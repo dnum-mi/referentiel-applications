@@ -19,7 +19,7 @@ async function selectFirstOrganization(page: Page, testId: string, search?: stri
   for (const searchValue of searchTerms) {
     await root.getByRole("textbox").fill(searchValue);
 
-    let hasOption = false;
+    let hasOption: boolean;
     try {
       await expect.poll(async () => (await root.locator("select option:not([value=''])").count()) > 0, { timeout: 4000 }).toBeTruthy();
       hasOption = true;

@@ -1,3 +1,4 @@
+import { isApiSuccess } from "@/api/api-result";
 import client from "@/api/index";
 import {
   Roles,
@@ -103,21 +104,21 @@ export const useUserStore = defineStore("userStore", () => {
     const sequence = ++fetchSequence;
     const response = await client.userControllerFindMe();
     if (generation !== sessionGeneration || sequence !== fetchSequence) return;
-    if (response.data && response.response.ok) {
+    if (response.data && isApiSuccess(response)) {
       deniedAuthLevel.value = undefined;
       user.value = response.data;
       settleReauthAttempt();
       notifyStepDown();
       return;
     }
-    if (response.response.status === 403 && isStrongAuthRequiredResponse(response.error)) {
+    if (response.response?.status === 403 && isStrongAuthRequiredResponse(response.error)) {
       requireStrongAuth(response.error.authLevel);
       return;
     }
     // #1985 : filet — une impersonation persistée refusée (session rétrogradée) rejoue le header à
     // chaque requête ; si le payload `stepDown` n'est pas parvenu à l'intercepteur (proxy, ancien
     // backend pendant un déploiement), on purge et on repart d'un état propre.
-    if (response.response.status === 403 && getImpersonationState()) {
+    if (response.response?.status === 403 && getImpersonationState()) {
       clearImpersonationState();
       impersonation.value = null;
       globalThis.location.assign("/");
@@ -158,7 +159,7 @@ export const useUserStore = defineStore("userStore", () => {
       sequence === preferencesSequence &&
       user.value &&
       response.data?.id === user.value.id &&
-      response.response.ok
+      isApiSuccess(response)
     ) {
       // Une réponse de mutation ne rafraîchit jamais les droits de la session.
       user.value.emailNotificationsEnabled = response.data.emailNotificationsEnabled;
@@ -175,7 +176,7 @@ export const useUserStore = defineStore("userStore", () => {
       path: { appId },
     });
 
-    if (generation === sessionGeneration && user.value && response.data?.id === user.value.id && response.response.ok) {
+    if (generation === sessionGeneration && user.value && response.data?.id === user.value.id && isApiSuccess(response)) {
       user.value.followedApplications = response.data.followedApplications;
     }
   }
@@ -186,7 +187,7 @@ export const useUserStore = defineStore("userStore", () => {
       path: { appId },
     });
 
-    if (generation === sessionGeneration && user.value && response.data?.id === user.value.id && response.response.ok) {
+    if (generation === sessionGeneration && user.value && response.data?.id === user.value.id && isApiSuccess(response)) {
       user.value.followedApplications = response.data.followedApplications;
     }
   }
@@ -206,7 +207,7 @@ export const useUserStore = defineStore("userStore", () => {
       path: { id: target.id },
     });
 
-    if (generation === sessionGeneration && response.data && response.response.ok) {
+    if (generation === sessionGeneration && response.data && isApiSuccess(response)) {
       invalidateSession();
       setImpersonationState({
         userId: target.id,

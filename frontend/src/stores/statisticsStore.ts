@@ -1,3 +1,4 @@
+import { isApiSuccess } from "@/api/api-result";
 import type { CountByIqDto, CountByMonthDto, GetIqAvgGroupedDto } from "@/client/types.gen";
 import { defineStore } from "pinia";
 import { ref } from "vue";
@@ -5,7 +6,7 @@ import api from "@/api/index";
 
 async function countApplicationsByMonth(): Promise<CountByMonthDto[]> {
   const response = await api.applicationControllerCountByMonth();
-  if (!response.response.ok || !response.data) {
+  if (!isApiSuccess(response) || !response.data) {
     throw new Error("Erreur lors de la récupération des applications par mois");
   }
   return response.data;
@@ -13,7 +14,7 @@ async function countApplicationsByMonth(): Promise<CountByMonthDto[]> {
 
 async function countApplicationsByIq(): Promise<CountByIqDto[]> {
   const response = await api.applicationControllerCountByIq();
-  if (!response.response.ok || !response.data) {
+  if (!isApiSuccess(response) || !response.data) {
     throw new Error("Erreur lors de la récupération des applications par IQ");
   }
   return response.data;
@@ -50,7 +51,7 @@ export const useStatisticsStore = defineStore("statisticsStore", () => {
     isLoading.value = true;
     error.value = null;
     const response = await api.statsControllerGetIqAvgGrouped({ query: { from, to, groupBy } });
-    if (!response.response.ok) {
+    if (!isApiSuccess(response)) {
       throw new Error("Erreur lors de la récupération des stats IQ");
     }
     if (!response.data || !Array.isArray(response.data)) {
@@ -62,7 +63,7 @@ export const useStatisticsStore = defineStore("statisticsStore", () => {
   // fetch total compliance count
   const countCompliances = async (): Promise<number> => {
     const response = await api.complianceControllerCountAllCompliances();
-    if (!response.response.ok) {
+    if (!isApiSuccess(response)) {
       throw new Error("Erreur lors du comptage des conformités.");
     }
     totalCompliances.value = response.data ?? 0;

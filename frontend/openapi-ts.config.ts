@@ -3,8 +3,6 @@ import { defineConfig } from "@hey-api/openapi-ts";
 export default defineConfig({
   input: "./openapi/swagger.yaml",
   output: {
-    format: "prettier",
-    lint: "eslint",
     path: "./src/client",
   },
   plugins: [

@@ -6,3 +6,8 @@ CHANGELOG.md
 swagger.yaml
 realm-export.json
 frontend/playwright-report/trace
+
+# Generated browser test reports
+**/test-results/
+**/playwright-report/
+**/blob-report/

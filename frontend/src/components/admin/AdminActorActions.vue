@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import api from "@/api";
 import type { ActorDto, ActorTypeDto, CreateActorDto, OrganizationDto, UpdateActorDto } from "@/client/types.gen";
 import ActorForm from "@/components/actor/ActorForm.vue";
@@ -36,7 +37,7 @@ async function fetchApplicationsForEmail() {
     const response = await api.actorControllerFindApplicationsByEmail({
       query: { email: props.actor.email },
     });
-    if (response.response.ok && response.data) {
+    if (isApiSuccess(response) && response.data) {
       availableApplications.value = response.data as Array<{ id: string; label: string }>;
     }
   } catch {
@@ -82,7 +83,7 @@ async function saveActor(formData: CreateActorDto) {
       path: { id: props.actor.id },
       body: formData as UpdateActorDto,
     });
-    if (response.response.ok) {
+    if (isApiSuccess(response)) {
       toaster.addSuccessMessage("Acteur mis à jour avec succès");
       closeEditModal();
       emit("updated");
@@ -121,7 +122,7 @@ async function syncEditAllFromMaia() {
   isSyncingFromMaia.value = true;
   try {
     const response = await api.userControllerSyncOrganizationFromMaiaByEmail({ path: { email } });
-    if (response.response.ok && response.data) {
+    if (isApiSuccess(response) && response.data) {
       const { organizationId: newOrgId, firstName, lastName } = response.data;
       editAllForm.value.firstname = firstName;
       editAllForm.value.lastname = lastName;
@@ -185,7 +186,7 @@ async function saveAllByEmail() {
         ...(!allSelected && selectedEditAppIds.value.length > 0 ? { applicationIds: selectedEditAppIds.value } : {}),
       },
     });
-    if (response.response.ok) {
+    if (isApiSuccess(response)) {
       const count = response.data?.count ?? 0;
       toaster.addSuccessMessage(`${count} acteur(s) mis à jour avec succès`);
       closeEditAllModal();
@@ -217,7 +218,7 @@ async function confirmDelete() {
     const response = await api.actorControllerDeleteActor({
       path: { id: props.actor.id },
     });
-    if (response.response.ok) {
+    if (isApiSuccess(response)) {
       toaster.addSuccessMessage("Acteur supprimé avec succès");
       closeDeleteModal();
       emit("updated");
@@ -256,7 +257,7 @@ async function confirmDeleteAll() {
         ...(!allSelected && selectedDeleteAppIds.value.length > 0 ? { applicationIds: selectedDeleteAppIds.value } : {}),
       },
     });
-    if (response.response.ok) {
+    if (isApiSuccess(response)) {
       const count = response.data?.count ?? 0;
       toaster.addSuccessMessage(`${count} acteur(s) supprimé(s) avec succès`);
       closeDeleteAllModal();

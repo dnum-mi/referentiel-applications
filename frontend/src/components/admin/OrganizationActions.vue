@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import api from "@/api";
 import type {
   BusinessDivisionDto,
@@ -61,7 +62,7 @@ async function loadBusinessDivisions() {
     query: { pageSize: 0, sortBy: "label", order: "asc" },
   });
 
-  if (response.response.ok && response.data) {
+  if (isApiSuccess(response) && response.data) {
     businessDivisions.value = response.data.results;
   }
 }
@@ -86,7 +87,7 @@ async function loadMaiaReferences() {
     query: { organizationId: props.organization!.id },
   });
 
-  if (response.response.ok && response.data) {
+  if (isApiSuccess(response) && response.data) {
     maiaReferences.value = (response.data as PaginatedOrganizationMaiaReferenceDto).results;
   }
 }
@@ -156,9 +157,9 @@ async function addMaiaReference() {
       body: payload,
     });
 
-    if (!response.response.ok) {
+    if (!isApiSuccess(response)) {
       referencesErrorMessage.value =
-        response.response.status === 409 ? "Cette référence MAIA existe déjà" : "Erreur lors de l'ajout de la référence MAIA";
+        response.response?.status === 409 ? "Cette référence MAIA existe déjà" : "Erreur lors de l'ajout de la référence MAIA";
       return;
     }
 
@@ -176,7 +177,7 @@ async function deleteMaiaReference(referenceId: string) {
     path: { id: referenceId },
   });
 
-  if (!response.response.ok) {
+  if (!isApiSuccess(response)) {
     toaster.addErrorMessage("Erreur lors de la suppression de la référence MAIA");
     return;
   }
@@ -200,11 +201,11 @@ async function saveOrganization() {
           body: toPayload() as PatchOrganizationDto,
         });
 
-    if (response.response.ok) {
+    if (isApiSuccess(response)) {
       toaster.addSuccessMessage(isCreateMode.value ? "Organisation créée avec succès" : "Organisation mise à jour avec succès");
       closeEditModal();
       emit("fetchOrganizations");
-    } else if (response.response.status === 400) {
+    } else if (response.response?.status === 400) {
       const error = response.error as BadRequestResponse;
       errorMessage.value = error.message.join(", ");
     } else {
@@ -226,7 +227,7 @@ async function deleteOrganization() {
       path: { id: props.organization!.id },
     });
 
-    if (response.response.ok) {
+    if (isApiSuccess(response)) {
       toaster.addSuccessMessage("Organisation supprimée avec succès");
       closeDeleteModal();
       emit("fetchOrganizations");

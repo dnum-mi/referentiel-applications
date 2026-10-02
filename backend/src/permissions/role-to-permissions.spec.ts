@@ -103,6 +103,27 @@ describe("roleToPermissions — administrateur de périmètre", () => {
   });
 });
 
+describe("roleToPermissions — gestion des organisations (#2800)", () => {
+  it("réserve OrganizationManage à l'administrateur global", () => {
+    expect(roleToPermissions(Roles.ADMIN)).toContain(
+      Permission.OrganizationManage,
+    );
+    expect(
+      principalToPermissions({
+        role: Roles.ADMIN,
+        scopeOrganizationId: "org-1",
+      }),
+    ).not.toContain(Permission.OrganizationManage);
+
+    for (const role of [Roles.CONTRIBUTOR, Roles.READER, Roles.VISITOR]) {
+      expect(roleToPermissions(role)).not.toContain(
+        Permission.OrganizationManage,
+      );
+    }
+    expect(DELEGABLE_PERMISSIONS).not.toContain(Permission.OrganizationManage);
+  });
+});
+
 // #2608 — QualityCampaignManage et MditCampaignManage ne sont jamais accordées par défaut au
 // rôle ADMIN, scopé ou non : contrairement aux autres permissions du socle Administrateur
 // (dont `GlobalAdminManage`, cf. ci-dessus), elles doivent systématiquement être indiquées

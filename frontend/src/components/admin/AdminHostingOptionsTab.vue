@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import { computed, onMounted, ref } from "vue";
 import { watchDebounced } from "@vueuse/core";
 import type { HostingOptionWithUsageDto } from "@/client/types.gen";
@@ -48,7 +49,7 @@ const {
     const response = await api.hostingOptionControllerFindAll({
       query: { ...pagination, search: searchQuery.value || undefined },
     });
-    if (!response.response.ok || !response.data) {
+    if (!isApiSuccess(response) || !response.data) {
       throw response.error ?? new Error(ERR_LOAD_HOSTING_OPTIONS);
     }
     return response.data;

@@ -12,11 +12,11 @@ const sendMail = jest.fn();
 
 (nodemailer.createTransport as jest.Mock).mockReturnValue({ sendMail });
 
-const makeService = (enabled: boolean) => {
+const makeService = (enabled: boolean, { port = 587, secure = false } = {}) => {
   const configValues: Record<string, unknown> = {
     "email.host": "smtp.example.com",
-    "email.port": 587,
-    "email.secure": false,
+    "email.port": port,
+    "email.secure": secure,
     "email.from": "noreply@example.com",
     "email.enabled": enabled,
     BASE_URL: "http://localhost:5173",
@@ -60,6 +60,21 @@ const makeService = (enabled: boolean) => {
 describe("EmailService — #2411 e-mail journalisé même quand les envois sont désactivés", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  it.each([
+    { mode: "TLS implicite", port: 465, secure: true },
+    { mode: "STARTTLS", port: 587, secure: false },
+    { mode: "SMTP local", port: 1025, secure: false },
+  ])("vérifie les certificats TLS en mode $mode", ({ port, secure }) => {
+    makeService(true, { port, secure });
+
+    expect(nodemailer.createTransport).toHaveBeenCalledWith({
+      host: "smtp.example.com",
+      port,
+      secure,
+      tls: { rejectUnauthorized: true },
+    });
   });
 
   describe("sendSignalementUpdateEmail", () => {

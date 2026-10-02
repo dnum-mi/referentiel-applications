@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import api from "@/api/index";
 import type { UserWithPermissions } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
@@ -88,7 +89,7 @@ const {
     const response = await api.userControllerFindAll({
       query: { ...pagination, search: searchQuery.value || undefined },
     });
-    if (!response.response.ok || !response.data) {
+    if (!isApiSuccess(response) || !response.data) {
       throw response.error ?? new Error(errorMessages.ERR_LOAD_USERS);
     }
     return response.data;
