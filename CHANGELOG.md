@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.96.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.96.0...v1.96.1) (2026-10-02)
+
+
+### Bug Fixes
+
+* admin scoped cannot remove orga ([#2827](https://github.com/dnum-mi/referentiel-applications/issues/2827)) ([572275c](https://github.com/dnum-mi/referentiel-applications/commit/572275c712ae869cf36e08e2c61efc76def603d6))
+* **front:** use named routes for footer mandatory and operator links ([#2797](https://github.com/dnum-mi/referentiel-applications/issues/2797)) ([301a894](https://github.com/dnum-mi/referentiel-applications/commit/301a894bca8c16e48c12f8b0671baa500083f69c))
+
 ## [1.96.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.95.0...v1.96.0) (2026-10-01)
 
 
