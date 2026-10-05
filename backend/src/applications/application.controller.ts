@@ -52,14 +52,12 @@ import {
 } from "./dto/get-application.dto";
 import { ApplicationSearchDto } from "./dto/search-application.dto";
 import { ApplicationExportService } from "./export.service";
-import { ExportApplicationsUseCase } from "./usecases/application-export.usecase";
 
 @ApiTags("applications")
 @Controller("applications")
 export class ApplicationController {
   constructor(
     private readonly applicationService: ApplicationService,
-    private readonly exportApplicationsUseCase: ExportApplicationsUseCase,
     private readonly applicationExportService: ApplicationExportService,
     private readonly metadataService: MetadatasService,
   ) {}
@@ -209,7 +207,8 @@ Vous devez fournir les informations suivantes :
     summary: "Exporter les applications en Excel",
     description: `Permet d'exporter les applications en un fichier Excel.
       Vous pouvez ajouter des filtres de recherche pour n'exporter que les applications correspondantes.
-      Si aucun filtre n'est appliqué, toutes les applications sont exportées.
+      L'export n'est pas paginé : \`page\` et \`pageSize\` sont ignorés, toutes les applications correspondant aux filtres sont exportées.
+      Les filtres par défaut de la recherche s'appliquent (ex. plage d'IQ 0-100 : ajoutez \`iq__isNull=true\` pour inclure les applications sans IQ).
       Accès limité aux utilisateurs avec privilège admin.`,
   })
   @ApiOkResponse({
@@ -233,12 +232,10 @@ Vous devez fournir les informations suivantes :
     @User() user: Requestor,
   ) {
     const buffer =
-      Object.keys(searchParams).length > 0
-        ? await this.applicationExportService.exportSearchResultsToExcel(
-            searchParams,
-            user,
-          )
-        : await this.exportApplicationsUseCase.execute();
+      await this.applicationExportService.exportSearchResultsToExcel(
+        searchParams,
+        user,
+      );
 
     await this.metadataService.createMetadata({
       createdById: requestorId,

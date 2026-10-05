@@ -6,7 +6,6 @@ import { PrismaQueryBuilder } from "./prisma-query-builder.service";
 import { Requestor } from "src/user/entities/user.entity";
 import { CheckPermissions } from "src/common/service/check-permissions.service";
 import { Permission } from "@prisma/client";
-import { ApplicationSearchResultDto } from "./dto/get-application.dto";
 
 @Injectable()
 export class ApplicationExportService {
@@ -16,10 +15,6 @@ export class ApplicationExportService {
     private readonly prismaQueryBuilder: PrismaQueryBuilder,
     private readonly checkPermissions: CheckPermissions,
   ) {}
-
-  async exportApplicationsToExcel(): Promise<Buffer> {
-    return this.exportApplicationsUseCase.execute();
-  }
 
   async exportSearchResultsToExcel(
     searchParams: ApplicationSearchDto,
@@ -33,42 +28,29 @@ export class ApplicationExportService {
       [Permission.AppRead],
       requestor,
     );
-    let allMatchingApps: ApplicationSearchResultDto;
     if (!hasAppList && !hasAppRead) {
-      allMatchingApps = {
-        results: [],
-        total: 0,
-        averageIq: 0,
-        technicalDebtPoints: [],
-      };
-    } else {
-      const where = await this.prismaQueryBuilder.buildSearchWhere(
-        searchParams,
-        requestor,
-        hasAppList
-          ? undefined
-          : {
-              actorEmail: requestor?.email,
-              businessDivisionId: requestor?.organization?.businessDivisionId,
-            },
-      );
-      const { sortBy = "shortName", order = "asc" } = searchParams;
-      const orderBy = this.prismaQueryBuilder.buildOrderBy(sortBy, order);
-      allMatchingApps = await this.repository.findApplications(
-        searchParams,
-        where,
-        orderBy,
-      );
+      return this.exportApplicationsUseCase.executeWithApps([]);
     }
 
-    // Get full relations for the filtered applications
-    const filteredIds = new Set(allMatchingApps.results.map((app) => app.id));
-    const applicationsWithRelations =
-      await this.repository.findAllWithFullRelations();
-    const filteredApplications = applicationsWithRelations.filter((app) =>
-      filteredIds.has(app.id),
+    // Filtrage et tri en base, sans pagination : l'export porte sur toutes les
+    // applications correspondant aux filtres, quel que soit `page`/`pageSize`.
+    const where = await this.prismaQueryBuilder.buildSearchWhere(
+      searchParams,
+      requestor,
+      hasAppList
+        ? undefined
+        : {
+            actorEmail: requestor?.email,
+            businessDivisionId: requestor?.organization?.businessDivisionId,
+          },
+    );
+    const { sortBy = "shortName", order = "asc" } = searchParams;
+    const orderBy = this.prismaQueryBuilder.buildOrderBy(sortBy, order);
+    const applications = await this.repository.findAllWithFullRelations(
+      where,
+      orderBy,
     );
 
-    return this.exportApplicationsUseCase.executeWithApps(filteredApplications);
+    return this.exportApplicationsUseCase.executeWithApps(applications);
   }
 }
