@@ -1681,7 +1681,8 @@ paths:
       description: >-
         Permet d'exporter les applications en un fichier Excel.
               Vous pouvez ajouter des filtres de recherche pour n'exporter que les applications correspondantes.
-              Si aucun filtre n'est appliqué, toutes les applications sont exportées.
+              L'export n'est pas paginé : `page` et `pageSize` sont ignorés, toutes les applications correspondant aux filtres sont exportées.
+              Les filtres par défaut de la recherche s'appliquent (ex. plage d'IQ 0-100 : ajoutez `iq__isNull=true` pour inclure les applications sans IQ).
               Accès limité aux utilisateurs avec privilège admin.
       operationId: ApplicationController_exportExcel
       parameters:

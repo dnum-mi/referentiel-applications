@@ -39,7 +39,6 @@ import {
   QualityCampaignActionDto,
   QualitySummaryDto,
 } from "./dto/get-application.dto";
-import { ApplicationWithAllRelations } from "src/applications/types/application.type";
 import { ApplicationSearchDto } from "./dto/search-application.dto";
 import { TechnicalDebtPointDto } from "./dto/technical-debt-point.dto";
 import { StatusesService } from "src/statuses/statuses.service";
@@ -591,10 +590,6 @@ export class ApplicationService {
 
   public async getTechnicalDebtMillesimes(): Promise<number[]> {
     return this.applicationRepository.findDistinctMillesimes();
-  }
-
-  public async exportApplications(): Promise<ApplicationWithAllRelations[]> {
-    return this.applicationRepository.findAllWithFullRelations();
   }
 
   public async getApplicationById(applicationId: string, user?: Requestor) {

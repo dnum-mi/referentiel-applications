@@ -277,8 +277,13 @@ export class ApplicationRepository implements IApplicationRepository {
     })) as unknown as TechnicalDebtPointDto[];
   }
 
-  async findAllWithFullRelations(): Promise<ApplicationWithAllRelations[]> {
+  async findAllWithFullRelations(
+    where?: Prisma.ApplicationWhereInput,
+    orderBy?: Prisma.ApplicationOrderByWithRelationInput,
+  ): Promise<ApplicationWithAllRelations[]> {
     return await this.prisma.application.findMany({
+      where,
+      orderBy,
       include: {
         currentStatus: true,
         metadatas: true,

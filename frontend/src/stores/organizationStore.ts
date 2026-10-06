@@ -19,7 +19,8 @@ export const useOrganizationStore = defineStore("organizationStore", () => {
 
   async function find(search?: string, usedOnly?: boolean): Promise<OrganizationDto[]> {
     const response = await api.organizationsControllerFindAll({
-      query: { search, usedOnly },
+      // pageSize 0 : pas de pagination, sinon l'API coupe à 50 résultats.
+      query: { search, usedOnly, pageSize: 0 },
     });
     if (!response.response.ok) {
       throw new Error("Failed to fetch organizations");
@@ -40,7 +41,7 @@ export const useOrganizationStore = defineStore("organizationStore", () => {
 
     try {
       const response = await api.organizationsControllerFindAll({
-        query: { ids },
+        query: { ids, pageSize: 0 },
       });
 
       if (response.response.ok && response.data?.results) {

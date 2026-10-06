@@ -3,7 +3,6 @@ import { ExcelBuilderService } from "src/common/service/excel-builder.service";
 import { sheetLabels } from "src/applications/constants/application-export.sheet-labels";
 import { ApplicationWithAllRelations } from "src/applications/types/application.type";
 import { columnLabels } from "src/applications/columnLabels/application-export.columnLabels";
-import { ApplicationRepository } from "src/applications/infrastructure/repository/application.repository";
 import {
   mapActors,
   mapReports,
@@ -19,15 +18,7 @@ import {
 
 @Injectable()
 export class ExportApplicationsUseCase {
-  constructor(
-    private readonly repository: ApplicationRepository,
-    private readonly excelBuilder: ExcelBuilderService,
-  ) {}
-
-  async execute(): Promise<Buffer> {
-    const apps = await this.repository.findAllWithFullRelations();
-    return this.executeWithApps(apps);
-  }
+  constructor(private readonly excelBuilder: ExcelBuilderService) {}
 
   async executeWithApps(apps: ApplicationWithAllRelations[]): Promise<Buffer> {
     const col = (key: string, width: number) => ({
