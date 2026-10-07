@@ -1,5 +1,5 @@
 import type { UserFakerReturnType } from "./fakers/user.faker";
-import { faker } from "@faker-js/faker/.";
+import { faker } from "@faker-js/faker";
 import { Roles } from "@prisma/client";
 import request from "supertest";
 import { TagFaker } from "./fakers/tag.faker";

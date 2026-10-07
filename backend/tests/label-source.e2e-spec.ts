@@ -5,7 +5,7 @@ import { LabelSourceFaker } from "./fakers/label-source.faker";
 import { UserFaker } from "./fakers/user.faker";
 import { getToken } from "./getToken";
 import { setupTestSuite } from "./setup";
-import { faker } from "@faker-js/faker/.";
+import { faker } from "@faker-js/faker";
 
 describe("LabelSources", () => {
   const app = setupTestSuite();
