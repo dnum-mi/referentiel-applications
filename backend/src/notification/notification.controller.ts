@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Param,
   Patch,
+  Post,
   Query,
   UseGuards,
 } from "@nestjs/common";
@@ -92,6 +93,14 @@ export class NotificationController {
   @ApiNoContentResponse({ description: "Notifications marquées comme lues" })
   @HttpCode(HttpStatus.NO_CONTENT)
   markAllAsRead(@User() user: UserEntity) {
+    return this.service.markAllAsRead(user.id);
+  }
+
+  @Post("read-all")
+  @ApiOperation({ summary: "Marquer toutes ses notifications comme lues" })
+  @ApiNoContentResponse({ description: "Notifications marquées comme lues" })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  markAllAsReadPost(@User() user: UserEntity) {
     return this.service.markAllAsRead(user.id);
   }
 
