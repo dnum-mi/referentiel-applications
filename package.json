@@ -17,7 +17,7 @@
     "gen": "docker compose exec backend pnpm gen && docker compose exec client pnpm gen"
   },
   "devDependencies": {
-    "@commitlint/cli": "^19.8.1",
+    "@commitlint/cli": "^21.2.3",
     "@commitlint/config-conventional": "^19.8.1",
     "@eslint/js": "^10.0.1",
     "eslint": "^10.11.0",
