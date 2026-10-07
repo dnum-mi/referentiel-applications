@@ -167,6 +167,60 @@ export class ApplicationPage extends BasePage {
     await expect(this.byTestId("relation-target-link").first()).toBeVisible();
   }
 
+  async expectCorrelationWith(
+    targetId: string,
+    targetLabel: string,
+  ): Promise<void> {
+    const row = this.byTestId("relations-table")
+      .locator("tbody tr")
+      .filter({
+        has: this.page.locator(`a[href="/applications/${targetId}"]`),
+      });
+    await expect(row).toHaveCount(1);
+    await expect(
+      row.getByRole("link", { name: targetLabel, exact: true }),
+    ).toBeVisible();
+    await expect(row).toContainText("Est corrélée à");
+  }
+
+  async expectCorrelationGraph(
+    sourceLabel: string,
+    targetLabel: string,
+  ): Promise<void> {
+    await this.tabContent("tab-relations")
+      .getByRole("button", { name: "Graphe", exact: true })
+      .click();
+    const graph = this.tabContent("tab-relations").locator(
+      ".graph-container svg",
+    );
+    await expect(graph).toBeVisible();
+    const titles = graph.locator("text > title");
+    await expect(titles).toHaveCount(2);
+    expect((await titles.allTextContents()).sort()).toEqual(
+      [sourceLabel, targetLabel].sort(),
+    );
+
+    const edge = graph.locator("line");
+    await expect(edge).toHaveCount(1);
+    await expect(edge).toHaveAttribute("stroke-dasharray", "6, 4");
+    await expect(edge).not.toHaveAttribute("marker-end", /./);
+    const legend = this.tabContent("tab-relations").getByRole("checkbox", {
+      name: "est corrélée à",
+      exact: true,
+    });
+    await expect(legend).toBeChecked();
+    // Le filtre de légende doit masquer l'arête réellement rendue, puis la rétablir.
+    const legendLabel = this.tabContent("tab-relations").locator(
+      'label[for="legend-is_correlated_with"]',
+    );
+    await legendLabel.click();
+    await expect(legend).not.toBeChecked();
+    await expect(graph.locator("line")).toHaveCount(0);
+    await legendLabel.click();
+    await expect(legend).toBeChecked();
+    await expect(graph.locator("line")).toHaveCount(1);
+  }
+
   // --- Onglet Informations générales (FIC-02) ---
   async expectInfosTabLoaded(): Promise<void> {
     await expect(this.byTestId("informations-generales")).toBeVisible();
