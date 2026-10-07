@@ -1,3 +1,4 @@
+import { isApiSuccess } from "@/api/api-result";
 import type { OrganizationDto } from "@/client/types.gen";
 import { defineStore } from "pinia";
 import { ref } from "vue";
@@ -22,7 +23,7 @@ export const useOrganizationStore = defineStore("organizationStore", () => {
       // pageSize 0 : pas de pagination, sinon l'API coupe à 50 résultats.
       query: { search, usedOnly, pageSize: 0 },
     });
-    if (!response.response.ok) {
+    if (!isApiSuccess(response)) {
       throw new Error("Failed to fetch organizations");
     }
     if (!response.data?.results) {
@@ -44,7 +45,7 @@ export const useOrganizationStore = defineStore("organizationStore", () => {
         query: { ids, pageSize: 0 },
       });
 
-      if (response.response.ok && response.data?.results) {
+      if (isApiSuccess(response) && response.data?.results) {
         const organizations = response.data.results;
         storeOrganization(organizations);
 

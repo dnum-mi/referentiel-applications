@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import api from "@/api";
 import type {
   BusinessDivisionDto,
@@ -11,6 +12,7 @@ import type {
   PatchOrganizationDto,
 } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
+import { backendErrorMessage } from "@/utils/api-error";
 import { computed, ref } from "vue";
 
 interface BadRequestResponse {
@@ -39,8 +41,8 @@ const isAddingReference = ref(false);
 const referencesErrorMessage = ref("");
 
 const maiaReferences = ref<OrganizationMaiaReferenceDto[]>([]);
-// Admins ayant cette organisation pour périmètre : la suppression le leur retire (FK
-// `ON DELETE SET NULL`) et en fait des admins globaux — on prévient avant de confirmer.
+// Les périmètres doivent être réaffectés avant la suppression (#2800),
+// afin de préserver les restrictions des administrateurs concernés.
 const scopedAdmins = ref<OrganizationScopedAdminDto[]>([]);
 const newMaiaReference = ref("");
 
@@ -61,7 +63,7 @@ async function loadBusinessDivisions() {
     query: { pageSize: 0, sortBy: "label", order: "asc" },
   });
 
-  if (response.response.ok && response.data) {
+  if (isApiSuccess(response) && response.data) {
     businessDivisions.value = response.data.results;
   }
 }
@@ -86,7 +88,7 @@ async function loadMaiaReferences() {
     query: { organizationId: props.organization!.id },
   });
 
-  if (response.response.ok && response.data) {
+  if (isApiSuccess(response) && response.data) {
     maiaReferences.value = (response.data as PaginatedOrganizationMaiaReferenceDto).results;
   }
 }
@@ -116,7 +118,7 @@ async function openDeleteModal() {
     path: { id: props.organization!.id },
   });
 
-  if (!response.response.ok || !response.data) {
+  if (!isApiSuccess(response) || !response.data) {
     toaster.addErrorMessage("Erreur lors de la récupération des administrateurs de l'organisation");
     return;
   }
@@ -156,9 +158,9 @@ async function addMaiaReference() {
       body: payload,
     });
 
-    if (!response.response.ok) {
+    if (!isApiSuccess(response)) {
       referencesErrorMessage.value =
-        response.response.status === 409 ? "Cette référence MAIA existe déjà" : "Erreur lors de l'ajout de la référence MAIA";
+        response.response?.status === 409 ? "Cette référence MAIA existe déjà" : "Erreur lors de l'ajout de la référence MAIA";
       return;
     }
 
@@ -176,7 +178,7 @@ async function deleteMaiaReference(referenceId: string) {
     path: { id: referenceId },
   });
 
-  if (!response.response.ok) {
+  if (!isApiSuccess(response)) {
     toaster.addErrorMessage("Erreur lors de la suppression de la référence MAIA");
     return;
   }
@@ -200,11 +202,11 @@ async function saveOrganization() {
           body: toPayload() as PatchOrganizationDto,
         });
 
-    if (response.response.ok) {
+    if (isApiSuccess(response)) {
       toaster.addSuccessMessage(isCreateMode.value ? "Organisation créée avec succès" : "Organisation mise à jour avec succès");
       closeEditModal();
       emit("fetchOrganizations");
-    } else if (response.response.status === 400) {
+    } else if (response.response?.status === 400) {
       const error = response.error as BadRequestResponse;
       errorMessage.value = error.message.join(", ");
     } else {
@@ -226,14 +228,17 @@ async function deleteOrganization() {
       path: { id: props.organization!.id },
     });
 
-    if (response.response.ok) {
+    if (isApiSuccess(response)) {
       toaster.addSuccessMessage("Organisation supprimée avec succès");
       closeDeleteModal();
       emit("fetchOrganizations");
-    } else if (response.response.status === 403) {
+    } else if (response.response?.status === 403) {
       toaster.addErrorMessage("Seul un administrateur global peut supprimer une organisation");
-    } else if (response.response.status === 409) {
-      toaster.addErrorMessage("Cette organisation possède des organisations filles : supprimez-les d'abord");
+    } else if (response.response?.status === 409) {
+      toaster.addErrorMessage(
+        backendErrorMessage(response.error) ??
+          "Cette organisation possède des organisations filles ou définit un périmètre utilisateur : réaffectez les périmètres avant de la supprimer.",
+      );
     } else {
       toaster.addErrorMessage("Erreur lors de la suppression de l'organisation");
     }
@@ -386,7 +391,7 @@ async function deleteOrganization() {
     <div v-if="scopedAdmins.length" data-testid="organization-delete-scoped-admins-alert">
       <DsfrAlert
         title="Des administrateurs ont cette organisation pour périmètre"
-        description="La suppression retirera leur périmètre : ils deviendront administrateurs globaux."
+        description="Réaffectez leur périmètre à une autre organisation avant de supprimer celle-ci."
         type="error"
         class="fr-mb-2w alert-multiline"
       />
@@ -411,7 +416,7 @@ async function deleteOrganization() {
         title="Confirmer la suppression"
         aria-label="Confirmer la suppression"
         danger
-        :disabled="isDeleting"
+        :disabled="isDeleting || scopedAdmins.length > 0"
         data-testid="admin-delete-confirm-btn"
         @click="deleteOrganization"
       />

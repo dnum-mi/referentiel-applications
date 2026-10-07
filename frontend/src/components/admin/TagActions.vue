@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import { ref, nextTick } from "vue";
 import type { TagDto } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
@@ -71,13 +72,13 @@ async function saveTag() {
         },
       });
 
-  if (response.response.ok) {
+  if (isApiSuccess(response)) {
     toaster.addSuccessMessage(props.tag?.id ? "Tag mis à jour avec succès" : "Tag créé avec succès");
 
     closeEditModal();
     emit("fetchTags");
   } else {
-    if (response.response.status === 400) {
+    if (response.response?.status === 400) {
       const error = response.error as BadRequestResponse;
       errorMessage.value = error.message.join(", ");
     } else {
@@ -95,7 +96,7 @@ async function deleteTag() {
   isDeleting.value = true;
 
   const response = await api.tagsControllerDelete({ path: { id: props.tag.id } });
-  if (response.response.ok) {
+  if (isApiSuccess(response)) {
     toaster.addSuccessMessage("Tag supprimé avec succès");
     closeDeleteModal();
     emit("fetchTags");

@@ -40,8 +40,7 @@ jobs:
       (github.event_name == 'pull_request' && startsWith(github.head_ref, 'release-please--branches--main'))
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Résoudre la version
         id: ver
         run: |
@@ -89,10 +88,10 @@ jobs:
           echo "Seed échoué"; exit 1
 
       # --- Frontend (serveur de dev) + e2e ---
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: pnpm
 
       - name: Installer les deps frontend
@@ -163,7 +162,7 @@ jobs:
 
       - name: Upload du rapport Playwright
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: playwright-report
           path: |

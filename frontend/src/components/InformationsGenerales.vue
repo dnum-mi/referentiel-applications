@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import api from "@/api/index.js";
 import { Permission, type HostingDto, type LabelDto, type TechnicalDebtInfoDto } from "@/client/types.gen";
 import MarkdownDisplay from "@/components/MarkdownDisplay.vue";
@@ -55,11 +56,11 @@ async function fetchTechnicalDebtInfo() {
     path: { applicationId: props.application.id },
     query: { pageSize: 1 },
   });
-  if (response.response.status === 404) {
+  if (response.response?.status === 404) {
     technicalDebtInfo.value = null;
     return;
   }
-  if (!response.response.ok) {
+  if (!isApiSuccess(response)) {
     toaster.addErrorMessage("Erreur lors de la récupération des informations de dette technique.");
     return;
   }
@@ -88,9 +89,9 @@ const isLoading = ref(false);
 
 async function fetchLabels(applicationId: string) {
   const response = await api.labelsControllerFindAllSorted({ path: { applicationId } });
-  if (!response.response.ok) {
+  if (!isApiSuccess(response)) {
     toaster.addErrorMessage("Erreur lors de la récupération des noms alternatifs");
-    throw new Error(`Failed to fetch labels: ${response.response.statusText}`);
+    throw response.error ?? new Error("Erreur lors du chargement des noms alternatifs.");
   }
   labels.value = response.data ?? [];
 }
@@ -233,9 +234,9 @@ async function confirmDeletionLabel() {
     const response = await api.labelsControllerDelete({
       path: { applicationId: application.value.id, id: labelToDelete.value.id },
     });
-    if (!response.response.ok) {
+    if (!isApiSuccess(response)) {
       toaster.addErrorMessage("Erreur lors de la suppression du nom alternatif");
-      throw new Error(`Failed to delete label: ${response.response.statusText}`);
+      throw response.error ?? new Error("Erreur lors de la suppression du nom alternatif.");
     }
     await fetchLabels(application.value.id);
     toaster.addSuccessMessage("Nom alternatif supprimé avec succès");

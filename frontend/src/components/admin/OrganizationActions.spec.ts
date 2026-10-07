@@ -46,7 +46,7 @@ afterEach(() => {
 });
 
 describe("organizationActions — suppression", () => {
-  it("prévient que les admins scopés sur l'organisation deviendront admins globaux", async () => {
+  it("exige la réaffectation des périmètres avant la suppression", async () => {
     findScopedAdminsMock.mockResolvedValue({
       response: { ok: true, status: 200 },
       data: [
@@ -60,7 +60,9 @@ describe("organizationActions — suppression", () => {
 
     await waitFor(() => expect(screen.getByTestId("organization-delete-scoped-admins-alert")).toBeInTheDocument());
     expect(findScopedAdminsMock).toHaveBeenCalledExactlyOnceWith({ path: { id: "org-1" } });
-    expect(screen.getByText(/ils deviendront administrateurs globaux/)).toBeInTheDocument();
+    expect(screen.getByText(/Réaffectez leur périmètre à une autre organisation/)).toBeInTheDocument();
+    expect(screen.getByTestId("admin-delete-confirm-btn")).toBeDisabled();
+    expect(deleteMock).not.toHaveBeenCalled();
     expect(screen.getAllByTestId("organization-delete-scoped-admin-item").map((item) => item.textContent?.trim())).toEqual([
       "alice@interieur.gouv.fr",
       "bob@interieur.gouv.fr",
@@ -77,8 +79,12 @@ describe("organizationActions — suppression", () => {
     expect(screen.queryByTestId("organization-delete-scoped-admins-alert")).not.toBeInTheDocument();
   });
 
-  it("n'ouvre pas la modale si les admins scopés ne peuvent pas être récupérés", async () => {
-    findScopedAdminsMock.mockResolvedValue({ response: { ok: false, status: 403 } });
+  it.each([
+    { failure: "HTTP 403", response: { ok: false, status: 403 }, error: undefined },
+    { failure: "réseau sans réponse", response: undefined, error: new TypeError("Failed to fetch") },
+    { failure: "décodage après HTTP 200", response: { ok: true, status: 200 }, error: new SyntaxError("Invalid JSON") },
+  ])("n'ouvre pas la modale après un échec $failure", async ({ response, error }) => {
+    findScopedAdminsMock.mockResolvedValue({ response, error });
     renderActions();
 
     await openDeleteModal();
@@ -98,5 +104,32 @@ describe("organizationActions — suppression", () => {
     await fireEvent.click(await screen.findByTestId("admin-delete-confirm-btn"));
 
     await waitFor(() => expect(addErrorMessage).toHaveBeenCalledWith("Seul un administrateur global peut supprimer une organisation"));
+  });
+
+  it("relaie le refus 409 quand un périmètre est utilisé sans administrateur listé", async () => {
+    const message = "Cette organisation définit le périmètre d'utilisateurs : réaffectez leur périmètre avant de la supprimer.";
+    findScopedAdminsMock.mockResolvedValue({ response: { ok: true, status: 200 }, data: [] });
+    deleteMock.mockResolvedValue({ response: { ok: false, status: 409 }, error: { message } });
+    renderActions();
+
+    await openDeleteModal();
+    await fireEvent.click(await screen.findByTestId("admin-delete-confirm-btn"));
+
+    await waitFor(() => expect(addErrorMessage).toHaveBeenCalledWith(message));
+    expect(addSuccessMessage).not.toHaveBeenCalled();
+    expect(screen.getByTestId("organization-delete-alert")).toBeInTheDocument();
+  });
+
+  it("conserve la modale et signale une suppression sans réponse HTTP", async () => {
+    findScopedAdminsMock.mockResolvedValue({ response: { ok: true, status: 200 }, data: [] });
+    deleteMock.mockResolvedValue({ error: new TypeError("Failed to fetch") });
+    renderActions();
+
+    await openDeleteModal();
+    await fireEvent.click(await screen.findByTestId("admin-delete-confirm-btn"));
+
+    await waitFor(() => expect(addErrorMessage).toHaveBeenCalledWith("Erreur lors de la suppression de l'organisation"));
+    expect(addSuccessMessage).not.toHaveBeenCalled();
+    expect(screen.getByTestId("organization-delete-alert")).toBeInTheDocument();
   });
 });

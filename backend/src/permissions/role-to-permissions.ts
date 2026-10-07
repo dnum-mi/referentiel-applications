@@ -21,7 +21,6 @@ const WRITE_PERMISSIONS = new Set([
   Permission.CreateApplication,
   Permission.CreateGlobalReport,
   Permission.ReportManage,
-  Permission.OrganizationManage,
   Permission.ActorTypeDelete,
   Permission.ActorTypeManage,
   // Gère le catalogue de données partagé (data descriptions, familles, sensibilités) :
@@ -34,6 +33,7 @@ const ADMIN_PERMISSIONS = new Set([
   ...Array.from(WRITE_PERMISSIONS),
   Permission.AdminPanelManage,
   Permission.GlobalAdminManage,
+  Permission.OrganizationManage,
   Permission.DataExport,
   Permission.DeleteApplication,
   Permission.ActorTypePost,
@@ -62,6 +62,9 @@ const ADMIN_PERMISSIONS = new Set([
  */
 const SCOPED_ADMIN_EXCLUDED_PERMISSIONS: ReadonlySet<Permission> = new Set([
   Permission.GlobalAdminManage,
+  // #2800 : les organisations définissent les périmètres de droits. Les modifier
+  // ou les supprimer ne peut donc pas relever d'un administrateur de périmètre.
+  Permission.OrganizationManage,
 ]);
 
 /**

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import { computed, onMounted, ref, watch } from "vue";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
 import { useToasterStore } from "@/stores/toasterStore";
@@ -129,7 +130,7 @@ async function createActorType() {
         description: newActorTypeForm.value.description?.trim() || undefined,
       },
     });
-    if (response.response.ok) {
+    if (isApiSuccess(response)) {
       toaster.addSuccessMessage("Type d'acteur créé avec succès");
       closeCreateActorTypeModal();
       // Rafraîchit le store partagé (liste utilisée par la matrice ET par le select de

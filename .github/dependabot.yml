@@ -1,0 +1,33 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directories:
+      - "/"
+      - "/backend"
+      - "/frontend"
+      - "/e2e"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      compatible-updates:
+        update-types: [minor, patch]
+    commit-message:
+      prefix: chore(deps)
+  - package-ecosystem: docker
+    directories:
+      - "/backend"
+      - "/frontend"
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore(deps)
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: ci

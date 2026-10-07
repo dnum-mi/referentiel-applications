@@ -36,16 +36,19 @@ const permDict = {
 };
 const permOrder = props.permOrder;
 
-let currentPermission: PermissionValue;
-if (props.write) {
-  currentPermission = "Write";
-} else if (props.read) {
-  currentPermission = "Read";
-} else {
-  currentPermission = "none";
-}
-const foundIndex = permOrder.indexOf(currentPermission);
-const permIndex = ref(foundIndex === -1 ? 0 : foundIndex);
+const permIndex = ref(0);
+
+// Conserve les clics optimistes tout en suivant les permissions rechargées par le parent.
+watch(
+  [() => props.read, () => props.write],
+  ([read, write]) => {
+    const readPermission = read ? "Read" : "none";
+    const currentPermission = write ? "Write" : readPermission;
+    const foundIndex = permOrder.indexOf(currentPermission);
+    permIndex.value = foundIndex === -1 ? 0 : foundIndex;
+  },
+  { immediate: true },
+);
 
 const toggleTitle = computed(() => {
   const current = permDict[permOrder[permIndex.value]];

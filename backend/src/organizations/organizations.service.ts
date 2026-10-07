@@ -93,6 +93,19 @@ export class OrganizationsService extends BaseService<
   }
 
   async deleteSafe(id: string, force = false): Promise<void> {
+    // #2800 : la FK nullable remettrait le périmètre à null et accorderait des
+    // droits globaux. Les comptes doivent être réaffectés explicitement avant
+    // suppression, même lorsque le contrôle des organisations filles est forcé.
+    const scopedUser = await this.prisma.user.findFirst({
+      where: { scopeOrganizationId: id },
+      select: { id: true },
+    });
+    if (scopedUser) {
+      throw new ConflictException(
+        "Cette organisation définit le périmètre d'utilisateurs : réaffectez leur périmètre avant de la supprimer.",
+      );
+    }
+
     if (!force) {
       // Vérifier si l'organisation a des enfants
       const children = await this.prisma.organization.findMany({

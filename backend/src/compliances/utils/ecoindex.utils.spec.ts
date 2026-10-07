@@ -95,17 +95,25 @@ describe("EcoIndex — appel sortant via le dispatcher commun (#2447)", () => {
     expect(warnSpy.mock.calls[0][0]).toContain("statut HTTP 503");
   });
 
-  it("n'appelle rien quand la garde SSRF rejette la cible, mais le trace", async () => {
-    await expect(
-      calculateEcoIndexMetricsFromUrl("http://127.0.0.1/"),
-    ).rejects.toThrow(BadRequestException);
+  it.each([
+    "http://127.0.0.1/",
+    "http://[::ffff:127.0.0.1]/",
+    "http://[::ffff:7f00:1]/",
+    "http://[::ffff:10.1.2.3]/",
+  ])(
+    "n'appelle rien quand la garde SSRF rejette %s, mais le trace",
+    async (url) => {
+      await expect(calculateEcoIndexMetricsFromUrl(url)).rejects.toThrow(
+        BadRequestException,
+      );
 
-    expect(fetchMock).not.toHaveBeenCalled();
-    expect(dispatcherMock).not.toHaveBeenCalled();
-    // Le rejet est tracé sous « EcoIndex », sinon l'exploitant ne verrait qu'un 400
-    // et chercherait une panne réseau qui n'a pas eu lieu.
-    expect(warnSpy).toHaveBeenCalledTimes(1);
-    expect(warnSpy.mock.calls[0][0]).toContain("refusé avant tout appel");
-    expect(warnSpy.mock.calls[0][0]).toContain("adresse interne");
-  });
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(dispatcherMock).not.toHaveBeenCalled();
+      // Le rejet est tracé sous « EcoIndex », sinon l'exploitant ne verrait qu'un 400
+      // et chercherait une panne réseau qui n'a pas eu lieu.
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy.mock.calls[0][0]).toContain("refusé avant tout appel");
+      expect(warnSpy.mock.calls[0][0]).toContain("adresse interne");
+    },
+  );
 });

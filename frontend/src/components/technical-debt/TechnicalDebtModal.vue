@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import { ref, computed, onMounted, nextTick } from "vue";
 import type { TechnicalDebtInfoDto, CreateTechnicalDebtInfoDto } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
@@ -101,7 +102,7 @@ async function handleSubmit() {
 
   isSubmitting.value = false;
 
-  if (!response.response.ok || !response.data) {
+  if (!isApiSuccess(response) || !response.data) {
     toaster.addErrorMessage("Erreur lors de l'enregistrement des informations de dette technique.");
     return;
   }

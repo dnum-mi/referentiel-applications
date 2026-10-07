@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import { Permission, type CreateLinkDto, type LinkDto, type UpdateLinkDto } from "@/client/types.gen";
 import { linkTypesDict } from "@/constants/dictionary";
 import useModal from "@/composables/use-modal";
@@ -68,7 +69,7 @@ async function fetchLinks(filters: { page?: number; pageSize?: number } = {}) {
       path: { applicationId: props.application.id },
       query: cleanParams,
     });
-    if (!response.response.ok || !response.data) {
+    if (!isApiSuccess(response) || !response.data) {
       throw new Error("Erreur lors de la récupération des liens.");
     }
     links.value = response.data.results ?? [];
@@ -97,7 +98,7 @@ async function createLink(newLink: CreateLinkDto) {
   try {
     isSubmitting.value = true;
     const response = await api.applicationLinksControllerCreate({ path: { applicationId: props.application.id }, body: newLink });
-    if (!response.response.ok || !response.data) {
+    if (!isApiSuccess(response) || !response.data) {
       throw new Error("Erreur lors de la création du lien.");
     }
     toaster.addSuccessMessage("Lien créé avec succès !");
@@ -125,7 +126,7 @@ async function editLink(updatedLink: UpdateLinkDto) {
       path: { applicationId: props.application.id, id: selectedItem.id },
       body: updateDto,
     });
-    if (!response.response.ok || !response.data) {
+    if (!isApiSuccess(response) || !response.data) {
       throw new Error("Erreur lors de la modification du lien.");
     }
     toaster.addSuccessMessage("Lien modifié avec succès !");

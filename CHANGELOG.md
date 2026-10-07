@@ -353,7 +353,7 @@
 * **e2e:** disambiguate "Détails de la modification" heading locator (HIS-04/05/07/10) ([#1966](https://github.com/dnum-mi/referentiel-applications/issues/1966)) ([cdd2011](https://github.com/dnum-mi/referentiel-applications/commit/cdd2011dc663a9a49ca7bb4c65d5bf2144208272))
 * total value for mdit is now correct ([#1923](https://github.com/dnum-mi/referentiel-applications/issues/1923)) ([600bdf6](https://github.com/dnum-mi/referentiel-applications/commit/600bdf6de677cc5b6e3a3407df0a7b8fd8305576))
 * update refapptable  with sorting ([#1916](https://github.com/dnum-mi/referentiel-applications/issues/1916)) ([01de11c](https://github.com/dnum-mi/referentiel-applications/commit/01de11cf14615be13d851b2ade5485ffa414fa98))
-* update search page POM with defautl value for sorting ([#1965](https://github.com/dnum-mi/referentiel-applications/issues/1965)) ([55632de](https://github.com/dnum-mi/referentiel-applications/commit/55632de574d9c7254023d3f03b3c25d2c7cc9e7b))
+* update search page POM with default value for sorting ([#1965](https://github.com/dnum-mi/referentiel-applications/issues/1965)) ([55632de](https://github.com/dnum-mi/referentiel-applications/commit/55632de574d9c7254023d3f03b3c25d2c7cc9e7b))
 
 ## [1.80.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.80.0...v1.80.1) (2026-06-26)
 
@@ -474,7 +474,7 @@
 ### Features
 
 * :lipstick: update refapp logo ([#1689](https://github.com/dnum-mi/referentiel-applications/issues/1689)) ([312ead5](https://github.com/dnum-mi/referentiel-applications/commit/312ead51e1e6db7adf1f33d9ecf9ec60f66139bb))
-* :sparkles: add mulitple rgaa compliances ([#1684](https://github.com/dnum-mi/referentiel-applications/issues/1684)) ([37167a4](https://github.com/dnum-mi/referentiel-applications/commit/37167a4f301d020e18dc1579eb542ad60b8278e5))
+* :sparkles: add multiple rgaa compliances ([#1684](https://github.com/dnum-mi/referentiel-applications/issues/1684)) ([37167a4](https://github.com/dnum-mi/referentiel-applications/commit/37167a4f301d020e18dc1579eb542ad60b8278e5))
 
 
 ### Bug Fixes
@@ -605,7 +605,7 @@
 * add direction metier into columns and move filter to actor filter ([#1573](https://github.com/dnum-mi/referentiel-applications/issues/1573)) ([6b36d5a](https://github.com/dnum-mi/referentiel-applications/commit/6b36d5a3f68d56656b416ceb9532cf2e293bd79a))
 * add hosting active inactive mode ([#1590](https://github.com/dnum-mi/referentiel-applications/issues/1590)) ([d7e2fc8](https://github.com/dnum-mi/referentiel-applications/commit/d7e2fc860c3dbae99e814034ec5f87529bfa062e))
 * add pagination on organization ([#1569](https://github.com/dnum-mi/referentiel-applications/issues/1569)) ([d66d1a6](https://github.com/dnum-mi/referentiel-applications/commit/d66d1a6c27094b4ffd11fddabc0a74a9e75a7132))
-* typing improvement pagingation type in swagger ([#1576](https://github.com/dnum-mi/referentiel-applications/issues/1576)) ([11179c7](https://github.com/dnum-mi/referentiel-applications/commit/11179c703fd705d7bc7d2424ce2a4626bc00aa18))
+* typing improvement pagination type in swagger ([#1576](https://github.com/dnum-mi/referentiel-applications/issues/1576)) ([11179c7](https://github.com/dnum-mi/referentiel-applications/commit/11179c703fd705d7bc7d2424ce2a4626bc00aa18))
 
 
 ### Bug Fixes
@@ -688,7 +688,7 @@
 
 * add token active limit ([#1478](https://github.com/dnum-mi/referentiel-applications/issues/1478)) ([b740bd8](https://github.com/dnum-mi/referentiel-applications/commit/b740bd866bbea70ba395ccdaaa5b6e848e0b93bd))
 * do not refresh app list when user use input search relation ([#1473](https://github.com/dnum-mi/referentiel-applications/issues/1473)) ([14a189b](https://github.com/dnum-mi/referentiel-applications/commit/14a189b3e99a9fba6020e29fce80767a2849a677))
-* remove redondant bug title template title format ([#1486](https://github.com/dnum-mi/referentiel-applications/issues/1486)) ([509b9be](https://github.com/dnum-mi/referentiel-applications/commit/509b9be805c37875282101717661d2c97292727d))
+* remove redundant bug title template title format ([#1486](https://github.com/dnum-mi/referentiel-applications/issues/1486)) ([509b9be](https://github.com/dnum-mi/referentiel-applications/commit/509b9be805c37875282101717661d2c97292727d))
 
 ## [1.62.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.61.0...v1.62.0) (2026-02-13)
 

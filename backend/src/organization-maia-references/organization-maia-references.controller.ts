@@ -38,7 +38,7 @@ export class OrganizationMaiaReferencesController {
   ) {}
 
   @Post()
-  @RequiredPermissions([Permission.OrganizationManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({
     summary: "Créer une référence MAIA vers une organisation",
   })
@@ -57,7 +57,7 @@ export class OrganizationMaiaReferencesController {
   }
 
   @Get()
-  @RequiredPermissions([Permission.OrganizationManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({
     summary: "Lister les références MAIA",
   })
@@ -70,7 +70,7 @@ export class OrganizationMaiaReferencesController {
   }
 
   @Delete(":id")
-  @RequiredPermissions([Permission.OrganizationManage])
+  @RequiredPermissions([Permission.GlobalAdminManage])
   @HttpCode(204)
   @ApiOperation({
     summary: "Supprimer une référence MAIA",

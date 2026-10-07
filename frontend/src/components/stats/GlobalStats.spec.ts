@@ -117,10 +117,17 @@ describe("GlobalStats — compteur des fins de vie", () => {
     expect(screen.getByTestId("global-stats-data")).not.toHaveTextContent("99");
   });
 
-  it.each(["HTTP", "réseau"])("n'affiche pas un faux zéro après une erreur %s", async (failure) => {
+  it.each([
+    ["HTTP", () => findEndOfLife.mockResolvedValueOnce({ response: { ok: false }, error: {} })],
+    ["réseau rejetée", () => findEndOfLife.mockRejectedValueOnce(new TypeError("Failed to fetch"))],
+    ["réseau sans réponse HTTP", () => findEndOfLife.mockResolvedValueOnce({ error: new TypeError("Failed to fetch") })],
+    [
+      "de décodage après HTTP 200",
+      () => findEndOfLife.mockResolvedValueOnce({ response: { ok: true }, error: new SyntaxError("Invalid JSON") }),
+    ],
+  ] as const)("n'affiche pas un faux zéro après une erreur %s", async (_failure, failRequest) => {
     userStore.canListTechnologies = true;
-    if (failure === "HTTP") findEndOfLife.mockResolvedValueOnce({ response: { ok: false }, error: {} });
-    else findEndOfLife.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    failRequest();
     renderStats();
 
     expect(await screen.findByText("Applications concernées par une fin de vie dans votre périmètre : indisponible")).toBeInTheDocument();

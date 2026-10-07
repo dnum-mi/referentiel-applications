@@ -4,6 +4,7 @@ import { useHostingStore } from "@/stores/hostingStore";
 import { useStatisticsStore } from "@/stores/statisticsStore";
 import { useUserStore } from "@/stores/userStore";
 import api from "@/api/index";
+import { isApiSuccess } from "@/api/api-result";
 
 const actorsNb = ref(0);
 const compliancesNb = ref(0);
@@ -62,7 +63,7 @@ async function loadEndOfLifeStats() {
     // conserve ce filtre API historique ; `all` compterait aussi les technologies saines.
     const response = await api.endOfLifeControllerFindEndOfLifeApplications({ query: { page: 0, pageSize: 1 } });
     if (!isCurrentRequest()) return;
-    if (!response.response.ok || !response.data) {
+    if (!isApiSuccess(response) || !response.data) {
       endOfLifeError.value = true;
       return;
     }

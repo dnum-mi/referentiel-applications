@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import type { TagDto } from "@/client";
 import api from "@/api";
 
@@ -28,7 +29,7 @@ async function getTagsOptions(query: string) {
     },
   });
 
-  if (!response.response.ok || !response.data) {
+  if (!isApiSuccess(response) || !response.data) {
     throw new Error("Failed to fetch tags");
   }
 

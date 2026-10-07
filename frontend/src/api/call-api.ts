@@ -1,3 +1,4 @@
+import { isApiSuccess } from "@/api/api-result";
 import type { Ref } from "vue";
 
 const pendingCalls = new WeakMap<Ref<boolean>, number>();
@@ -19,7 +20,7 @@ export async function withLoading<T>(isLoading: Ref<boolean>, fn: () => Promise<
 interface ApiResult<T> {
   data?: T;
   error?: unknown;
-  response: Pick<Response, "ok" | "statusText">;
+  response?: Pick<Response, "ok" | "statusText">;
 }
 
 interface CallApiOptions {
@@ -33,8 +34,10 @@ export function callApi<T>(fn: () => Promise<ApiResult<T>>, options: CallApiOpti
   const run = async () => {
     try {
       const result = await fn();
-      if (!result.response.ok) {
-        throw new Error(`${options.errorMessage} (${result.response.statusText})`, { cause: result.error });
+      if (!isApiSuccess(result)) {
+        if (result.error instanceof Error) throw result.error;
+        const statusText = result.response?.statusText;
+        throw new Error(statusText ? `${options.errorMessage} (${statusText})` : options.errorMessage, { cause: result.error });
       }
       return result.data;
     } catch (error) {

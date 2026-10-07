@@ -99,7 +99,7 @@ async function main() {
     "Pour corriger : régénérer le contrat depuis le backend, puis committer le fichier.",
   );
   console.error(
-    "  docker compose exec backend npx prisma generate   # le swagger dérive des enums Prisma",
+    "  docker compose exec backend pnpm exec prisma generate   # le swagger dérive des enums Prisma",
   );
   console.error(
     "  docker compose restart backend                    # réécrit frontend/openapi/swagger.yaml",

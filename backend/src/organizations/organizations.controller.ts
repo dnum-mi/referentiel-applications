@@ -187,7 +187,7 @@ Vous devez fournir les informations suivantes :
   })
   @ApiConflictResponse({
     description:
-      "L'organisation possède des organisations filles : suppression refusée.",
+      "L'organisation possède des organisations filles ou définit un périmètre utilisateur : suppression refusée.",
   })
   public async delete(@Param("id") id: string) {
     return this.organizationService.deleteSafe(id);

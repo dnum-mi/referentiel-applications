@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import { ref, computed, onMounted } from "vue";
 import { Permission, type ComplianceDto } from "@/client/types.gen";
 import api from "@/api/index.js";
@@ -248,7 +249,7 @@ async function runEcoIndexScan() {
     });
     // #2292 : le backend distingue désormais l'URL cible manquante (404) du site injoignable
     // (502). Afficher son message plutôt qu'un diagnostic unique, et souvent faux.
-    if (response.error || !response.response.ok) {
+    if (!isApiSuccess(response)) {
       toaster.addErrorMessage(backendErrorMessage(response.error) ?? "Erreur lors du scan EcoIndex.");
       return;
     }

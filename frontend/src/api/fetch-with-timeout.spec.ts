@@ -40,7 +40,7 @@ describe("fetchWithTimeout", () => {
       const address = server.address();
       if (!address || typeof address === "string") throw new Error("Adresse HTTP de test indisponible");
       const request = new Request(`http://127.0.0.1:${address.port}/api/v2/hostings`);
-      await expect(fetchWithTimeout(request, 50)).rejects.toMatchObject({ name: "TimeoutError" });
+      await expect(fetchWithTimeout(request, undefined, 50)).rejects.toMatchObject({ name: "TimeoutError" });
     } finally {
       server.closeAllConnections();
       await new Promise<void>((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
@@ -59,6 +59,43 @@ describe("fetchWithTimeout", () => {
     await expect(pending).rejects.toMatchObject({ name: "AbortError" });
   });
 
+  it.each(["https://refapp.test/api/v2/hostings", new URL("https://refapp.test/api/v2/hostings")])(
+    "préserve les options fetch pour une entrée %s",
+    async (input) => {
+      const response = new Response("ok");
+      const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(response);
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(
+        fetchWithTimeout(input, {
+          method: "POST",
+          headers: { Authorization: "Bearer test" },
+          credentials: "include",
+          body: "payload",
+        }),
+      ).resolves.toBe(response);
+
+      const [request] = fetchMock.mock.calls[0];
+      if (!(request instanceof Request)) throw new Error("Le transport doit recevoir une Request");
+      expect(request.url).toBe("https://refapp.test/api/v2/hostings");
+      expect(request.method).toBe("POST");
+      expect(request.headers.get("Authorization")).toBe("Bearer test");
+      expect(request.credentials).toBe("include");
+      await expect(request.text()).resolves.toBe("payload");
+    },
+  );
+
+  it("préserve l'annulation fournie dans les options fetch", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>().mockImplementation((_request, init) => waitForAbort(init?.signal)),
+    );
+    const controller = new AbortController();
+    const pending = fetchWithTimeout("https://refapp.test/api/v2/hostings", { signal: controller.signal });
+    controller.abort();
+    await expect(pending).rejects.toMatchObject({ name: "AbortError" });
+  });
+
   it("interrompt aussi un corps bloqué après réception des en-têtes", async () => {
     vi.stubGlobal(
       "fetch",
@@ -71,7 +108,7 @@ describe("fetchWithTimeout", () => {
         return new Response(body);
       }),
     );
-    const response = await fetchWithTimeout(new Request("https://refapp.test/api/v2/hostings"), 10);
+    const response = await fetchWithTimeout(new Request("https://refapp.test/api/v2/hostings"), undefined, 10);
     await expect(response.text()).rejects.toMatchObject({ name: "TimeoutError" });
   });
 });

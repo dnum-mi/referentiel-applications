@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import { computed, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/api/index";
@@ -50,7 +51,7 @@ async function confirmDeletion() {
     const response = await api.dataCatalogControllerDeleteApplicationData({
       path: { applicationId: props.application.id, dataApplicationId: itemToDelete.value.id },
     });
-    if (!response.response.ok) throw new Error("delete failed");
+    if (!isApiSuccess(response)) throw new Error("delete failed");
     toaster.addSuccessMessage("Donnée détachée avec succès");
     await fetchByApplication(props.application.id);
   } catch (error) {
@@ -91,7 +92,7 @@ async function fetchByApplication(id: string) {
         sortBy: sortField.value,
       },
     });
-    if (!response.response.ok) {
+    if (!isApiSuccess(response)) {
       toaster.addErrorMessage("Erreur lors du chargement des données de l'application.");
       return;
     }

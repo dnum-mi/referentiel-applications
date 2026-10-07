@@ -1,3 +1,4 @@
+import { isApiSuccess } from "@/api/api-result";
 import type { ActorTypeDto } from "@/client/types.gen.js";
 import { defineStore } from "pinia";
 import { ref } from "vue";
@@ -17,7 +18,7 @@ export const useActorTypeStore = defineStore("actorTypeStore", () => {
       const response = await api.actorTypeControllerFindAll({
         query: { pageSize: 0, includeSystem },
       });
-      if (!response.response.ok) {
+      if (!isApiSuccess(response)) {
         throw new Error("Erreur lors de la récupération des types d'acteurs");
       }
       if (!response.data) {
@@ -36,7 +37,7 @@ export const useActorTypeStore = defineStore("actorTypeStore", () => {
   async function fetchById(id: string): Promise<ActorTypeDto | undefined> {
     try {
       const response = await api.actorTypeControllerFindOne({ path: { id } });
-      if (!response.response.ok) {
+      if (!isApiSuccess(response)) {
         throw new Error("Erreur lors de la récupération des types d'acteurs");
       }
       if (!response.data) {

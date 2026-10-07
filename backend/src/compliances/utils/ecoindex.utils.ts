@@ -1,5 +1,5 @@
 import { lookup } from "node:dns/promises";
-import { isIP } from "node:net";
+import { BlockList, isIP } from "node:net";
 import { BadRequestException, Logger } from "@nestjs/common";
 import { type Response, fetch } from "undici";
 import {
@@ -18,11 +18,18 @@ const ECOINDEX_FETCH_TIMEOUT_MS = 10_000;
 /// sous « OutboundHttp », cf. src/common/http/outbound-dispatcher.ts).
 const logger = new Logger("EcoIndex");
 
-function ipv4ToInt(ip: string): number {
-  return (
-    ip.split(".").reduce((acc, octet) => acc * 256 + Number(octet), 0) >>> 0
-  );
-}
+const privateAddresses = new BlockList();
+privateAddresses.addSubnet("0.0.0.0", 8, "ipv4");
+privateAddresses.addSubnet("10.0.0.0", 8, "ipv4");
+privateAddresses.addSubnet("100.64.0.0", 10, "ipv4");
+privateAddresses.addSubnet("127.0.0.0", 8, "ipv4");
+privateAddresses.addSubnet("169.254.0.0", 16, "ipv4");
+privateAddresses.addSubnet("172.16.0.0", 12, "ipv4");
+privateAddresses.addSubnet("192.168.0.0", 16, "ipv4");
+privateAddresses.addAddress("::", "ipv6");
+privateAddresses.addAddress("::1", "ipv6");
+privateAddresses.addSubnet("fc00::", 7, "ipv6");
+privateAddresses.addSubnet("fe80::", 10, "ipv6");
 
 /**
  * Adresse non routable publiquement (loopback, privée RFC1918, link-local incluant les
@@ -30,29 +37,9 @@ function ipv4ToInt(ip: string): number {
  * empêche le scan EcoIndex d'atteindre l'infrastructure interne (SSRF, #2373).
  */
 export function isPrivateAddress(ip: string): boolean {
-  const v4 = ip.toLowerCase().startsWith("::ffff:") ? ip.slice(7) : ip;
-  if (isIP(v4) === 4) {
-    const n = ipv4ToInt(v4);
-    const inRange = (base: string, bits: number) =>
-      n >>> (32 - bits) === ipv4ToInt(base) >>> (32 - bits);
-    return (
-      inRange("0.0.0.0", 8) ||
-      inRange("10.0.0.0", 8) ||
-      inRange("100.64.0.0", 10) ||
-      inRange("127.0.0.0", 8) ||
-      inRange("169.254.0.0", 16) ||
-      inRange("172.16.0.0", 12) ||
-      inRange("192.168.0.0", 16)
-    );
-  }
-  const lower = ip.toLowerCase();
-  return (
-    lower === "::1" ||
-    lower === "::" ||
-    lower.startsWith("fc") ||
-    lower.startsWith("fd") ||
-    lower.startsWith("fe80")
-  );
+  // BlockList reconnaît aussi les IPv4 mappées sous forme IPv6 hexadécimale,
+  // produite par URL (ex. ::ffff:127.0.0.1 devient ::ffff:7f00:1).
+  return privateAddresses.check(ip, isIP(ip) === 6 ? "ipv6" : "ipv4");
 }
 
 /**

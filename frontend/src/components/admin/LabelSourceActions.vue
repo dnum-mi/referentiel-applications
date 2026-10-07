@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import { ref } from "vue";
 import type { LabelSourceDto } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
@@ -58,12 +59,12 @@ async function saveLabelSource() {
         },
       });
 
-  if (response.response.ok) {
+  if (isApiSuccess(response)) {
     toaster.addSuccessMessage(props.labelSource?.id ? "Source mise à jour avec succès" : "Source créée avec succès");
 
     closeEditModal();
     emit("fetchLabelSources");
-  } else if (response.response.status === 400) {
+  } else if (response.response?.status === 400) {
     errorMessage.value = "La valeur est incorrecte.";
   } else {
     errorMessage.value = "Erreur lors de la sauvegarde de la source";
@@ -77,7 +78,7 @@ async function deleteLabelSource() {
   isDeleting.value = true;
 
   const response = await api.labelSourceControllerRemove({ path: { id: props.labelSource.id } });
-  if (response.response.ok) {
+  if (isApiSuccess(response)) {
     toaster.addSuccessMessage("Source supprimée avec succès");
     closeDeleteModal();
     emit("fetchLabelSources");

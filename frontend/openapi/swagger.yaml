@@ -3837,8 +3837,8 @@ paths:
         "403":
           description: Réservé aux administrateurs globaux.
         "409":
-          description: "L'organisation possède des organisations filles : suppression
-            refusée."
+          description: "L'organisation possède des organisations filles ou définit un périmètre
+            utilisateur : suppression refusée."
       summary: Supprimer une organisation
       tags: *a20
   /api/v2/applications/{applicationId}/actors:
@@ -9425,6 +9425,7 @@ components:
       properties:
         path:
           type: string
+          pattern: \S
           example: Direction de la transformation numérique
           description: Nom de l'organisation
         url:
@@ -9480,6 +9481,7 @@ components:
       properties:
         path:
           type: string
+          pattern: \S
           example: Direction de la transformation numérique
           description: Nom de l'organisation
         url:

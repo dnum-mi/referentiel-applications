@@ -1,5 +1,5 @@
 import type { UserFakerReturnType } from "./fakers/user.faker";
-import { Roles } from "@prisma/client";
+import { Permission, Roles } from "@prisma/client";
 import request from "supertest";
 import { BusinessDivisionFaker } from "./fakers/business-division.faker";
 import { OrganizationFaker } from "./fakers/organization.faker";
@@ -264,17 +264,27 @@ describe("Organizations - écritures réservées à l'admin global", () => {
       .expect(404);
   });
 
-  it("la suppression par un admin global retire le périmètre des admins scopés (comportement assumé)", async () => {
+  it("refuse la suppression d'un périmètre utilisé et conserve les restrictions de l'admin scopé", async () => {
     const scopeOrg = await OrganizationFaker.create();
-    const { user } = await createScopedUser(Roles.ADMIN, scopeOrg.id);
+    const { user, token } = await createScopedUser(Roles.ADMIN, scopeOrg.id);
 
     await request(app().getHttpServer())
       .delete(`/organizations/${scopeOrg.id}`)
       .set("Authorization", `Bearer ${GLOBAL_ADMIN_TOKEN}`)
-      .expect(204);
+      .expect(409);
 
     const reloaded = await prisma.user.findUnique({ where: { id: user.id } });
-    expect(reloaded?.scopeOrganizationId).toBeNull();
+    expect(reloaded?.scopeOrganizationId).toBe(scopeOrg.id);
+    expect(
+      await prisma.organization.findUnique({ where: { id: scopeOrg.id } }),
+    ).not.toBeNull();
+    const response = await request(app().getHttpServer())
+      .get("/users/me")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    expect(response.body.permissions).not.toContain(
+      Permission.GlobalAdminManage,
+    );
   });
 });
 
@@ -283,7 +293,7 @@ describe("Organizations - MAIA references", () => {
   let TOKEN: string;
 
   beforeAll(async () => {
-    const user = await UserFaker.create({ role: Roles.CONTRIBUTOR });
+    const user = await UserFaker.create({ role: Roles.ADMIN });
     TOKEN = await getToken(user);
   });
 

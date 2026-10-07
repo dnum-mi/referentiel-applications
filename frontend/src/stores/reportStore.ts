@@ -1,3 +1,4 @@
+import { isApiSuccess } from "@/api/api-result";
 import type { CreateReportRequestDto, ReportStatus } from "@/client/types.gen";
 import { defineStore } from "pinia";
 import api from "@/api/index";
@@ -10,7 +11,7 @@ export const useReportStore = defineStore("reportStore", () => {
 
     try {
       const response = await api.reportsControllerCreate({ body: payload });
-      if (!response.response.ok) {
+      if (!isApiSuccess(response)) {
         throw new Error("Erreur lors de la création du signalement");
       }
       if (!response.data) {
@@ -30,7 +31,7 @@ export const useReportStore = defineStore("reportStore", () => {
 
     try {
       const response = await api.applicationReportsControllerCreate({ path: { applicationId }, body: payload });
-      if (!response.response.ok) {
+      if (!isApiSuccess(response)) {
         throw new Error("Erreur lors de la création du signalement");
       }
       if (!response.data) {

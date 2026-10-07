@@ -189,7 +189,7 @@ Le tableau ci-dessous restitue les **permissions globales** attribuées à chaqu
 | `CreateApplication`  |         |        |      ✓      |   ✓   |
 | `CreateGlobalReport` |         |        |      ✓      |   ✓   |
 | `ReportManage`       |         |        |      ✓      |   ✓   |
-| `OrganizationManage` |         |        |      ✓      |   ✓   |
+| `OrganizationManage` |         |        |             |  ✓\*  |
 | `ActorTypeManage`    |         |        |      ✓      |   ✓   |
 | `ActorTypeDelete`    |         |        |      ✓      |   ✓   |
 | `AdminPanelManage`   |         |        |             |   ✓   |
@@ -198,8 +198,8 @@ Le tableau ci-dessous restitue les **permissions globales** attribuées à chaqu
 | `DeleteApplication`  |         |        |             |   ✓   |
 | `ActorTypePost`      |         |        |             |   ✓   |
 
-\* `GlobalAdminManage` — et `QualityCampaignManage` — ne sont accordées qu'à un administrateur
-**sans périmètre organisationnel** (#2446, `SCOPED_ADMIN_EXCLUDED_PERMISSIONS`). Un administrateur
+\* `GlobalAdminManage` et `OrganizationManage` ne sont accordées qu'à un administrateur
+**sans périmètre organisationnel** (#2446, #2800, `SCOPED_ADMIN_EXCLUDED_PERMISSIONS`). Un administrateur
 de périmètre garde `AdminPanelManage`, qui ne lui ouvre plus que l'administration des utilisateurs
 et des acteurs de son périmètre (cf. [section 6.4](#64-effet-sur-les-onglets-dadministration)).
 
@@ -381,10 +381,14 @@ règle pour les trois tuiles, sans cas particulier : un administrateur de périm
 voit déjà pas la tuile « Gestion ». La description de la tuile n'énumère, sinon, que les onglets
 réellement ouverts.
 
-> **Limite connue.** Les routes `/organizations` (POST/PATCH/DELETE) restent gouvernées par
-> `OrganizationManage`, portée par le socle **Contributeur** : l'onglet « Gestion des
-> organisations » disparaît pour un administrateur de périmètre, mais la capacité elle-même n'est
-> pas retirée — la revoir supposerait de la reprendre aussi pour les contributeurs.
+Depuis #2800, les écritures `/organizations` (POST/PATCH/DELETE) et la gestion des références
+MAIA exigent `GlobalAdminManage`, comme l'onglet « Gestion des organisations ». Les contributeurs
+et administrateurs de périmètre sont refusés (403), même s'ils portent une ancienne délégation
+`OrganizationManage`. La lecture des organisations reste accessible aux utilisateurs authentifiés.
+Un chemin vide, composé uniquement d'espaces ou nul est refusé à la création et à la modification
+(400). La suppression d'une organisation servant de périmètre à des utilisateurs est refusée (409),
+y compris en suppression forcée : un administrateur global doit d'abord réaffecter explicitement
+ces périmètres pour éviter que la suppression de la relation ne leur accorde des droits globaux.
 
 ## 7. Mise en œuvre côté code
 

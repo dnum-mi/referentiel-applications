@@ -1,2 +1,14 @@
 node_modules
 .tmp
+.pnpm-store
+.env
+.env.*
+!.env.example
+!.env.sample
+dist
+coverage
+*.log
+*.tsbuildinfo
+playwright-report
+test-results
+blob-report

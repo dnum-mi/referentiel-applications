@@ -1,7 +1,18 @@
 diff --git a/dist/pptxgen.cjs.js b/dist/pptxgen.cjs.js
-index 143dfa3e7fb54054153bad16b6c991697c0d31e7..2486b88d14fb560fbaca277ccec8468a5aab7535 100644
+index 143dfa3e7fb54054153bad16b6c991697c0d31e7..4292e0ec26fa87a21f25028d64f34ebb7a18c337 100644
 --- a/dist/pptxgen.cjs.js
 +++ b/dist/pptxgen.cjs.js
+@@ -4841,8 +4841,8 @@ function encodeSlideMediaRels(layout) {
+     // STEP 2: Lazy-load Node built-ins if needed
+     const loadNodeDeps = isNode
+         ? () => __awaiter(this, void 0, void 0, function* () {
+-            ({ default: fs } = yield import('node:fs'));
+-            ({ default: https } = yield import('node:https'));
++            fs = require('node:fs');
++            https = require('node:https');
+         })
+         : () => __awaiter(this, void 0, void 0, function* () { });
+     // Immediately start it when we know we’re in Node
 @@ -6349,8 +6349,8 @@ function makeXmlContTypes(slides, slideLayouts, masterSlide) {
      // STEP 2: Add presentation and slide master(s)/slide(s)
      strXml += '<Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>';
@@ -12,6 +23,17 @@ index 143dfa3e7fb54054153bad16b6c991697c0d31e7..2486b88d14fb560fbaca277ccec8468a
          strXml += `<Override PartName="/ppt/slides/slide${idx + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>`;
          // Add charts if any
          slide._relsChart.forEach(rel => {
+@@ -7203,8 +7203,8 @@ class PptxGenJS {
+             const data = yield this.exportPresentation({ compression, outputType });
+             // STEP 4: Write the file out
+             if (isNode) {
+-                // Dynamically import to avoid bundling fs in the browser build
+-                const { promises: fs } = yield import('node:fs');
++                // The CommonJS build loads Node built-ins without an ESM runtime.
++                const { promises: fs } = require('node:fs');
+                 const { writeFile } = fs;
+                 yield writeFile(fileName, data);
+                 return fileName;
 diff --git a/dist/pptxgen.es.js b/dist/pptxgen.es.js
 index 449038cbf3d367c7e5a51bf692793a25bd06a86e..e84bba1ae25a7177300789f1285f5a5d376e1dec 100644
 --- a/dist/pptxgen.es.js

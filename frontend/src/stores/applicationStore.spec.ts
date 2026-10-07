@@ -1,15 +1,16 @@
 import { createPinia, setActivePinia } from "pinia";
 import { useApplicationStore } from "./applicationStore";
 
-const { removeMock, addErrorMessage, addSuccessMessage, push } = vi.hoisted(() => ({
+const { removeMock, exportPowerpointMock, addErrorMessage, addSuccessMessage, push } = vi.hoisted(() => ({
   removeMock: vi.fn(),
+  exportPowerpointMock: vi.fn(),
   addErrorMessage: vi.fn(),
   addSuccessMessage: vi.fn(),
   push: vi.fn(),
 }));
 
 vi.mock("@/api/index", () => ({
-  default: { applicationControllerRemove: removeMock },
+  default: { applicationControllerRemove: removeMock, applicationControllerExportProductPowerpoint: exportPowerpointMock },
 }));
 
 vi.mock("@/router", () => ({
@@ -49,6 +50,21 @@ describe("applicationStore.deleteApplication — retour d'erreur (#2542)", () =>
     expect(addErrorMessage).toHaveBeenCalledWith("Erreur lors de la suppression définitive de l'application.");
   });
 
+  it.each([
+    { failure: "réseau sans réponse", response: undefined, error: new TypeError("Failed to fetch") },
+    { failure: "décodage après un HTTP 200", response: { ok: true, status: 200 }, error: new SyntaxError("Invalid JSON") },
+  ])("ne confirme pas la suppression après une erreur $failure", async ({ response, error }) => {
+    removeMock.mockResolvedValueOnce({ response, error });
+
+    await expect(useApplicationStore().deleteApplication("app-1")).rejects.toThrow(
+      "Erreur lors de la suppression définitive de l'application.",
+    );
+
+    expect(addErrorMessage).toHaveBeenCalledExactlyOnceWith("Erreur lors de la suppression définitive de l'application.");
+    expect(addSuccessMessage).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
+  });
+
   it("redirige vers la recherche et confirme après une suppression réussie", async () => {
     removeMock.mockResolvedValueOnce({ response: { ok: true, status: 204 } });
 
@@ -57,5 +73,22 @@ describe("applicationStore.deleteApplication — retour d'erreur (#2542)", () =>
     expect(push).toHaveBeenCalledTimes(1);
     expect(addSuccessMessage).toHaveBeenCalledWith("Application supprimée définitivement avec succès.");
     expect(addErrorMessage).not.toHaveBeenCalled();
+  });
+});
+
+describe("applicationStore.downloadProductPowerpoint — erreurs du client API", () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    exportPowerpointMock.mockReset();
+  });
+
+  it.each([
+    { failure: "réseau sans réponse", response: undefined, error: new TypeError("Failed to fetch") },
+    { failure: "décodage après HTTP 200", response: { ok: true, status: 200 }, error: new SyntaxError("Invalid blob") },
+  ])("signale l'échec $failure sans tenter de télécharger", async ({ response, error }) => {
+    exportPowerpointMock.mockResolvedValueOnce({ response, error });
+
+    await expect(useApplicationStore().downloadProductPowerpoint("app-1")).rejects.toThrow("Erreur lors de l'export PowerPoint.");
+    expect(exportPowerpointMock).toHaveBeenCalledExactlyOnceWith({ path: { applicationId: "app-1" }, parseAs: "blob" });
   });
 });

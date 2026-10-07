@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isApiSuccess } from "@/api/api-result";
 import { ref, onMounted, watch, nextTick, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/api/index";
@@ -32,7 +33,7 @@ async function fetchGraphData() {
       path: { applicationId: props.applicationId },
       query: { depth: depth.value },
     });
-    if (!response.response.ok) throw new Error("Erreur lors du chargement du graphe");
+    if (!isApiSuccess(response)) throw new Error("Erreur lors du chargement du graphe");
     graphData.value = response.data || null;
   } catch {
     error.value = "Impossible de charger le graphe des relations";
