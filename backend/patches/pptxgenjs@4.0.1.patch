@@ -1,0 +1,28 @@
+diff --git a/dist/pptxgen.cjs.js b/dist/pptxgen.cjs.js
+index 143dfa3e7fb54054153bad16b6c991697c0d31e7..2486b88d14fb560fbaca277ccec8468a5aab7535 100644
+--- a/dist/pptxgen.cjs.js
++++ b/dist/pptxgen.cjs.js
+@@ -6349,8 +6349,8 @@ function makeXmlContTypes(slides, slideLayouts, masterSlide) {
+     // STEP 2: Add presentation and slide master(s)/slide(s)
+     strXml += '<Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>';
+     strXml += '<Override PartName="/ppt/notesMasters/notesMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.notesMaster+xml"/>';
++    strXml += '<Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"/>';
+     slides.forEach((slide, idx) => {
+-        strXml += `<Override PartName="/ppt/slideMasters/slideMaster${idx + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"/>`;
+         strXml += `<Override PartName="/ppt/slides/slide${idx + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>`;
+         // Add charts if any
+         slide._relsChart.forEach(rel => {
+diff --git a/dist/pptxgen.es.js b/dist/pptxgen.es.js
+index 449038cbf3d367c7e5a51bf692793a25bd06a86e..e84bba1ae25a7177300789f1285f5a5d376e1dec 100644
+--- a/dist/pptxgen.es.js
++++ b/dist/pptxgen.es.js
+@@ -6347,8 +6347,8 @@ function makeXmlContTypes(slides, slideLayouts, masterSlide) {
+     // STEP 2: Add presentation and slide master(s)/slide(s)
+     strXml += '<Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>';
+     strXml += '<Override PartName="/ppt/notesMasters/notesMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.notesMaster+xml"/>';
++    strXml += '<Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"/>';
+     slides.forEach((slide, idx) => {
+-        strXml += `<Override PartName="/ppt/slideMasters/slideMaster${idx + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"/>`;
+         strXml += `<Override PartName="/ppt/slides/slide${idx + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>`;
+         // Add charts if any
+         slide._relsChart.forEach(rel => {

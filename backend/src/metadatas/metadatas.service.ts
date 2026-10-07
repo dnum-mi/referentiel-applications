@@ -139,7 +139,7 @@ export class MetadatasService extends BaseService<
     }
     const created = await this.metadataRepository.create(prismaData);
 
-    if (applicationId) {
+    if (applicationId && type !== "export") {
       await this.notifyFollowedApplicationSubscribers(
         applicationId,
         createdById,
@@ -153,7 +153,8 @@ export class MetadatasService extends BaseService<
 
   /**
    * Notifie en temps réel les abonnés d'une application dès qu'une métadonnée la concernant
-   * est créée (mise à jour de la fiche, d'un acteur, d'une conformité, d'un statut, etc.) —
+   * est créée (mise à jour de la fiche, d'un acteur, d'une conformité, d'un statut, etc.),
+   * hors exports qui ne changent pas les données —
    * c'est le même signal que celui agrégé par le digest email quotidien (#2280).
    */
   private async notifyFollowedApplicationSubscribers(

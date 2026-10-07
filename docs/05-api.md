@@ -199,21 +199,22 @@ Inventaire **par module / ressource** (résumé : verbes et chemins principaux, 
 
 ### Applications
 
-| Verbe & chemin                                     | Rôle                                                        |
-| -------------------------------------------------- | ----------------------------------------------------------- |
-| `POST /applications`                               | Créer une application                                       |
-| `GET /applications`                                | Lister / rechercher (paginé, filtres riches)                |
-| `GET /applications/count-by-month`                 | Comptage par mois                                           |
-| `GET /applications/count-by-iq`                    | Comptage par indice qualité                                 |
-| `GET /applications/:applicationId/my-perms`        | Permissions de l'utilisateur courant sur l'application      |
-| `GET /applications/:applicationId/contact-admin`   | Admin à contacter si l'accès à la fiche est partiel (#2593) |
-| `GET /users/me/contact-admin`                      | Admin à contacter pour l'utilisateur courant (profil)       |
-| `GET /applications/export/excel`                   | Export Excel (xlsx) — réservé admin                         |
-| `GET /applications/data-quality/update`            | Recalcul global de l'indice qualité                         |
-| `GET /applications/:applicationId`                 | Détail d'une application                                    |
-| `GET /applications/:applicationId/quality-summary` | Synthèse qualité                                            |
-| `PATCH /applications/:applicationId`               | Mettre à jour                                               |
-| `DELETE /applications/:applicationId`              | Supprimer                                                   |
+| Verbe & chemin                                        | Rôle                                                           |
+| ----------------------------------------------------- | -------------------------------------------------------------- |
+| `POST /applications`                                  | Créer une application                                          |
+| `GET /applications`                                   | Lister / rechercher (paginé, filtres riches)                   |
+| `GET /applications/count-by-month`                    | Comptage par mois                                              |
+| `GET /applications/count-by-iq`                       | Comptage par indice qualité                                    |
+| `GET /applications/:applicationId/my-perms`           | Permissions de l'utilisateur courant sur l'application         |
+| `GET /applications/:applicationId/contact-admin`      | Admin à contacter si l'accès à la fiche est partiel (#2593)    |
+| `GET /users/me/contact-admin`                         | Admin à contacter pour l'utilisateur courant (profil)          |
+| `GET /applications/export/excel`                      | Export Excel (xlsx) — réservé admin                            |
+| `POST /applications/:applicationId/export/powerpoint` | Fiche produit PowerPoint modifiable, accessible avec `AppRead` |
+| `GET /applications/data-quality/update`               | Recalcul global de l'indice qualité                            |
+| `GET /applications/:applicationId`                    | Détail d'une application                                       |
+| `GET /applications/:applicationId/quality-summary`    | Synthèse qualité                                               |
+| `PATCH /applications/:applicationId`                  | Mettre à jour                                                  |
+| `DELETE /applications/:applicationId`                 | Supprimer                                                      |
 
 ### Sous-ressources d'une application (`/applications/:applicationId/...`)
 
@@ -357,7 +358,13 @@ Le compteur non lu est calculé directement en base par `userId` et `isRead`, co
 | `POST /tokens/:id/regenerate`                        | Régénérer un jeton |
 | `DELETE /tokens/:id` · `DELETE /tokens/personal/:id` | Révoquer un jeton  |
 
-> Il n'existe **pas de route d'import** ; l'export se limite à `GET /applications/export/excel` (admin).
+> L'export Excel des résultats de recherche utilise `GET /applications/export/excel` (`DataExport`).
+> La fiche produit individuelle utilise `POST /applications/:applicationId/export/powerpoint`
+> (`AppRead`, sans corps) et renvoie un fichier `.pptx` en pièce jointe. Chaque demande est
+> tracée dans `ActionLog` et chaque fichier généré dans `Metadata` avec l'action `export`,
+> l'utilisateur, l'application et la date. Le fichier reprend les informations générales,
+> sans dette technique ni contacts ; les textes longs sont conservés dans des diapositives
+> de détail. Les champs absents sont indiqués comme non renseignés.
 
 ## Variables d'environnement
 

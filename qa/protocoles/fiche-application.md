@@ -137,3 +137,15 @@
   automatique quand le champ est effacé sont vérifiés par les tests unitaires du backend
   (`technology.service.spec.ts`, `eol-refresh.service.spec.ts`) et le contrat HTTP
   (`technologies-contract.e2e-spec.ts`), pas par cet e2e.
+
+### FIC-25 — Export d'une fiche produit PowerPoint sans droits administrateur (#434)
+
+- **Datafeature** : une application existante, puis connexion avec le compte `user`.
+- **Action** : sur la fiche, cliquer **Exporter la fiche produit en PowerPoint**.
+- **Résultat attendu** : téléchargement de `fiche-produit-<id>.pptx`, fichier OpenXML non vide ;
+  le bouton est de nouveau disponible après la préparation.
+- **Couvert par le contrat backend** : contenu modifiable, conservation des textes longs,
+  champs non renseignés, exclusion de la dette technique et des contacts, refus sans
+  authentification, application absente, journalisation de l'utilisateur, de la fiche et de la date,
+  absence de notification de changement aux abonnés (cloche et digest), conservation des
+  dates de la fiche et maintien des relances de validation après un export récent.

@@ -2157,6 +2157,35 @@ paths:
           description: Accès refusé - Privilège admin requis
       summary: Exporter les applications en Excel
       tags: *a8
+  /api/v2/applications/{applicationId}/export/powerpoint:
+    post:
+      description: Produit un fichier PPTX modifiable à partir des informations
+        générales de la fiche. Accessible avec AppRead, sans privilège
+        administrateur. La dette technique et les contacts ne sont pas inclus.
+        Chaque export est journalisé avec l'utilisateur, l'application et la date.
+        Les textes longs sont conservés dans des diapositives de détail.
+      operationId: ApplicationController_exportProductPowerpoint
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Fiche produit PowerPoint
+          content:
+            application/vnd.openxmlformats-officedocument.presentationml.presentation:
+              schema:
+                type: string
+                format: binary
+        "403":
+          description: Lecture de la fiche non autorisée
+        "404":
+          description: Application non trouvée
+      summary: Exporter la fiche produit en PowerPoint
+      tags:
+        - applications
   /api/v2/applications/{applicationId}:
     get:
       description: "

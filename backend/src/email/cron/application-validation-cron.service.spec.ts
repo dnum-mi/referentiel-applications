@@ -112,6 +112,7 @@ describe("ApplicationValidationCronService", () => {
 
       expect(findManyCallArgs.where.metadatas).toEqual({
         none: {
+          action: { not: "export" },
           createdAt: { gte: expect.any(Date) },
         },
       });

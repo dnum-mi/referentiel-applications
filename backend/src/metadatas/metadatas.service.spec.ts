@@ -103,6 +103,22 @@ describe("MetadatasService.createMetadata — notification des abonnés (#2280)"
     expect(createForUsers).not.toHaveBeenCalled();
   });
 
+  it("conserve la trace d'un export sans alerter les abonnés d'un changement", async () => {
+    const { service, create, createForUsers } = buildService();
+
+    await service.createMetadata({
+      applicationId: "app-1",
+      createdById: "author-1",
+      title: "de la fiche produit en PowerPoint",
+      type: "export",
+    });
+
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({ applicationId: "app-1", action: "export" }),
+    );
+    expect(createForUsers).not.toHaveBeenCalled();
+  });
+
   it("ne crée ni métadonnée ni notification quand la mise à jour ne change rien", async () => {
     const { service, create, createForUsers } = buildService();
 

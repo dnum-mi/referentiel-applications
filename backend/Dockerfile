@@ -17,6 +17,7 @@ RUN npm install --ignore-scripts --location=global pnpm@10.14.0
 # pnpm-workspace.yaml porte les overrides de sécurité (pnpm 10 ne les lit plus
 # depuis package.json) : il doit être présent avant `pnpm install`.
 COPY --chown=node:root package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY --chown=node:root patches ./patches
 
 USER node
 

@@ -84,7 +84,7 @@ export class MetadataRepository implements IMetadataRepository {
   async findFirstAndLastByApplicationId(applicationId: string) {
     const [first, last] = await this.prisma.$transaction([
       this.prisma.metadata.findFirst({
-        where: { applicationId },
+        where: { applicationId, action: { not: "export" } },
         orderBy: { createdAt: "asc" },
         include: {
           createdBy: {
@@ -96,7 +96,7 @@ export class MetadataRepository implements IMetadataRepository {
         },
       }),
       this.prisma.metadata.findFirst({
-        where: { applicationId },
+        where: { applicationId, action: { not: "export" } },
         orderBy: { createdAt: "desc" },
         include: {
           createdBy: {

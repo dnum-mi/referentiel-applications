@@ -243,6 +243,12 @@ L'énumération `Permission` (`backend/prisma/schema/permissions.prisma:59-105`)
 
 Quatre valeurs sont à la fois **globales** (socle Visiteur, cf. §3) et **applicatives** (colonnes de la matrice §4.2) : `AppRead`, `DataRead`, `ReportRead`, `ReportPost`. Comme le socle les accorde à tout utilisateur authentifié, leur colonne dans la matrice des types d'acteur est **sans effet** — la matrice ne les propose plus en retrait (#2510). Depuis #2506, `DeleteApplication` protège bien la route `DELETE /applications/:id` (auparavant `AdminPanelManage`).
 
+L'export individuel de fiche produit (`POST /applications/:applicationId/export/powerpoint`,
+#434) utilise `AppRead`. Il ne requiert pas `DataExport`, qui protège l'export Excel de masse.
+La sélection exportée se limite aux informations générales, aux noms alternatifs et aux tags ;
+elle exclut la dette technique et les contacts pour tous les rôles. Chaque demande est tracée
+dans `ActionLog`, y compris l'identité réelle en cas d'impersonation.
+
 ### 4.2. Permissions applicatives (par application)
 
 | Permission (lecture) | Permission (écriture) | Domaine                                                                                                                                                                             |
