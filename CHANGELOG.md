@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.97.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.96.0...v1.97.0) (2026-10-07)
+
+
+### Features
+
+* export product cards to PowerPoint ([#2833](https://github.com/dnum-mi/referentiel-applications/issues/2833)) ([88ae194](https://github.com/dnum-mi/referentiel-applications/commit/88ae194056537c7a94380ea68f98b1208151c4e3))
+
+
+### Bug Fixes
+
+* admin scoped cannot remove orga ([#2827](https://github.com/dnum-mi/referentiel-applications/issues/2827)) ([572275c](https://github.com/dnum-mi/referentiel-applications/commit/572275c712ae869cf36e08e2c61efc76def603d6))
+* complete notification filtering and read actions ([#2772](https://github.com/dnum-mi/referentiel-applications/issues/2772)) ([b6f69e0](https://github.com/dnum-mi/referentiel-applications/commit/b6f69e04360105f4581e73ceba6337eff94c1c86))
+* excel pagination ([#2829](https://github.com/dnum-mi/referentiel-applications/issues/2829)) ([1092f76](https://github.com/dnum-mi/referentiel-applications/commit/1092f76f385ea063fd840a968395669a4ccad347))
+* **front:** use named routes for footer mandatory and operator links ([#2797](https://github.com/dnum-mi/referentiel-applications/issues/2797)) ([301a894](https://github.com/dnum-mi/referentiel-applications/commit/301a894bca8c16e48c12f8b0671baa500083f69c))
+* rgaa focus is now stable in page application ([#2831](https://github.com/dnum-mi/referentiel-applications/issues/2831)) ([3ee00c1](https://github.com/dnum-mi/referentiel-applications/commit/3ee00c17dcaa0973e8fc2250cc04cc5e14267ab1))
+* **security:** remove vulnerable tooling dependencies ([#2862](https://github.com/dnum-mi/referentiel-applications/issues/2862)) ([23d954f](https://github.com/dnum-mi/referentiel-applications/commit/23d954fab4fed5d14a5ef0bef43ca74aaa01ec19))
+* **security:** update dependencies and harden application access ([#2802](https://github.com/dnum-mi/referentiel-applications/issues/2802)) ([bd777df](https://github.com/dnum-mi/referentiel-applications/commit/bd777dfd3cb0a79d4b11d4b1c9c4aeea9dfd0af5))
+* update aria and delete dead slot ([#2863](https://github.com/dnum-mi/referentiel-applications/issues/2863)) ([41c41d0](https://github.com/dnum-mi/referentiel-applications/commit/41c41d046d97fce0344d00570fef42a082fac41a))
+
 ## [1.96.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.95.0...v1.96.0) (2026-10-01)
 
 
