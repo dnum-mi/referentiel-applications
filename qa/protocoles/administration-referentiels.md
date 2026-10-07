@@ -206,3 +206,45 @@
   « Aucune direction métier » pour détacher.
 - **Résultat attendu** : toast « Organisation mise à jour avec succès » ; la colonne « Direction métier »
   de `admin-organizations-table` affiche le nom de la direction, puis « - » après détachement.
+
+### ADM-24 — Accepter une suggestion de corrélation
+
+- **Datafeature** : seed QA, paire `QA-CORRELATION-<NAVIGATEUR>-ACCEPT-PORTAIL(S)` avec labels
+  proches et une donnée partagée. Une paire distincte existe pour Chromium, Firefox et WebKit.
+- **Action** : admin global → tuile « Campagnes » → « Revue datasteward » → retrouver la paire,
+  vérifier ses signaux → Accepter → Confirmer → consulter les deux fiches, onglet Relations.
+- **Résultat attendu** : toast d'acceptation, une seule suggestion acceptée avec auteur/date de
+  revue, une seule relation « Est corrélée à » sur chaque fiche. Le graphe comporte les deux
+  applications et une arête en tirets sans flèche. La légende de corrélation masque puis rétablit
+  cette arête.
+- **Nettoyage** : remise en attente de cette seule paire et suppression de sa relation et des
+  deux traces d'acceptation, y compris après un échec du scénario.
+
+### ADM-25 — Rejeter une corrélation et relancer la détection
+
+- **Datafeature** : paire `QA-CORRELATION-<NAVIGATEUR>-REJECT-PORTAIL(S)`. La préparation enlève
+  sa suggestion, afin que le parcours vérifie aussi sa création par la vraie détection.
+- **Action** : admin global → « Revue datasteward » → Lancer la détection → retrouver la paire →
+  Rejeter → Confirmer → relancer la détection → filtrer les suggestions rejetées.
+- **Résultat attendu** : la première détection produit une suggestion avec une donnée partagée.
+  Après rejet, aucune relation n'apparaît sur les deux fiches ni dans leur graphe. La seconde
+  détection conserve l'unique suggestion rejetée, son identifiant, son auteur et sa date de revue ;
+  aucune suggestion en attente n'est recréée pour cette paire.
+- **Nettoyage** : remise en attente de la seule paire QA utilisée ; aucune revue métier hors
+  fixture n'est effacée.
+
+### ADM-26 — Afficher la corrélation pré-acceptée du seed QA
+
+- **Datafeature** : paire `QA-CORRELATION-<NAVIGATEUR>-ACCEPTED-PORTAIL(S)`, déjà acceptée, une
+  donnée partagée et une seule relation canonique. Les identifiants fixes rendent le seed rejouable.
+- **Action** : consulter les deux fiches puis le graphe des relations.
+- **Résultat attendu** : une unique suggestion acceptée et une unique relation « Est corrélée à »
+  de chaque côté ; le graphe et sa légende représentent une arête symétrique en tirets.
+
+Les trois cas sont automatisés dans `e2e/tests/correlations.spec.ts`. Le job **Correlation E2E**
+applique le seed QA deux fois puis rejoue chaque cas deux fois, sans retries. En local, sur une
+stack dédiée et migrée, appliquer le seed principal puis deux fois `pnpm db:seed:qa`, puis lancer
+deux fois `pnpm --dir e2e test:e2e tests/correlations.spec.ts --project=chromium --workers=1 --retries=0`.
+Les variables `E2E_BASE_URL`, `API_BASE_URL` et `E2E_DATABASE_URL` doivent viser cette même stack.
+Le nettoyage global des autres specs n'est pas élargi : seules les paires réservées au scénario
+sont remises en état. Les exécutions d'un même navigateur sur une même base restent séquentielles.

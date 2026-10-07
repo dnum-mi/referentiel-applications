@@ -16,6 +16,7 @@ import {
   ApiBody,
   ApiConflictResponse,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -28,6 +29,7 @@ import { OrganizationFilterDto } from "./dto/filters.dto";
 import {
   CreateOrganizationDto,
   OrganizationDto,
+  OrganizationScopedAdminDto,
   PatchOrganizationDto,
 } from "./dto/organizations.dto";
 import { OrganizationsService } from "./organizations.service";
@@ -54,6 +56,9 @@ export class OrganizationsController {
    * @returns La nouvelle organisation créée
    * @throws BadRequestException Si le token est invalide ou l'identifiant utilisateur est manquant
    */
+  // Écritures réservées à l'admin global : le périmètre d'un utilisateur scopé est relu à chaque
+  // requête via le `path` de son organisation de scope — la créer, la renommer ou la déplacer
+  // élargirait ce périmètre.
   @Post()
   @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiBody({ type: CreateOrganizationDto })
@@ -73,6 +78,9 @@ Vous devez fournir les informations suivantes :
     description: "Organisation Créée avec succes",
     type: OrganizationDto,
   })
+  @ApiForbiddenResponse({
+    description: "Réservé aux administrateurs globaux.",
+  })
   public async create(
     @Body() createOrganizationDto: CreateOrganizationDto,
     @Request() req: { user: { id: string } },
@@ -84,6 +92,28 @@ Vous devez fournir les informations suivantes :
     });
 
     return await this.organizationService.create(createOrganizationDto);
+  }
+
+  /**
+   * Liste les administrateurs dont le périmètre est cette organisation. Sert à prévenir l'admin
+   * global avant une suppression : la FK `ON DELETE SET NULL` leur retirerait leur périmètre et en
+   * ferait des administrateurs globaux.
+   */
+  @Get("/:id/scoped-admins")
+  @RequiredPermissions([Permission.GlobalAdminManage])
+  @ApiOperation({
+    summary:
+      "Lister les administrateurs ayant cette organisation pour périmètre",
+  })
+  @ApiOkResponse({
+    description: "Administrateurs scopés sur l'organisation",
+    type: [OrganizationScopedAdminDto],
+  })
+  @ApiNotFoundResponse({ description: "Organisation non trouvée" })
+  public async findScopedAdmins(
+    @Param("id") id: string,
+  ): Promise<OrganizationScopedAdminDto[]> {
+    return this.organizationService.findScopedAdmins(id);
   }
 
   /**
@@ -132,6 +162,9 @@ Vous devez fournir les informations suivantes :
     description: "Organisation mise à jour",
     type: OrganizationDto,
   })
+  @ApiForbiddenResponse({
+    description: "Réservé aux administrateurs globaux.",
+  })
   public async update(
     @Param("id") id: string,
     @Body() data: PatchOrganizationDto,
@@ -139,12 +172,18 @@ Vous devez fournir les informations suivantes :
     return await this.organizationService.update(id, data);
   }
 
+  // Réservé à l'admin global : supprimer l'organisation de périmètre d'un utilisateur
+  // scopé remet son `scopeOrganizationId` à NULL (FK `ON DELETE SET NULL`), ce qui le rendrait
+  // non scopé — un admin scopé pourrait ainsi s'élever en admin global.
   @Delete("/:id")
   @RequiredPermissions([Permission.GlobalAdminManage])
   @ApiOperation({ summary: "Supprimer une organisation" })
   @HttpCode(204)
   @ApiNoContentResponse({
     description: "Organisation supprimée",
+  })
+  @ApiForbiddenResponse({
+    description: "Réservé aux administrateurs globaux.",
   })
   @ApiConflictResponse({
     description:

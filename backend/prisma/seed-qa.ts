@@ -4,6 +4,7 @@ import {
   TechnologyEolSource,
   priorityRestart,
 } from "@prisma/client";
+import { CORRELATION_QA_FIXTURES } from "./qa-correlation-fixtures";
 
 /**
  * Seed QA — fixtures déterministes et idempotentes pour la non-régression e2e (#1825, Lot 2 :
@@ -263,7 +264,73 @@ async function seedQa() {
   const appEndOfLife = await ensureApplication(APP.endOfLife, scopeAdmin.id);
   await ensureEndOfLifeStack(appEndOfLife.id);
 
+  console.log("🔗 QA — suggestions et relations de corrélation…");
+  await ensureCorrelationFixtures(scopeAdmin.id);
+
   console.log("✅ Seed QA terminé.");
+}
+
+/** Paires stables, donnée partagée et revue pré-acceptée, sans famille de données jetable. */
+async function ensureCorrelationFixtures(createdById: string) {
+  for (const fixture of CORRELATION_QA_FIXTURES) {
+    await ensureApplication(fixture.source, createdById);
+    await ensureApplication(fixture.target, createdById);
+    await prisma.dataDescription.upsert({
+      where: { id: fixture.data.id },
+      create: {
+        ...fixture.data,
+        applicationsSource: {
+          connect: [{ id: fixture.source.id }, { id: fixture.target.id }],
+        },
+      },
+      update: {
+        name: fixture.data.name,
+        applicationsSource: {
+          set: [{ id: fixture.source.id }, { id: fixture.target.id }],
+        },
+      },
+    });
+
+    // Même calcul que la détection par défaut : nom + une donnée partagée.
+    // La proximité des labels est mesurée par PostgreSQL, pas simulée.
+    const [similarity] = await prisma.$queryRaw<{ value: number }[]>`
+      SELECT similarity(${fixture.source.label}, ${fixture.target.label})::float8 AS value
+    `;
+    const accepted = fixture.scenario === "accepted";
+    const review = {
+      score: 0.6 * similarity.value + 0.25 / 3,
+      signals: {
+        nameSimilarity: similarity.value,
+        sharedDataCount: 1,
+        sharedActorCount: 0,
+      },
+      status: accepted ? ("ACCEPTED" as const) : ("PENDING" as const),
+      reviewedById: accepted ? createdById : null,
+      reviewedAt: accepted ? new Date("2026-01-01T00:00:00Z") : null,
+    };
+    const pair = {
+      applicationSourceId: fixture.source.id,
+      applicationTargetId: fixture.target.id,
+    };
+    await prisma.correlationSuggestion.upsert({
+      where: { applicationSourceId_applicationTargetId: pair },
+      create: { id: fixture.suggestionId, ...pair, ...review },
+      update: review,
+    });
+    if (accepted) {
+      const relation = { ...pair, type: "is_correlated_with" as const };
+      await prisma.relation.upsert({
+        where: { applicationSourceId_applicationTargetId_type: relation },
+        create: { id: fixture.relationId, ...relation },
+        update: {},
+      });
+    } else {
+      // Rétablit uniquement les paires de test qu'un précédent parcours a acceptées.
+      await prisma.relation.deleteMany({
+        where: { ...pair, type: "is_correlated_with" },
+      });
+    }
+  }
 }
 
 /**

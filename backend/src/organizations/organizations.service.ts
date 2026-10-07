@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { Organization } from "@prisma/client";
+import { Organization, Roles } from "@prisma/client";
 import { BaseService } from "src/common/base.service";
 import { PaginatedResponseDto } from "src/common/dto";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -11,6 +11,7 @@ import { OrganizationFilterDto } from "./dto/filters.dto";
 import {
   CreateOrganizationDto,
   OrganizationDto,
+  OrganizationScopedAdminDto,
 } from "./dto/organizations.dto";
 import { PrismaQueryBuilder } from "./prisma-query-builder.service";
 
@@ -52,6 +53,19 @@ export class OrganizationsService extends BaseService<
     return this.findOne(id, {
       maiaReferences: true,
       businessDivision: true,
+    });
+  }
+
+  /**
+   * Administrateurs dont le périmètre est cette organisation : sa suppression leur retire ce
+   * périmètre (FK `ON DELETE SET NULL`) et en fait des administrateurs globaux.
+   */
+  async findScopedAdmins(id: string): Promise<OrganizationScopedAdminDto[]> {
+    await this.findOne(id);
+    return this.prisma.user.findMany({
+      where: { scopeOrganizationId: id, role: Roles.ADMIN },
+      select: { id: true, email: true },
+      orderBy: { email: "asc" },
     });
   }
 

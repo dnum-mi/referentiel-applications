@@ -122,6 +122,18 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     downloadBlob(blob, `applications_export_${date}.xlsx`);
   };
 
+  const downloadProductPowerpoint = async (applicationId: string): Promise<void> => {
+    const response = await api.applicationControllerExportProductPowerpoint({
+      path: { applicationId },
+      parseAs: "blob",
+    });
+    if (!isApiSuccess(response) || !response.data) {
+      throw new Error("Erreur lors de l'export PowerPoint.");
+    }
+    const blob = new Blob([response.data], { type: "application/vnd.openxmlformats-officedocument.presentationml.presentation" });
+    downloadBlob(blob, `fiche-produit-${applicationId}.pptx`);
+  };
+
   return {
     application,
     applicationsById,
@@ -134,6 +146,7 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     patchApplicationsQuality,
     deleteApplication,
     downloadExcel,
+    downloadProductPowerpoint,
   };
 });
 

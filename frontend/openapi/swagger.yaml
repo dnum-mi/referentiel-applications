@@ -763,11 +763,11 @@ paths:
         - name: page
           required: false
           in: query
-          description: Numéro de page
+          description: Numéro de page, à partir de zéro
           schema:
             minimum: 0
             example: 0
-            type: number
+            type: integer
         - name: pageSize
           required: false
           in: query
@@ -777,7 +777,7 @@ paths:
             maximum: 100
             default: 15
             example: 15
-            type: number
+            type: integer
         - name: sortBy
           required: false
           in: query
@@ -795,6 +795,15 @@ paths:
             enum:
               - asc
               - desc
+        - name: isRead
+          required: false
+          in: query
+          description: "Filtrer sur l'état de lecture : false pour les notifications non
+            lues, true pour les notifications lues. Sans ce paramètre, les deux
+            états sont renvoyés."
+          schema:
+            example: false
+            type: boolean
       responses:
         "200":
           description: Liste paginée des notifications
@@ -861,6 +870,14 @@ paths:
   /api/v2/notifications/read-all:
     patch:
       operationId: NotificationController_markAllAsRead
+      parameters: []
+      responses:
+        "204":
+          description: Notifications marquées comme lues
+      summary: Marquer toutes ses notifications comme lues
+      tags: *a5
+    post:
+      operationId: NotificationController_markAllAsReadPost
       parameters: []
       responses:
         "204":
@@ -1681,7 +1698,8 @@ paths:
       description: >-
         Permet d'exporter les applications en un fichier Excel.
               Vous pouvez ajouter des filtres de recherche pour n'exporter que les applications correspondantes.
-              Si aucun filtre n'est appliqué, toutes les applications sont exportées.
+              L'export n'est pas paginé : `page` et `pageSize` sont ignorés, toutes les applications correspondant aux filtres sont exportées.
+              Les filtres par défaut de la recherche s'appliquent (ex. plage d'IQ 0-100 : ajoutez `iq__isNull=true` pour inclure les applications sans IQ).
               Accès limité aux utilisateurs avec privilège admin.
       operationId: ApplicationController_exportExcel
       parameters:
@@ -2139,6 +2157,35 @@ paths:
           description: Accès refusé - Privilège admin requis
       summary: Exporter les applications en Excel
       tags: *a8
+  /api/v2/applications/{applicationId}/export/powerpoint:
+    post:
+      description: Produit un fichier PPTX modifiable à partir des informations
+        générales de la fiche. Accessible avec AppRead, sans privilège
+        administrateur. La dette technique et les contacts ne sont pas inclus.
+        Chaque export est journalisé avec l'utilisateur, l'application et la date.
+        Les textes longs sont conservés dans des diapositives de détail.
+      operationId: ApplicationController_exportProductPowerpoint
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Fiche produit PowerPoint
+          content:
+            application/vnd.openxmlformats-officedocument.presentationml.presentation:
+              schema:
+                type: string
+                format: binary
+        "403":
+          description: Lecture de la fiche non autorisée
+        "404":
+          description: Application non trouvée
+      summary: Exporter la fiche produit en PowerPoint
+      tags:
+        - applications
   /api/v2/applications/{applicationId}:
     get:
       description: "
@@ -3627,6 +3674,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OrganizationDto"
+        "403":
+          description: Réservé aux administrateurs globaux.
       summary: Créer une nouvelle organisation
       tags: &a20
         - organizations
@@ -3705,6 +3754,28 @@ paths:
                 $ref: "#/components/schemas/PaginatedOrganizationDto"
       summary: Récupérer toutes les organisations
       tags: *a20
+  /api/v2/organizations/{id}/scoped-admins:
+    get:
+      operationId: OrganizationsController_findScopedAdmins
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Administrateurs scopés sur l'organisation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OrganizationScopedAdminDto"
+        "404":
+          description: Organisation non trouvée
+      summary: Lister les administrateurs ayant cette organisation pour périmètre
+      tags: *a20
   /api/v2/organizations/{id}:
     get:
       description: Ce endpoint permet de récupérer les détails complets d'une
@@ -3748,6 +3819,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OrganizationDto"
+        "403":
+          description: Réservé aux administrateurs globaux.
       summary: Mettre à jour une organisation
       tags: *a20
     delete:
@@ -3761,6 +3834,8 @@ paths:
       responses:
         "204":
           description: Organisation supprimée
+        "403":
+          description: Réservé aux administrateurs globaux.
         "409":
           description: "L'organisation possède des organisations filles ou définit un périmètre
             utilisateur : suppression refusée."
@@ -6085,7 +6160,7 @@ paths:
       tags: *a34
   /api/v2/technologies/end-of-life:
     get:
-      description: "Vue transverse accessible avec la capacité TechnologyList aux
+      description: Vue transverse accessible avec la capacité TechnologyList aux
         lecteurs, contributeurs et administrateurs. Cette capacité est accordée
         par défaut aux administrateurs, avec ou sans périmètre, et doit être
         attribuée explicitement aux lecteurs et contributeurs. Les applications
@@ -6095,7 +6170,7 @@ paths:
         ou sortie du support actif. Filtrable par statut (`eol`, `eol-soon`,
         `eoas-passed`, partitionnant), par organisation et par recherche libre.
         Le filtre `all` inclut les technologies saines sans élargir le périmètre
-        autorisé."
+        autorisé.
       operationId: EndOfLifeController_findEndOfLifeApplications
       parameters:
         - name: page
@@ -9372,6 +9447,20 @@ components:
           description: L'identifiant de la direction métier associée (null pour détacher)
       required:
         - path
+    OrganizationScopedAdminDto:
+      type: object
+      properties:
+        id:
+          type: string
+          example: f09ed26a-8415-476a-be3b-ada479291c34
+          description: L'identifiant de l'utilisateur
+        email:
+          type: string
+          example: jean.dupont@interieur.gouv.fr
+          description: L'adresse email de l'utilisateur
+      required:
+        - id
+        - email
     PaginatedOrganizationDto:
       type: object
       properties:

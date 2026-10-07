@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { BASE_URL } from "./support/helpers";
 
 const outputDir = process.env.CI
   ? "test-results"
@@ -19,7 +20,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: "html",
   use: {
-    baseURL: "http://localhost:5173",
+    baseURL: BASE_URL,
     headless: true,
     trace: "on-first-retry",
     video: "retain-on-failure",
@@ -41,9 +42,9 @@ export default defineConfig({
 
   /* Démarre le serveur de dev du frontend (réutilise une instance déjà lancée en local). */
   webServer: {
-    command: "pnpm dev",
+    command: `pnpm dev --port ${new URL(BASE_URL).port || "5173"}`,
     cwd: "../frontend",
-    url: "http://localhost:5173",
+    url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },

@@ -58,6 +58,123 @@ export class AdminPage extends BasePage {
     await expect(this.adminTabs().getByRole("tab", { name })).toHaveCount(0);
   }
 
+  // --- Revue datasteward (ADM-24..26) ---
+
+  private correlationsTable = () => this.byTestId("admin-correlations-table");
+
+  private async waitForCorrelationList(action: () => Promise<unknown>) {
+    const response = this.page.waitForResponse(
+      (res) =>
+        new URL(res.url()).pathname.endsWith("/correlation-suggestions") &&
+        res.request().method() === "GET",
+      { timeout: 60_000 },
+    );
+    await action();
+    expect([200, 304]).toContain((await response).status());
+    await expect(this.correlationsTable()).toBeVisible();
+  }
+
+  async openCorrelationsTab(): Promise<void> {
+    // Le changement de thème ouvre immédiatement son premier onglet accessible.
+    await this.waitForCorrelationList(async () => {
+      await this.switchToTheme("campaigns");
+      await this.adminTabs()
+        .getByRole("tab", { name: "Revue datasteward", exact: true })
+        .click();
+    });
+    await expect(this.byTestId("admin-correlations-title")).toBeVisible();
+  }
+
+  async filterCorrelations(
+    status: "PENDING" | "ACCEPTED" | "REJECTED",
+  ): Promise<void> {
+    // DsfrSelect peut transmettre le testid à son wrapper : viser le libellé natif.
+    const select = this.page.getByLabel("Filtrer par statut", { exact: true });
+    if ((await select.inputValue()) === status) return;
+    await this.waitForCorrelationList(() => select.selectOption(status));
+    await expect(select).toHaveValue(status);
+  }
+
+  private async correlationRow(id: string) {
+    const table = this.correlationsTable();
+    const first = table.locator(".p-paginator-first");
+    if (await first.isEnabled())
+      await this.waitForCorrelationList(() => first.click());
+    const row = table.locator("tbody tr").filter({
+      has: this.byTestId(`correlation-source-link-${id}`),
+    });
+    // La détection porte sur tout le référentiel : la fixture n'est pas forcément
+    // sur la première page. Identifier la paire par son id, jamais par sa position.
+    for (let page = 0; page < 100; page += 1) {
+      if (await row.count()) {
+        await expect(row).toHaveCount(1);
+        return row;
+      }
+      const next = table.locator(".p-paginator-next");
+      if (!(await next.isEnabled())) break;
+      await this.waitForCorrelationList(() => next.click());
+    }
+    throw new Error(`Suggestion de corrélation ${id} absente de la liste`);
+  }
+
+  async expectCorrelationSuggestion(
+    id: string,
+    sourceLabel: string,
+    targetLabel: string,
+    status: string,
+  ): Promise<void> {
+    const row = await this.correlationRow(id);
+    await expect(row.getByTestId(`correlation-source-link-${id}`)).toHaveText(
+      sourceLabel,
+    );
+    await expect(row.getByTestId(`correlation-target-link-${id}`)).toHaveText(
+      targetLabel,
+    );
+    await expect(row).toContainText(status);
+    await expect(row.getByTestId(`correlation-signals-${id}`)).toContainText(
+      "1 donnée partagée",
+    );
+  }
+
+  async reviewCorrelation(
+    id: string,
+    action: "accept" | "reject",
+  ): Promise<void> {
+    const row = await this.correlationRow(id);
+    await row.getByTestId(`${action}-suggestion-${id}`).click();
+    const modal = this.byTestId("correlation-confirm-modal");
+    await expect(modal).toBeVisible();
+    const response = this.page.waitForResponse(
+      (res) =>
+        new URL(res.url()).pathname.endsWith(
+          `/correlation-suggestions/${id}/${action}`,
+        ) && res.request().method() === "POST",
+    );
+    await this.waitForCorrelationList(() =>
+      modal.getByTestId("correlation-confirm-btn").click(),
+    );
+    expect((await response).status()).toBe(200);
+    await this.expectToaster(
+      action === "accept" ? /Suggestion acceptée/ : /Suggestion rejetée/,
+    );
+    await expect(this.byTestId(`correlation-source-link-${id}`)).toHaveCount(0);
+  }
+
+  async runCorrelationDetection(): Promise<void> {
+    const response = this.page.waitForResponse(
+      (res) =>
+        new URL(res.url()).pathname.endsWith("/correlation-suggestions/run") &&
+        res.request().method() === "POST",
+      { timeout: 60_000 },
+    );
+    await this.waitForCorrelationList(() =>
+      this.byTestId("run-detection-button").click(),
+    );
+    expect((await response).status()).toBe(200);
+    await this.expectToaster(/Détection terminée/);
+    await expect(this.byTestId("run-detection-button")).toBeEnabled();
+  }
+
   private editModal = () => this.byTestId("admin-edit-user-modal");
 
   async searchUser(value: string): Promise<void> {

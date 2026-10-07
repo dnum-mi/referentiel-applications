@@ -73,6 +73,7 @@ export class EmailDigestCronService {
 
       const yesterdayMetadata = await this.prisma.metadata.findMany({
         where: {
+          action: { not: "export" },
           createdAt: {
             gte: startOfYesterday,
             lte: endOfYesterday,

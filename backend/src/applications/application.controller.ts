@@ -52,16 +52,17 @@ import {
 } from "./dto/get-application.dto";
 import { ApplicationSearchDto } from "./dto/search-application.dto";
 import { ApplicationExportService } from "./export.service";
-import { ExportApplicationsUseCase } from "./usecases/application-export.usecase";
+import { ApplicationProductExportService } from "./product-export.service";
+import { POWERPOINT_CONTENT_TYPE } from "./product-powerpoint";
 
 @ApiTags("applications")
 @Controller("applications")
 export class ApplicationController {
   constructor(
     private readonly applicationService: ApplicationService,
-    private readonly exportApplicationsUseCase: ExportApplicationsUseCase,
     private readonly applicationExportService: ApplicationExportService,
     private readonly metadataService: MetadatasService,
+    private readonly productExportService: ApplicationProductExportService,
   ) {}
 
   @Post()
@@ -209,7 +210,8 @@ Vous devez fournir les informations suivantes :
     summary: "Exporter les applications en Excel",
     description: `Permet d'exporter les applications en un fichier Excel.
       Vous pouvez ajouter des filtres de recherche pour n'exporter que les applications correspondantes.
-      Si aucun filtre n'est appliqué, toutes les applications sont exportées.
+      L'export n'est pas paginé : \`page\` et \`pageSize\` sont ignorés, toutes les applications correspondant aux filtres sont exportées.
+      Les filtres par défaut de la recherche s'appliquent (ex. plage d'IQ 0-100 : ajoutez \`iq__isNull=true\` pour inclure les applications sans IQ).
       Accès limité aux utilisateurs avec privilège admin.`,
   })
   @ApiOkResponse({
@@ -233,12 +235,10 @@ Vous devez fournir les informations suivantes :
     @User() user: Requestor,
   ) {
     const buffer =
-      Object.keys(searchParams).length > 0
-        ? await this.applicationExportService.exportSearchResultsToExcel(
-            searchParams,
-            user,
-          )
-        : await this.exportApplicationsUseCase.execute();
+      await this.applicationExportService.exportSearchResultsToExcel(
+        searchParams,
+        user,
+      );
 
     await this.metadataService.createMetadata({
       createdById: requestorId,
@@ -254,6 +254,51 @@ Vous devez fournir les informations suivantes :
       "Content-Disposition",
       "attachment; filename=applications_export.xlsx",
     );
+    res.send(buffer);
+  }
+
+  @Post(":applicationId/export/powerpoint")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(PermissionGuard)
+  @RequiredPermissions([Permission.AppRead])
+  @ApiOperation({
+    summary: "Exporter la fiche produit en PowerPoint",
+    description:
+      "Produit un fichier PPTX modifiable à partir des informations générales de la fiche. " +
+      "Accessible avec AppRead, sans privilège administrateur. La dette technique et les " +
+      "contacts ne sont pas inclus. Chaque export est journalisé avec l'utilisateur, " +
+      "l'application et la date. Les textes longs sont conservés dans des diapositives de détail.",
+  })
+  @ApiParam({ name: "applicationId", type: String })
+  @ApiOkResponse({
+    description: "Fiche produit PowerPoint",
+    content: {
+      [POWERPOINT_CONTENT_TYPE]: {
+        schema: { type: "string", format: "binary" },
+      },
+    },
+  })
+  @ApiForbiddenResponse({ description: "Lecture de la fiche non autorisée" })
+  @ApiNotFoundResponse({ description: "Application non trouvée" })
+  async exportProductPowerpoint(
+    @Param("applicationId") applicationId: string,
+    @UserId() requestorId: string,
+    @Res() res: Response,
+  ) {
+    const buffer =
+      await this.productExportService.exportProductCard(applicationId);
+    await this.metadataService.createMetadata({
+      applicationId,
+      createdById: requestorId,
+      title: "de la fiche produit en PowerPoint",
+      type: "export",
+    });
+    res.setHeader("Content-Type", POWERPOINT_CONTENT_TYPE);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=fiche-produit-${applicationId}.pptx`,
+    );
+    res.setHeader("Cache-Control", "no-store");
     res.send(buffer);
   }
 

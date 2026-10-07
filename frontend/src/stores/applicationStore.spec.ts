@@ -1,15 +1,16 @@
 import { createPinia, setActivePinia } from "pinia";
 import { useApplicationStore } from "./applicationStore";
 
-const { removeMock, addErrorMessage, addSuccessMessage, push } = vi.hoisted(() => ({
+const { removeMock, exportPowerpointMock, addErrorMessage, addSuccessMessage, push } = vi.hoisted(() => ({
   removeMock: vi.fn(),
+  exportPowerpointMock: vi.fn(),
   addErrorMessage: vi.fn(),
   addSuccessMessage: vi.fn(),
   push: vi.fn(),
 }));
 
 vi.mock("@/api/index", () => ({
-  default: { applicationControllerRemove: removeMock },
+  default: { applicationControllerRemove: removeMock, applicationControllerExportProductPowerpoint: exportPowerpointMock },
 }));
 
 vi.mock("@/router", () => ({
@@ -72,5 +73,22 @@ describe("applicationStore.deleteApplication — retour d'erreur (#2542)", () =>
     expect(push).toHaveBeenCalledTimes(1);
     expect(addSuccessMessage).toHaveBeenCalledWith("Application supprimée définitivement avec succès.");
     expect(addErrorMessage).not.toHaveBeenCalled();
+  });
+});
+
+describe("applicationStore.downloadProductPowerpoint — erreurs du client API", () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    exportPowerpointMock.mockReset();
+  });
+
+  it.each([
+    { failure: "réseau sans réponse", response: undefined, error: new TypeError("Failed to fetch") },
+    { failure: "décodage après HTTP 200", response: { ok: true, status: 200 }, error: new SyntaxError("Invalid blob") },
+  ])("signale l'échec $failure sans tenter de télécharger", async ({ response, error }) => {
+    exportPowerpointMock.mockResolvedValueOnce({ response, error });
+
+    await expect(useApplicationStore().downloadProductPowerpoint("app-1")).rejects.toThrow("Erreur lors de l'export PowerPoint.");
+    expect(exportPowerpointMock).toHaveBeenCalledExactlyOnceWith({ path: { applicationId: "app-1" }, parseAs: "blob" });
   });
 });

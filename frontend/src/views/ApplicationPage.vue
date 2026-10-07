@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { hasFullReadAppPermissions, type ApplicationWithPerms } from "@/models/Application";
 import ApplicationOverview from "@/components/ApplicationOverview.vue";
+import ApplicationProductExport from "@/components/ApplicationProductExport.vue";
 import { computed, onMounted, ref, watch, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { setPageTitle } from "@/router";
@@ -266,6 +267,7 @@ function formatMetadataAuthor(metadata: MetadataDto): string {
       >
         Copier le lien de la fiche application
       </DsfrButton>
+      <ApplicationProductExport :application-id="id" />
       <div class="status-tags" aria-hidden="false" data-testid="application-tags">
         <DsfrTag
           v-if="application.currentStatus?.status"

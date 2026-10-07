@@ -39,6 +39,7 @@ describe("Test Swagger documentation", () => {
   it("test all paths and responses", () => {
     const pathsAllowedWithoutBody = [
       "/users/me/subscribe/{appId}",
+      "/applications/{applicationId}/export/powerpoint",
       "/applications/{applicationId}/compliances/ecoindex/scan",
       "/users/{id}/sync-organization-from-maia",
       "/users/{id}/impersonate",
