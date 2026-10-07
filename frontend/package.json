@@ -20,7 +20,7 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
-    "@gouvfr/dsfr": "~1.14.4",
+    "@gouvfr/dsfr": "~1.15.3",
     "@gouvminint/vue-dsfr": "~8.15.0",
     "@primevue/themes": "^4.5.4",
     "@vueuse/core": "^14.4.0",
@@ -54,7 +54,7 @@
     "@vitejs/plugin-vue-jsx": "^5.1.6",
     "@vitest/coverage-v8": "4.1.11",
     "@vue/test-utils": "^2.5.1",
-    "@vue/tsconfig": "^0.5.1",
+    "@vue/tsconfig": "^0.9.1",
     "jsdom": "^26.1.0",
     "npm-run-all2": "^8.0.4",
     "typescript": "~5.8.3",
@@ -63,7 +63,7 @@
     "vite": "^7.3.6",
     "vite-plugin-pwa": "^1.3.0",
     "vitest": "4.1.11",
-    "vue-tsc": "^3.3.11",
+    "vue-tsc": "^3.3.12",
     "workbox-window": "^7.4.1",
     "workbox-build": "^7.4.1"
   },
