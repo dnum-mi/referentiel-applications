@@ -1,4 +1,4 @@
-FROM node:24-trixie-slim AS base
+FROM node:25-trixie-slim AS base
 
 ARG VERSION
 ENV VERSION=${VERSION:-main}
