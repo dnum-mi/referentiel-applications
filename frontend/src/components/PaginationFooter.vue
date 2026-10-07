@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { PAGE_SIZE_OPTIONS } from "@/constants/pagination";
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 
 const props = defineProps<{
@@ -50,13 +51,14 @@ watch([() => props.page, () => props.totalFiltered, () => props.limit], () => ne
         data-testid="pagination-rows-select"
         @change="emit('update:limit', +($event.target as HTMLSelectElement).value)"
       >
-        <option v-for="opt in [5, 15, 30, 50, 100]" :key="opt" :value="opt">
+        <option v-for="opt in PAGE_SIZE_OPTIONS" :key="opt" :value="opt">
           {{ opt }}
         </option>
       </select>
     </div>
 
-    <nav ref="paginationRoot" class="footer-item pagination-centered" role="navigation" aria-label="Pagination">
+    <!-- DsfrPagination rend déjà sa propre <nav aria-label="Pagination"> : pas de landmark englobant. -->
+    <div ref="paginationRoot" class="footer-item pagination-centered">
       <DsfrPagination
         :current-page="page"
         :pages="pages"
@@ -67,7 +69,7 @@ watch([() => props.page, () => props.totalFiltered, () => props.limit], () => ne
         data-testid="pagination-component"
         @update:current-page="emit('update:page', $event)"
       />
-    </nav>
+    </div>
 
     <p class="footer-item total-count" data-testid="pagination-total-count">{{ totalFiltered }} résultat(s)</p>
   </div>

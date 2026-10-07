@@ -2,7 +2,7 @@ import { isApiSuccess } from "@/api/api-result";
 import type { LocationQueryValue } from "vue-router";
 import type {
   ApplicationControllerSearchData,
-  ApplicationDto,
+  ApplicationSearchItemDto,
   TechnicalDebtControllerGetTechnicalDebtPointsResponses,
 } from "@/client/types.gen";
 import type { Ref } from "vue";
@@ -67,8 +67,8 @@ const TIME_DEFAULT_FILTERS: Filters = {
 };
 
 // Shared state across components (singleton pattern)
-const results = ref<ApplicationDto[]>([]);
-const technicalDebtPoints = ref<ApplicationDto[]>([]);
+const results = ref<ApplicationSearchItemDto[]>([]);
+const technicalDebtPoints = ref<ApplicationSearchItemDto[]>([]);
 const total = ref(0);
 const averageIq = ref<number>(0);
 const isLoading = ref(false);

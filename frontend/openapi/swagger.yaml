@@ -8483,6 +8483,401 @@ components:
       required:
         - iq
         - total
+    HostingOptionDto:
+      type: object
+      properties:
+        site:
+          type: string
+          maxLength: 100
+          description: Site name (géographique)
+          example: CER(RENNES)
+        platform:
+          type: string
+          maxLength: 100
+          description: Platform name
+          example: PHYSIQUE
+        provider:
+          type: string
+          maxLength: 100
+          description: Provider name
+          example: DTNUM
+        building:
+          type: string
+          nullable: true
+          maxLength: 100
+          description: Building (optional)
+          example: B15
+        room:
+          type: string
+          nullable: true
+          maxLength: 50
+          description: Room (optional)
+          example: IT2
+        id:
+          type: string
+          description: Unique identifier of the hosting option
+          example: 12345678-1234-1234-1234-123456789012
+      required:
+        - site
+        - platform
+        - provider
+        - id
+    ApplicationSearchHostingDto:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+          nullable: true
+        hostingOption:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/HostingOptionDto"
+      required:
+        - id
+        - label
+        - hostingOption
+    TagDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Identifiant unique du tag
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          pattern: ^[a-z._-]+$
+          description: Nom unique du tag
+          example: securite
+        createdAt:
+          type: string
+          description: Date de création du tag
+          example: 2025-01-01T00:00:00.000Z
+      required:
+        - id
+        - name
+        - createdAt
+    ActorTypeDto:
+      type: object
+      properties:
+        code:
+          type: string
+          example: MOA
+          description: Code du type d'acteur
+        label:
+          type: string
+          example: Maîtrise d’Ouvrage
+          description: Libellé du type d'acteur
+        description:
+          type: string
+          example: La MOA définit les besoins du projet, supervise sa mise en œuvre et
+            veille à ce que les objectifs métiers soient atteints.
+          description: description du type d'acteur
+        id:
+          type: string
+          example: 12345678-1234-1234-1234-123456789012
+          description: Identifiant unique du type d'acteur
+        isDefault:
+          type: boolean
+          example: false
+          description: "Type d'acteur système représentant les droits par défaut d'un
+            utilisateur non-acteur. Non assignable à un acteur réel : à exclure
+            des sélecteurs de création/édition d'acteur."
+      required:
+        - code
+        - label
+        - id
+        - isDefault
+    ApplicationSearchActorOrganizationDto:
+      type: object
+      properties:
+        id:
+          type: string
+        path:
+          type: string
+          nullable: true
+        sigle:
+          type: string
+          nullable: true
+      required:
+        - id
+        - path
+        - sigle
+    ApplicationSearchActorDto:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+          nullable: true
+        firstname:
+          type: string
+          nullable: true
+        lastname:
+          type: string
+          nullable: true
+        actorType:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ActorTypeDto"
+        organization:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ApplicationSearchActorOrganizationDto"
+      required:
+        - id
+        - email
+        - firstname
+        - lastname
+        - actorType
+        - organization
+    ComplianceDto:
+      type: object
+      properties:
+        dima_duration_hours:
+          type: number
+          enum: &a43
+            - 96
+            - 72
+            - 48
+            - 24
+            - 4
+            - 1
+            - 0
+          example: 4
+          description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
+        dima_is_hno:
+          type: boolean
+          example: true
+          description: DIMA HNO (Heure non ouvrée)
+        dima_business_impact:
+          type: string
+          example: Perte de revenu, impact client
+          description: DIMA business impact of interruption
+        dima_recovery_plan:
+          type: boolean
+          example: true
+          description: DIMA recovery plan exists
+        dima_recovery_solutions:
+          type: string
+          example: Bascule sur serveur de secours
+          description: DIMA recovery solutions
+        dima_last_test_date:
+          type: string
+          example: 2023-01-01
+          description: DIMA last test date
+        dima_test_result:
+          enum: &a44
+            - OK
+            - KO
+          type: string
+          description: DIMA test result
+        dima_recovery_manager:
+          type: string
+          example: Jean Dupont
+          description: DIMA recovery manager
+        pdma_duration_hours:
+          type: number
+          enum: &a45
+            - 48
+            - 24
+            - 2
+            - 0
+          example: 24
+          description: PDMA duration in hours (one of 48, 24, 2, 0)
+        pdma_data_types:
+          type: string
+          example: Transactions, logs, fichiers utilisateur
+          description: PDMA data types concerned
+        pdma_backup_frequency:
+          type: string
+          example: Toutes les heures
+          description: PDMA backup frequency
+        pdma_backup_method:
+          type: string
+          example: Snapshot, backup incrémental
+          description: PDMA backup method used
+        pdma_backup_storage:
+          enum: &a46
+            - S3
+            - LOCAL
+            - EXTERNE
+          type: string
+          description: PDMA backup storage
+        pdma_last_test_date:
+          type: string
+          example: 2023-01-01
+          description: PDMA last test date
+        pdma_test_result:
+          enum: &a47
+            - OK
+            - KO
+          type: string
+          description: PDMA test result
+        pdma_restoration_manager:
+          type: string
+          example: Marie Martin
+          description: PDMA restoration manager
+        homologation_status:
+          enum: &a48
+            - homologuee
+            - en_cours
+            - dispensee
+            - non_realisee
+            - a_mettre_en_place
+          type: string
+          description: Homologation status
+        homologation_date_end:
+          type: string
+          example: 2023-01-01
+          description: Homologation date end
+        homologation_rssi_id:
+          type: string
+          example: uuid-of-rssi-actor
+          description: Homologation RSSI actor ID
+        dsfr_implemented:
+          type: boolean
+          example: true
+          description: DSFR implemented
+        dsfr_version:
+          type: string
+          example: 1.9.0
+          description: DSFR version used
+        rgpd_has_aipd:
+          type: boolean
+          example: true
+          description: RGPD has AIPD
+        rgpd_dpo_name:
+          type: string
+          example: Pierre Durand
+          description: RGPD DPO name
+        eco_index_target_url:
+          type: string
+          example: https://service.example.com
+          description: EcoIndex target URL used for scan
+        id:
+          type: string
+          example: 12345678-1234-1234-1234-123456789012
+          description: Unique identifier of the compliance record
+        eco_index_score:
+          type: number
+          example: 72.5
+          description: EcoIndex score (0-100)
+        eco_index_ges:
+          type: number
+          example: 1.77
+          description: EcoIndex greenhouse gas emissions (gCO2e)
+        eco_index_water:
+          type: number
+          example: 2.65
+          description: EcoIndex water consumption (cl)
+        eco_index_last_calculated_at:
+          type: string
+          format: date-time
+          example: 2026-03-20T10:30:00.000Z
+          description: EcoIndex last calculation datetime
+      required:
+        - id
+    ApplicationSearchItemDto:
+      type: object
+      properties:
+        logo:
+          type: string
+          nullable: true
+          example: https://example.com/logo.png
+          description: URL of the application logo
+        status:
+          description: Current status of the application
+          allOf:
+            - $ref: "#/components/schemas/ApplicationStatus"
+        priorityRestart:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/ApplicationPriorityRestart"
+        currentStatus:
+          nullable: true
+          description: Current status of the application with full details
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ApplicationStatusDto"
+        technicalDebtInfo:
+          nullable: true
+          description: Technical debt information for the application
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/TechnicalDebtInfoDto"
+        businessDivisions:
+          description: Business divisions MOA for the application
+          type: array
+          items:
+            $ref: "#/components/schemas/BusinessDivisionDTO"
+        hostings:
+          type: array
+          items:
+            $ref: "#/components/schemas/ApplicationSearchHostingDto"
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/TagDto"
+        actors:
+          type: array
+          items:
+            $ref: "#/components/schemas/ApplicationSearchActorDto"
+        compliance:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ComplianceDto"
+        rgaaScorePercentage:
+          type: number
+          nullable: true
+          description: Meilleur score RGAA (0-100) parmi les conformités RGAA de
+            l'application
+          example: 75.5
+        applicationViews:
+          type: number
+          description: Nombre de consultations de la fiche sur les 12 derniers mois
+        id:
+          type: string
+        label:
+          type: string
+        shortName:
+          type: string
+          nullable: true
+        description:
+          type: string
+        targetPopulations:
+          type: array
+          items:
+            type: string
+        purposes:
+          type: array
+          items:
+            type: string
+        quality:
+          type: number
+          nullable: true
+      required:
+        - logo
+        - hostings
+        - tags
+        - actors
+        - compliance
+        - rgaaScorePercentage
+        - applicationViews
+        - id
+        - label
+        - shortName
+        - description
+        - targetPopulations
+        - purposes
+        - quality
     ApplicationSearchResultDto:
       type: object
       properties:
@@ -8490,7 +8885,7 @@ components:
           description: Liste des applications correspondant aux critères de recherche
           type: array
           items:
-            $ref: "#/components/schemas/ApplicationDto"
+            $ref: "#/components/schemas/ApplicationSearchItemDto"
         total:
           type: number
           description: Total number of items
@@ -8506,7 +8901,7 @@ components:
             legitime au technical debt point
           type: array
           items:
-            $ref: "#/components/schemas/ApplicationDto"
+            $ref: "#/components/schemas/ApplicationSearchItemDto"
       required:
         - results
         - total
@@ -8681,27 +9076,6 @@ components:
           example: securite
       required:
         - name
-    TagDto:
-      type: object
-      properties:
-        id:
-          type: string
-          description: Identifiant unique du tag
-        name:
-          type: string
-          minLength: 2
-          maxLength: 100
-          pattern: ^[a-z._-]+$
-          description: Nom unique du tag
-          example: securite
-        createdAt:
-          type: string
-          description: Date de création du tag
-          example: 2025-01-01T00:00:00.000Z
-      required:
-        - id
-        - name
-        - createdAt
     PaginatedTagDto:
       type: object
       properties:
@@ -9711,37 +10085,6 @@ components:
       required:
         - code
         - label
-    ActorTypeDto:
-      type: object
-      properties:
-        code:
-          type: string
-          example: MOA
-          description: Code du type d'acteur
-        label:
-          type: string
-          example: Maîtrise d’Ouvrage
-          description: Libellé du type d'acteur
-        description:
-          type: string
-          example: La MOA définit les besoins du projet, supervise sa mise en œuvre et
-            veille à ce que les objectifs métiers soient atteints.
-          description: description du type d'acteur
-        id:
-          type: string
-          example: 12345678-1234-1234-1234-123456789012
-          description: Identifiant unique du type d'acteur
-        isDefault:
-          type: boolean
-          example: false
-          description: "Type d'acteur système représentant les droits par défaut d'un
-            utilisateur non-acteur. Non assignable à un acteur réel : à exclure
-            des sélecteurs de création/édition d'acteur."
-      required:
-        - code
-        - label
-        - id
-        - isDefault
     AppPermsDto:
       type: object
       properties:
@@ -9871,130 +10214,6 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: &a43
-            - 96
-            - 72
-            - 48
-            - 24
-            - 4
-            - 1
-            - 0
-          example: 4
-          description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
-        dima_is_hno:
-          type: boolean
-          example: true
-          description: DIMA HNO (Heure non ouvrée)
-        dima_business_impact:
-          type: string
-          example: Perte de revenu, impact client
-          description: DIMA business impact of interruption
-        dima_recovery_plan:
-          type: boolean
-          example: true
-          description: DIMA recovery plan exists
-        dima_recovery_solutions:
-          type: string
-          example: Bascule sur serveur de secours
-          description: DIMA recovery solutions
-        dima_last_test_date:
-          type: string
-          example: 2023-01-01
-          description: DIMA last test date
-        dima_test_result:
-          enum: &a44
-            - OK
-            - KO
-          type: string
-          description: DIMA test result
-        dima_recovery_manager:
-          type: string
-          example: Jean Dupont
-          description: DIMA recovery manager
-        pdma_duration_hours:
-          type: number
-          enum: &a45
-            - 48
-            - 24
-            - 2
-            - 0
-          example: 24
-          description: PDMA duration in hours (one of 48, 24, 2, 0)
-        pdma_data_types:
-          type: string
-          example: Transactions, logs, fichiers utilisateur
-          description: PDMA data types concerned
-        pdma_backup_frequency:
-          type: string
-          example: Toutes les heures
-          description: PDMA backup frequency
-        pdma_backup_method:
-          type: string
-          example: Snapshot, backup incrémental
-          description: PDMA backup method used
-        pdma_backup_storage:
-          enum: &a46
-            - S3
-            - LOCAL
-            - EXTERNE
-          type: string
-          description: PDMA backup storage
-        pdma_last_test_date:
-          type: string
-          example: 2023-01-01
-          description: PDMA last test date
-        pdma_test_result:
-          enum: &a47
-            - OK
-            - KO
-          type: string
-          description: PDMA test result
-        pdma_restoration_manager:
-          type: string
-          example: Marie Martin
-          description: PDMA restoration manager
-        homologation_status:
-          enum: &a48
-            - homologuee
-            - en_cours
-            - dispensee
-            - non_realisee
-            - a_mettre_en_place
-          type: string
-          description: Homologation status
-        homologation_date_end:
-          type: string
-          example: 2023-01-01
-          description: Homologation date end
-        homologation_rssi_id:
-          type: string
-          example: uuid-of-rssi-actor
-          description: Homologation RSSI actor ID
-        dsfr_implemented:
-          type: boolean
-          example: true
-          description: DSFR implemented
-        dsfr_version:
-          type: string
-          example: 1.9.0
-          description: DSFR version used
-        rgpd_has_aipd:
-          type: boolean
-          example: true
-          description: RGPD has AIPD
-        rgpd_dpo_name:
-          type: string
-          example: Pierre Durand
-          description: RGPD DPO name
-        eco_index_target_url:
-          type: string
-          example: https://service.example.com
-          description: EcoIndex target URL used for scan
-    ComplianceDto:
-      type: object
-      properties:
-        dima_duration_hours:
-          type: number
           enum: *a43
           example: 4
           description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
@@ -10091,29 +10310,6 @@ components:
           type: string
           example: https://service.example.com
           description: EcoIndex target URL used for scan
-        id:
-          type: string
-          example: 12345678-1234-1234-1234-123456789012
-          description: Unique identifier of the compliance record
-        eco_index_score:
-          type: number
-          example: 72.5
-          description: EcoIndex score (0-100)
-        eco_index_ges:
-          type: number
-          example: 1.77
-          description: EcoIndex greenhouse gas emissions (gCO2e)
-        eco_index_water:
-          type: number
-          example: 2.65
-          description: EcoIndex water consumption (cl)
-        eco_index_last_calculated_at:
-          type: string
-          format: date-time
-          example: 2026-03-20T10:30:00.000Z
-          description: EcoIndex last calculation datetime
-      required:
-        - id
     UpdateComplianceDto:
       type: object
       properties:
@@ -10351,45 +10547,6 @@ components:
       required:
         - applicationId
         - isActive
-    HostingOptionDto:
-      type: object
-      properties:
-        site:
-          type: string
-          maxLength: 100
-          description: Site name (géographique)
-          example: CER(RENNES)
-        platform:
-          type: string
-          maxLength: 100
-          description: Platform name
-          example: PHYSIQUE
-        provider:
-          type: string
-          maxLength: 100
-          description: Provider name
-          example: DTNUM
-        building:
-          type: string
-          nullable: true
-          maxLength: 100
-          description: Building (optional)
-          example: B15
-        room:
-          type: string
-          nullable: true
-          maxLength: 50
-          description: Room (optional)
-          example: IT2
-        id:
-          type: string
-          description: Unique identifier of the hosting option
-          example: 12345678-1234-1234-1234-123456789012
-      required:
-        - site
-        - platform
-        - provider
-        - id
     HostingDto:
       type: object
       properties:
@@ -11320,6 +11477,9 @@ components:
           type: object
           allOf:
             - $ref: "#/components/schemas/Notifier"
+        notes:
+          type: string
+          description: Notes internes de traitement du signalement
         status:
           description: Le statut du signalement
           allOf:
@@ -11347,6 +11507,7 @@ components:
           type: string
       required:
         - notifier
+        - notes
         - status
         - createdAt
         - id

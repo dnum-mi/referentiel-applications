@@ -13,9 +13,6 @@ import { DsfrSearchBar } from "@gouvminint/vue-dsfr";
 import type { DataTablePageEvent } from "primevue/datatable";
 import { computed, ref, watch } from "vue";
 
-// L'API renvoie aussi les notes du signalement, non déclarées dans ReportDto.
-type ReportRow = ReportDto & { notes?: string };
-
 const props = defineProps<{
   isActive: boolean;
   allReport: boolean;
@@ -52,7 +49,7 @@ const sortedDesc = ref<boolean>(true);
 
 const rows = computed(() =>
   (data.value.results || []).map(
-    (report: ReportRow): GenericRow<typeof headers> => ({
+    (report: ReportDto): GenericRow<typeof headers> => ({
       id: report.id,
       application: {
         label: report.application?.label,
@@ -64,8 +61,7 @@ const rows = computed(() =>
         : report.notifier?.email || "Inconnu",
       description: report.description,
       notes: report.notes,
-      // updatedAt arrive en chaîne ISO au runtime (typé Date dans le client généré).
-      date: formatDate(String(report.updatedAt)),
+      date: formatDate(report.updatedAt),
       status: {
         report,
         isEditing: isEditing.value,

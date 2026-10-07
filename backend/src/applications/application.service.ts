@@ -34,7 +34,7 @@ import {
   PatchApplicationDto,
 } from "./dto/create-application.dto";
 import {
-  ApplicationDto,
+  ApplicationSearchItemDto,
   ApplicationSearchResultDto,
   QualityCampaignActionDto,
   QualitySummaryDto,
@@ -508,7 +508,11 @@ export class ApplicationService {
     }
 
     const dataWithViews = paginatedResult.results.map(
-      (app: ApplicationDto & { _count?: { applicationViews: number } }) => {
+      (
+        app: ApplicationSearchItemDto & {
+          _count?: { applicationViews: number };
+        },
+      ) => {
         const { _count, ...rest } = app;
 
         return {

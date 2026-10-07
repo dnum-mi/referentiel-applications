@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ApplicationDto, ApplicationStatus, BusinessDivisionDto, ComplianceDto, HostingOptionDto } from "@/client/types.gen.js";
+import type { ApplicationSearchActorDto, ApplicationStatus, BusinessDivisionDto, HostingOptionDto } from "@/client/types.gen.js";
 import type { DataTablePageEvent } from "primevue/datatable";
 import { useApplicationSearch } from "@/composables/use-application-search";
 import { useColumnPreferences } from "@/composables/use-column-preferences";
@@ -24,27 +24,7 @@ const firstIndex = computed(() => page.value * pageSize.value);
 const sortField = computed(() => filters.value.sortBy || "label");
 const sortOrder = computed(() => (filters.value.order === "desc" ? -1 : 1));
 
-// Acteur tel que renvoyé par la recherche : relations `actorType`/`organization` incluses
-// à l'exécution mais absentes du swagger généré (périmé) — typé localement.
-interface SearchActor {
-  email?: string | null;
-  firstname?: string | null;
-  lastname?: string | null;
-  actorType?: { code?: string } | null;
-  organization?: { sigle?: string | null; path?: string | null } | null;
-}
-
-// Résultat de recherche enrichi côté backend (hostings, tags, acteurs, conformité)
-// non décrit par `ApplicationDto` généré.
-type SearchApplication = ApplicationDto & {
-  hostings: Array<{ site?: string; hostingOption?: HostingOptionDto }>;
-  tags: Array<{ name: string }>;
-  actors: SearchActor[];
-  // `rgaa_score_percentage` est renvoyé par l'API mais absent du DTO généré (swagger périmé).
-  compliance?: (ComplianceDto & { rgaa_score_percentage?: number | null }) | null;
-};
-
-const formatActors = (actors: SearchActor[], actorTypeCode: string): string => {
+const formatActors = (actors: ApplicationSearchActorDto[], actorTypeCode: string): string => {
   const filteredActors = actors.filter((actor) => actor.actorType?.code === actorTypeCode);
 
   if (filteredActors.length === 0) return "";
@@ -82,15 +62,15 @@ const formatHomologation = (value: string | null | undefined): string =>
   value ? homologationStatusDict[value as keyof typeof homologationStatusDict] || value : "";
 const formatDate = (value: string | null | undefined): string => (value ? formatDateFR(value) : "");
 const formatStatus = (value: ApplicationStatus | null | undefined): string => (value ? statusApplicationDictionary[value] || value : "");
-const formatHostingsProvider = (value: HostingOptionDto | undefined): string => (value ? value.provider : "");
-const formatHostingsPlatform = (value: HostingOptionDto | undefined): string => (value ? value.platform : "");
+const formatHostingsProvider = (value: HostingOptionDto | null): string => (value ? value.provider : "");
+const formatHostingsPlatform = (value: HostingOptionDto | null): string => (value ? value.platform : "");
 
 const applications = computed(() =>
-  (results.value as SearchApplication[]).map((app) => {
+  results.value.map((app) => {
     return {
       ...app,
       qualityDisplay: formatPercent(app.quality),
-      hostingDisplay: app.hostings.map((h) => h.hostingOption?.site || h.site).join(", "),
+      hostingDisplay: app.hostings.map((h) => h.hostingOption?.site ?? "").join(", "),
       tagsDisplay: app.tags.map((tag) => tag.name).join(", "),
       hostingProviderDisplay: app.hostings.map((h) => formatHostingsProvider(h.hostingOption)).join(", "),
       hostingPlatformDisplay: app.hostings.map((h) => formatHostingsPlatform(h.hostingOption)).join(", "),
@@ -102,7 +82,7 @@ const applications = computed(() =>
       rsimmDisplay: formatActors(app.actors, "RSSI"),
       dimaDisplay: formatHours(app.compliance?.dima_duration_hours),
       pdmaDisplay: formatHours(app.compliance?.pdma_duration_hours),
-      rgaaDisplay: formatPercent(app.compliance?.rgaa_score_percentage),
+      rgaaDisplay: formatPercent(app.rgaaScorePercentage),
       dsfrDisplay: formatBooleanText(app.compliance?.dsfr_implemented),
       rgpdDisplay: formatBooleanText(app.compliance?.rgpd_has_aipd),
       praDisplay: formatBooleanText(app.compliance?.dima_recovery_plan),
@@ -166,18 +146,6 @@ function onColumnResize(event: { field: string; width: string }) {
     <template #body-priorityRestart="{ data }">
       <DsfrBadge v-if="data.priorityConfig" :label="data.priorityConfig.shortLabel" :type="data.priorityConfig.type" />
       <span v-else />
-    </template>
-
-    <template #body-hostingSite="{ data }">
-      {{ data.hostingDisplay }}
-    </template>
-
-    <template #body-hosting-ProviderDisplay="{ data }">
-      {{ data.hostingProviderDisplay }}
-    </template>
-
-    <template #body-hosting-PlatformDisplay="{ data }">
-      {{ data.hostingPlatformDisplay }}
     </template>
 
     <template #body-tag="{ data }">
