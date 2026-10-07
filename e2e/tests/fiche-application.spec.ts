@@ -1,6 +1,8 @@
 import { skipIfOptionalDataMissing } from "../support/optional-data";
 import { test, expect } from "../fixtures/test";
 import { ApplicationPage, SearchPage, loginAs } from "../pom";
+import { switchTo } from "../pom/auth";
+import { readFile } from "node:fs/promises";
 
 const USER_EMAIL = "user@example.com";
 
@@ -9,6 +11,41 @@ const USER_EMAIL = "user@example.com";
  * La datafeature résout une application réelle avant chaque test ; POM strict.
  */
 test.describe("Fiche application", () => {
+  test("FIC-25 - exporter une fiche produit PowerPoint sans droits admin", async ({
+    page,
+    data,
+  }) => {
+    const application = await data.firstApplication();
+    expect(
+      application,
+      "Aucune application dans le jeu de données",
+    ).toBeTruthy();
+    await switchTo(page, "user");
+    const fiche = new ApplicationPage(page);
+    await fiche.open(application!.id);
+    await fiche.expectHeader();
+    const downloading = page.waitForEvent("download");
+    await page.getByTestId("application-export-powerpoint-btn").click();
+    const download = await downloading;
+    expect(download.suggestedFilename()).toBe(
+      `fiche-produit-${application!.id}.pptx`,
+    );
+    expect(await download.failure()).toBeNull();
+    const path = test.info().outputPath("fiche-produit.pptx");
+    await download.saveAs(path);
+    const content = await readFile(path);
+    expect(content.length).toBeGreaterThan(1000);
+    expect(content.subarray(0, 4).toString("hex")).toBe("504b0304");
+    await test.info().attach("fiche-produit.pptx", {
+      path,
+      contentType:
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    });
+    await expect(
+      page.getByTestId("application-export-powerpoint-btn"),
+    ).toBeEnabled();
+  });
+
   test("FIC-01 - ouverture de la fiche (titre + tags)", async ({
     page,
     data,

@@ -52,6 +52,8 @@ import {
 } from "./dto/get-application.dto";
 import { ApplicationSearchDto } from "./dto/search-application.dto";
 import { ApplicationExportService } from "./export.service";
+import { ApplicationProductExportService } from "./product-export.service";
+import { POWERPOINT_CONTENT_TYPE } from "./product-powerpoint";
 
 @ApiTags("applications")
 @Controller("applications")
@@ -60,6 +62,7 @@ export class ApplicationController {
     private readonly applicationService: ApplicationService,
     private readonly applicationExportService: ApplicationExportService,
     private readonly metadataService: MetadatasService,
+    private readonly productExportService: ApplicationProductExportService,
   ) {}
 
   @Post()
@@ -251,6 +254,51 @@ Vous devez fournir les informations suivantes :
       "Content-Disposition",
       "attachment; filename=applications_export.xlsx",
     );
+    res.send(buffer);
+  }
+
+  @Post(":applicationId/export/powerpoint")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(PermissionGuard)
+  @RequiredPermissions([Permission.AppRead])
+  @ApiOperation({
+    summary: "Exporter la fiche produit en PowerPoint",
+    description:
+      "Produit un fichier PPTX modifiable à partir des informations générales de la fiche. " +
+      "Accessible avec AppRead, sans privilège administrateur. La dette technique et les " +
+      "contacts ne sont pas inclus. Chaque export est journalisé avec l'utilisateur, " +
+      "l'application et la date. Les textes longs sont conservés dans des diapositives de détail.",
+  })
+  @ApiParam({ name: "applicationId", type: String })
+  @ApiOkResponse({
+    description: "Fiche produit PowerPoint",
+    content: {
+      [POWERPOINT_CONTENT_TYPE]: {
+        schema: { type: "string", format: "binary" },
+      },
+    },
+  })
+  @ApiForbiddenResponse({ description: "Lecture de la fiche non autorisée" })
+  @ApiNotFoundResponse({ description: "Application non trouvée" })
+  async exportProductPowerpoint(
+    @Param("applicationId") applicationId: string,
+    @UserId() requestorId: string,
+    @Res() res: Response,
+  ) {
+    const buffer =
+      await this.productExportService.exportProductCard(applicationId);
+    await this.metadataService.createMetadata({
+      applicationId,
+      createdById: requestorId,
+      title: "de la fiche produit en PowerPoint",
+      type: "export",
+    });
+    res.setHeader("Content-Type", POWERPOINT_CONTENT_TYPE);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=fiche-produit-${applicationId}.pptx`,
+    );
+    res.setHeader("Cache-Control", "no-store");
     res.send(buffer);
   }
 

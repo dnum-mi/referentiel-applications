@@ -349,6 +349,32 @@ globales. Un constat, pas une note.
 
 **Permission.** `DataExport` (**administrateurs**).
 
+### Fiche produit PowerPoint
+
+Depuis une fiche application, **Exporter la fiche produit en PowerPoint** télécharge un
+fichier `.pptx` modifiable. La synthèse reprend le nom et le cycle de vie, le nom court,
+l'identifiant, les directions métier, le type, la description, les objectifs, les populations,
+les noms alternatifs, les tags et l'IQ. La mise en page suit la fiche produit du ticket #434.
+Les informations de relation client, d'usage et de budget absentes du modèle RefApp sont
+indiquées comme non renseignées. Les textes trop longs pour la synthèse sont conservés
+intégralement dans des diapositives de détail.
+
+**Permission.** `AppRead` : les profils sans droits administrateur peuvent exporter les
+informations générales qu'ils consultent. L'export ne contient ni dette technique, ni contacts,
+ni détails d'exploitation. `ApplicationProductExportService` sélectionne explicitement ces
+champs. Le client généré appelle `POST /applications/:applicationId/export/powerpoint`.
+
+Le correctif pnpm de PptxGenJS 4.0.1 supprime les références à des masques inexistants
+dans les fichiers de plusieurs diapositives ([défaut amont #1444](https://github.com/gitbrent/PptxGenJS/issues/1444)).
+Un test vérifie que chaque partie déclarée dans le fichier OpenXML existe dans l'archive.
+
+**Traçabilité.** Le journal central `ActionLog` conserve l'utilisateur, l'application dans le
+chemin, la date et le statut de la requête, avec l'administrateur réel en cas d'impersonation.
+Une métadonnée `export` est aussi rattachée à la fiche après génération du fichier ; elle ne
+modifie pas la date de dernière mise à jour affichée sur la fiche et ne déclenche pas de
+notification de changement aux abonnés. La trace est également exclue du digest quotidien
+et du calcul des relances de validation.
+
 ## 9. Administration
 
 Le panneau d'administration (`frontend/src/views/AdminPage.vue`) est organisé en onglets, réservés aux administrateurs. Depuis #2446, seuls **Gestion des utilisateurs** et **Gestion des acteurs** relèvent d'`AdminPanelManage` — et sont alors filtrés par le périmètre du requêteur ; tous les autres onglets exigent `GlobalAdminManage`, réservée aux administrateurs **sans** périmètre organisationnel.

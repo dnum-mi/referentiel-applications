@@ -88,6 +88,7 @@ export class ApplicationValidationCronService
           ],
           metadatas: {
             none: {
+              action: { not: "export" },
               createdAt: { gte: sixMonthsThresholdDate },
             },
           },
@@ -96,6 +97,7 @@ export class ApplicationValidationCronService
           id: true,
           label: true,
           metadatas: {
+            where: { action: { not: "export" } },
             orderBy: { createdAt: "desc" },
             take: 1,
             select: { createdAt: true },
