@@ -37,11 +37,12 @@ export async function restorePendingCorrelation(fixture: CorrelationQaFixture) {
         OR ("applicationId" = $2 AND description LIKE '%' || $3 || '%')`,
     [...pair, fixture.source.label, fixture.target.label],
   );
+  // float8 conserve la même précision que le seed et les signaux du moteur.
   await dbQuery(
     `INSERT INTO "CorrelationSuggestion"
        (id, "applicationSourceId", "applicationTargetId", score, signals, status, "createdAt")
-     VALUES ($1, $2, $3, 0.6 * similarity($4, $5) + 0.25 / 3,
-       jsonb_build_object('nameSimilarity', similarity($4, $5),
+     VALUES ($1, $2, $3, 0.6 * similarity($4, $5)::float8 + 0.25 / 3,
+       jsonb_build_object('nameSimilarity', similarity($4, $5)::float8,
          'sharedDataCount', 1, 'sharedActorCount', 0), 'PENDING', CURRENT_TIMESTAMP)
      ON CONFLICT ("applicationSourceId", "applicationTargetId") DO UPDATE
      SET status = 'PENDING', "reviewedById" = NULL, "reviewedAt" = NULL,
