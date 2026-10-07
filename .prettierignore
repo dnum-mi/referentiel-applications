@@ -6,3 +6,5 @@ CHANGELOG.md
 swagger.yaml
 realm-export.json
 frontend/playwright-report/trace
+e2e/playwright-report/
+e2e/test-results/
