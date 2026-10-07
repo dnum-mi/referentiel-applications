@@ -763,11 +763,11 @@ paths:
         - name: page
           required: false
           in: query
-          description: Numéro de page
+          description: Numéro de page, à partir de zéro
           schema:
             minimum: 0
             example: 0
-            type: number
+            type: integer
         - name: pageSize
           required: false
           in: query
@@ -777,7 +777,7 @@ paths:
             maximum: 100
             default: 15
             example: 15
-            type: number
+            type: integer
         - name: sortBy
           required: false
           in: query

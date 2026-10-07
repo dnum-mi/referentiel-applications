@@ -207,6 +207,18 @@ describe("Notifications — contrat HTTP (#2297)", () => {
     },
   );
 
+  it.each([
+    { page: 0.5, pageSize: 2 },
+    { pageSize: 1.5 },
+    { page: -1 },
+    { pageSize: -1 },
+    { pageSize: 101 },
+    { page: "invalid" },
+    { pageSize: "invalid" },
+  ])("refuse les paramètres de pagination invalides %j", async (query) => {
+    await list(ownerToken, query).expect(400);
+  });
+
   it.each(["yes", "1", "0", "TRUE", "False", "null", "", " false "])(
     "refuse la valeur isRead invalide %j avec un 400",
     async (isRead) => {
@@ -312,24 +324,68 @@ describe("Notifications — contrat HTTP (#2297)", () => {
     ).toBe(3);
   });
 
-  it("documente le filtre booléen facultatif et les endpoints de lecture dans OpenAPI", async () => {
+  it("documente la pagination, le filtre, les réponses et les endpoints de lecture dans OpenAPI", async () => {
     const response = await request(app.getHttpServer())
       .get("/swagger/json")
       .expect(200);
     const spec = response.body as OpenAPIObject;
-    const isReadParameter = spec.paths["/notifications"]?.get?.parameters?.find(
-      (parameter) => !("$ref" in parameter) && parameter.name === "isRead",
-    );
-    expect(isReadParameter).toMatchObject({
+    const findParameter = (name: string) =>
+      spec.paths["/notifications"]?.get?.parameters?.find(
+        (parameter) => !("$ref" in parameter) && parameter.name === name,
+      );
+    expect(findParameter("page")).toMatchObject({
+      name: "page",
+      in: "query",
+      required: false,
+      schema: { type: "integer", minimum: 0 },
+    });
+    expect(findParameter("pageSize")).toMatchObject({
+      name: "pageSize",
+      in: "query",
+      required: false,
+      schema: { type: "integer", minimum: 0, maximum: 100, default: 15 },
+    });
+    expect(findParameter("isRead")).toMatchObject({
       name: "isRead",
       in: "query",
       required: false,
       schema: { type: "boolean" },
     });
-    expect(spec.paths["/notifications"]?.get?.responses["200"]).toBeDefined();
+    expect(spec.paths["/notifications"]?.get?.responses["200"]).toMatchObject({
+      content: {
+        "application/json": {
+          schema: { $ref: "#/components/schemas/PaginatedNotificationDto" },
+        },
+      },
+    });
     expect(
       spec.paths["/notifications/unread-count"]?.get?.responses["200"],
-    ).toBeDefined();
+    ).toMatchObject({
+      content: {
+        "application/json": {
+          schema: { $ref: "#/components/schemas/UnreadCountDto" },
+        },
+      },
+    });
+    expect(spec.components?.schemas?.PaginatedNotificationDto).toMatchObject({
+      properties: {
+        results: {
+          type: "array",
+          items: { $ref: "#/components/schemas/NotificationDto" },
+        },
+        total: { type: "number" },
+      },
+    });
+    expect(spec.components?.schemas?.NotificationDto).toMatchObject({
+      properties: {
+        id: { type: "string" },
+        isRead: { type: "boolean" },
+        createdAt: { type: "string", format: "date-time" },
+      },
+    });
+    expect(spec.components?.schemas?.UnreadCountDto).toMatchObject({
+      properties: { count: { type: "number" } },
+    });
     expect(
       spec.paths["/notifications/{id}/read"]?.patch?.responses["204"],
     ).toBeDefined();
