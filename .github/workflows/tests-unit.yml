@@ -72,7 +72,7 @@ jobs:
       - name: Run test coverage
         run: IMAGE_TAG=${{ inputs.backend_image_tag }} docker compose -f docker-compose.yml -f docker-compose.ci.yml exec backend pnpm test:cov
       - name: Upload backend coverage
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: unit-tests-coverage
           path: ./backend/coverage/
@@ -96,7 +96,7 @@ jobs:
           name: unit-tests-coverage
           path: ./backend/coverage
       - name: Produce coverage report
-        uses: insightsengineering/coverage-action@43a6afd6801c3936903b40fb7474b4f870abcd62 # v2
+        uses: insightsengineering/coverage-action@3179498004cf3a28cbd5b496ce580767888375b9 # v3.0.4
         with:
           coverage-summary-title: Backend Coverage Summary
           path: ./backend/coverage/cobertura-coverage.xml
@@ -147,7 +147,7 @@ jobs:
           name: unit-tests-coverage
           path: ./coverage/backend
       - name: Install pnpm
-        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
         with:
           version: 10.34.6
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
