@@ -81,6 +81,7 @@ export class ApplicationRepository implements IApplicationRepository {
         },
       },
       compliance: true,
+      rgaaCompliances: { select: { score_percentage: true } },
       labels: true,
       externalRessource: true,
       tags: true,
@@ -94,6 +95,26 @@ export class ApplicationRepository implements IApplicationRepository {
         },
       },
     } satisfies Prisma.ApplicationInclude;
+  }
+
+  /**
+   * Ligne de liste : dette technique aplatie et conformités RGAA réduites au
+   * meilleur score (même règle que le tri `rgaa`, cf. `sortApplicationIdsRaw`).
+   */
+  private toSearchItem<
+    T extends { rgaaCompliances: { score_percentage: unknown }[] },
+  >(
+    app: T,
+  ): Omit<T, "rgaaCompliances"> & { rgaaScorePercentage: number | null } {
+    const { rgaaCompliances, ...rest } = this.flattenTechnicalDebt(app);
+    const scores = rgaaCompliances
+      .map((rgaa) => rgaa.score_percentage)
+      .filter((score) => score != null)
+      .map(Number);
+    return {
+      ...rest,
+      rgaaScorePercentage: scores.length ? Math.max(...scores) : null,
+    };
   }
 
   /** Aplatit le dernier point de dette technique (relation historisée -> objet unique). */
@@ -141,7 +162,7 @@ export class ApplicationRepository implements IApplicationRepository {
 
     // Prisma decimal extension returns runtime numbers, so we cast to API DTOs.
     return {
-      results: results.map((app) => this.flattenTechnicalDebt(app)),
+      results: results.map((app) => this.toSearchItem(app)),
       total: aggregate._count._all,
       averageIq: aggregate._avg.quality ?? 0,
     } as unknown as ApplicationSearchResultDto;
@@ -207,7 +228,7 @@ export class ApplicationRepository implements IApplicationRepository {
           .filter((record): record is NonNullable<typeof record> =>
             Boolean(record),
           )
-          .map((app) => this.flattenTechnicalDebt(app));
+          .map((app) => this.toSearchItem(app));
 
         return {
           results,

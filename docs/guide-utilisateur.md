@@ -22,14 +22,14 @@ Vos droits dans RefApp ont deux sources : votre rôle et votre type d'acteur sur
 
 ### 1. Votre rôle
 
-Votre rôle s'applique à toutes les applications du référentiel. Par défaut, votre rôle est **Visiteur**.
+Votre rôle s'applique à toutes les applications du référentiel. Par défaut, votre rôle est **Utilisateur**.
 
-| Rôle               | Droits                                                                                                            |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| **Visiteur**       | Rechercher les applications. Lire les informations générales des fiches. Créer des signalements.                  |
-| **Lecteur**        | Droits du Visiteur. Lire toutes les rubriques des fiches : acteurs, hébergement, conformités, relations et liens. |
-| **Contributeur**   | Droits du Lecteur. Créer et modifier les fiches. Traiter les signalements.                                        |
-| **Administrateur** | Droits du Contributeur. Gérer les utilisateurs et leurs droits, sur un périmètre ou sur tout le référentiel.      |
+| Rôle                | Droits                                                                                                                               |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Utilisateur**     | Rechercher les applications. Lire les informations générales, les statuts et les données des fiches. Créer des signalements.         |
+| **Lecture totale**  | Droits de l'Utilisateur. Lire toutes les rubriques des fiches : acteurs, hébergement, conformités, technologies, relations et liens. |
+| **Écriture totale** | Droits de la Lecture totale. Créer et modifier les fiches. Traiter les signalements.                                                 |
+| **Administrateur**  | Droits de l'Écriture totale. Gérer les utilisateurs et leurs droits, sur un périmètre ou sur tout le référentiel.                    |
 
 ### 2. Votre type d'acteur sur une application
 

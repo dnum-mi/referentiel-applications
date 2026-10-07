@@ -5,6 +5,7 @@ import Column from "primevue/column";
 import Skeleton from "primevue/skeleton";
 import type { TableColumn, TableSortEvent } from "@/types/table";
 import type { DataTableSortEvent, DataTablePageEvent, DataTableColumnResizeEndEvent } from "primevue/datatable";
+import { PAGE_SIZE_OPTIONS } from "@/constants/pagination";
 
 export interface Props<T> {
   items: T[];
@@ -146,7 +147,7 @@ watch(
       :rows="rows"
       :first="first"
       :paginator="paginator"
-      :rows-per-page-options="[5, 10, 15, 20, 50]"
+      :rows-per-page-options="PAGE_SIZE_OPTIONS"
       :paginator-template="'RowsPerPageDropdown FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport'"
       current-page-report-template="{first} à {last} sur {totalRecords}"
       :sort-field="internalSortField"

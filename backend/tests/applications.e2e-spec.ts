@@ -93,6 +93,55 @@ describe("Applications", () => {
     expect(resultIds).not.toContain(appWithoutHomologation.id);
   });
 
+  it("/GET applications - chaque ligne expose les relations du DTO de recherche et le meilleur score RGAA", async () => {
+    const prisma = getPrismaClient();
+    const withRgaa = await ApplicationFaker.create(user);
+    const withoutRgaa = await ApplicationFaker.create(user);
+    await prisma.rgaaCompliance.createMany({
+      data: [
+        {
+          applicationId: withRgaa.id,
+          service_url: "https://a.example.com",
+          score_percentage: 42.5,
+        },
+        {
+          applicationId: withRgaa.id,
+          service_url: "https://b.example.com",
+          score_percentage: 87,
+        },
+        {
+          applicationId: withRgaa.id,
+          service_url: "https://c.example.com",
+          score_percentage: null,
+        },
+      ],
+    });
+
+    const response = await request(app().getHttpServer())
+      .get("/applications")
+      .query({ page: 0, pageSize: 0 })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(200);
+
+    const byId = new Map(
+      response.body.results.map((application: { id: string }) => [
+        application.id,
+        application,
+      ]),
+    );
+    expect(byId.get(withRgaa.id)).toMatchObject({
+      rgaaScorePercentage: 87,
+      hostings: expect.any(Array),
+      tags: expect.any(Array),
+      actors: expect.any(Array),
+      applicationViews: expect.any(Number),
+    });
+    expect(byId.get(withRgaa.id)).not.toHaveProperty("rgaaCompliances");
+    expect(byId.get(withoutRgaa.id)).toMatchObject({
+      rgaaScorePercentage: null,
+    });
+  });
+
   it("/GET applications?compliance__in=rgpd should include apps with RGPD data", async () => {
     const prisma = getPrismaClient();
     const appWithRgpd = await ApplicationFaker.create(user);

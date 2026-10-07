@@ -127,6 +127,10 @@ const showEmpty = computed(
     !hasResults.value,
 );
 
+// La liste n'est rendue que si elle a un contenu : aria-expanded / aria-controls
+// doivent refléter ce rendu réel, pas seulement l'intention d'ouverture.
+const isListRendered = computed(() => showList.value && (hasResults.value || showEmpty.value || loading.value || !!error.value));
+
 const ariaActiveDescendant = computed(() => {
   if (highlightedIndex.value >= 0 && showList.value) return optionId(highlightedIndex.value);
   return undefined;
@@ -163,22 +167,16 @@ onClickOutside(containerEl, () => {
       autocomplete="off"
       role="combobox"
       aria-autocomplete="list"
-      :aria-controls="listId"
+      :aria-controls="isListRendered ? listId : undefined"
       :aria-activedescendant="ariaActiveDescendant"
-      :aria-expanded="showList"
+      :aria-expanded="isListRendered"
       :aria-describedby="ariaDescribedById"
     />
     <div v-if="id" :id="ariaDescribedById" class="visually-hidden">
       Utilisez les flèches haut et bas pour naviguer dans la liste, Entrée pour sélectionner.
     </div>
 
-    <ul
-      v-if="showList && (hasResults || showEmpty || loading || error)"
-      :id="listId"
-      class="autocomplete-list"
-      role="listbox"
-      :aria-label="listLabel ?? 'Suggestions'"
-    >
+    <ul v-if="isListRendered" :id="listId" class="autocomplete-list" role="listbox" :aria-label="listLabel ?? 'Suggestions'">
       <li v-if="loading" class="autocomplete-status" role="presentation">Recherche en cours…</li>
 
       <template v-else>

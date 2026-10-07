@@ -1,7 +1,7 @@
 import { format, formatDistanceToNow, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 
-export function formatDate(isoDate: string): string {
+export function formatDate(isoDate: string | Date): string {
   const date = new Date(isoDate);
   return new Intl.DateTimeFormat("fr-FR", {
     day: "2-digit",

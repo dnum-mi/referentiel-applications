@@ -47,6 +47,10 @@ export class ReportDto {
   @IsString()
   description: string;
 
+  @ApiProperty({ description: "Notes internes de traitement du signalement" })
+  @IsString()
+  notes: string;
+
   @ApiProperty({
     description: "Le statut du signalement",
     enum: ReportStatus,

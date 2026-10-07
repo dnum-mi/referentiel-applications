@@ -9,9 +9,13 @@ import {
   IsOptional,
   IsString,
 } from "class-validator";
+import { ActorTypeDto } from "src/actorType/dto/actorType.dto";
 import { BusinessDivisionDTO } from "src/business-division/dto/business-division.dto";
 import { PaginatedResponseDto } from "src/common/dto";
+import { ComplianceDto } from "src/compliances/dto/create-compliance.dto";
+import { HostingOptionDto } from "src/hosting-option/dto/hosting-option.dto";
 import { ApplicationStatusDto } from "src/statuses/dto/application-status.dto";
+import { TagDto } from "src/tag/dto/tag.dto";
 import { TechnicalDebtInfoDto } from "src/technical-debt-info/dto/create-technical-debt-info.dto";
 
 export class ApplicationDto {
@@ -123,13 +127,77 @@ export class CountByIqDto {
   total: number;
 }
 
-export class ApplicationSearchResultDto extends PaginatedResponseDto<ApplicationDto> {
+export class ApplicationSearchHostingDto {
+  @ApiProperty() id: string;
+
+  @ApiProperty({ nullable: true }) label: string | null;
+
+  @ApiProperty({ type: () => HostingOptionDto, nullable: true })
+  hostingOption: HostingOptionDto | null;
+}
+
+export class ApplicationSearchActorOrganizationDto {
+  @ApiProperty() id: string;
+
+  @ApiProperty({ nullable: true }) path: string | null;
+
+  @ApiProperty({ nullable: true }) sigle: string | null;
+}
+
+export class ApplicationSearchActorDto {
+  @ApiProperty() id: string;
+
+  @ApiProperty({ nullable: true }) email: string | null;
+
+  @ApiProperty({ nullable: true }) firstname: string | null;
+
+  @ApiProperty({ nullable: true }) lastname: string | null;
+
+  @ApiProperty({ type: () => ActorTypeDto, nullable: true })
+  actorType: ActorTypeDto | null;
+
+  @ApiProperty({
+    type: () => ApplicationSearchActorOrganizationDto,
+    nullable: true,
+  })
+  organization: ApplicationSearchActorOrganizationDto | null;
+}
+
+/** Ligne de résultat de recherche : `ApplicationDto` enrichi des relations affichées en liste. */
+export class ApplicationSearchItemDto extends ApplicationDto {
+  @ApiProperty({ type: () => [ApplicationSearchHostingDto] })
+  hostings: ApplicationSearchHostingDto[];
+
+  @ApiProperty({ type: () => [TagDto] })
+  tags: TagDto[];
+
+  @ApiProperty({ type: () => [ApplicationSearchActorDto] })
+  actors: ApplicationSearchActorDto[];
+
+  @ApiProperty({ type: () => ComplianceDto, nullable: true })
+  compliance: ComplianceDto | null;
+
+  @ApiProperty({
+    description:
+      "Meilleur score RGAA (0-100) parmi les conformités RGAA de l'application",
+    nullable: true,
+    example: 75.5,
+  })
+  rgaaScorePercentage: number | null;
+
+  @ApiProperty({
+    description: "Nombre de consultations de la fiche sur les 12 derniers mois",
+  })
+  applicationViews: number;
+}
+
+export class ApplicationSearchResultDto extends PaginatedResponseDto<ApplicationSearchItemDto> {
   @ApiProperty({
     description:
       "Liste des applications correspondant aux critères de recherche",
-    type: [ApplicationDto],
+    type: [ApplicationSearchItemDto],
   })
-  results: ApplicationDto[];
+  results: ApplicationSearchItemDto[];
 
   @ApiProperty({
     description:
@@ -142,9 +210,9 @@ export class ApplicationSearchResultDto extends PaginatedResponseDto<Application
   @ApiProperty({
     description:
       "Liste des applications correspondant aux critères de recherche et legitime au technical debt point",
-    type: [ApplicationDto],
+    type: [ApplicationSearchItemDto],
   })
-  technicalDebtPoints: ApplicationDto[];
+  technicalDebtPoints: ApplicationSearchItemDto[];
 }
 
 export class ApplicationMinimalDto extends PickType(ApplicationDto, [
