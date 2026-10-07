@@ -4,6 +4,7 @@ import { ref, computed, nextTick } from "vue";
 import { useAppUpdate } from "./composables/use-app-update";
 import { useToasterStore } from "./stores/toasterStore";
 import { routeNames } from "./router/route-names";
+import { isTabNavigation } from "./router";
 import { buildNavItems, buildPublicNavItems } from "./router/nav-items";
 import { getConfig } from "./services/config";
 import { useRoute, useRouter } from "vue-router";
@@ -34,8 +35,9 @@ const currentPageTitle = ref("");
 // 12.8 / 7.1 : simuler un rechargement de page pour les TA après chaque navigation SPA.
 // On ignore les navigations qui ne changent que la query string (ex. filtres de recherche mis à jour
 // via router.replace) : sinon le focus est repris au h1 pendant que l'utilisateur saisit dans un champ.
+// Idem pour un changement d'onglet : le focus doit rester sur la liste d'onglets.
 router.afterEach(async (to, from) => {
-  if (to.path === from.path) return;
+  if (to.path === from.path || isTabNavigation(to, from)) return;
   currentPageTitle.value = (to.meta.title as string) ?? document.title;
   await nextTick();
   pageTitleAnnouncer.value?.focus();

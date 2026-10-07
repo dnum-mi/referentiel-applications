@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory, type RouteLocationNormalized, type RouteRecordRaw } from "vue-router";
+import { createRouter, createWebHistory, type RouteLocation, type RouteLocationNormalized, type RouteRecordRaw } from "vue-router";
 import { routeNames } from "./route-names";
 import { USER_MANAGER, resumeStrongReauthAfterLogout } from "@/services/authentication";
 import { consumeReauthAttempt } from "@/composables/use-auth-level";
@@ -97,7 +97,7 @@ const routes = [
     name: routeNames.PROFILEAPP,
     path: "/applications/:id/:tab?",
     component: () => import("@/views/ApplicationPage.vue"),
-    meta: { requiresAuth: true, title: "Profil d'application - Référentiel des applications" },
+    meta: { requiresAuth: true, title: "Profil d'application - Référentiel des applications", tabParam: "tab" },
   },
   {
     name: routeNames.NOTIFICATIONS,
@@ -236,8 +236,21 @@ export function setPageTitle(parts: string | string[]) {
   document.title = [...segments, APP_TITLE_SUFFIX].filter(Boolean).join(" - ");
 }
 
+/**
+ * RGAA 7.1 / 12.8 / 8.6 : un changement d'onglet (paramètre désigné par `meta.tabParam`) sur la
+ * même page n'est pas un changement de page — ni reprise du focus, ni titre générique.
+ */
+export function isTabNavigation(to: RouteLocation, from: RouteLocation) {
+  const tabParam = to.meta.tabParam as string | undefined;
+  if (!tabParam || to.name !== from.name) return false;
+  const keys = new Set([...Object.keys(to.params), ...Object.keys(from.params)]);
+  keys.delete(tabParam);
+  return [...keys].every((key) => String(to.params[key] ?? "") === String(from.params[key] ?? ""));
+}
+
 // Update document title when navigating (titre par défaut)
-router.afterEach((to) => {
+router.afterEach((to, from) => {
+  if (isTabNavigation(to, from)) return;
   if (to.meta.title) {
     document.title = to.meta.title as string;
   }
