@@ -14,11 +14,7 @@ import { PrismaQueryBuilder } from "src/applications/prisma-query-builder.servic
 import { isRetired } from "src/applications/constants/status-groups";
 import { CheckPermissions } from "src/common/service/check-permissions.service";
 import { ContactAdminService } from "src/common/service/contact-admin.service";
-import {
-  isDimaFilled,
-  isPdmaFilled,
-} from "src/common/utils/compliance-presence.utils";
-import { calculateIQ } from "src/common/utils/quality.utils";
+import { calculateIQ, getQualitySummary } from "src/common/utils/quality.utils";
 import {
   getCompletedQualityActionKeys,
   getQualityActionLabel,
@@ -208,18 +204,17 @@ export class ApplicationService {
     let { data } = params;
 
     // protect fields based on permissions
+    // B22 : permissions résolues explicitement sur CETTE application, sans dépendre de
+    // l'état laissé sur `requestor` par le guard ou par l'import.
+    const permissions = await this.checkPermissions.effectivePermissions(
+      requestor,
+      applicationId,
+    );
     // priorityRestart field is only writable by users with AppWritePriority permission
-    if (
-      !(await this.checkPermissions.can(
-        [Permission.AppWritePriority],
-        requestor,
-      ))
-    ) {
+    if (!permissions.has(Permission.AppWritePriority)) {
       delete data.priorityRestart;
       // if the user has AppWrite permission, they can write other fields except priorityRestart
-    } else if (
-      !(await this.checkPermissions.can([Permission.AppWrite], requestor))
-    ) {
+    } else if (!permissions.has(Permission.AppWrite)) {
       data = {
         priorityRestart: data.priorityRestart,
       };
@@ -362,8 +357,7 @@ export class ApplicationService {
       .sort((a, b) => b.iq - a.iq);
   }
 
-  // #2510 : résolution EXPLICITE des permissions applicatives, au lieu de relire
-  // `requestor.appPerms`, effet de bord du passage dans PermissionGuard.
+  // #2510 : résolution EXPLICITE des permissions applicatives.
   public async getMyPerms(
     applicationId: string,
     requestor: Requestor,
@@ -698,39 +692,7 @@ export class ApplicationService {
   }
 
   async getQualitySummary(applicationId: string): Promise<QualitySummaryDto> {
-    const [application, hosting, actors, compliance, links, rgaaCompliances] =
-      await Promise.all([
-        this.prisma.application.findUnique({ where: { id: applicationId } }),
-        this.prisma.hosting.findFirst({ where: { applicationId } }),
-        this.prisma.actor.findMany({
-          where: { applicationId },
-          include: { actorType: true },
-        }),
-        this.prisma.compliance.findFirst({ where: { applicationId } }),
-        this.prisma.externalRessource.findMany({ where: { applicationId } }),
-        this.prisma.rgaaCompliance.findMany({ where: { applicationId } }),
-      ]);
-
-    return {
-      hasDescription: Boolean(application?.description),
-      hasHosting: Boolean(hosting),
-      hasSnapvisu: links.some((l) => l.link.toLowerCase().includes("snapvisu")),
-      actors: {
-        MOA: actors.some((a) => a.actorType?.code === "MOA"),
-        MOE: actors.some((a) => a.actorType?.code === "MOE"),
-        TMA: actors.some((a) => a.actorType?.code === "TMA"),
-        HEB: actors.some((a) => a.actorType?.code === "HEB"),
-        REP: actors.some((a) => a.actorType?.code === "REP"),
-      },
-      compliances: {
-        DIMA: isDimaFilled(compliance),
-        PDMA: isPdmaFilled(compliance),
-        HOMOLOGATION: Boolean(compliance?.homologation_date_end),
-        RGAA: rgaaCompliances.length > 0,
-        DSFR: compliance?.dsfr_implemented ?? null,
-        RGPD: compliance?.rgpd_has_aipd ?? null,
-      },
-    };
+    return getQualitySummary(applicationId, this.prisma);
   }
 
   /**

@@ -359,7 +359,6 @@ describe("EndOfLifeService — périmètre fonctionnel (#2801)", () => {
         ...requestor,
         organizationId: "org-AUTRE",
         organization: organization("AUTRE"),
-        appPerms: [Permission.TechnologyRead, Permission.TechnologyWrite],
       },
     );
 

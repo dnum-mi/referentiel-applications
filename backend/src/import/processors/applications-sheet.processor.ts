@@ -173,8 +173,7 @@ export class ApplicationsSheetProcessor {
       }
 
       // Droits applicatifs (portée incluse) sur CETTE application, comme l'API `PATCH`.
-      // L'appel renseigne aussi `requestor.appPerms`, que `update` réutilise pour la protection
-      // des champs (ex. priorité de redémarrage).
+      // La protection des champs (ex. priorité de redémarrage) est faite par `update`.
       const allowed = await this.checkPermissions.can(
         [Permission.AppWrite],
         requestor,

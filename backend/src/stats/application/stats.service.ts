@@ -3,7 +3,7 @@ import { StatsType } from "@prisma/client";
 import { StatsHelper } from "../infrastructure/helpers/stats.helper";
 import { IStatsRepository } from "../infrastructure/stats.repository-interface";
 import { GroupBy } from "../interfaces/types/stats-entry.type";
-import { GetIqAvgGroupedUseCase } from "./use-cases/get-iq-avg-grouped.use-case.ts";
+import { GetIqAvgGroupedUseCase } from "./use-cases/get-iq-avg-grouped.use-case";
 
 @Injectable()
 export class StatsService {

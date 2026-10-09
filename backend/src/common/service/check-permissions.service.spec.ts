@@ -285,3 +285,38 @@ describe("CheckPermissions.resolveAppPermissions — session rétrogradée (#198
     expect(await service.can([Permission.AppWrite], user, "app-1")).toBe(true);
   });
 });
+
+describe("CheckPermissions.can — fonction pure (B22)", () => {
+  it("avec applicationId : n'écrit rien sur l'utilisateur", async () => {
+    const { service } = makeService({ emailActors: [emailActor()] });
+    const user = baseUser();
+    const before = JSON.stringify(user);
+
+    expect(await service.can([Permission.AppRead], user, "app-1")).toBe(true);
+    expect(JSON.stringify(user)).toBe(before);
+  });
+
+  it("sans applicationId : ignore les droits applicatifs résolus par un appel précédent", async () => {
+    const { service } = makeService({ emailActors: [emailActor()] });
+    const user = baseUser();
+
+    expect(await service.can([Permission.AppRead], user, "app-1")).toBe(true);
+    expect(await service.can([Permission.AppRead], user)).toBe(false);
+  });
+
+  it("effectivePermissions : union des permissions globales et applicatives", async () => {
+    const { service } = makeService({ emailActors: [emailActor()] });
+    const user = {
+      ...baseUser(),
+      permissions: [Permission.AppList],
+      additionalPermissions: [Permission.TechnologyList],
+    } as Requestor;
+
+    const permissions = await service.effectivePermissions(user, "app-1");
+
+    expect(permissions.has(Permission.AppList)).toBe(true);
+    expect(permissions.has(Permission.TechnologyList)).toBe(true);
+    expect(permissions.has(Permission.AppRead)).toBe(true);
+    expect(permissions.has(Permission.AppWrite)).toBe(false);
+  });
+});

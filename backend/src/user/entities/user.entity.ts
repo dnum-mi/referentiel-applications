@@ -8,7 +8,6 @@ import {
   IsString,
 } from "class-validator";
 import { AuthLevelDto } from "src/auth-level/auth-level.dto";
-import { APP_PERMISSIONS } from "src/common/utils/types";
 import { DELEGATED_AUTH } from "src/permissions/delegated-auth";
 import type { DelegatedAuth } from "src/permissions/delegated-auth";
 import { OrganizationDto } from "src/organizations/dto/organizations.dto";
@@ -169,10 +168,6 @@ export class Requestor extends UserWithPermissions {
   @IsArray()
   @IsOptional()
   groups?: string[];
-
-  @IsArray()
-  @IsOptional()
-  appPerms?: APP_PERMISSIONS[]; // Changed from permissions to appPerms
 }
 
 export class UserWithPermissionsAndFullNameMaia extends UserWithPermissions {
