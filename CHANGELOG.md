@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.97.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.97.0...v1.97.1) (2026-10-09)
+
+
+### Bug Fixes
+
+* can modify userappperm ([#2865](https://github.com/dnum-mi/referentiel-applications/issues/2865)) ([070ccab](https://github.com/dnum-mi/referentiel-applications/commit/070ccab8b4db4058a4b45fb8f87f6da157180c59))
+
 ## [1.97.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.96.0...v1.97.0) (2026-10-07)
 
 
