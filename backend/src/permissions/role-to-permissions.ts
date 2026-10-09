@@ -43,7 +43,8 @@ const ADMIN_PERMISSIONS = new Set([
   // aux autres permissions de ce socle, la gestion des campagnes (qualité ou dette IT) n'est
   // jamais accordée par défaut à un administrateur, y compris global. Elle doit être indiquée
   // explicitement via la couche 2 (additionalPermissions), pour lui comme pour un utilisateur
-  // délégué non-admin — cf. DELEGABLE_PERMISSIONS ci-dessous.
+  // délégué non-admin — cf. DELEGABLE_PERMISSIONS ci-dessous. GristSync suit la même règle : la
+  // synchronisation écrit dans un outil externe et reste un choix délibéré.
 ]);
 
 /**
@@ -86,6 +87,8 @@ export const DELEGABLE_PERMISSIONS: readonly Permission[] = [
   Permission.QualityCampaignManage,
   Permission.MditCampaignManage,
   Permission.TechnologyList,
+  // Écrit dans un outil externe (Grist) : jamais accordée par le rôle, comme les campagnes.
+  Permission.GristSync,
 ];
 
 /**

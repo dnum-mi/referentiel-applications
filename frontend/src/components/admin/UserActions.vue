@@ -275,6 +275,11 @@ const additionalPermissionsOptions = computed<Omit<DsfrCheckboxProps, "modelValu
         ? "Accès inclus dans le rôle Administrateur, dans son périmètre."
         : "Disponible pour les niveaux Lecture totale, Écriture totale et Administrateur, dans leur périmètre.",
   },
+  {
+    label: "Synchroniser avec Grist",
+    value: Permission.GRIST_SYNC,
+    name: "capability-grist-sync",
+  },
 ]);
 
 const isNotValidated = computed(() => {

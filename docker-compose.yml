@@ -79,6 +79,10 @@ services:
       - MAINTENANCE_CACHE_TTL_MS=${MAINTENANCE_CACHE_TTL_MS:-30000}
       - MOCK_MAIA_SERVICE=true
       - MOCK_MAIA_ORGANIZATION=departements/77 SEINE-ET-MARNE/SGC/DIRECTION
+      # Synchro Grist : renseigner GRIST_API_KEY et GRIST_DOC_ID dans le .env racine (non commité).
+      - GRIST_URL=${GRIST_URL:-https://grist.numerique.gouv.fr}
+      - GRIST_API_KEY=${GRIST_API_KEY:-}
+      - GRIST_DOC_ID=${GRIST_DOC_ID:-}
       - FOOTER_LINKS=[{"label":"Documentation","title":"Aller à la documentation","href":"#"},{"label":"Snapvisu","title":"Aller à Snapvisu","href":"#"},{"label":"CSU","title":"Aller au CSU","href":"#"},{"label":"Portail SH24","title":"Aller au Portail SH24","href":"#"}]
     depends_on:
       - postgres
@@ -134,7 +138,7 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    command: sh -c "pnpm install --frozen-lockfile && pnpm dev"
+    command: sh -c "pnpm install --frozen-lockfile --config.confirmModulesPurge=false && pnpm dev"
     environment:
       - VITE_RDA_MATOMO_URL=http://localhost:8083
       - VITE_RDA_MATOMO_SITE_ID=1

@@ -33,4 +33,33 @@ describe("public configuration", () => {
     expect(JSON.stringify(frontend)).not.toContain(secret);
     expect(JSON.stringify(frontend)).not.toContain("HS256");
   });
+
+  it("never exposes the Grist API key to the frontend", () => {
+    const apiKey = "grist-test-api-key".repeat(4);
+    const previous = process.env.GRIST_API_KEY;
+    process.env.GRIST_API_KEY = apiKey;
+    try {
+      const service = new ConfigService(
+        appConfig(),
+        {
+          jwksUrl: "https://idp.example/jwks",
+          configUrl: "https://idp.example/.well-known/openid-configuration",
+          clientId: "refapp",
+          scope: "openid profile email",
+        },
+        {
+          mode: "off",
+          claim: "auth_mode",
+          strongValues: [],
+          trustedIdps: [],
+          reauth: { enabled: false, prompt: "login", strategy: "prompt" },
+          userinfo: { enabled: false, timeoutMs: 2000 },
+        },
+      );
+      expect(JSON.stringify(service.getFrontendConfig())).not.toContain(apiKey);
+    } finally {
+      if (previous === undefined) delete process.env.GRIST_API_KEY;
+      else process.env.GRIST_API_KEY = previous;
+    }
+  });
 });

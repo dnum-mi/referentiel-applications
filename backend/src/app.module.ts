@@ -44,6 +44,7 @@ import { DataCatalogModule } from "./data-catalog/data-catalogue.module";
 import { DataFamilyModule } from "./data-catalog/data-family/data-family.module";
 import { DataSensibilityModule } from "./data-catalog/data-sensibility/data-sensibility.module";
 import { OrganizationMaiaReferencesModule } from "./organization-maia-references/organization-maia-references.module";
+import { GristModule } from "./grist/grist.module";
 import { ImportModule } from "./import/import.module";
 import { MaintenanceModule } from "./maintenance/maintenance.module";
 import { MaintenanceMiddleware } from "./maintenance/maintenance.middleware";
@@ -75,6 +76,7 @@ import { MaintenanceMiddleware } from "./maintenance/maintenance.middleware";
     ActorTypeModule,
     CompliancesModule,
     ImportModule,
+    GristModule,
     HostingsModule,
     HostingOptionModule,
     LabelsModule,

@@ -56,6 +56,7 @@ export const PERMISSIONS_LABELS: Record<Permission, string> = {
   QualityCampaignManage: "Gérer les campagnes de mise en qualité",
   MditCampaignManage: "Gérer les campagnes dette IT",
   TechnologyList: "Consulter les technologies",
+  GristSync: "Synchroniser avec Grist",
   // Permissions applicatives
   AppRead: "Voir les informations de base",
   AppWrite: "Modifier les informations de base",

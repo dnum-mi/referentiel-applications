@@ -2162,8 +2162,8 @@ paths:
       description: Produit un fichier PPTX modifiable à partir des informations
         générales de la fiche. Accessible avec AppRead, sans privilège
         administrateur. La dette technique et les contacts ne sont pas inclus.
-        Chaque export est journalisé avec l'utilisateur, l'application et la date.
-        Les textes longs sont conservés dans des diapositives de détail.
+        Chaque export est journalisé avec l'utilisateur, l'application et la
+        date. Les textes longs sont conservés dans des diapositives de détail.
       operationId: ApplicationController_exportProductPowerpoint
       parameters:
         - name: applicationId
@@ -2184,8 +2184,7 @@ paths:
         "404":
           description: Application non trouvée
       summary: Exporter la fiche produit en PowerPoint
-      tags:
-        - applications
+      tags: *a8
   /api/v2/applications/{applicationId}:
     get:
       description: "
@@ -3837,8 +3836,8 @@ paths:
         "403":
           description: Réservé aux administrateurs globaux.
         "409":
-          description: "L'organisation possède des organisations filles ou définit un périmètre
-            utilisateur : suppression refusée."
+          description: "L'organisation possède des organisations filles ou définit un
+            périmètre utilisateur : suppression refusée."
       summary: Supprimer une organisation
       tags: *a20
   /api/v2/applications/{applicationId}/actors:
@@ -4721,6 +4720,52 @@ paths:
       summary: Récupérer le nombre total d'hébergements (toutes applications)
       tags:
         - Hostings
+  /api/v2/grist/setup:
+    post:
+      description: >-
+        Écrit toutes les applications dans la table RefApp du document Grist
+        configuré.
+
+        La table est créée au premier appel. Chaque application est retrouvée
+        par son identifiant (refapp_id) :
+
+        les colonnes nom et statut sont mises à jour, les colonnes metadata_1 à
+        metadata_3 saisies dans Grist
+
+        sont conservées. Les Access Rules rendent refapp_id, nom et statut non
+        modifiables et interdisent
+
+        l'ajout et la suppression de lignes pour les non-propriétaires du
+        document.
+      operationId: GristController_setup
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GristSyncReportDto"
+      summary: Synchroniser les applications avec Grist
+      tags: &a26
+        - Grist
+  /api/v2/grist/records:
+    get:
+      description: Retourne les lignes de la table RefApp, métadonnées saisies dans
+        Grist comprises.
+      operationId: GristController_records
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GristRecordDto"
+      summary: Lire la table RefApp de Grist
+      tags: *a26
   /api/v2/hosting-options:
     post:
       operationId: HostingOptionController_create
@@ -4741,7 +4786,7 @@ paths:
         "409":
           description: Hosting option already exists
       summary: Create a new hosting option
-      tags: &a26
+      tags: &a27
         - HostingOptions
     get:
       operationId: HostingOptionController_findAll
@@ -4821,7 +4866,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/PaginatedHostingOptionWithUsageDto"
       summary: Get all hosting options with optional filtering
-      tags: *a26
+      tags: *a27
   /api/v2/hosting-options/{id}:
     patch:
       operationId: HostingOptionController_update
@@ -4849,7 +4894,7 @@ paths:
         "409":
           description: Hosting option already exists
       summary: Update hosting option by ID
-      tags: *a26
+      tags: *a27
     delete:
       operationId: HostingOptionController_remove
       parameters:
@@ -4864,7 +4909,7 @@ paths:
         "404":
           description: Hosting option not found
       summary: Delete hosting option by ID
-      tags: *a26
+      tags: *a27
   /api/v2/applications/{applicationId}/labels:
     post:
       description: "
@@ -4900,7 +4945,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/LabelDto"
       summary: Créer un nouveau nom
-      tags: &a27
+      tags: &a28
         - Labels
     get:
       description: "
@@ -4929,7 +4974,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/LabelDto"
       summary: Récupérer les noms alternatifs par ID d'application
-      tags: *a27
+      tags: *a28
   /api/v2/applications/{applicationId}/labels/{id}:
     patch:
       operationId: LabelsController_update
@@ -4960,7 +5005,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/LabelDto"
       summary: Mettre à jour un nom existant
-      tags: *a27
+      tags: *a28
     delete:
       description: " Ce endpoint permet de supprimer un nom alternatif existant.\ 
 
@@ -4983,7 +5028,7 @@ paths:
         "204":
           description: Nom alternatif supprimé avec succès
       summary: Supprimer un nom alternatif
-      tags: *a27
+      tags: *a28
   /api/v2/label-sources:
     post:
       description: "
@@ -5014,7 +5059,7 @@ paths:
         "403":
           description: Accès refusé - Privilège admin requis
       summary: Créer une nouvelle source de libellés.
-      tags: &a28
+      tags: &a29
         - LabelSources
     get:
       operationId: LabelSourceController_findAll
@@ -5067,7 +5112,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/PaginatedLabelSourceDto"
       summary: Rechercher des sources de libellés alternatifs avec filtre en option.
-      tags: *a28
+      tags: *a29
   /api/v2/label-sources/{id}:
     patch:
       operationId: LabelSourceController_update
@@ -5095,7 +5140,7 @@ paths:
         "404":
           description: Source non trouvée
       summary: Modifier une source de libellés alternatifs
-      tags: *a28
+      tags: *a29
     delete:
       operationId: LabelSourceController_remove
       parameters:
@@ -5112,7 +5157,7 @@ paths:
         "404":
           description: Source non trouvée
       summary: Supprimer une source de libellés alternatifs
-      tags: *a28
+      tags: *a29
   /api/v2/mdit-campaigns:
     post:
       operationId: MditCampaignController_create
@@ -5135,7 +5180,7 @@ paths:
         "409":
           description: Une campagne existe déjà pour ce millésime
       summary: Créer une campagne dette IT (millésime)
-      tags: &a29
+      tags: &a30
         - MDIT Campaigns
     get:
       operationId: MditCampaignController_findAll
@@ -5191,7 +5236,7 @@ paths:
                 $ref: "#/components/schemas/PaginatedMditCampaignDto"
       summary: Lister les campagnes dette IT, triées du millésime le plus récent au
         plus ancien
-      tags: *a29
+      tags: *a30
   /api/v2/mdit-campaigns/{id}:
     patch:
       operationId: MditCampaignController_update
@@ -5221,7 +5266,7 @@ paths:
         "409":
           description: Une campagne existe déjà pour ce millésime
       summary: Modifier une campagne dette IT
-      tags: *a29
+      tags: *a30
     delete:
       operationId: MditCampaignController_remove
       parameters:
@@ -5238,7 +5283,7 @@ paths:
         "404":
           description: Campagne non trouvée
       summary: Supprimer une campagne dette IT
-      tags: *a29
+      tags: *a30
   /api/v2/applications/{applicationId}/links:
     post:
       operationId: ApplicationLinksController_create
@@ -5263,7 +5308,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/LinkDto"
       summary: Create a new link for an application
-      tags: &a30
+      tags: &a31
         - Links
     get:
       description: Get list of links for an application
@@ -5318,7 +5363,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/PaginatedLinkDto"
       summary: Retrieve links for an application
-      tags: *a30
+      tags: *a31
   /api/v2/applications/{applicationId}/links/{id}:
     patch:
       operationId: ApplicationLinksController_update
@@ -5349,7 +5394,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/LinkDto"
       summary: Update a link for an application
-      tags: *a30
+      tags: *a31
     delete:
       operationId: ApplicationLinksController_delete
       parameters:
@@ -5369,7 +5414,7 @@ paths:
         "204":
           description: Link deleted successfully
       summary: Delete a link for an application
-      tags: *a30
+      tags: *a31
   /api/v2/applications/{applicationId}/technical-debt-info:
     post:
       operationId: ApplicationTechnicalDebtInfoController_create
@@ -5396,7 +5441,7 @@ paths:
         "409":
           description: Technical debt info already exists for this application
       summary: Create technical debt info for an application
-      tags: &a31
+      tags: &a32
         - Technical Debt Info
     get:
       operationId: ApplicationTechnicalDebtInfoController_find
@@ -5450,7 +5495,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/PaginatedTechnicalDebtInfoDto"
       summary: Retrieve the technical debt info for an application
-      tags: *a31
+      tags: *a32
   /api/v2/technical-debts:
     get:
       description: Retourne toutes les données de dette technique sans pagination, en
@@ -5909,7 +5954,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/TechnicalDebtPointDto"
       summary: Lister les points de dette technique
-      tags: &a32
+      tags: &a33
         - technical-debts
   /api/v2/technical-debts/millesimes:
     get:
@@ -5927,7 +5972,7 @@ paths:
                 items:
                   type: number
       summary: Lister les millésimes de campagne dette IT disponibles
-      tags: *a32
+      tags: *a33
   /api/v2/applications/{applicationId}/rgaa-compliances:
     get:
       operationId: RgaaController_findAll
@@ -5948,7 +5993,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/RgaaComplianceDto"
       summary: Lister les conformités RGAA d'une application
-      tags: &a33
+      tags: &a34
         - RGAA Compliances
     post:
       operationId: RgaaController_create
@@ -5979,7 +6024,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/RgaaComplianceErrorResponseDto"
       summary: Créer une conformité RGAA pour une application
-      tags: *a33
+      tags: *a34
   /api/v2/applications/{applicationId}/rgaa-compliances/{id}:
     patch:
       operationId: RgaaController_update
@@ -6010,7 +6055,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/RgaaComplianceDto"
       summary: Mettre à jour une conformité RGAA
-      tags: *a33
+      tags: *a34
     delete:
       operationId: RgaaController_delete
       parameters:
@@ -6030,7 +6075,7 @@ paths:
         "204":
           description: Conformité RGAA supprimée
       summary: Supprimer une conformité RGAA
-      tags: *a33
+      tags: *a34
   /api/v2/applications/{applicationId}/technologies:
     get:
       operationId: TechnologyController_findAll
@@ -6051,7 +6096,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/TechnologyDto"
       summary: Lister la stack technique d'une application
-      tags: &a34
+      tags: &a35
         - Technologies
     post:
       operationId: TechnologyController_create
@@ -6078,7 +6123,7 @@ paths:
       summary: Ajouter une technologie à la stack d'une application (met à jour la
         ligne existante si le couple technologie/produit est déjà renseigné,
         sans tenir compte de la casse)
-      tags: *a34
+      tags: *a35
   /api/v2/applications/{applicationId}/technologies/eol-products:
     get:
       operationId: TechnologyController_listEolProducts
@@ -6100,7 +6145,7 @@ paths:
                   $ref: "#/components/schemas/EolProductDto"
       summary: Lister les produits suivis par endoflife.date (autocomplétion de la
         saisie produit)
-      tags: *a34
+      tags: *a35
   /api/v2/applications/{applicationId}/technologies/{id}:
     patch:
       operationId: TechnologyController_update
@@ -6137,7 +6182,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/TechnologyErrorResponseDto"
       summary: Mettre à jour une technologie
-      tags: *a34
+      tags: *a35
     delete:
       operationId: TechnologyController_delete
       parameters:
@@ -6157,7 +6202,7 @@ paths:
         "204":
           description: Technologie supprimée
       summary: Supprimer une technologie
-      tags: *a34
+      tags: *a35
   /api/v2/technologies/end-of-life:
     get:
       description: Vue transverse accessible avec la capacité TechnologyList aux
@@ -6381,7 +6426,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/PaginatedReportDto"
       summary: Récupérer tous les signalements
-      tags: &a35
+      tags: &a36
         - Reports
     post:
       operationId: ReportsController_create
@@ -6400,7 +6445,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReportDto"
       summary: Créer un signalement
-      tags: *a35
+      tags: *a36
   /api/v2/reports/{id}:
     patch:
       operationId: ReportsController_update
@@ -6431,7 +6476,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReportDto"
       summary: Mettre à jour un signalement
-      tags: *a35
+      tags: *a36
   /api/v2/applications/{applicationId}/reports:
     post:
       operationId: ApplicationReportsController_create
@@ -6456,7 +6501,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReportDto"
       summary: Demande de modification pour une fiche application
-      tags: &a36
+      tags: &a37
         - ApplicationReports
     get:
       description: Renvoie la liste paginée des signalements pour une application donnée.
@@ -6520,7 +6565,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/PaginatedReportDto"
       summary: Récupérer tous les signalements pour une application
-      tags: *a36
+      tags: *a37
   /api/v2/applications/{applicationId}/reports/{id}:
     get:
       operationId: ApplicationReportsController_findOne
@@ -6544,7 +6589,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReportDto"
       summary: Récupérer un signalement spécifique par ID
-      tags: *a36
+      tags: *a37
     patch:
       operationId: ApplicationReportsController_update
       parameters:
@@ -6580,7 +6625,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReportDto"
       summary: Mettre à jour un signalement
-      tags: *a36
+      tags: *a37
     delete:
       operationId: ApplicationReportsController_remove
       parameters:
@@ -6599,7 +6644,7 @@ paths:
         "204":
           description: Signalement supprimé avec succès
       summary: Supprimer un signalement
-      tags: *a36
+      tags: *a37
   /api/v2/saved-filters:
     get:
       description: Renvoie les filtres de recherche d'applications sauvegardés par
@@ -6616,7 +6661,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/SavedFilterDto"
       summary: Lister ses filtres sauvegardés
-      tags: &a37
+      tags: &a38
         - SavedFilters
     post:
       description: Sauvegarde les filtres courants sous un nom. Si un filtre du même
@@ -6637,7 +6682,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/SavedFilterDto"
       summary: Sauvegarder un filtre
-      tags: *a37
+      tags: *a38
   /api/v2/saved-filters/{id}:
     delete:
       operationId: SavedFilterController_remove
@@ -6654,7 +6699,7 @@ paths:
         "404":
           description: Filtre sauvegardé non trouvé
       summary: Supprimer un filtre sauvegardé
-      tags: *a37
+      tags: *a38
   /api/v2/quality-campaigns:
     post:
       operationId: QualityCampaignController_create
@@ -6673,7 +6718,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/QualityCampaignDto"
       summary: Créer une campagne de mise en qualité
-      tags: &a38
+      tags: &a39
         - Quality Campaigns
     get:
       operationId: QualityCampaignController_findAll
@@ -6721,7 +6766,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/PaginatedQualityCampaignDto"
       summary: Lister les campagnes de mise en qualité
-      tags: *a38
+      tags: *a39
   /api/v2/quality-campaigns/{id}:
     get:
       operationId: QualityCampaignController_findOne
@@ -6741,7 +6786,7 @@ paths:
         "404":
           description: Campagne non trouvée
       summary: Détail d'une campagne de mise en qualité, avec son impact
-      tags: *a38
+      tags: *a39
     patch:
       operationId: QualityCampaignController_update
       parameters:
@@ -6766,7 +6811,7 @@ paths:
         "404":
           description: Campagne non trouvée
       summary: Modifier une campagne de mise en qualité
-      tags: *a38
+      tags: *a39
     delete:
       operationId: QualityCampaignController_remove
       parameters:
@@ -6781,7 +6826,7 @@ paths:
         "404":
           description: Campagne non trouvée
       summary: Supprimer une campagne de mise en qualité
-      tags: *a38
+      tags: *a39
   /api/v2/quality-campaigns/{id}/preview:
     get:
       operationId: QualityCampaignController_preview
@@ -6802,7 +6847,7 @@ paths:
           description: Campagne non trouvée
       summary: Aperçu à la volée des applications actuellement matchées par le filtre
         de la campagne
-      tags: *a38
+      tags: *a39
   /api/v2/quality-campaigns/{id}/status:
     patch:
       operationId: QualityCampaignController_updateStatus
@@ -6829,7 +6874,7 @@ paths:
           description: Campagne non trouvée
       summary: Changer librement le statut de la campagne (planifiée / en cours /
         terminée), dans n'importe quel sens
-      tags: *a38
+      tags: *a39
   /api/v2/quality-campaigns/{id}/send:
     post:
       operationId: QualityCampaignController_send
@@ -6850,7 +6895,7 @@ paths:
           description: Campagne non trouvée
       summary: Déclencher immédiatement l'envoi de la campagne aux acteurs des
         applications ciblées
-      tags: *a38
+      tags: *a39
   /api/v2/quality-campaigns/{id}/send-sponsor-report:
     post:
       operationId: QualityCampaignController_sendSponsorReport
@@ -6871,7 +6916,7 @@ paths:
           description: Campagne non trouvée
       summary: Envoyer au sponsor de la campagne un email récapitulatif de l'impact
         courant
-      tags: *a38
+      tags: *a39
   /api/v2/health-check:
     get:
       description: Exécute une requête basique vers la base de données pour vérifier
@@ -7248,7 +7293,7 @@ components:
           description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
             le futur
         status:
-          enum: &a39
+          enum: &a40
             - active
             - expired
             - revoked
@@ -7368,7 +7413,7 @@ components:
           description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
             le futur
         status:
-          enum: *a39
+          enum: *a40
           type: string
           example: active
           description: Statut du token
@@ -7479,6 +7524,7 @@ components:
         - QualityCampaignManage
         - MditCampaignManage
         - TechnologyList
+        - GristSync
         - AppRead
         - AppWrite
         - ActorRead
@@ -8281,7 +8327,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: &a40
+          example: &a41
             - population 1
             - population 2
           description: population associated with the application
@@ -8292,7 +8338,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: &a41
+          example: &a42
             - finance
             - HR
           description: Purposes of the application
@@ -8305,7 +8351,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: &a42
+          example: &a43
             - tag1
             - tag2
           type: array
@@ -8642,7 +8688,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: &a43
+          enum: &a44
             - 96
             - 72
             - 48
@@ -8673,7 +8719,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: &a44
+          enum: &a45
             - OK
             - KO
           type: string
@@ -8684,7 +8730,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: &a45
+          enum: &a46
             - 48
             - 24
             - 2
@@ -8704,7 +8750,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: &a46
+          enum: &a47
             - S3
             - LOCAL
             - EXTERNE
@@ -8715,7 +8761,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: &a47
+          enum: &a48
             - OK
             - KO
           type: string
@@ -8725,7 +8771,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: &a48
+          enum: &a49
             - homologuee
             - en_cours
             - dispensee
@@ -9020,7 +9066,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: *a40
+          example: *a41
           description: population associated with the application
           type: array
           items:
@@ -9029,7 +9075,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: *a41
+          example: *a42
           description: Purposes of the application
           type: array
           items:
@@ -9040,7 +9086,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: *a42
+          example: *a43
           type: array
           items:
             type: string
@@ -10214,7 +10260,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: *a43
+          enum: *a44
           example: 4
           description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
         dima_is_hno:
@@ -10238,7 +10284,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a44
+          enum: *a45
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -10247,7 +10293,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: *a45
+          enum: *a46
           example: 24
           description: PDMA duration in hours (one of 48, 24, 2, 0)
         pdma_data_types:
@@ -10263,7 +10309,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a46
+          enum: *a47
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -10271,7 +10317,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a47
+          enum: *a48
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -10279,7 +10325,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a48
+          enum: *a49
           type: string
           description: Homologation status
         homologation_date_end:
@@ -10315,7 +10361,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: *a43
+          enum: *a44
           example: 4
           description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
         dima_is_hno:
@@ -10339,7 +10385,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a44
+          enum: *a45
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -10348,7 +10394,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: *a45
+          enum: *a46
           example: 24
           description: PDMA duration in hours (one of 48, 24, 2, 0)
         pdma_data_types:
@@ -10364,7 +10410,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a46
+          enum: *a47
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -10372,7 +10418,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a47
+          enum: *a48
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -10380,7 +10426,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a48
+          enum: *a49
           type: string
           description: Homologation status
         homologation_date_end:
@@ -10588,6 +10634,57 @@ components:
           nullable: true
           description: Indicates whether the hosting is active, passif or not specified
             (null).
+    GristSyncReportDto:
+      type: object
+      properties:
+        tableCreated:
+          type: boolean
+          description: La table RefApp a été créée par cet appel
+        rowsWritten:
+          type: number
+          description: Nombre d'applications écrites (créées ou mises à jour)
+        rulesAdded:
+          type: number
+          description: Nombre d'Access Rules ajoutées (0 si déjà présentes)
+      required:
+        - tableCreated
+        - rowsWritten
+        - rulesAdded
+    GristRecordDto:
+      type: object
+      properties:
+        rowId:
+          type: number
+          description: Identifiant de la ligne dans Grist
+        refapp_id:
+          type: string
+          description: Identifiant de l'application dans RefApp
+        nom:
+          type: string
+          description: Nom de l'application
+        statut:
+          type: string
+          description: Statut courant de l'application
+        metadata_1:
+          type: string
+          nullable: true
+          description: Saisie libre dans Grist
+        metadata_2:
+          type: string
+          nullable: true
+          description: Saisie libre dans Grist
+        metadata_3:
+          type: string
+          nullable: true
+          description: Saisie libre dans Grist
+      required:
+        - rowId
+        - refapp_id
+        - nom
+        - statut
+        - metadata_1
+        - metadata_2
+        - metadata_3
     CreateHostingOptionDto:
       type: object
       properties:
@@ -11190,7 +11287,7 @@ components:
             - $ref: "#/components/schemas/TechnologyEolSource"
         eolStatus:
           nullable: true
-          enum: &a49
+          enum: &a50
             - eol
             - eol-soon
             - eoas-passed
@@ -11346,7 +11443,7 @@ components:
             - $ref: "#/components/schemas/TechnologyEolSource"
         status:
           nullable: true
-          enum: *a49
+          enum: *a50
           type: string
           description: Statut calculé côté serveur, pour que la fiche et la vue transverse
             classent une technologie de la même façon. null si la technologie ne
@@ -11390,7 +11487,7 @@ components:
             $ref: "#/components/schemas/EndOfLifeTechnologyDto"
         worstStatus:
           nullable: true
-          enum: *a49
+          enum: *a50
           type: string
           description: Statut le plus grave parmi les technologies retenues — sert au tri
             et à la pastille de synthèse. null si aucune des technologies
@@ -11795,7 +11892,7 @@ components:
           description: Version du backend
           example: v1.86.0
         etat:
-          enum: &a50
+          enum: &a51
             - OK
             - KO
           type: string
@@ -11817,7 +11914,7 @@ components:
           description: Version du backend
           example: v1.86.0
         etat:
-          enum: *a50
+          enum: *a51
           type: string
           description: État de la connexion à la base de données
           example: OK

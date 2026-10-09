@@ -51,8 +51,27 @@ async function exportToExcel() {
   }
 }
 
+const isSyncingGrist = ref(false);
+
+async function syncWithGrist() {
+  isSyncingGrist.value = true;
+  try {
+    const { rowsWritten } = await applicationStore.syncWithGrist();
+    toaster.addSuccessMessage(`${rowsWritten} applications synchronisées avec Grist.`);
+  } catch (error) {
+    console.error("Erreur lors de la synchronisation avec Grist", error);
+    toaster.addErrorMessage("Une erreur est survenue lors de la synchronisation avec Grist. Veuillez réessayer.");
+  } finally {
+    isSyncingGrist.value = false;
+  }
+}
+
 const hasExportPermissions = computed(() => {
   return userStore.hasPermissions([Permission.DATA_EXPORT]);
+});
+
+const hasGristSyncPermissions = computed(() => {
+  return userStore.hasPermissions([Permission.GRIST_SYNC]);
 });
 
 const hasCreateApplicationsPermissions = computed(() => {
@@ -131,6 +150,32 @@ const hasQualityCampaignPermissions = computed(() => {
         @click="exportToExcel"
         aria-label="Exporter en Excel les applications correspondant aux filtres actuels"
         title="Exporter en excel les applications correspondant aux filtres actuels"
+      ></DsfrButton>
+
+      <DsfrButton
+        v-if="hasGristSyncPermissions"
+        label="Synchroniser avec Grist"
+        icon="ri-refresh-line"
+        secondary
+        :disabled="isSyncingGrist"
+        data-testid="grist-sync-btn"
+        class="action-btn icon-left hide-on-mobile"
+        @click="syncWithGrist"
+        aria-label="Synchroniser toutes les applications avec Grist"
+        title="Synchroniser toutes les applications avec Grist"
+      ></DsfrButton>
+
+      <DsfrButton
+        v-if="hasGristSyncPermissions"
+        label="Synchroniser avec Grist"
+        icon="ri-refresh-line"
+        secondary
+        :disabled="isSyncingGrist"
+        data-testid="grist-sync-btn-mobile"
+        class="action-btn icon-left show-on-mobile"
+        @click="syncWithGrist"
+        aria-label="Synchroniser toutes les applications avec Grist"
+        title="Synchroniser toutes les applications avec Grist"
       ></DsfrButton>
 
       <DsfrButton

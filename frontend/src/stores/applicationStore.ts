@@ -1,5 +1,5 @@
 import { isApiSuccess } from "@/api/api-result";
-import type { ContactAdminDto, PatchApplicationDto } from "@/client/types.gen";
+import type { ContactAdminDto, GristSyncReportDto, PatchApplicationDto } from "@/client/types.gen";
 import type { Filters } from "@/composables/use-application-search";
 import type { APP_PERMISSIONS, ApplicationWithPerms } from "@/models/Application";
 import { computed, ref } from "vue";
@@ -122,6 +122,15 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     downloadBlob(blob, `applications_export_${date}.xlsx`);
   };
 
+  // Écrit toutes les applications dans le document Grist configuré côté backend.
+  const syncWithGrist = async (): Promise<GristSyncReportDto> => {
+    const response = await api.gristControllerSetup();
+    if (!isApiSuccess(response) || !response.data) {
+      throw new Error("Erreur lors de la synchronisation avec Grist.");
+    }
+    return response.data;
+  };
+
   const downloadProductPowerpoint = async (applicationId: string): Promise<void> => {
     const response = await api.applicationControllerExportProductPowerpoint({
       path: { applicationId },
@@ -146,6 +155,7 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     patchApplicationsQuality,
     deleteApplication,
     downloadExcel,
+    syncWithGrist,
     downloadProductPowerpoint,
   };
 });
