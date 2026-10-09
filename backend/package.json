@@ -48,7 +48,7 @@
     "exceljs": "^4.4.0",
     "helmet": "^7.2.0",
     "html-to-text": "^10.0.1",
-    "jose": "^5.10.0",
+    "jose": "^6.2.12",
     "lodash": "4.18.1",
     "nestjs-pino": "^4.6.1",
     "nodemailer": "^10.0.13",
