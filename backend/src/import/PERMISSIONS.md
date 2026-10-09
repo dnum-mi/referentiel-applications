@@ -30,9 +30,8 @@ l'API correspondante (via `CheckPermissions.can(permission, requestor, applicati
 | **Conformités**  | création / mise à jour | `ComplianceWrite`   | applicative | sur l'application de rattachement       |
 
 > Note `priorityRestart` (Applications) : la protection fine du champ priorité de redémarrage
-> (`AppWritePriority`) reste assurée par `ApplicationService.update`. Le contrôle `AppWrite` effectué
-> en amont par le processeur renseigne `requestor.appPerms` pour l'application ciblée, ce dont
-> dépend cette protection.
+> (`AppWritePriority`) reste assurée par `ApplicationService.update`, qui résout lui-même les
+> permissions applicatives sur l'application ciblée.
 
 ## Où c'est implémenté
 

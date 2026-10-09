@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
 import { PrismaModule } from "../prisma/prisma.module";
 import { StatsService } from "./application/stats.service";
-import { GetIqAvgGroupedUseCase } from "./application/use-cases/get-iq-avg-grouped.use-case.ts";
+import { GetIqAvgGroupedUseCase } from "./application/use-cases/get-iq-avg-grouped.use-case";
 
 import { StatsCronService } from "./cron/stats.cron.service";
 import { StatsRepository } from "./infrastructure/stats.repository";

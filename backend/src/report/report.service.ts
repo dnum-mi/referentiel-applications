@@ -31,6 +31,7 @@ export class ReportsService {
     const hasPostPerm = await this.checkPermissions.can(
       [Permission.ReportPost],
       requestor,
+      applicationId,
     );
     if (applicationId) {
       if (!hasPostPerm) {

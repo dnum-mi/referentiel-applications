@@ -9,12 +9,13 @@ jest.mock("src/common/utils/quality.utils", () => ({
   calculateIQ: jest.fn().mockResolvedValue(75),
 }));
 
-import { Prisma } from "@prisma/client";
+import { Permission, Prisma } from "@prisma/client";
 import { ConflictException, NotFoundException } from "@nestjs/common";
 import { calculateIQ } from "src/common/utils/quality.utils";
 import { CheckPermissions } from "src/common/service/check-permissions.service";
 import { ContactAdminService } from "src/common/service/contact-admin.service";
 import { PrismaService } from "src/prisma/prisma.service";
+import { APP_PERMISSIONS } from "src/common/utils/types";
 import { Requestor } from "src/user/entities/user.entity";
 import {
   ApplicationService,
@@ -601,5 +602,87 @@ describe("describeBlockingDependency", () => {
       "custom_check",
     );
     expect(describeBlockingDependency(undefined)).toBe("dépendance inconnue");
+  });
+});
+
+describe("ApplicationService.update — protection des champs (B22)", () => {
+  const requestor = {
+    id: "user-1",
+    permissions: [],
+    additionalPermissions: [],
+  } as unknown as Requestor;
+
+  const setup = (appPermissions: APP_PERMISSIONS[]) => {
+    const prisma = {
+      application: {
+        findUnique: jest.fn().mockResolvedValue({ id: "app-1" }),
+        update: jest.fn().mockResolvedValue({ id: "app-1" }),
+      },
+      qualityCampaignTarget: { findMany: jest.fn().mockResolvedValue([]) },
+    };
+    const checkPermissions = new CheckPermissions({} as never, {} as never);
+    const resolveAppPermissions = jest
+      .spyOn(checkPermissions, "resolveAppPermissions")
+      .mockResolvedValue(appPermissions);
+    const service = new ApplicationService(
+      prisma as unknown as PrismaService,
+      {
+        findById: jest.fn().mockResolvedValue({ id: "app-1" }),
+      } as unknown as ApplicationRepository,
+      {} as never,
+      { createMetadata: jest.fn() } as never,
+      {} as never,
+      {} as never,
+      checkPermissions,
+      { scheduleRefresh: jest.fn() } as unknown as ApplicationSearchService,
+      {} as never,
+      {} as never,
+    );
+    return { service, prisma, resolveAppPermissions };
+  };
+
+  const updatedData = (prisma: ReturnType<typeof setup>["prisma"]) =>
+    prisma.application.update.mock.calls[0][0].data;
+
+  it("résout les permissions sur l'application ciblée, sans état préalable sur le requestor", async () => {
+    const { service, prisma, resolveAppPermissions } = setup([
+      Permission.AppWrite,
+      Permission.AppWritePriority,
+    ]);
+
+    await service.update({
+      applicationId: "app-1",
+      data: { label: "App", priorityRestart: "P1" } as never,
+      requestor,
+    });
+
+    expect(resolveAppPermissions).toHaveBeenCalledTimes(1);
+    expect(resolveAppPermissions).toHaveBeenCalledWith("app-1", requestor);
+    expect(updatedData(prisma)).toMatchObject({ priorityRestart: "P1" });
+    expect(requestor).not.toHaveProperty("appPerms");
+  });
+
+  it("sans AppWritePriority sur l'application : priorityRestart est ignoré", async () => {
+    const { service, prisma } = setup([Permission.AppWrite]);
+
+    await service.update({
+      applicationId: "app-1",
+      data: { label: "App", priorityRestart: "P1" } as never,
+      requestor,
+    });
+
+    expect(updatedData(prisma)).not.toHaveProperty("priorityRestart");
+  });
+
+  it("AppWritePriority seul : seule la priorité est écrite", async () => {
+    const { service, prisma } = setup([Permission.AppWritePriority]);
+
+    await service.update({
+      applicationId: "app-1",
+      data: { label: "App", priorityRestart: "P1" } as never,
+      requestor,
+    });
+
+    expect(updatedData(prisma)).not.toHaveProperty("label");
   });
 });

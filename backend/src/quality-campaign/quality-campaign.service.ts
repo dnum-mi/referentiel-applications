@@ -64,7 +64,6 @@ const SYSTEM_REQUESTOR: Requestor = {
   isBlocked: false,
   additionalPermissions: [],
   permissions: roleToPermissions(Roles.ADMIN),
-  appPerms: [],
 };
 
 function average(values: number[]): number | null {

@@ -29,24 +29,40 @@ export class CheckPermissions {
     private readonly queryBuilderGroupActor: QueryBuilderGroupActor,
   ) {}
 
+  /**
+   * Vrai si l'utilisateur détient au moins une des permissions demandées. Sans `applicationId`,
+   * seules les permissions globales comptent. Fonction pure : `user` n'est jamais modifié (B22).
+   */
   async can(
     permissions: Permission[],
     user: Requestor,
     applicationId?: string,
   ): Promise<boolean> {
     if (!permissions?.length) return true;
-    if (applicationId) {
-      user.appPerms = await this.resolveAppPermissions(applicationId, user);
-    }
-    const userPermissions = new Set([
+    const userPermissions = await this.effectivePermissions(
+      user,
+      applicationId,
+    );
+    return permissions.some((permission) => userPermissions.has(permission));
+  }
+
+  /**
+   * Permissions globales (rôle + additionnelles), plus les permissions applicatives sur
+   * `applicationId` s'il est fourni. Permet plusieurs contrôles sans résoudre la couche 3
+   * à chaque fois.
+   */
+  async effectivePermissions(
+    user: Requestor,
+    applicationId?: string,
+  ): Promise<Set<Permission>> {
+    const appPermissions = applicationId
+      ? await this.resolveAppPermissions(applicationId, user)
+      : [];
+    return new Set<Permission>([
       ...user.permissions,
       ...user.additionalPermissions,
-      ...(user.appPerms ?? []),
+      ...appPermissions,
     ]);
-    const hasPermissions = Array.from(userPermissions).some((userPermission) =>
-      permissions.includes(userPermission),
-    );
-    return hasPermissions;
   }
 
   /**
