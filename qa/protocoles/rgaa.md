@@ -15,6 +15,17 @@
 Ces contrôles de comportement ne constituent pas une validation intégrale des critères RGAA.
 La restitution effective avec les lecteurs d'écran de l'environnement de test reste à qualifier.
 
+Des contrôles complémentaires versionnés couvrent les modifications de données personnelles
+(11.12) : les tests des formulaires acteurs/utilisateurs, campagnes et filtres sauvegardés
+vérifient le refus sans écriture, la confirmation des valeurs courantes et la reprise après erreur.
+Les créations ordinaires restent distinctes des modifications et suppressions.
+
+`frontend/tests/authLevelAccess.spec.ts` vérifie aussi la conservation des saisies et du focus
+pendant le renouvellement valide de la même session OIDC, puis l'abandon du contexte après
+changement d'identité effective ou refus d'accès. Les tests du store couvrent les sessions
+différentes, les jetons expirés, les échecs réseau et les réponses périmées. Ces contrôles ne
+modifient pas la durée maximale de session du fournisseur d'identité.
+
 ---
 
 ### RGA-01 — Tab sans sélection — pas de piège clavier (textarea) ✅

@@ -3,6 +3,7 @@ import { ref } from "vue";
 import type { QualityCampaignDto, UpdateQualityCampaignStatusDto } from "@/client/types.gen";
 import { useQualityCampaignStore } from "@/stores/qualityCampaignStore";
 import SponsorEmailsInput from "@/components/form/SponsorEmailsInput.vue";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps<{
   campaign: QualityCampaignDto;
@@ -17,6 +18,7 @@ const store = useQualityCampaignStore();
 const isEditModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
 const isSaving = ref(false);
+useSubmissionFocus(isSaving);
 const isDeleting = ref(false);
 const isSendingReport = ref(false);
 const isChangingStatus = ref(false);
@@ -64,7 +66,8 @@ function closeDeleteModal() {
   isDeleteModalOpen.value = false;
 }
 
-async function saveCampaign() {
+async function saveCampaign(event: MouseEvent) {
+  if (isSaving.value) return;
   if (!editingName.value.trim()) {
     errorMessage.value = "Le nom de la campagne est requis.";
     return;
@@ -78,24 +81,39 @@ async function saveCampaign() {
     return;
   }
 
+  const sponsorEmails = editingSponsorEmails.value.map((email) => email.trim()).filter(Boolean);
+  const currentSponsorEmails = props.campaign.sponsorEmails.map((email) => email.trim()).filter(Boolean);
+  const trigger = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
+  if (
+    JSON.stringify(sponsorEmails) !== JSON.stringify(currentSponsorEmails) &&
+    !globalThis.confirm(
+      `Confirmer la modification des adresses email des sponsors de la campagne « ${editingName.value.trim()} » ?\nNouvelles adresses : ${sponsorEmails.join(", ") || "aucun sponsor"}.`,
+    )
+  ) {
+    trigger?.focus();
+    return;
+  }
+
   isSaving.value = true;
   errorMessage.value = "";
+  try {
+    const updated = await store.updateCampaign(props.campaign.id, {
+      name: editingName.value.trim(),
+      sponsorEmails,
+      message: editingMessage.value.trim() || null,
+      startDate: new Date(editingStartDate.value),
+      endDate: editingEndDate.value ? new Date(editingEndDate.value) : null,
+    });
 
-  const updated = await store.updateCampaign(props.campaign.id, {
-    name: editingName.value.trim(),
-    sponsorEmails: editingSponsorEmails.value.map((email) => email.trim()).filter(Boolean),
-    message: editingMessage.value.trim() || null,
-    startDate: new Date(editingStartDate.value),
-    endDate: editingEndDate.value ? new Date(editingEndDate.value) : null,
-  });
-
-  if (updated) {
-    closeEditModal();
-    emit("fetchCampaigns");
-  } else {
-    errorMessage.value = "Erreur lors de la sauvegarde de la campagne.";
+    if (updated) {
+      closeEditModal();
+      emit("fetchCampaigns");
+    } else {
+      errorMessage.value = "Erreur lors de la sauvegarde de la campagne.";
+    }
+  } finally {
+    isSaving.value = false;
   }
-  isSaving.value = false;
 }
 
 async function deleteCampaign() {

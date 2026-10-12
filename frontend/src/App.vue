@@ -292,7 +292,7 @@ const { needRefresh, updateServiceWorker } = useAppUpdate();
     <WeakAuthBanner v-if="userStore.isAuthDowngraded" />
     <RouterView
       v-else-if="userStore.hasApplicationAccess || (userStore.sessionInitialized && !userStore.authenticated && !route.meta.requiresAuth)"
-      :key="String(route.params.id ?? '')"
+      :key="`${userStore.user?.id ?? 'public'}:${String(route.params.id ?? '')}`"
     />
     <div v-else class="fr-container" data-testid="access-verification">
       <p role="status">Vérification de votre accès au référentiel…</p>

@@ -20,8 +20,17 @@ import type { APP_PERMISSIONS } from "@/models/Application";
 import { USER_MANAGER } from "@/services/authentication";
 import { clearImpersonationState, getImpersonationState, setImpersonationState, type ImpersonationState } from "@/services/impersonation";
 import { defineStore } from "pinia";
+import type { User } from "oidc-client-ts";
 import { computed, ref } from "vue";
 import { useToasterStore } from "./toasterStore";
+
+function getOidcSessionKey(oidcUser: User | null) {
+  if (!oidcUser || oidcUser.expired !== false) return undefined;
+  const { iss, sub, sid } = oidcUser.profile;
+  // Sans identifiant de session, une nouvelle connexion ne peut pas être distinguée
+  // d'un renouvellement : on conserve alors l'invalidation complète.
+  return iss && sub && sid ? JSON.stringify([iss, sub, sid]) : undefined;
+}
 
 export const useUserStore = defineStore("userStore", () => {
   const user = ref<UserWithPermissions>();
@@ -33,9 +42,14 @@ export const useUserStore = defineStore("userStore", () => {
   let sessionGeneration = 0;
   let fetchSequence = 0;
   let preferencesSequence = 0;
+  // Un refus /me retire les droits mais garde l'identité OIDC connue pour une reprise.
+  // Cette clé ne permet de conserver la vue qu'après une validation backend réussie.
+  let oidcSessionKey: string | undefined;
+  let requiresSessionRevalidation = false;
 
   function invalidateSession() {
     sessionGeneration += 1;
+    requiresSessionRevalidation = false;
     user.value = undefined;
     deniedAuthLevel.value = undefined;
   }
@@ -66,16 +80,26 @@ export const useUserStore = defineStore("userStore", () => {
   }
 
   // Écoute les événements OIDC pour maintenir l'état d'authentification à jour
-  USER_MANAGER.events.addUserLoaded(() => {
-    invalidateSession();
+  USER_MANAGER.events.addUserLoaded((oidcUser) => {
+    const nextSessionKey = getOidcSessionKey(oidcUser);
+    if (hasApplicationAccess.value && nextSessionKey && nextSessionKey === oidcSessionKey) {
+      // Un renouvellement valide de la même session ne doit pas démonter la vue
+      // et perdre la saisie. Le backend revalide toujours les droits avec le nouveau jeton.
+      sessionGeneration += 1;
+    } else {
+      invalidateSession();
+    }
+    oidcSessionKey = nextSessionKey;
+    requiresSessionRevalidation = true;
     authenticated.value = true;
     sessionInitialized.value = true;
-    fetchUser();
+    void fetchUser();
   });
   USER_MANAGER.events.addUserUnloaded(() => {
     // signinStrong retire le jeton avant la redirection. Garder l'écran de refus
     // permet de réessayer si le fournisseur est injoignable à cette étape.
     const denied = isAuthDowngraded.value ? authLevel.value : undefined;
+    oidcSessionKey = undefined;
     invalidateSession();
     deniedAuthLevel.value = denied;
     authenticated.value = false;
@@ -85,6 +109,7 @@ export const useUserStore = defineStore("userStore", () => {
   // Initialise l'état d'authentification au démarrage
   USER_MANAGER.getUser().then((oidcUser) => {
     if (sessionGeneration !== 0) return;
+    oidcSessionKey = getOidcSessionKey(oidcUser);
     authenticated.value = !!oidcUser;
     sessionInitialized.value = true;
     if (oidcUser) {
@@ -102,9 +127,18 @@ export const useUserStore = defineStore("userStore", () => {
   async function fetchUser() {
     const generation = sessionGeneration;
     const sequence = ++fetchSequence;
-    const response = await client.userControllerFindMe();
+    let response;
+    try {
+      response = await client.userControllerFindMe();
+    } catch (error) {
+      if (generation !== sessionGeneration || sequence !== fetchSequence) return;
+      if (!requiresSessionRevalidation) throw error;
+      invalidateSession();
+      return;
+    }
     if (generation !== sessionGeneration || sequence !== fetchSequence) return;
     if (response.data && isApiSuccess(response)) {
+      requiresSessionRevalidation = false;
       deniedAuthLevel.value = undefined;
       user.value = response.data;
       settleReauthAttempt();
@@ -123,6 +157,7 @@ export const useUserStore = defineStore("userStore", () => {
       impersonation.value = null;
       globalThis.location.assign("/");
     }
+    if (requiresSessionRevalidation) invalidateSession();
   }
 
   // Après un rechargement forcé par un 403 `stepDown` (impersonation refusée), explique ce qui

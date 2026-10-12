@@ -127,12 +127,22 @@ const isFormValid = computed(() => {
 const isGroup = computed(() => !!form.value.isGroup);
 
 function handleSubmit() {
+  if (props.isSubmitting || !isFormValid.value) return;
   const formData = {
     ...form.value,
     email: form.value.email?.trim() || "",
     firstname: isGroup.value ? null : (form.value.firstname?.trim() ?? undefined),
     lastname: isGroup.value ? null : (form.value.lastname?.trim() ?? undefined),
   };
+
+  if (
+    props.initialData &&
+    !window.confirm(
+      `Confirmer la modification des coordonnées de cet acteur ?\n\nNom : ${[formData.firstname, formData.lastname].filter(Boolean).join(" ") || "Non renseigné"}\nEmail : ${formData.email || "Non renseigné"}\n\nLes coordonnées et le rattachement affichés seront enregistrés.`,
+    )
+  ) {
+    return;
+  }
 
   emit("submit", formData);
 }

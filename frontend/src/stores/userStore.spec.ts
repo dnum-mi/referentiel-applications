@@ -1,4 +1,6 @@
 import { createPinia, setActivePinia } from "pinia";
+import { User } from "oidc-client-ts";
+import { flushPromises } from "@vue/test-utils";
 import { Permission, Roles, type UserWithPermissions } from "@/client/types.gen";
 import { reauthLoopState, setReauthLoop } from "@/composables/use-auth-level";
 import { useToasterStore } from "./toasterStore";
@@ -10,7 +12,7 @@ const { findMeMock, updateMeMock, subscribeMock, unsubscribeMock, getUserMock, o
   subscribeMock: vi.fn(),
   unsubscribeMock: vi.fn(),
   getUserMock: vi.fn().mockResolvedValue(null),
-  oidcEvents: { loaded: () => {}, unloaded: () => {} },
+  oidcEvents: { loaded: (_user: User) => {}, unloaded: () => {} },
 }));
 vi.mock("@/api/index", () => ({
   default: {
@@ -23,7 +25,7 @@ vi.mock("@/api/index", () => ({
 vi.mock("@/services/authentication", () => ({
   USER_MANAGER: {
     events: {
-      addUserLoaded: (callback: () => void) => {
+      addUserLoaded: (callback: (user: User) => void) => {
         oidcEvents.loaded = callback;
       },
       addUserUnloaded: (callback: () => void) => {
@@ -42,6 +44,15 @@ const userWithScope = (path: string | null): UserWithPermissions =>
     additionalPermissions: [],
     scopeOrganization: path ? { id: "scope-org", path } : null,
   }) as unknown as UserWithPermissions;
+
+function oidcSession(profile: Partial<User["profile"]> = {}, expiresAt = Math.floor(Date.now() / 1000) + 300) {
+  return new User({
+    access_token: "test-token",
+    token_type: "Bearer",
+    expires_at: expiresAt,
+    profile: { iss: "https://sso.example.test", sub: "subject-1", sid: "session-1", aud: "refapp", iat: 1, exp: expiresAt, ...profile },
+  });
+}
 
 describe("userStore.canListTechnologies", () => {
   beforeEach(() => setActivePinia(createPinia()));
@@ -227,6 +238,143 @@ describe("userStore — niveau d'authentification (#1985)", () => {
     error: { strongAuthRequired: true, authLevel: deniedLevel },
     response: { ok: false, status: 403 },
   };
+
+  async function startVerifiedSession() {
+    getUserMock.mockResolvedValueOnce(oidcSession());
+    findMeMock.mockResolvedValue(okResponse(me({ level: "strong", downgraded: false, reason: "strong-method" }, "ADMIN")));
+    const store = useUserStore();
+    await flushPromises();
+    expect(store.hasApplicationAccess).toBe(true);
+    return store;
+  }
+
+  it("conserve la vue pendant un renouvellement de la même session puis applique les droits revalidés", async () => {
+    const store = await startVerifiedSession();
+    const original = store.user;
+    const pending = deferred<ReturnType<typeof okResponse>>();
+    findMeMock.mockReturnValueOnce(pending.promise);
+    oidcEvents.loaded(oidcSession());
+    expect(store.user).toBe(original);
+    expect(store.hasApplicationAccess).toBe(true);
+    pending.resolve(okResponse(me({ level: "strong", downgraded: false, reason: "strong-method" }, "READER")));
+    await flushPromises();
+    expect(store.user?.role).toBe("READER");
+    expect(store.hasApplicationAccess).toBe(true);
+  });
+
+  it.each([
+    ["fournisseur", { iss: "https://other.example.test" }],
+    ["identité", { sub: "subject-2" }],
+    ["session", { sid: "session-2" }],
+    ["session absente", { sid: undefined }],
+  ] as const)("retire immédiatement le contexte quand le renouvellement change %s", async (_name, profile) => {
+    const store = await startVerifiedSession();
+    const pending = deferred<ReturnType<typeof okResponse>>();
+    findMeMock.mockReturnValueOnce(pending.promise);
+    oidcEvents.loaded(oidcSession(profile));
+    expect(store.user).toBeUndefined();
+    expect(store.hasApplicationAccess).toBe(false);
+    pending.resolve(okResponse(me(undefined)));
+    await flushPromises();
+  });
+
+  it("ne conserve pas le contexte avec un jeton expiré", async () => {
+    const store = await startVerifiedSession();
+    findMeMock.mockResolvedValueOnce(deniedResponse);
+    oidcEvents.loaded(oidcSession({}, 1));
+    expect(store.user).toBeUndefined();
+    expect(store.hasApplicationAccess).toBe(false);
+    await flushPromises();
+    expect(store.isAuthDowngraded).toBe(true);
+  });
+
+  it.each(["refus fort", "refus", "indisponibilité", "réseau"] as const)(
+    "révoque le contexte conservé si la revalidation échoue : %s",
+    async (failure) => {
+      const store = await startVerifiedSession();
+      if (failure === "réseau") findMeMock.mockRejectedValueOnce(new Error("Indisponible"));
+      else if (failure === "refus fort") findMeMock.mockResolvedValueOnce(deniedResponse);
+      else findMeMock.mockResolvedValueOnce({ response: { ok: false, status: failure === "refus" ? 403 : 500 } });
+      oidcEvents.loaded(oidcSession());
+      await flushPromises();
+      expect(store.user).toBeUndefined();
+      expect(store.hasApplicationAccess).toBe(false);
+      expect(store.isAuthDowngraded).toBe(failure === "refus fort");
+    },
+  );
+
+  it("ignore le refus tardif d'un renouvellement après une revalidation plus récente", async () => {
+    const store = await startVerifiedSession();
+    const stale = deferred<typeof deniedResponse>();
+    findMeMock.mockReturnValueOnce(stale.promise);
+    oidcEvents.loaded(oidcSession());
+    oidcEvents.loaded(oidcSession());
+    await flushPromises();
+    stale.resolve(deniedResponse);
+    await flushPromises();
+    expect(store.hasApplicationAccess).toBe(true);
+    expect(store.isAuthDowngraded).toBe(false);
+  });
+
+  it.each(["refus", "indisponibilité", "réseau"] as const)(
+    "révoque aussi le contexte si un fetch ordinaire prend le relais du renouvellement : %s",
+    async (failure) => {
+      const store = await startVerifiedSession();
+      const pending = deferred<ReturnType<typeof okResponse>>();
+      findMeMock.mockReturnValueOnce(pending.promise);
+      oidcEvents.loaded(oidcSession());
+      if (failure === "réseau") findMeMock.mockRejectedValueOnce(new Error("Indisponible"));
+      else findMeMock.mockResolvedValueOnce({ response: { ok: false, status: failure === "refus" ? 403 : 500 } });
+      await store.fetchUser();
+      expect(store.user).toBeUndefined();
+      expect(store.hasApplicationAccess).toBe(false);
+      pending.resolve(okResponse(me(undefined)));
+      await flushPromises();
+      expect(store.hasApplicationAccess).toBe(false);
+    },
+  );
+
+  it("accepte la revalidation ordinaire plus récente et ignore le refus tardif du renouvellement", async () => {
+    const store = await startVerifiedSession();
+    const stale = deferred<typeof deniedResponse>();
+    findMeMock.mockReturnValueOnce(stale.promise);
+    oidcEvents.loaded(oidcSession());
+    await store.fetchUser();
+    stale.resolve(deniedResponse);
+    await flushPromises();
+    expect(store.hasApplicationAccess).toBe(true);
+    expect(store.isAuthDowngraded).toBe(false);
+  });
+
+  it("conserve à nouveau le contexte après une revalidation en échec suivie d'une reprise réussie", async () => {
+    const store = await startVerifiedSession();
+    findMeMock.mockResolvedValueOnce({ response: { ok: false, status: 500 } });
+    oidcEvents.loaded(oidcSession());
+    await flushPromises();
+    expect(store.hasApplicationAccess).toBe(false);
+    await store.fetchUser();
+    expect(store.hasApplicationAccess).toBe(true);
+    const original = store.user;
+    const pending = deferred<ReturnType<typeof okResponse>>();
+    findMeMock.mockReturnValueOnce(pending.promise);
+    oidcEvents.loaded(oidcSession());
+    expect(store.user).toBe(original);
+    expect(store.hasApplicationAccess).toBe(true);
+    pending.resolve(okResponse(me(undefined)));
+    await flushPromises();
+  });
+
+  it("une déconnexion empêche le renouvellement en vol de rétablir le contexte", async () => {
+    const store = await startVerifiedSession();
+    const pending = deferred<ReturnType<typeof okResponse>>();
+    findMeMock.mockReturnValueOnce(pending.promise);
+    oidcEvents.loaded(oidcSession());
+    oidcEvents.unloaded();
+    pending.resolve(okResponse(me(undefined)));
+    await flushPromises();
+    expect(store.user).toBeUndefined();
+    expect(store.hasApplicationAccess).toBe(false);
+  });
 
   it("remplace le profil par le refus global et purge l'impersonation sans rechargement", async () => {
     findMeMock.mockResolvedValue(deniedResponse);
@@ -420,7 +568,7 @@ describe("userStore — niveau d'authentification (#1985)", () => {
     getUserMock.mockReturnValueOnce(startup.promise);
     findMeMock.mockResolvedValue(okResponse(me({ level: "strong", downgraded: false, reason: "strong-method" }, "ADMIN")));
     const store = useUserStore();
-    oidcEvents[event]();
+    oidcEvents[event](oidcSession());
     await Promise.resolve();
     startup.resolve(event === "loaded" ? null : {});
     await Promise.resolve();

@@ -15,6 +15,7 @@ import { RolesOptions, RolesScopes } from "@/utils/roles-utils";
 import type { DsfrCheckboxProps } from "@gouvminint/vue-dsfr";
 import { computed, nextTick, ref } from "vue";
 import OrganizationSearchSelect from "../common/OrganizationSearchSelect.vue";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps<{ user: Required<UserEntity> }>();
 
@@ -86,6 +87,8 @@ async function impersonate() {
 
 const isEditModalOpen = ref(false);
 const isSaving = ref(false);
+useSubmissionFocus(isSaving);
+const editError = ref("");
 const isSyncingFromMaia = ref(false);
 // Snapshot de l'utilisateur au moment de l'ouverture : si l'instance est réutilisée par la
 // table avec un AUTRE utilisateur pendant que le modal est ouvert (refetch qui réordonne),
@@ -118,6 +121,7 @@ let maiaSuggestionRequest = 0;
 async function openEditModal() {
   if (!canEditUser.value) return;
 
+  editError.value = "";
   editingUser.value = props.user;
   editingUserRole.value = props.user.role;
   editingOrganizationId.value = props.user.organizationId || "";
@@ -153,6 +157,7 @@ async function fetchMaiaSuggestion() {
 }
 
 function closeEditModal() {
+  editError.value = "";
   maiaSuggestionRequest++;
   isEditModalOpen.value = false;
   editingUser.value = null;
@@ -176,7 +181,15 @@ function focusOpener() {
 
 async function saveUser() {
   const target = editingUser.value;
-  if (!target) return;
+  if (!target || isSaving.value) return;
+  if (
+    !window.confirm(
+      `Confirmer la modification de l'utilisateur « ${target.email} » ?\n\nLes organisations, le niveau de privilège et les capacités affichés seront enregistrés.`,
+    )
+  ) {
+    return;
+  }
+  editError.value = "";
   isSaving.value = true;
   try {
     const response = await api.userControllerUpdate({
@@ -204,11 +217,11 @@ async function saveUser() {
     } else {
       const errorMessage =
         (response.error as { message: string })?.message ?? "Une erreur est survenue lors de la mise à jour de l'utilisateur";
-      toaster.addErrorMessage(errorMessage);
+      editError.value = errorMessage;
       console.error(response.error);
     }
   } catch (err) {
-    toaster.addErrorMessage("Une erreur est survenue lors de la mise à jour de l'utilisateur");
+    editError.value = "Une erreur est survenue lors de la mise à jour de l'utilisateur";
     console.error(err);
   } finally {
     isSaving.value = false;
@@ -216,6 +229,14 @@ async function saveUser() {
 }
 
 async function syncFromMaia() {
+  if (isSyncingFromMaia.value) return;
+  if (
+    !window.confirm(
+      `Confirmer la synchronisation de l'organisation de l'utilisateur « ${props.user.email} » depuis MAIA ?\n\nSon organisation actuelle sera remplacée par celle renvoyée par MAIA.`,
+    )
+  ) {
+    return;
+  }
   isSyncingFromMaia.value = true;
   try {
     const response = await api.userControllerSyncOrganizationFromMaia({ path: { id: props.user.id } });
@@ -298,7 +319,8 @@ const isScopeDisabled = computed(() => {
         :label="isSyncingFromMaia ? 'MAIA...' : 'MAIA'"
         size="sm"
         tertiary
-        :disabled="isSyncingFromMaia"
+        :aria-disabled="isSyncingFromMaia"
+        :aria-busy="isSyncingFromMaia"
         data-testid="admin-user-sync-maia-btn"
         title="Synchroniser l'organisation depuis MAIA"
         aria-label="Synchroniser l'organisation depuis MAIA"
@@ -391,6 +413,9 @@ const isScopeDisabled = computed(() => {
 
     <DsfrModal :opened="isEditModalOpen" title="Modifier l'utilisateur" data-testid="admin-edit-user-modal" @close="closeEditModal">
       <p><strong>Utilisateur :</strong> {{ editingUser?.email ?? user.email }}</p>
+      <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="user-edit-error">
+        <p v-if="editError" class="fr-error-text">{{ editError }}</p>
+      </div>
 
       <!-- RGAA-086 (11.5) : regroupement des champs organisation de même nature. -->
       <fieldset class="fr-fieldset">

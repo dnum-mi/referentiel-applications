@@ -3,7 +3,7 @@ import { flushPromises } from "@vue/test-utils";
 import { Permission, Roles, type MaiaOrganizationSuggestionDto, type OrganizationDto, type UserEntity } from "@/client/types.gen";
 import UserActions from "./UserActions.vue";
 
-const { currentUserMock, hasPermissionsMock, syncOrganizationMock, fetchUserMock } = vi.hoisted(() => ({
+const { currentUserMock, hasPermissionsMock, syncOrganizationMock, syncDirectMock, fetchUserMock } = vi.hoisted(() => ({
   currentUserMock: {
     user: {
       id: "current-user",
@@ -12,6 +12,7 @@ const { currentUserMock, hasPermissionsMock, syncOrganizationMock, fetchUserMock
   },
   hasPermissionsMock: vi.fn(),
   syncOrganizationMock: vi.fn(),
+  syncDirectMock: vi.fn(),
   fetchUserMock: vi.fn(),
 }));
 
@@ -24,7 +25,7 @@ const { blockMock, unblockMock, updateUserMock } = vi.hoisted(() => ({
 vi.mock("@/api/index", () => ({
   default: {
     userControllerSyncOrganizationFromMaiaByEmail: (...args: unknown[]) => syncOrganizationMock(...args),
-    userControllerSyncOrganizationFromMaia: vi.fn(),
+    userControllerSyncOrganizationFromMaia: syncDirectMock,
     userControllerUpdate: (...args: unknown[]) => updateUserMock(...args),
     userControllerBlock: (...args: unknown[]) => blockMock(...args),
     userControllerUnblock: (...args: unknown[]) => unblockMock(...args),
@@ -139,8 +140,10 @@ const global = {
 
 describe("UserActions", () => {
   beforeEach(() => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
     hasPermissionsMock.mockReset();
     syncOrganizationMock.mockReset();
+    syncDirectMock.mockReset();
     updateUserMock.mockReset();
     fetchUserMock.mockReset();
     currentUserMock.user.scopeOrganization = null;
@@ -151,7 +154,58 @@ describe("UserActions", () => {
     });
   });
 
-  afterEach(cleanup);
+  afterEach(() => {
+    cleanup();
+    vi.restoreAllMocks();
+  });
+
+  it("demande confirmation après la saisie et garde l'édition si l'enregistrement confirmé est refusé", async () => {
+    hasPermissionsMock.mockReturnValue(true);
+    vi.mocked(window.confirm).mockReturnValueOnce(false).mockReturnValueOnce(true);
+    updateUserMock.mockResolvedValue({ response: { ok: false }, error: { message: "Modification refusée" } });
+    render(UserActions, {
+      props: { user: targetUser },
+      global: { ...global, stubs: { ...global.stubs, DsfrRadioButtonSet: false } },
+    });
+    await fireEvent.click(screen.getByTestId("admin-user-edit-btn"));
+    await fireEvent.click(screen.getByRole("radio", { name: /Écriture totale/ }));
+    await fireEvent.click(screen.getByTestId("admin-save-perms-btn"));
+    expect(updateUserMock).not.toHaveBeenCalled();
+    expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining(targetUser.email));
+    expect(screen.getByRole("radio", { name: /Écriture totale/ })).toBeChecked();
+
+    await fireEvent.click(screen.getByTestId("admin-save-perms-btn"));
+    await waitFor(() => expect(screen.getByTestId("user-edit-error")).toHaveTextContent("Modification refusée"));
+    expect(updateUserMock).toHaveBeenCalledOnce();
+    expect(updateUserMock).toHaveBeenCalledWith({
+      path: { id: targetUser.id },
+      body: expect.objectContaining({ role: Roles.CONTRIBUTOR }),
+    });
+    expect(screen.getByTestId("admin-edit-user-modal")).toContainElement(screen.getByTestId("user-edit-error"));
+    expect(screen.getByRole("radio", { name: /Écriture totale/ })).toBeChecked();
+  });
+
+  it("confirme la synchronisation MAIA directe et empêche un second envoi pendant l'attente", async () => {
+    hasPermissionsMock.mockReturnValue(true);
+    vi.mocked(window.confirm).mockReturnValueOnce(false).mockReturnValueOnce(true);
+    const request = deferred<{ response: { ok: true }; data: typeof targetUser }>();
+    syncDirectMock.mockReturnValue(request.promise);
+    render(UserActions, { props: { user: targetUser }, global });
+    const button = screen.getByTestId("admin-user-sync-maia-btn");
+    await fireEvent.click(button);
+    expect(syncDirectMock).not.toHaveBeenCalled();
+    expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining("synchronisation de l'organisation"));
+    await fireEvent.click(button);
+    expect(syncDirectMock).toHaveBeenCalledWith({ path: { id: targetUser.id } });
+    expect(button).not.toBeDisabled();
+    expect(button).toHaveAttribute("aria-disabled", "true");
+    await fireEvent.click(button);
+    expect(syncDirectMock).toHaveBeenCalledOnce();
+    expect(window.confirm).toHaveBeenCalledTimes(2);
+    request.resolve({ response: { ok: true }, data: targetUser });
+    await flushPromises();
+    expect(button).toHaveAttribute("aria-disabled", "false");
+  });
 
   it.each([
     { isBlocked: false, visibleLabel: "Bloquer", name: "Bloquer l’accès de cet utilisateur" },
@@ -288,7 +342,7 @@ describe("UserActions", () => {
 
     await fireEvent.click(screen.getByTestId("admin-user-edit-btn"));
     await waitFor(() => expect(screen.queryByText(/Récupération de la suggestion MAIA/)).not.toBeInTheDocument());
-    const errorText = screen.queryByRole("alert")?.textContent;
+    const errorText = screen.getByText(/Impossible de récupérer la suggestion MAIA/).textContent;
     const retryButton = screen.queryByRole("button", { name: "Réessayer la recherche MAIA" });
     await fireEvent.click(screen.getByRole("button", { name: "Annuler la modification" }));
     await fireEvent.click(screen.getByTestId("admin-user-edit-btn"));
@@ -297,7 +351,8 @@ describe("UserActions", () => {
     expect(await screen.findByText("MININT/ORGANISATION-RETROUVÉE")).toBeInTheDocument();
     expect(errorText).toMatch(/MAIA/);
     expect(retryButton).not.toBeNull();
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Impossible de récupérer la suggestion MAIA/)).not.toBeInTheDocument();
+    expect(screen.getByTestId("user-edit-error")).toBeEmptyDOMElement();
   });
 
   it.each([
@@ -313,7 +368,8 @@ describe("UserActions", () => {
     expect(await screen.findByText("Organisation MAIA :")).toBeInTheDocument();
     expect(screen.getByText("MININT/ORGANISATION-MAIA")).toBeInTheDocument();
     expect(screen.getByTestId("user-org-not-validated-badge")).toHaveTextContent(new RegExp(`^${badge}$`));
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Impossible de récupérer la suggestion MAIA/)).not.toBeInTheDocument();
+    expect(screen.getByTestId("user-edit-error")).toBeEmptyDOMElement();
   });
 
   it("signale une erreur réseau et permet de relancer la recherche MAIA dans la même fenêtre", async () => {
@@ -324,7 +380,7 @@ describe("UserActions", () => {
     render(UserActions, { props: { user: targetUser }, global });
 
     await fireEvent.click(screen.getByTestId("admin-user-edit-btn"));
-    expect(await screen.findByRole("alert")).toHaveTextContent(/MAIA/);
+    expect(await screen.findByText(/Impossible de récupérer la suggestion MAIA/)).toHaveAttribute("role", "alert");
     expect(screen.queryByTestId("user-org-not-validated-badge")).not.toBeInTheDocument();
 
     await fireEvent.click(screen.getByRole("button", { name: "Réessayer la recherche MAIA" }));
@@ -332,7 +388,8 @@ describe("UserActions", () => {
     expect(await screen.findByText("MININT/APRÈS-RELANCE")).toBeInTheDocument();
     expect(syncOrganizationMock).toHaveBeenCalledTimes(2);
     expect(syncOrganizationMock).toHaveBeenLastCalledWith({ path: { email: targetUser.email } });
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Impossible de récupérer la suggestion MAIA/)).not.toBeInTheDocument();
+    expect(screen.getByTestId("user-edit-error")).toBeEmptyDOMElement();
     expect(screen.queryByRole("button", { name: "Réessayer la recherche MAIA" })).not.toBeInTheDocument();
   });
 
@@ -345,7 +402,8 @@ describe("UserActions", () => {
 
     expect(await screen.findByText(/aucune organisation.*MAIA|MAIA.*aucune organisation/i)).toBeInTheDocument();
     expect(screen.queryByTestId("user-org-not-validated-badge")).not.toBeInTheDocument();
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Impossible de récupérer la suggestion MAIA/)).not.toBeInTheDocument();
+    expect(screen.getByTestId("user-edit-error")).toBeEmptyDOMElement();
   });
 
   it("actualise aussi une suggestion MAIA réussie à chaque réouverture", async () => {
@@ -396,7 +454,8 @@ describe("UserActions", () => {
     expect(screen.getByText("MININT/ORGANISATION-ACTUELLE")).toBeInTheDocument();
     expect(screen.queryByText("MININT/RÉPONSE-ANCIENNE-2")).not.toBeInTheDocument();
     expect(screen.queryByText(/Récupération de la suggestion MAIA/)).not.toBeInTheDocument();
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Impossible de récupérer la suggestion MAIA/)).not.toBeInTheDocument();
+    expect(screen.getByTestId("user-edit-error")).toBeEmptyDOMElement();
   });
 
   it("disables user edition without the administration permission", async () => {

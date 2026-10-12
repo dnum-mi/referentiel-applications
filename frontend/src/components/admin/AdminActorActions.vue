@@ -8,6 +8,7 @@ import type { Application } from "@/models/Application";
 import { useOrganizationStore } from "@/stores/organizationStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import { computed, ref } from "vue";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps<{
   actor: ActorDto;
@@ -56,6 +57,7 @@ const applicationMultiselectOptions = computed(() =>
 
 const isEditModalOpen = ref(false);
 const isSaving = ref(false);
+const editError = ref("");
 
 const editInitialData = computed<CreateActorDto>(() => ({
   email: props.actor.email || "",
@@ -69,14 +71,18 @@ const editInitialData = computed<CreateActorDto>(() => ({
 const editApplication = computed(() => ({ id: props.actor.applicationId }) as Application);
 
 function openEditModal() {
+  editError.value = "";
   isEditModalOpen.value = true;
 }
 
 function closeEditModal() {
+  editError.value = "";
   isEditModalOpen.value = false;
 }
 
 async function saveActor(formData: CreateActorDto) {
+  if (isSaving.value) return;
+  editError.value = "";
   isSaving.value = true;
   try {
     const response = await api.actorControllerUpdateActor({
@@ -88,10 +94,10 @@ async function saveActor(formData: CreateActorDto) {
       closeEditModal();
       emit("updated");
     } else {
-      toaster.addErrorMessage("Erreur lors de la mise à jour de l'acteur");
+      editError.value = "Erreur lors de la mise à jour de l'acteur. Votre saisie est conservée.";
     }
   } catch {
-    toaster.addErrorMessage("Erreur lors de la mise à jour de l'acteur");
+    editError.value = "Erreur lors de la mise à jour de l'acteur. Votre saisie est conservée.";
   } finally {
     isSaving.value = false;
   }
@@ -99,6 +105,8 @@ async function saveActor(formData: CreateActorDto) {
 
 const isEditAllModalOpen = ref(false);
 const isSavingAll = ref(false);
+useSubmissionFocus(isSavingAll);
+const editAllError = ref("");
 const editAllForm = ref<UpdateActorDto>({});
 const selectedEditAppIds = ref<string[]>([]);
 const editAllOrganizationId = computed({
@@ -145,6 +153,7 @@ async function syncEditAllFromMaia() {
 }
 
 async function openEditAllModal() {
+  editAllError.value = "";
   editAllForm.value = {
     email: props.actor.email || "",
     firstname: props.actor.firstname || "",
@@ -162,11 +171,20 @@ async function openEditAllModal() {
 }
 
 function closeEditAllModal() {
+  editAllError.value = "";
   isEditAllModalOpen.value = false;
 }
 
 async function saveAllByEmail() {
-  if (!props.actor.email) return;
+  if (!props.actor.email || isSavingAll.value || selectedEditAppIds.value.length === 0) return;
+  if (
+    !window.confirm(
+      `Confirmer la modification des acteurs avec l'email « ${props.actor.email} » dans les ${selectedEditAppIds.value.length} application(s) sélectionnée(s) ?\n\nNom : ${!isEditAllGroup.value ? [editAllForm.value.firstname, editAllForm.value.lastname].filter(Boolean).join(" ") || "Non renseigné" : "Acteur rattaché à une entité"}\nNouvel email : ${editAllForm.value.email?.trim() || "Non renseigné"}\n\nLes coordonnées et les options affichées seront enregistrées.`,
+    )
+  ) {
+    return;
+  }
+  editAllError.value = "";
   isSavingAll.value = true;
   try {
     const { actorTypeId, organizationId, ...restForm } = editAllForm.value;
@@ -192,10 +210,10 @@ async function saveAllByEmail() {
       closeEditAllModal();
       emit("updated");
     } else {
-      toaster.addErrorMessage("Erreur lors de la mise à jour des acteurs");
+      editAllError.value = "Erreur lors de la mise à jour des acteurs. Votre saisie est conservée.";
     }
   } catch {
-    toaster.addErrorMessage("Erreur lors de la mise à jour des acteurs");
+    editAllError.value = "Erreur lors de la mise à jour des acteurs. Votre saisie est conservée.";
   } finally {
     isSavingAll.value = false;
   }
@@ -320,6 +338,7 @@ const actorDisplayName = computed(() => {
     <ActorForm
       :initial-data="editInitialData"
       :is-submitting="isSaving"
+      :error-message="editError"
       :application="editApplication"
       :actor-types="actorTypes"
       @submit="saveActor"
@@ -334,6 +353,9 @@ const actorDisplayName = computed(() => {
     @close="closeEditAllModal"
   >
     <p class="fr-text--sm fr-mb-3w" data-testid="required-fields-hint">* = champs obligatoires</p>
+    <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="admin-actor-all-error">
+      <p v-if="editAllError" class="fr-error-text">{{ editAllError }}</p>
+    </div>
     <DsfrAlert
       :description="`Les acteurs avec l'email « ${actor.email} » dans les applications sélectionnées seront modifiés.`"
       type="info"

@@ -17,6 +17,29 @@ export type AppTab =
 
 /** Page Object — Fiche application (`/applications/:id/:tab?`). */
 export class ApplicationPage extends BasePage {
+  private async confirmActorEdit(
+    button: Locator,
+    firstname: string,
+    lastname: string,
+  ): Promise<void> {
+    const confirmation = this.page
+      .waitForEvent("dialog")
+      .then(async (dialog) => {
+        try {
+          expect(dialog.type()).toBe("confirm");
+          expect(dialog.message()).toContain(
+            "Confirmer la modification des coordonnées de cet acteur ?",
+          );
+          expect(dialog.message()).toContain(`${firstname} ${lastname}`);
+        } catch (error) {
+          await dialog.dismiss();
+          throw error;
+        }
+        await dialog.accept();
+      });
+    await Promise.all([confirmation, button.click()]);
+  }
+
   private currentId = "";
 
   private root = () => this.byTestId("application-profile");
@@ -655,7 +678,11 @@ export class ApplicationPage extends BasePage {
     await expect(this.byTestId("actor-form-container")).toBeVisible();
     await this.byTestId("actor-firstname-input").fill(firstname);
     await this.byTestId("actor-lastname-input").fill(lastname);
-    await this.byTestId("actor-submit-btn").click();
+    await this.confirmActorEdit(
+      this.byTestId("actor-submit-btn"),
+      firstname,
+      lastname,
+    );
     await this.expectToaster(/sauvegardé avec succès|enregistré/i);
   }
 
