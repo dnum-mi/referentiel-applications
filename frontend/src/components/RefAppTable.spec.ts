@@ -71,8 +71,69 @@ describe("RefAppTable", () => {
     expect(wrapper.get(`[id="${table.attributes("aria-labelledby")}"]`).text()).toBe("Applications du référentiel");
     expect(wrapper.findAll("thead th").map((header) => header.attributes("scope"))).toEqual(["col", "col"]);
     expect(wrapper.findAll("thead th[tabindex='0']")).toHaveLength(0);
-    expect(wrapper.find('[aria-label="Page suivante"]').exists()).toBe(true);
-    expect(wrapper.find('[aria-label="Nombre de lignes par page"]').exists()).toBe(true);
+    expect(wrapper.find('[aria-label^="Page suivante ("]').exists()).toBe(true);
+    expect(wrapper.get("label").text()).toBe("Application — largeur en pixels");
+    expect(wrapper.get<HTMLSelectElement>('[data-testid="pagination-rows-select"]').element.labels?.[0]?.textContent).toBe(
+      "Résultats par page",
+    );
+    expect(wrapper.findAll('nav[aria-label="Pagination"]')).toHaveLength(1);
+    wrapper.unmount();
+  });
+
+  it("conserve la commande focalisée aux bornes et annonce la pagination client", async () => {
+    const wrapper = mount(RefAppTable, {
+      attachTo: document.body,
+      props: {
+        items: Array.from({ length: 12 }, (_, id) => ({ id, label: `Application ${id}` })),
+        columns: [{ field: "label", header: "Application" }],
+        paginator: true,
+        rows: 5,
+      },
+      global: { plugins: [[PrimeVue, { locale: primeVueFrenchLocale, unstyled: true }]] },
+    });
+    const last = wrapper.get<HTMLButtonElement>('[data-testid="pagination-last"]');
+    last.element.focus();
+    await last.trigger("click");
+    expect(document.activeElement).toBe(last.element);
+    expect(last.attributes("aria-disabled")).toBe("true");
+    expect(last.element.disabled).toBe(false);
+    expect(wrapper.get('[data-testid="pagination-page-status"]').text()).toBe("Page 3 sur 3");
+    expect(wrapper.findAll("tbody tr")).toHaveLength(2);
+    const events = wrapper.emitted("page")?.length;
+    await last.trigger("click");
+    expect(wrapper.emitted("page")).toHaveLength(events!);
+    const first = wrapper.get<HTMLButtonElement>('[data-testid="pagination-first"]');
+    first.element.focus();
+    await first.trigger("click");
+    expect(document.activeElement).toBe(first.element);
+    expect(wrapper.get('[data-testid="pagination-page-status"]').text()).toBe("Page 1 sur 3");
+    expect(wrapper.findAll("tbody tr")).toHaveLength(5);
+    wrapper.unmount();
+  });
+
+  it("émet une seule requête quand une nouvelle taille dépasse la dernière page serveur", async () => {
+    const wrapper = mount(RefAppTable, {
+      attachTo: document.body,
+      props: {
+        items: [{ label: "Dernière application" }],
+        columns: [{ field: "label", header: "Application" }],
+        lazy: true,
+        paginator: true,
+        rows: 5,
+        first: 40,
+        totalRecords: 42,
+      },
+      global: { plugins: [[PrimeVue, { unstyled: true }]] },
+    });
+    const select = wrapper.get<HTMLSelectElement>('[data-testid="pagination-rows-select"]');
+    select.element.focus();
+    await select.setValue("50");
+    expect(wrapper.emitted("page")).toHaveLength(1);
+    expect(wrapper.emitted("page")?.[0]?.[0]).toMatchObject({ page: 0, first: 0, rows: 50 });
+    await wrapper.setProps({ rows: 50, first: 0, loading: true });
+    await wrapper.setProps({ loading: false, items: [{ label: "Page rechargée" }] });
+    expect(document.activeElement).toBe(select.element);
+    expect(wrapper.get('[data-testid="pagination-page-status"]').text()).toBe("Page 1 sur 1");
     wrapper.unmount();
   });
 });

@@ -97,7 +97,7 @@ export class AdminPage extends BasePage {
 
   private async correlationRow(id: string) {
     const table = this.correlationsTable();
-    const first = table.locator(".p-paginator-first");
+    const first = table.getByRole("button", { name: /^Première page/ });
     if (await first.isEnabled())
       await this.waitForCorrelationList(() => first.click());
     const row = table.locator("tbody tr").filter({
@@ -110,7 +110,7 @@ export class AdminPage extends BasePage {
         await expect(row).toHaveCount(1);
         return row;
       }
-      const next = table.locator(".p-paginator-next");
+      const next = table.getByRole("button", { name: /^Page suivante/ });
       if (!(await next.isEnabled())) break;
       await this.waitForCorrelationList(() => next.click());
     }

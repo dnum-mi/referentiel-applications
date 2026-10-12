@@ -101,8 +101,7 @@ async function ensurePaginationReady(page: Page) {
 }
 
 async function selectPageSize(page: Page, value: string) {
-  await page.locator('[data-testid="application-table"] .p-paginator-rpp-dropdown').click();
-  await page.locator(".p-select-overlay").getByRole("option", { name: value, exact: true }).click();
+  await page.getByTestId("application-table").getByLabel("Résultats par page", { exact: true }).selectOption(value);
 }
 
 async function isFocusedWithin(page: Page, locator: Locator) {
@@ -120,7 +119,7 @@ async function tabUntilFocused(page: Page, locator: Locator, maxTabs = 120) {
 }
 
 async function focusFirstTabStop(page: Page) {
-  const firstSkipLink = page.locator('a[href="#app-search"]').first();
+  const firstSkipLink = page.locator('a[href="#app-search-shortcut"]').first();
   await expect(firstSkipLink).toBeVisible();
   await firstSkipLink.focus();
 }
@@ -337,12 +336,12 @@ test.describe("ApplicationsView", () => {
     await selectPageSize(page, "5");
     await waitForSearchParams(page, (params) => params.get("pageSize") === "5");
 
-    const nextBtn = page.getByTestId("application-table").locator(".p-paginator-next");
+    const nextBtn = page.getByTestId("application-table").getByRole("button", { name: /^Page suivante/ });
     await expect(nextBtn).toBeEnabled();
     await nextBtn.click();
     await waitForSearchParams(page, (params) => params.get("page") === "1");
 
-    const prevBtn = page.getByTestId("application-table").locator(".p-paginator-prev");
+    const prevBtn = page.getByTestId("application-table").getByRole("button", { name: /^Page précédente/ });
     await expect(prevBtn).toBeEnabled();
     await prevBtn.click();
     await waitForSearchParams(page, (params) => (params.get("page") ?? "0") === "0");
@@ -355,7 +354,7 @@ test.describe("ApplicationsView", () => {
     await selectPageSize(page, "5");
     await waitForSearchParams(page, (params) => params.get("pageSize") === "5");
 
-    const nextBtn = page.getByTestId("application-table").locator(".p-paginator-next");
+    const nextBtn = page.getByTestId("application-table").getByRole("button", { name: /^Page suivante/ });
     await nextBtn.click();
     await waitForSearchParams(page, (params) => params.get("page") === "1");
 

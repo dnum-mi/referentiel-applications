@@ -97,7 +97,7 @@ async function deleteBusinessDivision() {
     label="Créer une direction métier"
     data-testid="admin-create-business-division-btn"
     title="Créer une nouvelle direction métier"
-    aria-label="Créer une nouvelle direction métier"
+    aria-label="Créer une direction métier"
     @click="openEditModal"
   />
 
@@ -210,7 +210,7 @@ async function deleteBusinessDivision() {
             label="Supprimer"
             data-testid="admin-business-division-delete-confirm-btn"
             title="Confirmer la suppression"
-            aria-label="Confirmer la suppression"
+            aria-label="Supprimer la direction métier"
             danger
             :disabled="isDeleting"
             @click="deleteBusinessDivision"

@@ -153,6 +153,18 @@ describe("UserActions", () => {
 
   afterEach(cleanup);
 
+  it.each([
+    { isBlocked: false, visibleLabel: "Bloquer", name: "Bloquer l’accès de cet utilisateur" },
+    { isBlocked: true, visibleLabel: "Rétablir", name: "Rétablir l’accès de cet utilisateur" },
+  ])("reprend le texte visible $visibleLabel dans le nom de la confirmation", async ({ isBlocked, visibleLabel, name }) => {
+    hasPermissionsMock.mockReturnValue(true);
+    render(UserActions, { props: { user: { ...targetUser, isBlocked } }, global });
+    await fireEvent.click(screen.getByTestId("admin-user-block-btn"));
+    const confirm = screen.getByTestId("admin-block-user-confirm-btn");
+    expect(confirm).toHaveTextContent(visibleLabel);
+    expect(confirm).toHaveAccessibleName(name);
+  });
+
   it("permet d'attribuer explicitement la consultation des technologies à un lecteur", async () => {
     hasPermissionsMock.mockReturnValue(true);
     const reader = { ...targetUser, role: Roles.READER };

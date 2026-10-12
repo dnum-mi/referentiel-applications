@@ -194,31 +194,93 @@ export class ApplicationPage extends BasePage {
       ".graph-container svg",
     );
     await expect(graph).toBeVisible();
-    const titles = graph.locator("text > title");
-    await expect(titles).toHaveCount(2);
-    expect((await titles.allTextContents()).sort()).toEqual(
-      [sourceLabel, targetLabel].sort(),
+    const transcription = this.tabContent("tab-relations").getByTestId(
+      "relations-graph-transcription",
     );
+    const expectApplications = async () => {
+      const nodes = graph.getByRole("link");
+      await expect(nodes).toHaveCount(2);
+      const applications = transcription.locator("ul").getByRole("link");
+      await expect(applications).toHaveCount(2);
+      const hrefs: string[] = [];
+      for (const label of [sourceLabel, targetLabel]) {
+        const application = transcription
+          .locator("ul")
+          .getByRole("link", { name: label, exact: true });
+        await expect(application).toHaveCount(1);
+        // Le nom accessible du nœud ajoute sa qualité de racine et son statut.
+        const name = await application.evaluate((link) =>
+          link.parentElement!.textContent!.trim().replace(/\s+/g, " "),
+        );
+        const node = graph.getByRole("link", {
+          name,
+          exact: true,
+        });
+        await expect(node).toHaveCount(1);
+        await expect(node).toBeVisible();
+        const href = await node.getAttribute("href");
+        expect(href).toMatch(/^\/applications\/[^/]+$/);
+        if (!href) throw new Error(`Lien absent pour « ${label} »`);
+        hrefs.push(href);
+        await expect(application).toHaveAttribute("href", href);
+      }
+      expect(new Set(hrefs).size).toBe(2);
+      expect(hrefs).toContain(`/applications/${this.currentId}`);
+      return hrefs;
+    };
+    const hrefs = await expectApplications();
+
+    const expectRelation = async () => {
+      const row = transcription.locator("tbody tr");
+      await expect(row).toHaveCount(1);
+      await expect(
+        row.getByRole("cell", { name: "est corrélée à", exact: true }),
+      ).toBeVisible();
+      await expect(
+        row.getByRole("cell", {
+          name: "Réciproque, sans direction",
+          exact: true,
+        }),
+      ).toBeVisible();
+      const endpoints = row.getByRole("link");
+      await expect(endpoints).toHaveCount(2);
+      expect(
+        await endpoints.evaluateAll((links) =>
+          links.map((link) => link.getAttribute("href")).sort(),
+        ),
+      ).toEqual([...hrefs].sort());
+    };
+    await expectRelation();
 
     const edge = graph.locator("line");
     await expect(edge).toHaveCount(1);
-    await expect(edge).toHaveAttribute("stroke-dasharray", "6, 4");
+    await expect(edge).toHaveAttribute("stroke-dasharray", "12 4 2 4 2 4");
     await expect(edge).not.toHaveAttribute("marker-end", /./);
     const legend = this.tabContent("tab-relations").getByRole("checkbox", {
-      name: "est corrélée à",
+      name: "est corrélée à (tiret et deux points, sans flèche)",
       exact: true,
     });
     await expect(legend).toBeChecked();
     // Le filtre de légende doit masquer l'arête réellement rendue, puis la rétablir.
+    const legendId = await legend.getAttribute("id");
+    expect(legendId).toBeTruthy();
     const legendLabel = this.tabContent("tab-relations").locator(
-      'label[for="legend-is_correlated_with"]',
+      `label[for="${legendId}"]`,
     );
     await legendLabel.click();
     await expect(legend).not.toBeChecked();
     await expect(graph.locator("line")).toHaveCount(0);
+    await expect(graph.getByRole("link")).toHaveCount(1);
+    await expect(graph.getByRole("link")).toHaveAttribute(
+      "href",
+      `/applications/${this.currentId}`,
+    );
+    await expect(transcription.locator("tbody tr")).toHaveCount(0);
     await legendLabel.click();
     await expect(legend).toBeChecked();
     await expect(graph.locator("line")).toHaveCount(1);
+    await expectApplications();
+    await expectRelation();
   }
 
   // --- Onglet Informations générales (FIC-02) ---

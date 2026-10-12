@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, nextTick, useId, watch } from "vue";
+import { useMediaQuery } from "@vueuse/core";
 import { useRoute } from "vue-router";
 import { useApplicationSearch } from "@/composables/use-application-search";
 import { useMditCampaigns } from "@/composables/use-mdit-campaigns";
@@ -30,7 +31,20 @@ const props = withDefaults(
   },
 );
 
-const sidebarOpen = ref(true);
+const isMobile = useMediaQuery("(max-width: 768px)");
+const sidebarOpen = ref(!isMobile.value);
+const sidebarRef = ref<HTMLElement | null>(null);
+const toggleRef = ref<HTMLButtonElement | null>(null);
+const sidebarId = `application-filters-${useId()}`;
+
+watch(isMobile, async (mobile) => {
+  const restoreFocus = mobile && sidebarRef.value?.contains(document.activeElement);
+  sidebarOpen.value = !mobile;
+  if (restoreFocus) {
+    await nextTick();
+    toggleRef.value?.focus();
+  }
+});
 const route = useRoute();
 // Le sélecteur de campagne (millésime) ne concerne que le diagramme Time.
 const isTimeRoute = computed(() => route.path === "/time");
@@ -66,14 +80,36 @@ const total = computed(() => {
 </script>
 
 <template>
+  <button
+    ref="toggleRef"
+    type="button"
+    class="sidebar-toggle"
+    data-testid="sidebar-toggle"
+    :aria-label="sidebarOpen ? 'Fermer les filtres' : 'Ouvrir les filtres'"
+    :aria-expanded="sidebarOpen"
+    :aria-controls="sidebarId"
+    @click="sidebarOpen = !sidebarOpen"
+  >
+    <VIcon :name="sidebarOpen ? 'ri-arrow-left-s-line' : 'ri-arrow-right-s-line'" class="sidebar-toggle-icon" aria-hidden="true" />
+    <span v-if="isMobile">{{ sidebarOpen ? "Fermer les filtres" : "Ouvrir les filtres" }}</span>
+  </button>
+
   <Transition name="sidebar-width">
-    <aside v-if="sidebarOpen" class="sidebar" v-bind="$attrs" data-testid="sidebar-filter">
+    <aside
+      v-show="sidebarOpen"
+      :id="sidebarId"
+      ref="sidebarRef"
+      class="sidebar"
+      v-bind="$attrs"
+      :aria-labelledby="`${sidebarId}-title`"
+      data-testid="sidebar-filter"
+    >
       <div class="filters-wrapper">
         <DsfrButton tertiary size="small" class="reset-link" data-testid="sidebar-reset-filters-button" @click="handleReset">
           ✕ Réinitialiser
         </DsfrButton>
 
-        <h2 class="fr-h6">Filtres</h2>
+        <h2 :id="`${sidebarId}-title`" class="fr-h6">Filtres</h2>
 
         <DsfrAccordion
           v-if="userStore.user?.email"
@@ -185,15 +221,6 @@ const total = computed(() => {
       </div>
     </aside>
   </Transition>
-
-  <button
-    class="sidebar-toggle"
-    data-testid="sidebar-toggle"
-    :aria-label="sidebarOpen ? 'Fermer les filtres' : 'Ouvrir les filtres'"
-    @click="sidebarOpen = !sidebarOpen"
-  >
-    <VIcon :name="sidebarOpen ? 'ri-arrow-left-s-line' : 'ri-arrow-right-s-line'" class="sidebar-toggle-icon" />
-  </button>
 </template>
 
 <style scoped>
@@ -203,6 +230,7 @@ const total = computed(() => {
 
 .sidebar {
   width: 280px;
+  flex-shrink: 0;
   border-right: 1px solid var(--border-contrast-grey);
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.03);
   max-height: 100%;
@@ -214,35 +242,12 @@ const total = computed(() => {
   transition: all 0.3s ease;
 }
 
-@media (max-width: 768px) {
-  .sidebar {
-    position: fixed;
-    background-color: var(--background-default-grey);
-    top: 0;
-    left: 0;
-    width: 100vw;
-    max-height: 100vh;
-    height: 100vh;
-    overflow-y: auto;
-    z-index: 1000;
-    border-right: none;
-    border-bottom: 1px solid var(--border-contrast-grey);
-    padding: 1rem;
-  }
-
-  .sidebar-toggle {
-    left: auto;
-    right: 0;
-    border-radius: 6px 0 0 6px;
-  }
-}
-
 .sidebar-toggle {
   position: fixed;
   top: 50%;
   left: 0;
   transform: translateY(-50%);
-  background: white;
+  background: var(--background-default-grey);
   border: 1px solid var(--border-contrast-grey);
   border-radius: 0 6px 6px 0;
   width: 32px;
@@ -250,17 +255,15 @@ const total = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #3a3a3a;
+  color: var(--text-default-grey);
   box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.08);
   cursor: pointer;
   transition: all 0.2s ease;
-  opacity: 0.7;
   z-index: 1010;
 }
 
 .sidebar-toggle:hover {
-  opacity: 1;
-  background-color: #f3f4f6;
+  background-color: var(--background-default-grey-hover);
 }
 
 .sidebar-toggle-icon {
@@ -294,5 +297,33 @@ const total = computed(() => {
 .total-count {
   font-size: 0.875rem;
   margin: 0.25rem 0 0;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    max-height: none;
+    box-sizing: border-box;
+    border-right: none;
+    border-bottom: 1px solid var(--border-contrast-grey);
+    padding: 1rem;
+  }
+
+  .filters-wrapper {
+    overflow: visible;
+  }
+
+  .sidebar-toggle {
+    position: static;
+    transform: none;
+    width: fit-content;
+    height: auto;
+    min-height: 3rem;
+    margin: 1rem;
+    padding: 0.5rem 1rem;
+    gap: 0.5rem;
+    border-radius: 0;
+    align-self: flex-start;
+  }
 }
 </style>

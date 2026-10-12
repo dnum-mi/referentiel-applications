@@ -114,7 +114,7 @@ async function deleteTag() {
     label="Créer un tag"
     data-testid="admin-create-tag-btn"
     title="Créer un nouveau tag"
-    aria-label="Créer un nouveau tag"
+    aria-label="Créer un tag"
     @click="openEditModal"
   />
 
@@ -201,7 +201,7 @@ async function deleteTag() {
         label="Supprimer"
         data-testid="admin-delete-confirm-btn"
         title="Confirmer la suppression"
-        aria-label="Confirmer la suppression"
+        aria-label="Supprimer le tag"
         danger
         :disabled="isDeleting"
         @click="deleteTag"

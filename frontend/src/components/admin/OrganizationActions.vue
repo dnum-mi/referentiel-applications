@@ -415,7 +415,7 @@ async function deleteOrganization() {
       <DsfrButton
         label="Supprimer"
         title="Confirmer la suppression"
-        aria-label="Confirmer la suppression"
+        aria-label="Supprimer l’organisation"
         danger
         :disabled="isDeleting || scopedAdmins.length > 0"
         data-testid="admin-delete-confirm-btn"

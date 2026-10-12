@@ -96,7 +96,7 @@ async function deleteLabelSource() {
     label="Créer une source"
     data-testid="admin-create-label-source-btn"
     title="Créer une nouvelle source"
-    aria-label="Créer une nouvelle source"
+    aria-label="Créer une source"
     @click="openEditModal"
   />
 
@@ -187,7 +187,7 @@ async function deleteLabelSource() {
         label="Supprimer"
         data-testid="admin-delete-confirm-btn"
         title="Confirmer la suppression"
-        aria-label="Confirmer la suppression"
+        aria-label="Supprimer la source"
         danger
         :disabled="isDeleting"
         @click="deleteLabelSource"

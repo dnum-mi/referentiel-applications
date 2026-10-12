@@ -3,9 +3,9 @@ import { computed, ref, nextTick, useId, watch } from "vue";
 import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 import Skeleton from "primevue/skeleton";
+import PaginationFooter from "./PaginationFooter.vue";
 import type { TableColumn, TableSortEvent } from "@/types/table";
 import type { DataTableSortEvent, DataTablePageEvent, DataTableColumnResizeEndEvent } from "primevue/datatable";
-import { PAGE_SIZE_OPTIONS } from "@/constants/pagination";
 import { DEFAULT_COLUMN_WIDTH, MIN_COLUMN_WIDTH, MAX_COLUMN_WIDTH, normalizeColumnWidth } from "@/utils/column-width";
 
 export interface Props<T> {
@@ -268,26 +268,35 @@ watch(
       :rows="rows"
       :first="first"
       :paginator="paginator"
-      :rows-per-page-options="PAGE_SIZE_OPTIONS"
-      :paginator-template="'RowsPerPageDropdown FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport'"
-      current-page-report-template="{first} à {last} sur {totalRecords}"
       :sort-field="internalSortField"
       :sort-order="internalSortOrder"
       :loading="loading && !isSorting"
       :data-testid="dataTestId"
       :table-props="{ 'aria-labelledby': tableTitleId }"
-      :pt="{ column: { headerCell: { tabindex: null, scope: 'col' } } }"
+      :pt="{
+        column: { headerCell: { tabindex: null, scope: 'col' } },
+        pcPaginator: { paginatorContainer: { 'aria-label': 'Pagination' } },
+      }"
       striped-rows
       resizable-columns
       column-resize-mode="fit"
       responsive-layout="scroll"
-      aria-live="polite"
       :aria-busy="loading || isSorting"
       @sort="onSort"
       @page="onPage"
       @column-resize-end="onColumnResize"
       :table-style="tableStyle"
     >
+      <template #paginatorcontainer="pagination">
+        <PaginationFooter
+          embedded
+          :total-filtered="pagination.totalRecords ?? 0"
+          :page="pagination.page"
+          :limit="pagination.rows"
+          @update:page="pagination.changePageCallback"
+          @update:limit="pagination.rowChangeCallback"
+        />
+      </template>
       <template #empty>
         <output class="fr-py-2w fr-text--center" aria-live="polite" style="display: block">{{ emptyMessage }}</output>
       </template>

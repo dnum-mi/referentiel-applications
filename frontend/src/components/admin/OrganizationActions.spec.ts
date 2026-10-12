@@ -76,6 +76,7 @@ describe("organizationActions — suppression", () => {
     await openDeleteModal();
 
     await waitFor(() => expect(screen.getByTestId("organization-delete-alert")).toBeInTheDocument());
+    expect(screen.getByTestId("admin-delete-confirm-btn")).toHaveAccessibleName("Supprimer l’organisation");
     expect(screen.queryByTestId("organization-delete-scoped-admins-alert")).not.toBeInTheDocument();
   });
 

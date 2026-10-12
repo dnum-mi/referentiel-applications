@@ -187,7 +187,7 @@ test.describe("Reports flow", () => {
     await statusSelect.selectOption("in_progress");
     await patchResponse;
 
-    await panel.getByRole("button", { name: "Arreter de modifier" }).click();
+    await panel.getByRole("button", { name: "Arrêter de modifier", exact: true }).click();
     await expect(row).toContainText("En cours");
   });
 });

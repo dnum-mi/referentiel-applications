@@ -103,7 +103,7 @@ async function deleteCampaign() {
     label="Créer une campagne"
     data-testid="admin-create-campaign-btn"
     title="Créer une nouvelle campagne"
-    aria-label="Créer une nouvelle campagne"
+    aria-label="Créer une campagne"
     @click="openEditModal"
   />
 
@@ -232,7 +232,7 @@ async function deleteCampaign() {
             label="Supprimer"
             data-testid="admin-campaign-delete-confirm-btn"
             title="Confirmer la suppression"
-            aria-label="Confirmer la suppression"
+            aria-label="Supprimer la campagne"
             danger
             :disabled="isDeleting"
             @click="deleteCampaign"

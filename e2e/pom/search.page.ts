@@ -19,7 +19,7 @@ export class SearchPage extends BasePage {
   // --- Locators encapsulés ---
   private title = () => this.byTestId("application-search-title");
   private table = () => this.byTestId("application-table");
-  private cardView = () => this.byTestId("application-card-view");
+  private cardView = () => this.byTestId("application-card-container");
   private averageIqTag = () => this.byTestId("application-average-iq");
   private sidebar = () => this.byTestId("sidebar-filter");
   private totalCounter = () => this.byTestId("sidebar-total-count");
@@ -227,11 +227,9 @@ export class SearchPage extends BasePage {
 
   // --- Pagination ---
   async setPageSize(value: string): Promise<void> {
-    await this.table().locator(".p-paginator-rpp-dropdown").click();
-    await this.page
-      .locator(".p-select-overlay")
-      .getByRole("option", { name: value, exact: true })
-      .click();
+    await this.table()
+      .getByLabel("Résultats par page", { exact: true })
+      .selectOption(value);
     await waitForSearchParams(
       this.page,
       (params) => params.get("pageSize") === value,
@@ -239,7 +237,7 @@ export class SearchPage extends BasePage {
   }
 
   async goToNextPage(): Promise<void> {
-    const next = this.table().locator(".p-paginator-next");
+    const next = this.table().getByRole("button", { name: /^Page suivante/ });
     await expect(next).toBeEnabled();
     await next.click();
     await waitForSearchParams(
@@ -249,13 +247,112 @@ export class SearchPage extends BasePage {
   }
 
   async goToPrevPage(): Promise<void> {
-    const prev = this.table().locator(".p-paginator-prev");
+    const prev = this.table().getByRole("button", { name: /^Page précédente/ });
     await expect(prev).toBeEnabled();
     await prev.click();
     await waitForSearchParams(
       this.page,
       (params) => (params.get("page") ?? "0") === "0",
     );
+  }
+
+  /** Les commandes de pagination gardent le focus, même devenues inactives aux bornes. */
+  async expectPaginationKeepsFocus(): Promise<void> {
+    const activateAndWaitForResults = async (
+      button: Locator,
+      key = "Enter",
+    ) => {
+      const responsePromise = this.page.waitForResponse(
+        (response) =>
+          response.request().method() === "GET" &&
+          new URL(response.url()).pathname === "/api/v2/applications",
+      );
+      await button.press(key);
+      const response = await responsePromise;
+      // Firefox expose la revalidation HTTP 304 lors du retour à une page en cache.
+      expect([200, 304]).toContain(response.status());
+      await response.finished();
+      await expect(this.page.locator("#application-results")).toHaveAttribute(
+        "aria-busy",
+        "false",
+      );
+    };
+    const navigation = this.page.getByRole("navigation", {
+      name: "Pagination",
+      exact: true,
+    });
+    const first = navigation.getByRole("button", { name: /^Première page/ });
+    const previous = navigation.getByRole("button", {
+      name: /^Page précédente/,
+    });
+    const next = navigation.getByRole("button", { name: /^Page suivante/ });
+    const last = navigation.getByRole("button", { name: /^Dernière page/ });
+    const status = this.byTestId("pagination-page-status");
+    await expect(last).toBeEnabled();
+    await next.focus();
+    await activateAndWaitForResults(next);
+    await expect(status).toContainText(/Page 2 sur /);
+    await expect(next).toBeFocused();
+    await last.focus();
+    await activateAndWaitForResults(last);
+    await expect(last).toHaveAttribute("aria-disabled", "true");
+    await expect(last).toBeFocused();
+    const lastStatus = await status.textContent();
+    await last.press("Enter");
+    await expect(status).toHaveText(lastStatus!);
+    await expect(last).toBeFocused();
+    await previous.focus();
+    await activateAndWaitForResults(previous, "Space");
+    await expect(last).toHaveAttribute("aria-disabled", "false");
+    await expect(previous).toBeFocused();
+    await first.focus();
+    await activateAndWaitForResults(first);
+    await expect(first).toHaveAttribute("aria-disabled", "true");
+    await expect(status).toContainText(/Page 1 sur /);
+    await expect(first).toBeFocused();
+    await first.press("Enter");
+    await expect(first).toBeFocused();
+    await expect(
+      navigation.getByRole("button", { name: /^Page 1 sur / }),
+    ).toHaveAttribute("aria-current", "page");
+  }
+
+  async expectMobileFiltersStayInFlow(): Promise<void> {
+    const toggle = this.byTestId("sidebar-toggle");
+    const filters = this.page.getByRole("complementary", { name: "Filtres" });
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await expect(filters).toBeHidden();
+    await toggle.focus();
+    await toggle.press("Enter");
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
+    await expect(filters).toBeVisible();
+    const panelBounds = await filters.boundingBox();
+    const resultsBounds = await this.byTestId("main-content").boundingBox();
+    expect(panelBounds).not.toBeNull();
+    expect(resultsBounds).not.toBeNull();
+    expect(resultsBounds!.y).toBeGreaterThanOrEqual(
+      panelBounds!.y + panelBounds!.height,
+    );
+    // Sous macOS, WebKit utilise Option+Tab pour inclure les boutons natifs.
+    const tabModifier =
+      process.platform === "darwin" &&
+      this.page.context().browser()?.browserType().name() === "webkit"
+        ? "Alt+"
+        : "";
+    await toggle.press(`${tabModifier}Tab`);
+    await expect(this.byTestId("sidebar-reset-filters-button")).toBeFocused();
+    await this.page.keyboard.press(`${tabModifier}Shift+Tab`);
+    await expect(toggle).toBeFocused();
+    await toggle.press("Space");
+    await expect(filters).toBeHidden();
+    await expect(toggle).toBeFocused();
+
+    await this.page.setViewportSize({ width: 1280, height: 900 });
+    await expect(filters).toBeVisible();
+    await this.byTestId("sidebar-reset-filters-button").focus();
+    await this.page.setViewportSize({ width: 375, height: 900 });
+    await expect(filters).toBeHidden();
+    await expect(toggle).toBeFocused();
   }
 
   // --- Navigation vers la fiche ---

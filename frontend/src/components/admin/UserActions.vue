@@ -381,7 +381,7 @@ const isScopeDisabled = computed(() => {
               :disabled="isTogglingBlock"
               data-testid="admin-block-user-confirm-btn"
               title="Confirmer"
-              aria-label="Confirmer"
+              :aria-label="user.isBlocked ? `Rétablir l’accès de cet utilisateur` : `Bloquer l’accès de cet utilisateur`"
               @click="toggleBlock"
             />
           </li>

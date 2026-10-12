@@ -1,9 +1,20 @@
 import type { INestApplication } from "@nestjs/common";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { runInNewContext } from "node:vm";
 import { Test } from "@nestjs/testing";
 import request from "supertest";
+import {
+  parseJsonConfigFileContent,
+  readConfigFile,
+  sys,
+  transpileModule,
+} from "typescript";
 import { setupSwagger } from "./swagger-config";
-import { swaggerAccessibilityPlugin } from "./swagger-ui-accessibility";
+import {
+  swaggerAccessibilityPlugin,
+  swaggerDownloadUrlPlugin,
+} from "./swagger-ui-accessibility";
 
 type Props = Record<string, unknown>;
 interface RenderedElement {
@@ -24,6 +35,28 @@ function createReactFixture() {
       return { current: null as T | null };
     },
   };
+}
+
+function browserTestContext(context: Record<string, unknown> = {}) {
+  // Istanbul inserts calls to a file-local counter into serialized functions.
+  // Share only those counters with the sandbox so these behavior tests still
+  // contribute coverage. The production compilation is tested separately below
+  // without any instrumentation runtime or other server globals.
+  const source = swaggerAccessibilityPlugin.toString();
+  const coverage = (
+    globalThis as typeof globalThis & {
+      __coverage__?: Record<string, unknown>;
+    }
+  ).__coverage__;
+  const counters: Record<string, () => unknown> = {};
+  for (const [, name] of source.matchAll(/\b(cov_\w+)\(\)/g)) {
+    const fileCoverage =
+      coverage?.[require.resolve("./swagger-ui-accessibility")];
+    if (!fileCoverage)
+      throw new Error("Missing Istanbul counter for Swagger plugin");
+    counters[name] = () => fileCoverage;
+  }
+  return { ...context, ...counters };
 }
 
 describe("Swagger accessibility plugin", () => {
@@ -125,9 +158,9 @@ describe("Swagger accessibility plugin", () => {
   it("names the dialog and wraps the original authorizations with their original props", () => {
     const plugin = runInNewContext(
       `(${swaggerAccessibilityPlugin.toString()})`,
-      {
+      browserTestContext({
         document: { activeElement: null },
-      },
+      }),
     )({ React: createReactFixture() }) as ReturnType<
       typeof swaggerAccessibilityPlugin
     >;
@@ -159,10 +192,10 @@ describe("Swagger accessibility plugin", () => {
     const icon = new ElementFixture(button);
     const plugin = runInNewContext(
       `(${swaggerAccessibilityPlugin.toString()})`,
-      {
+      browserTestContext({
         document: { activeElement: { id: "previous-link" } },
         Element: ElementFixture,
-      },
+      }),
     )({ React: createReactFixture() }) as ReturnType<
       typeof swaggerAccessibilityPlugin
     >;
@@ -183,9 +216,9 @@ describe("Swagger accessibility plugin", () => {
     const document = { activeElement: last };
     const plugin = runInNewContext(
       `(${swaggerAccessibilityPlugin.toString()})`,
-      {
+      browserTestContext({
         document,
-      },
+      }),
     )({ React: createReactFixture() }) as ReturnType<
       typeof swaggerAccessibilityPlugin
     >;
@@ -240,11 +273,11 @@ describe("Swagger accessibility plugin", () => {
     };
     const plugin = runInNewContext(
       `(${swaggerAccessibilityPlugin.toString()})`,
-      {
+      browserTestContext({
         document,
         HTMLElement: ElementFixture,
         queueMicrotask,
-      },
+      }),
     )({ React: createReactFixture() }) as ReturnType<
       typeof swaggerAccessibilityPlugin
     >;
@@ -265,6 +298,52 @@ describe("Swagger accessibility plugin", () => {
       "focusin",
       popup.onFocusIn,
     );
+  });
+
+  it("serializes the production TypeScript output without any server closure or coverage runtime", () => {
+    const configPath = resolve(__dirname, "../tsconfig.json");
+    const config = readConfigFile(configPath, sys.readFile);
+    expect(config.error).toBeUndefined();
+    const parsed = parseJsonConfigFileContent(
+      config.config,
+      sys,
+      resolve(__dirname, ".."),
+    );
+    const compiled = transpileModule(
+      readFileSync(resolve(__dirname, "swagger-ui-accessibility.ts"), "utf8"),
+      { compilerOptions: parsed.options },
+    );
+    const exports: Record<string, unknown> = {};
+    runInNewContext(compiled.outputText, { exports });
+    const serialized =
+      exports.swaggerAccessibilityPlugin as typeof swaggerAccessibilityPlugin;
+    const createStandalonePlugin = runInNewContext(
+      `(${serialized.toString()})`,
+      {
+        document: { activeElement: null },
+      },
+    ) as typeof swaggerAccessibilityPlugin;
+    const plugin = createStandalonePlugin({ React: createReactFixture() });
+    const Popup = plugin.wrapComponents.authorizationPopup(() => null);
+    const dialog = new Popup({}).render() as RenderedElement;
+    expect(dialog.props.role).toBe("dialog");
+    expect(dialog.props["aria-label"]).toBe("Available authorizations");
+    const Button = plugin.wrapComponents.Button(() => null);
+    const button = Button({
+      children: "Authorize",
+      "aria-label": "Apply credentials",
+    }) as RenderedElement;
+    expect(button.props["aria-label"]).toBe("Authorize: Apply credentials");
+
+    const download =
+      exports.swaggerDownloadUrlPlugin as typeof swaggerDownloadUrlPlugin;
+    const DownloadUrl = jest.fn().mockReturnValue({ statePlugins: {} });
+    const standaloneDownload = runInNewContext(`(${download.toString()})`, {
+      SwaggerUIBundle: { plugins: { DownloadUrl } },
+    }) as typeof swaggerDownloadUrlPlugin;
+    const system = { React: createReactFixture() };
+    expect(standaloneDownload(system)).toEqual({ statePlugins: {} });
+    expect(DownloadUrl).toHaveBeenCalledWith(system);
   });
 });
 
@@ -321,11 +400,14 @@ describe("Swagger accessibility integration", () => {
       location: { search: "", origin: "http://localhost:3500" },
       onload: null as (() => void) | null,
     };
-    runInNewContext(response.text, {
-      window,
-      SwaggerUIBundle: createUi,
-      SwaggerUIStandalonePreset: {},
-    });
+    runInNewContext(
+      response.text,
+      browserTestContext({
+        window,
+        SwaggerUIBundle: createUi,
+        SwaggerUIStandalonePreset: {},
+      }),
+    );
     window.onload();
     const options = createUi.mock.calls[0][0] as {
       plugins: Array<

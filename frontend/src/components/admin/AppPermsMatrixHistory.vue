@@ -54,15 +54,21 @@ onMounted(() => {
 
 <template>
   <div data-testid="app-perms-matrix-history">
-    <div v-if="errorMessage" class="fr-alert fr-alert--error" data-testid="app-perms-matrix-history-error">
-      <p>{{ errorMessage }}</p>
+    <div
+      role="alert"
+      aria-live="assertive"
+      aria-atomic="true"
+      :class="errorMessage ? 'fr-alert fr-alert--error' : undefined"
+      data-testid="app-perms-matrix-history-error"
+    >
+      <p v-if="errorMessage">{{ errorMessage }}</p>
     </div>
 
-    <div v-else-if="!isLoading && logs.length === 0" class="text-center" data-testid="app-perms-matrix-history-empty">
+    <div v-if="!errorMessage && !isLoading && logs.length === 0" class="text-center" data-testid="app-perms-matrix-history-empty">
       <p>Aucune modification enregistrée.</p>
     </div>
 
-    <div v-else>
+    <div v-else-if="!errorMessage">
       <AppLoader v-if="isLoading" data-testid="app-perms-matrix-history-loader" />
       <RefAppTable
         v-else

@@ -113,4 +113,26 @@ test.describe("RGAA — accessibilité", () => {
     await reports.expectListLoaded();
     await reports.expectSearchKeepsFocus("RGAA-recherche-sans-resultat");
   });
+
+  for (const width of [1280, 375]) {
+    test(`RGA-08 — la pagination garde le focus et annonce la page à ${width} px`, async ({
+      page,
+    }) => {
+      await loginAs(page, "admin");
+      await page.setViewportSize({ width, height: 900 });
+      const search = new SearchPage(page);
+      await search.open();
+      await search.expectPaginationKeepsFocus();
+    });
+  }
+
+  test("RGA-09 — les filtres mobiles restent accessibles sans recouvrir les résultats", async ({
+    page,
+  }) => {
+    await loginAs(page, "admin");
+    await page.setViewportSize({ width: 375, height: 900 });
+    const search = new SearchPage(page);
+    await search.open();
+    await search.expectMobileFiltersStayInFlow();
+  });
 });

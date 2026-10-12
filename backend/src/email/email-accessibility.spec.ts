@@ -25,13 +25,14 @@ describe("Structure des e-mails réellement rendus", () => {
   it.each(templates)(
     "donne au modèle %s langue, titre et contenu principal sans attributs de présentation",
     (name) => {
+      const applicationUrl = "https://example.test/application?a=1&b=2";
       const html = templateService.render(name, {
         title: "Notification « test & <script> »",
         actorName: "Nom <img src=x>",
         campaignName: "Campagne",
         applicationName: "Application",
         applicationLabel: "Application",
-        applicationUrl: "https://example.test/application?a=1&b=2",
+        applicationUrl,
         description: "Un signalement",
         notes: "Note lisible",
         status: "En cours",
@@ -54,8 +55,20 @@ describe("Structure des e-mails réellement rendus", () => {
       const text = templateService.htmlToText(html);
       expect(text).toContain("Notification « test & <script> »");
       expect(text).toContain("Référentiel des Applications");
-      if (html.includes("https://example.test/application"))
-        expect(text).toContain("https://example.test/application");
+      const links = Array.from(
+        html.matchAll(/<a\b[^>]*\bhref="([^"]+)"/g),
+        ([, href]) => templateService.htmlToText(href),
+      );
+      const textTokens = text
+        .split(/\s+/)
+        .map((token) => token.replace(/^\[/, "").replace(/\]$/, ""));
+      for (const link of links) expect(textTokens).toContain(link);
+      const template = fs.readFileSync(
+        path.join(__dirname, "templates", `${name}.template.html`),
+        "utf8",
+      );
+      if (template.includes("{{applicationUrl}}"))
+        expect(links).toContain(applicationUrl);
     },
   );
 
