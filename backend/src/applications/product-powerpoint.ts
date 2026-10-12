@@ -1,18 +1,9 @@
-import { ApplicationType } from "@prisma/client";
 import pptxgen from "pptxgenjs";
-import { ApplicationStatusLabels } from "./constants/enum-label";
 import type { ProductCard } from "./product-export.service";
+import { missingProductValue, productExportView } from "./product-export.view";
 
 export const POWERPOINT_CONTENT_TYPE =
   "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-
-const typeLabels = {
-  business: "Application métier",
-  core_service: "Service socle",
-  intranet_citizen: "Intranet citoyen",
-  intranet_staff: "Intranet agent",
-  data_hub: "Hub de données",
-} satisfies Record<ApplicationType, string>;
 
 const colors = {
   blue: "000091",
@@ -21,7 +12,8 @@ const colors = {
   text: "161616",
   background: "F6F6F6",
 };
-const missing = "Non renseigné";
+const missing = missingProductValue;
+const language = "fr-FR";
 
 // Largeurs prudentes pour Arial : les capitales, les emoji et les caractères
 // larges occupent davantage de place qu'une lettre courante.
@@ -63,6 +55,7 @@ export async function createProductPowerpoint(
   exportedAt = new Date(),
 ): Promise<Buffer> {
   const presentation = new pptxgen();
+  const view = productExportView(application);
   presentation.layout = "LAYOUT_WIDE";
   presentation.author = "Référentiel des applications";
   presentation.subject = `Fiche produit ${application.id}`;
@@ -71,6 +64,30 @@ export async function createProductPowerpoint(
     headFontFace: "Arial",
     bodyFontFace: "Arial",
   };
+  for (const [title, x, y, w, h] of [
+    ["PRODUCT_SUMMARY", 0.35, 0.1, 9.5, 0.85],
+    ["PRODUCT_DETAIL", 0.5, 0.35, 12.3, 0.65],
+  ] as const) {
+    presentation.defineSlideMaster({
+      title,
+      objects: [
+        {
+          placeholder: {
+            options: {
+              name: "title",
+              type: "title",
+              x,
+              y,
+              w,
+              h,
+              lang: language,
+              margin: 0,
+            },
+          },
+        },
+      ],
+    });
+  }
   const date = new Intl.DateTimeFormat("fr-FR", {
     timeZone: "Europe/Paris",
   }).format(exportedAt);
@@ -93,6 +110,8 @@ export async function createProductPowerpoint(
 
   function addFooter(slide: pptxgen.Slide) {
     slide.addText(source, {
+      lang: language,
+      objectName: "Source et date de l'export",
       x: 0.35,
       y: 7.12,
       w: 12.63,
@@ -108,11 +127,13 @@ export async function createProductPowerpoint(
     );
   }
 
-  const slide = presentation.addSlide();
-  const status = application.currentStatus
-    ? ApplicationStatusLabels[application.currentStatus.status]
-    : missing;
-  slide.addText(preview("Nom de l'application", application.label, 56, 2), {
+  const slide = presentation.addSlide({ masterName: "PRODUCT_SUMMARY" });
+  // Les objets sont ajoutés dans l'ordre de lecture : titre, statut, faits,
+  // puis chaque rubrique avec son contenu, et enfin la source.
+  slide.addText(preview("Nom de l'application", view.title, 56, 2), {
+    placeholder: "title",
+    objectName: "Titre de la fiche produit",
+    lang: language,
     x: 0.35,
     y: 0.1,
     w: 9.5,
@@ -124,7 +145,9 @@ export async function createProductPowerpoint(
     valign: "middle",
     breakLine: false,
   });
-  slide.addText(status, {
+  slide.addText(view.status, {
+    objectName: "Statut de l'application",
+    lang: language,
     x: 10,
     y: 0.28,
     w: 2.98,
@@ -136,41 +159,13 @@ export async function createProductPowerpoint(
     margin: 0,
   });
 
-  const facts = [
-    ["Nom court", preview("Nom court", application.shortName ?? "", 29, 2)],
-    ["Identifiant", application.id],
-    [
-      "Directions métier",
-      preview(
-        "Directions métier",
-        application.businessDivisions
-          .map((division) => division.label)
-          .join(" · "),
-        29,
-        3,
-      ),
-    ],
-    ["Type", application.type ? typeLabels[application.type] : missing],
-    [
-      "Noms alternatifs",
-      preview(
-        "Noms alternatifs",
-        application.labels.map((label) => label.value).join(" · "),
-        29,
-        3,
-      ),
-    ],
-    [
-      "Tags",
-      preview(
-        "Tags",
-        application.tags.map((tag) => tag.name).join(" · "),
-        29,
-        3,
-      ),
-    ],
-  ];
+  const facts = view.facts.map(({ title, value, lines }) => [
+    title,
+    title === "Identifiant" ? value : preview(title, value, 29, lines),
+  ]);
   slide.addText("Description flash", {
+    objectName: "Titre des informations générales",
+    lang: language,
     x: 0.35,
     y: 1.04,
     w: 3.05,
@@ -185,12 +180,17 @@ export async function createProductPowerpoint(
     facts.map(([title, value]) => [
       {
         text: [
-          { text: title, options: { bold: true, breakLine: true } },
-          { text: value },
+          {
+            text: title,
+            options: { bold: true, breakLine: true, lang: language },
+          },
+          { text: value, options: { lang: language } },
         ],
       },
     ]),
     {
+      objectName: "Informations générales de l'application",
+      lang: language,
       x: 0.35,
       y: 1.47,
       w: 3.05,
@@ -215,6 +215,8 @@ export async function createProductPowerpoint(
     options: { background?: string; color?: string } = {},
   ) {
     slide.addText(title, {
+      objectName: title,
+      lang: language,
       x,
       y,
       w,
@@ -225,6 +227,8 @@ export async function createProductPowerpoint(
       margin: [0, 7, 0, 7],
     });
     slide.addText(text, {
+      objectName: `Contenu : ${title}`,
+      lang: language,
       x,
       y: y + 0.44,
       w,
@@ -242,7 +246,7 @@ export async function createProductPowerpoint(
 
   addSection(
     "Proposition de valeur",
-    preview("Description", application.description, 46, 6),
+    preview("Description", view.description, 46, 6),
     3.65,
     1.04,
     5.4,
@@ -250,7 +254,7 @@ export async function createProductPowerpoint(
   );
   addSection(
     "Objectifs",
-    preview("Objectifs", application.purposes.join("\n"), 46, 3),
+    preview("Objectifs", view.purposes, 46, 3),
     3.65,
     3.46,
     5.4,
@@ -258,12 +262,7 @@ export async function createProductPowerpoint(
   );
   addSection(
     "Cibles & utilisateurs",
-    preview(
-      "Populations cibles",
-      application.targetPopulations.join("\n"),
-      46,
-      4,
-    ),
+    preview("Populations cibles", view.targetPopulations, 46, 4),
     3.65,
     5.18,
     5.4,
@@ -271,28 +270,34 @@ export async function createProductPowerpoint(
   );
   addSection(
     "Données flash",
-    `Indice de qualité de la fiche\n${application.quality === null ? missing : `${application.quality} %`}\n\nNombre de clients et d'utilisateurs\n${missing}`,
+    `Indice de qualité de la fiche\n${view.quality}\n\nNombre de clients et d'utilisateurs\n${view.clients}`,
     9.3,
     1.04,
     3.68,
     2.25,
     { background: colors.cyan, color: "FFFFFF" },
   );
-  addSection("Relation client", missing, 9.3, 3.46, 3.68, 1.55);
   addSection(
-    "Coûts et revenus",
-    "Non renseignés dans RefApp",
+    "Relation client",
+    view.customerRelationship,
     9.3,
-    5.18,
+    3.46,
     3.68,
-    1.74,
+    1.55,
   );
+  addSection("Coûts et revenus", view.costs, 9.3, 5.18, 3.68, 1.74);
   addFooter(slide);
 
   for (const [title, lines] of overflow) {
+    const pageCount = Math.ceil(lines.length / 18);
     for (let offset = 0; offset < lines.length; offset += 18) {
-      const detail = presentation.addSlide();
-      detail.addText(`${title}${offset ? " (suite)" : ""}`, {
+      const detail = presentation.addSlide({ masterName: "PRODUCT_DETAIL" });
+      const pageTitle =
+        pageCount > 1 ? `${title} (${offset / 18 + 1}/${pageCount})` : title;
+      detail.addText(pageTitle, {
+        placeholder: "title",
+        objectName: `Titre : ${title}`,
+        lang: language,
         x: 0.5,
         y: 0.35,
         w: 12.3,
@@ -303,6 +308,8 @@ export async function createProductPowerpoint(
         margin: 0,
       });
       detail.addText(lines.slice(offset, offset + 18).join("\n"), {
+        objectName: `Contenu complet : ${title}`,
+        lang: language,
         x: 0.5,
         y: 1.3,
         w: 12.3,

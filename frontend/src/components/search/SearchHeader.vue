@@ -14,47 +14,62 @@ interface ApplicationOption {
 const router = useRouter();
 const { searchApplications } = useApplicationSearch();
 const searchRef = ref<{ clear?: () => void; focus?: () => void } | null>(null);
-const openBtnRef = ref<{ $el?: HTMLElement } | null>(null);
-const closeBtnRef = ref<{ $el?: HTMLElement } | null>(null);
+const openBtnRef = ref<HTMLButtonElement | null>(null);
+const closeBtnRef = ref<HTMLButtonElement | null>(null);
+const panelRef = ref<HTMLDialogElement | HTMLDivElement | null>(null);
 const isMobile = useMediaQuery("(max-width: 768px)");
 const showInput = ref(!isMobile.value);
 
 // Bascule desktop⇄mobile : ne pas laisser surgir l'overlay plein écran sur un
 // simple redimensionnement (il ne doit s'ouvrir que sur action explicite).
 watch(isMobile, (mobile) => {
+  if (panelRef.value instanceof HTMLDialogElement && panelRef.value.open) panelRef.value.close();
   showInput.value = !mobile;
 });
 
 async function onLoupeClick() {
   showInput.value = true;
   await nextTick();
+  if (panelRef.value instanceof HTMLDialogElement) panelRef.value.showModal();
   searchRef.value?.focus?.();
 }
 
+async function focusSearch() {
+  if (isMobile.value && !showInput.value) await onLoupeClick();
+  else searchRef.value?.focus?.();
+}
+
 function restoreLoupeFocus() {
-  nextTick(() => openBtnRef.value?.$el?.querySelector("button")?.focus());
+  nextTick(() => openBtnRef.value?.focus());
 }
 
 function closeSearch() {
-  showInput.value = false;
+  if (panelRef.value instanceof HTMLDialogElement && panelRef.value.open) panelRef.value.close();
   searchRef.value?.clear?.();
+  showInput.value = false;
   restoreLoupeFocus();
 }
 
-// Piège de focus de la boîte de dialogue mobile : le Tab boucle entre le champ
-// de recherche et le bouton « Fermer », sans jamais sortir de l'overlay.
-function onOverlayKeydown(e: KeyboardEvent) {
-  if (e.key !== "Tab") return;
+function onDialogKeydown(event: KeyboardEvent) {
+  if (!isMobile.value) return;
+  // L'autocomplete intercepte déjà Échap lorsque ses suggestions sont ouvertes.
+  // Le second Échap ferme le dialogue, sans atteindre le gestionnaire du menu DSFR.
+  if (event.key === "Escape") {
+    event.preventDefault();
+    event.stopPropagation();
+    closeSearch();
+    return;
+  }
+  if (event.key !== "Tab") return;
   const input = document.getElementById("app-search");
-  const closeBtn = closeBtnRef.value?.$el?.querySelector("button");
-  if (!input || !closeBtn) return;
-  const active = document.activeElement;
-  if (!e.shiftKey && active === closeBtn) {
-    e.preventDefault();
+  const closeButton = closeBtnRef.value;
+  if (!input || !closeButton) return;
+  if (event.shiftKey && document.activeElement === input) {
+    event.preventDefault();
+    closeButton.focus();
+  } else if (!event.shiftKey && document.activeElement === closeButton) {
+    event.preventDefault();
     input.focus();
-  } else if (e.shiftKey && active === input) {
-    e.preventDefault();
-    closeBtn.focus();
   }
 }
 
@@ -62,18 +77,11 @@ async function fetchSuggestions(searchQuery: string): Promise<ApplicationOption[
   const trimmed = searchQuery.trim();
   if (!trimmed) return [];
 
-  try {
-    // Recherche INDÉPENDANTE des filtres de la page (mergeCurrentFilters = false)
-    // et triée par PERTINENCE (ts_rank), pas par le tri de la page de recherche.
-    const response = await searchApplications({ qPrefix: trimmed, page: 0, pageSize: 8, sortBy: "relevance" }, false, false);
-
-    return (response?.results ?? []).map(
-      (app): ApplicationOption => ({ id: app.id, label: app.label, shortName: app.shortName ?? undefined }),
-    );
-  } catch {
-    // L'autocomplete gère l'affichage ; on renvoie une liste vide en cas d'échec.
-    return [];
-  }
+  // La recherche du bandeau est indépendante des filtres de la page.
+  // L'autocomplete distingue une erreur d'une réponse sans résultat.
+  const response = await searchApplications({ qPrefix: trimmed, page: 0, pageSize: 8, sortBy: "relevance" }, false, false);
+  if (!response) throw new Error("La recherche est momentanément indisponible.");
+  return response.results.map((app): ApplicationOption => ({ id: app.id, label: app.label, shortName: app.shortName ?? undefined }));
 }
 
 function displayLabel(application: ApplicationOption | null) {
@@ -86,39 +94,35 @@ function onConfirm(selection: ApplicationOption | null) {
   searchRef.value?.clear?.();
   if (isMobile.value) closeSearch();
 }
-
-// Échap depuis l'autocomplete (liste déjà fermée) → ferme l'overlay mobile.
-function onClose() {
-  if (isMobile.value && showInput.value) closeSearch();
-}
 </script>
 
 <template>
-  <div class="search-header">
-    <label class="fr-sr-only" for="app-search">Recherche d’une application</label>
-
-    <DsfrButton
+  <div id="app-search-shortcut" class="search-header" tabindex="-1" @focus="focusSearch">
+    <button
       v-show="isMobile && !showInput"
       ref="openBtnRef"
       @click="onLoupeClick"
-      tertiary
-      class="loupe-button"
+      type="button"
+      class="fr-btn fr-btn--tertiary loupe-button"
       aria-label="Ouvrir la recherche"
       data-testid="open-search-btn"
     >
-      <v-icon name="ri-search-line" />
-    </DsfrButton>
+      <span class="fr-icon-search-line" aria-hidden="true" />
+      <span>Ouvrir la recherche</span>
+    </button>
 
     <!-- Desktop : champ inline ; Mobile : overlay plein écran (boîte de dialogue) ouvert via la loupe. -->
-    <div
+    <component
+      :is="isMobile ? 'dialog' : 'div'"
       v-if="!isMobile || showInput"
+      ref="panelRef"
       :class="['search-field', { 'mobile-search-overlay': isMobile && showInput }]"
-      :role="isMobile && showInput ? 'dialog' : undefined"
-      :aria-modal="isMobile && showInput ? 'true' : undefined"
       :aria-label="isMobile && showInput ? 'Recherche d’une application' : undefined"
-      @keydown="isMobile && showInput ? onOverlayKeydown($event) : undefined"
+      @cancel.prevent="closeSearch"
+      @keydown="onDialogKeydown"
     >
       <div :class="{ 'overlay-header': isMobile && showInput }">
+        <label class="fr-sr-only" for="app-search">Recherche d’une application</label>
         <AccessibleAutocomplete
           ref="searchRef"
           id="app-search"
@@ -129,7 +133,6 @@ function onClose() {
           :on-change="onConfirm"
           :display-no-result="true"
           placeholder="Rechercher une application…"
-          @close="onClose"
         >
           <template #suggestion="{ item }">
             <div class="suggestion">
@@ -139,19 +142,19 @@ function onClose() {
           </template>
         </AccessibleAutocomplete>
 
-        <DsfrButton
+        <button
           v-if="isMobile && showInput"
           ref="closeBtnRef"
           @click="closeSearch"
-          tertiary
-          class="close-overlay"
+          type="button"
+          class="fr-btn fr-btn--tertiary close-overlay"
           aria-label="Fermer la recherche"
           data-testid="close-search-btn"
         >
-          <v-icon name="ri-close-line" />
-        </DsfrButton>
+          <span class="fr-icon-close-line" aria-hidden="true" />
+        </button>
       </div>
-    </div>
+    </component>
   </div>
 </template>
 
@@ -168,6 +171,8 @@ function onClose() {
    placeholder, responsive, sans toucher au composant partagé AccessibleAutocomplete. */
 .search-header :deep(.autocomplete) {
   width: clamp(20rem, 30vw, 28rem);
+  max-width: 100%;
+  min-width: 0;
 }
 
 /* Dans l'overlay de recherche mobile, le champ occupe toute la largeur
@@ -184,16 +189,9 @@ function onClose() {
   flex-shrink: 0;
 }
 
-/* FIXME : `-18.99em` est un nombre magique fragile qui remonte la loupe dans le
-   bandeau. Il dépend de la hauteur du header et casserait à la moindre évolution
-   de mise en page. À remplacer par un positionnement robuste (le header devrait
-   piloter l'alignement, p. ex. flex/grid) — à faire avec une vérification
-   visuelle mobile, non modifié ici pour ne pas régresser à l'aveugle. */
 .loupe-button {
-  position: relative;
-  margin-top: -18.99em;
-  z-index: 999;
-  margin-right: 1.2em;
+  gap: 0.5rem;
+  max-width: 100%;
 }
 
 .suggestion {
@@ -203,7 +201,7 @@ function onClose() {
 }
 
 .suggestion small {
-  color: #6b7280;
+  color: var(--text-mention-grey);
   font-size: 0.85rem;
 }
 
@@ -223,12 +221,21 @@ function onClose() {
   left: 0;
   width: 100%;
   height: 100%;
-  background: white;
-  z-index: 2000;
+  max-width: 100%;
+  max-height: 100%;
+  margin: 0;
+  border: 0;
+  box-sizing: border-box;
+  background: var(--background-default-grey);
+  color: var(--text-default-grey);
   display: flex;
   flex-direction: column;
   padding: 1rem;
   animation: fadeIn 0.2s ease;
+}
+
+.mobile-search-overlay:not([open]) {
+  display: none;
 }
 
 .overlay-header {

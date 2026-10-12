@@ -31,12 +31,14 @@ describe("ApplicationDetailsStep", () => {
     await add.trigger("click");
     await nextTick();
     const first = wrapper.get(`[data-testid="application-${testId}-0"]`);
+    expect(first.element).toHaveAccessibleName(testId === "population" ? "Population cible 1" : "Objectif 1");
     expect(first.element).toHaveFocus();
     await first.setValue("Première valeur");
 
     await add.trigger("click");
     await nextTick();
     const second = wrapper.get(`[data-testid="application-${testId}-1"]`);
+    expect(second.element).toHaveAccessibleName(testId === "population" ? "Population cible 2" : "Objectif 2");
     expect(second.element).toHaveFocus();
     await second.setValue("Deuxième valeur");
     expect(model[field]).toEqual(["Première valeur", "Deuxième valeur"]);

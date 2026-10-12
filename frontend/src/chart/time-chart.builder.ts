@@ -20,6 +20,7 @@ interface ChartLayout {
 
 export class TimeChartBuilder {
   private tooltip: d3.Selection<HTMLDivElement, unknown, null, undefined> | null = null;
+  private disposeInteractions: (() => void) | null = null;
 
   constructor(
     private readonly g: GSelection,
@@ -29,6 +30,13 @@ export class TimeChartBuilder {
     private readonly layout: ChartLayout,
     private readonly data: TechnicalDebtPoint[],
   ) {}
+
+  destroy() {
+    this.disposeInteractions?.();
+    this.disposeInteractions = null;
+    this.tooltip?.remove();
+    this.tooltip = null;
+  }
 
   /** Titre principal en haut au centre */
   drawTitle(): this {
@@ -74,12 +82,14 @@ export class TimeChartBuilder {
     this.g
       .append("g")
       .attr("transform", `translate(0,${y(TRESHOLD_TIME_MATURITY)})`)
-      .call(xAxis);
+      .call(xAxis)
+      .attr("font-size", "12px");
 
     this.g
       .append("g")
       .attr("transform", `translate(${x(TRESHOLD_TIME_MATURITY)},0)`)
-      .call(yAxis);
+      .call(yAxis)
+      .attr("font-size", "12px");
 
     return this;
   }
@@ -127,7 +137,7 @@ export class TimeChartBuilder {
       .attr("y", plotHeight + 30)
       .attr("text-anchor", "start")
       .attr("fill", "currentColor")
-      .attr("font-size", "11px")
+      .attr("font-size", "14px")
       .attr("font-style", "italic")
       .text("Pire");
 
@@ -137,7 +147,7 @@ export class TimeChartBuilder {
       .attr("y", plotHeight + 55)
       .attr("text-anchor", "middle")
       .attr("fill", "currentColor")
-      .attr("font-size", "13px")
+      .attr("font-size", "14px")
       .attr("font-weight", "bold")
       .text("Maturité métier");
 
@@ -147,7 +157,7 @@ export class TimeChartBuilder {
       .attr("y", plotHeight + 30)
       .attr("text-anchor", "end")
       .attr("fill", "currentColor")
-      .attr("font-size", "11px")
+      .attr("font-size", "14px")
       .attr("font-style", "italic")
       .text("Meilleur");
 
@@ -158,7 +168,7 @@ export class TimeChartBuilder {
       .attr("transform", `translate(-30,${plotHeight}) rotate(-90)`)
       .attr("text-anchor", "start")
       .attr("fill", "currentColor")
-      .attr("font-size", "11px")
+      .attr("font-size", "14px")
       .attr("font-style", "italic")
       .text("Pire");
 
@@ -167,7 +177,7 @@ export class TimeChartBuilder {
       .attr("transform", `translate(-30,0) rotate(-90)`)
       .attr("text-anchor", "end")
       .attr("fill", "currentColor")
-      .attr("font-size", "11px")
+      .attr("font-size", "14px")
       .attr("font-style", "italic")
       .text("Meilleur");
 
@@ -176,7 +186,7 @@ export class TimeChartBuilder {
       .attr("transform", `translate(-55,${plotHeight / 2}) rotate(-90)`)
       .attr("text-anchor", "middle")
       .attr("fill", "currentColor")
-      .attr("font-size", "13px")
+      .attr("font-size", "14px")
       .attr("font-weight", "bold")
       .text("Maturité technique");
 
@@ -192,62 +202,144 @@ export class TimeChartBuilder {
    */
   drawBubbles(): this {
     const { x, y, color, radius } = this.scales;
-
-    // Tooltip HTML flottant (créé ici car utilisé par les events des bulles)
+    this.destroy();
+    const tooltipId = `${this.svg.attr("id") || "time-chart"}-tooltip`;
     this.tooltip = d3
       .select(this.root)
       .append("div")
+      .attr("id", tooltipId)
+      .attr("role", "tooltip")
       .attr("class", "td-tooltip fr-p-1w fr-text--sm")
       .style("position", "absolute")
-      .style("pointer-events", "none")
+      .style("pointer-events", "auto")
+      .style("z-index", "10")
       .style("background", "var(--background-raised-grey, #f6f6f6)")
-      .style("border", "1px solid #ddd")
+      .style("color", "var(--text-default-grey)")
+      .style("border", "1px solid var(--text-mention-grey)")
       .style("border-radius", "4px")
       .style("box-shadow", "0 4px 12px rgba(0,0,0,0.08)")
       .style("display", "none")
-      .style("max-width", "250px")
-      .style("overflow", "hidden")
-      .style("text-overflow", "ellipsis")
-      .style("white-space", "nowrap");
-
+      .style("max-width", "min(22rem, calc(100% - 16px))")
+      .style("overflow-wrap", "anywhere")
+      .style("white-space", "normal");
     const tooltip = this.tooltip;
-
-    this.g
-      .selectAll("circle")
-      .data(this.data)
-      .enter()
-      .append("circle")
-      .attr("cx", (d) => x(d.technicalDebtInfo?.businessMaturity ?? 0))
-      .attr("cy", (d) => y(d.technicalDebtInfo?.technicalMaturity ?? 0))
-      .attr("r", (d) => radius(d.technicalDebtInfo?.costContainment ?? 0))
-      .attr("fill", (d) => color(d.technicalDebtInfo?.costContainment ?? 0))
-      .attr("opacity", 0.9)
-      .attr("stroke", "#9F0126")
-      .attr("stroke-width", 1)
-      .attr("cursor", "pointer")
-      .attr("data-testid", "technical-debt-point")
-      .on("mouseenter", (_, d) => {
-        const shortNameHtml = d.shortName ? `<em>${d.shortName}<em/>` : "";
-        tooltip
-          .style("display", "block")
-          .html(
-            `<strong>${d.label}</strong><br/>` +
-              `${shortNameHtml}<br/>` +
-              `Technique: ${d.technicalDebtInfo?.technicalMaturity ?? "-"}<br/>` +
-              `Metier: ${d.technicalDebtInfo?.businessMaturity ?? "-"}<br/>` +
-              `Maîtrise des coûts MCO: ${d.technicalDebtInfo?.costContainment ?? "-"}`,
-          );
-      })
-      .on("mousemove", (event) => {
-        tooltip.style("left", `${event.offsetX + 12}px`).style("top", `${event.offsetY + 12}px`);
+    let hideTimer: ReturnType<typeof setTimeout> | undefined;
+    let activePoint: SVGAElement | null = null;
+    let hoveredPoint: { element: SVGAElement; data: TechnicalDebtPoint } | null = null;
+    let pointerOnTooltip = false;
+    let focusedPoint: { element: SVGAElement; data: TechnicalDebtPoint } | null = null;
+    let dismissed = false;
+    const shouldKeep = () =>
+      Boolean(activePoint && (pointerOnTooltip || hoveredPoint?.element === activePoint || focusedPoint?.element === activePoint));
+    const cancelHide = () => {
+      clearTimeout(hideTimer);
+    };
+    const hide = () => {
+      cancelHide();
+      tooltip.style("display", "none");
+      activePoint?.removeAttribute("aria-describedby");
+    };
+    const hideLater = () => {
+      cancelHide();
+      if (!shouldKeep()) {
+        // Permet de traverser l'espace entre la bulle et son infobulle.
+        hideTimer = setTimeout(() => {
+          if (shouldKeep()) return;
+          const remainingTrigger = focusedPoint || hoveredPoint;
+          if (remainingTrigger && !dismissed) show(remainingTrigger.element, remainingTrigger.data);
+          else hide();
+        }, 200);
+      }
+    };
+    const values = (d: TechnicalDebtPoint) =>
+      `Maturité technique : ${d.technicalDebtInfo?.technicalMaturity ?? "non renseignée"}. Maturité métier : ${d.technicalDebtInfo?.businessMaturity ?? "non renseignée"}. Maîtrise des coûts MCO : ${d.technicalDebtInfo?.costContainment ?? "non renseignée"}.`;
+    const hasCost = (d: TechnicalDebtPoint) =>
+      typeof d.technicalDebtInfo?.costContainment === "number" && Number.isFinite(d.technicalDebtInfo.costContainment);
+    const show = (point: SVGAElement, d: TechnicalDebtPoint) => {
+      dismissed = false;
+      cancelHide();
+      if (activePoint !== point) activePoint?.removeAttribute("aria-describedby");
+      activePoint = point;
+      point.setAttribute("aria-describedby", tooltipId);
+      tooltip.selectAll("*").remove();
+      tooltip.append("strong").text(d.label);
+      if (d.shortName && d.shortName !== d.label) tooltip.append("div").text(d.shortName);
+      tooltip.append("div").text(values(d));
+      tooltip.append("div").text("Échap pour fermer. Entrée ouvre la fiche de l’application.");
+      tooltip.style("display", "block");
+      const rootRect = this.root.getBoundingClientRect();
+      const pointRect = point.getBoundingClientRect();
+      const tooltipRect = tooltip.node()!.getBoundingClientRect();
+      const availableWidth = this.root.clientWidth || rootRect.width;
+      const left = Math.max(8, Math.min(pointRect.left - rootRect.left + 12, availableWidth - tooltipRect.width - 8));
+      tooltip.style("left", `${left}px`).style("top", `${Math.max(8, pointRect.bottom - rootRect.top + 8)}px`);
+    };
+    tooltip
+      .on("mouseenter", () => {
+        pointerOnTooltip = true;
+        cancelHide();
       })
       .on("mouseleave", () => {
-        tooltip.style("display", "none");
-      })
-      .on("click", (_, d) => {
-        const base = import.meta.env.BASE_URL.replace(/\/$/, "");
-        globalThis.location.href = `${base}/applications/${d.id}`;
+        pointerOnTooltip = false;
+        hideLater();
       });
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && tooltip.style("display") !== "none") {
+        event.preventDefault();
+        event.stopPropagation();
+        dismissed = true;
+        hide();
+      }
+    };
+    document.addEventListener("keydown", onEscape, true);
+    this.disposeInteractions = () => {
+      cancelHide();
+      document.removeEventListener("keydown", onEscape, true);
+    };
+
+    const points = this.g
+      .append("g")
+      .selectAll<SVGAElement, TechnicalDebtPoint>("a")
+      .data(this.data)
+      .join<SVGAElement>("a")
+      .attr("href", (d) => `${import.meta.env.BASE_URL.replace(/\/$/, "")}/applications/${encodeURIComponent(d.id)}`)
+      .attr("tabindex", 0)
+      .attr("data-application-id", (d) => d.id)
+      .attr(
+        "aria-label",
+        (d) =>
+          `${d.label}${d.shortName && d.shortName !== d.label ? ` (${d.shortName})` : ""}. ${values(d)} Ouvrir la fiche de l’application.`,
+      )
+      .on("mouseenter", function (_, d) {
+        hoveredPoint = { element: this, data: d };
+        show(this, d);
+      })
+      .on("mouseleave", function () {
+        if (hoveredPoint?.element === this) hoveredPoint = null;
+        hideLater();
+      })
+      .on("focus", function (_, d) {
+        focusedPoint = { element: this, data: d };
+        show(this, d);
+        d3.select(this).select("circle").attr("stroke-width", 4);
+      })
+      .on("blur", function () {
+        if (focusedPoint?.element === this) focusedPoint = null;
+        hideLater();
+        d3.select(this).select("circle").attr("stroke-width", 2);
+      });
+    points
+      .append("circle")
+      .attr("aria-hidden", "true")
+      .attr("cx", (d) => x(d.technicalDebtInfo?.businessMaturity ?? 0))
+      .attr("cy", (d) => y(d.technicalDebtInfo?.technicalMaturity ?? 0))
+      .attr("r", (d) => (hasCost(d) ? radius(d.technicalDebtInfo!.costContainment!) : 8))
+      .attr("fill", (d) => (hasCost(d) ? color(d.technicalDebtInfo!.costContainment!) : "var(--background-default-grey)"))
+      .attr("stroke-dasharray", (d) => (hasCost(d) ? null : "3 2"))
+      .attr("stroke", "var(--text-default-grey)")
+      .attr("stroke-width", 2)
+      .attr("cursor", "pointer")
+      .attr("data-testid", "technical-debt-point");
 
     return this;
   }
@@ -257,11 +349,11 @@ export class TimeChartBuilder {
     const { color } = this.scales;
     const { plotWidth, plotHeight } = this.layout;
 
-    const legendWidth = 180;
+    const legendWidth = Math.min(180, plotWidth);
     const legendHeight = 8;
-    const legend = this.g.append("g").attr("transform", `translate(${plotWidth - legendWidth},${plotHeight + 35})`);
+    const legend = this.g.append("g").attr("transform", `translate(${plotWidth - legendWidth},${plotHeight + 90})`);
 
-    const gradientId = "cost-gradient";
+    const gradientId = `${this.svg.attr("id") || "time-chart"}-cost-gradient`;
     const defs = this.svg.append("defs");
     const gradient = defs
       .append("linearGradient")

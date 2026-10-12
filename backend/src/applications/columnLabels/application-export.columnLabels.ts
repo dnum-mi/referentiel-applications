@@ -16,9 +16,9 @@ export const columnLabels: Record<string, string> = {
   "relationsAsSource.targetApplication.label": "Cibles liées (nom)",
   relationsAsTarget: "Relations entrantes",
   "relationsAsTarget.sourceApplication.label": "Sources liées (nom)",
-  sourceId: "Source ID",
-  targetId: "Target ID",
-  type: "Relation Type",
+  sourceId: "Identifiant source",
+  targetId: "Identifiant cible",
+  type: "Type de relation",
 
   labels: "Labels",
   "labels.value": "Valeur du label",
@@ -44,7 +44,7 @@ export const columnLabels: Record<string, string> = {
   "actors.lastname": "Nom de l’acteur",
   "actors.role": "Rôle",
   "actors.type": "Type",
-  "actors.email": "Email",
+  "actors.email": "Adresse e-mail",
   "actors.organization.sigle": "Organisation",
 
   externalRessource: "Ressources externes",

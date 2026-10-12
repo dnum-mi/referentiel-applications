@@ -27,6 +27,16 @@ const newToken = ref<CreatePersonalTokenDto>({
 });
 
 const fieldErrors = ref<{ name?: string; description?: string; expiresAt?: string }>({});
+const tokenSection = ref<HTMLElement | null>(null);
+const tokenForm = ref<HTMLFormElement | null>(null);
+
+function expirationLimits() {
+  const min = new Date();
+  min.setDate(min.getDate() + 1);
+  const max = new Date();
+  max.setFullYear(max.getFullYear() + 1);
+  return { min: format(min, "yyyy-MM-dd"), max: format(max, "yyyy-MM-dd") };
+}
 
 const maxTokensReached = computed(() => tokens.value.length >= 5);
 
@@ -45,12 +55,10 @@ function validateForm(): boolean {
     fieldErrors.value.description = "Veuillez saisir la description";
   }
 
-  const min = new Date();
-  min.setDate(min.getDate() + 1);
-  const max = new Date();
-  max.setFullYear(max.getFullYear() + 1);
-  const expiresAt = newToken.value.expiresAt ? new Date(newToken.value.expiresAt) : null;
-  if (!expiresAt || Number.isNaN(expiresAt.getTime()) || expiresAt < min || expiresAt > max) {
+  const limits = expirationLimits();
+  const expiration = newToken.value.expiresAt || "";
+  const expiresAt = expiration ? new Date(expiration) : null;
+  if (!expiresAt || Number.isNaN(expiresAt.getTime()) || expiration < limits.min || expiration > limits.max) {
     fieldErrors.value.expiresAt =
       "Veuillez saisir la date d'expiration, comprise entre demain et 1 an maximum, format attendu : JJ/MM/AAAA";
   }
@@ -91,7 +99,12 @@ async function fetchTokens() {
 }
 
 async function createToken() {
-  if (!validateForm()) return;
+  if (!validateForm()) {
+    await nextTick();
+    const firstError = (["name", "description", "expiresAt"] as const).find((field) => fieldErrors.value[field]);
+    if (firstError) tokenForm.value?.querySelector<HTMLInputElement>(`[id="token-${firstError}"]`)?.focus();
+    return;
+  }
 
   isLoading.value = true;
   newlyCreatedToken.value = null;
@@ -155,9 +168,11 @@ function cancelRevokeToken() {
   tokenToRevoke.value = null;
 }
 
-function toggleCreateForm() {
+async function toggleCreateForm() {
   showCreateForm.value = !showCreateForm.value;
   if (!showCreateForm.value) resetForm();
+  await nextTick();
+  tokenSection.value?.querySelector<HTMLElement>(showCreateForm.value ? "#token-name" : '[data-testid="token-create-btn"]')?.focus();
 }
 
 function formatDate(dateString?: string): string {
@@ -179,15 +194,14 @@ function isRevoked(token: TokenDto): boolean {
   return token.status === "revoked";
 }
 
-function copyToClipboard(text: string) {
-  navigator.clipboard.writeText(text).then(() => {
+async function copyToClipboard(text: string) {
+  resetMessages();
+  try {
+    await navigator.clipboard.writeText(text);
     successMessage.value = "Token copié dans le presse-papier";
-    setTimeout(() => {
-      if (successMessage.value === "Token copié dans le presse-papier") {
-        successMessage.value = null;
-      }
-    }, 3000);
-  });
+  } catch {
+    error.value = "Impossible de copier le token. Sélectionnez sa valeur pour le copier manuellement.";
+  }
 }
 
 function dismissNewToken() {
@@ -200,14 +214,15 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="fr-mt-3w">
+  <div ref="tokenSection" class="fr-mt-3w">
     <h2 class="fr-h3 fr-mb-2w">Tokens applicatifs</h2>
     <p class="fr-text--sm fr-mb-3w">
       Les tokens applicatifs vous permettent d'accéder à l'API du référentiel. Vous pouvez créer jusqu'à 5 tokens personnels.
     </p>
 
     <div ref="messageRef">
-      <DsfrAlert v-if="error" type="error" :title="error" class="fr-mb-2w" closeable @close="error = null" />
+      <p role="status" aria-live="polite" aria-atomic="true" class="fr-sr-only">{{ successMessage }}</p>
+      <DsfrAlert v-if="error" alert type="error" :title="error" class="fr-mb-2w" closeable @close="error = null" />
 
       <DsfrAlert
         v-if="successMessage && !newlyCreatedToken"
@@ -232,6 +247,7 @@ onMounted(() => {
             Copier
           </DsfrButton>
         </div>
+        <p v-if="successMessage === 'Token copié dans le presse-papier'" class="fr-valid-text">{{ successMessage }}</p>
       </DsfrAlert>
     </div>
 
@@ -259,34 +275,45 @@ onMounted(() => {
 
     <div v-if="showCreateForm" class="fr-card fr-p-3w fr-mb-3w">
       <h3 class="fr-h5 fr-mb-2w">Nouveau token</h3>
-      <form @submit.prevent="createToken">
+      <form ref="tokenForm" novalidate @submit.prevent="createToken">
         <p class="fr-text--sm" data-testid="token-required-fields-hint">* = champs obligatoires</p>
         <DsfrInputGroup
+          id="token-name"
           v-model.trim="newToken.name"
           label="Nom"
           label-visible
           required
           hint="Nom du service ou de l'application utilisant ce token"
           :error-message="fieldErrors.name"
+          description-id="token-name-error"
+          :aria-invalid="fieldErrors.name ? true : undefined"
         />
 
         <DsfrInputGroup
+          id="token-description"
           v-model.trim="newToken.description"
           label="Description"
           label-visible
           required
           hint="Description de l'usage du token"
           :error-message="fieldErrors.description"
+          description-id="token-description-error"
+          :aria-invalid="fieldErrors.description ? true : undefined"
         />
 
         <DsfrInputGroup
+          id="token-expiresAt"
           v-model="newToken.expiresAt"
           label="Date d'expiration"
           label-visible
           required
           type="date"
+          :min="expirationLimits().min"
+          :max="expirationLimits().max"
           hint="La date ne peut être comprise qu'entre demain et 1 an maximum, format : JJ/MM/AAAA"
           :error-message="fieldErrors.expiresAt"
+          description-id="token-expiresAt-error"
+          :aria-invalid="fieldErrors.expiresAt ? true : undefined"
         />
 
         <div class="fr-mt-2w">
@@ -296,7 +323,7 @@ onMounted(() => {
       </form>
     </div>
 
-    <div v-if="isLoading && tokens.length === 0" class="fr-py-6w fr-text--center">Chargement...</div>
+    <div v-if="isLoading && tokens.length === 0" role="status" class="fr-py-6w fr-text--center">Chargement...</div>
 
     <div v-else-if="tokens.length === 0" class="fr-card fr-p-3w">
       <p class="fr-text--center fr-mb-0">Aucun token créé pour le moment.</p>
@@ -324,6 +351,7 @@ onMounted(() => {
             tertiary
             icon="ri-delete-bin-line"
             label="Révoquer"
+            :aria-label="`Révoquer le token ${token.name}`"
             :disabled="isLoading"
             @click="requestRevokeToken(token.id)"
           />
@@ -335,8 +363,8 @@ onMounted(() => {
       <p>Êtes-vous sûr de vouloir révoquer ce token ? Cette action est irréversible.</p>
       <template #footer>
         <DsfrButtonGroup :inline-layout-when="true" :reverse="true">
-          <DsfrButton label="Annuler" secondary @click="cancelRevokeToken" />
-          <DsfrButton label="Révoquer" @click="confirmRevokeToken" />
+          <li><DsfrButton label="Annuler" secondary @click="cancelRevokeToken" /></li>
+          <li><DsfrButton label="Révoquer" @click="confirmRevokeToken" /></li>
         </DsfrButtonGroup>
       </template>
     </DsfrModal>

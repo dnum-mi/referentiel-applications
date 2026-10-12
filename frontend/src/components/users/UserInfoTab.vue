@@ -3,7 +3,7 @@ import api from "@/api/index";
 import { Roles, type ContactAdminDto } from "@/client/types.gen";
 import { profileAuthLevelText } from "@/composables/use-auth-level";
 import { useUserStore } from "@/stores/userStore";
-import { computed, ref, onMounted, nextTick, useTemplateRef } from "vue";
+import { computed, ref, onMounted, nextTick, useTemplateRef, watch } from "vue";
 
 const userStore = useUserStore();
 
@@ -38,27 +38,36 @@ const successMessage = ref("");
 const errorMessage = ref("");
 const toggleRef = useTemplateRef<{ $el?: HTMLElement } | null>("toggleRef");
 
+watch(
+  () => userStore.user?.emailNotificationsEnabled,
+  (enabled) => {
+    if (!isUpdating.value && typeof enabled === "boolean") emailNotificationsEnabled.value = enabled;
+  },
+  { immediate: true },
+);
+
 async function handleToggleEmailNotifications() {
   isUpdating.value = true;
   successMessage.value = "";
   errorMessage.value = "";
 
-  const SUCCESS_MESSAGE_TIMEOUT = 3000;
+  const userId = userStore.user?.id;
 
   try {
     await userStore.updateEmailPreferences(emailNotificationsEnabled.value);
+    if (userId !== userStore.user?.id) return;
     successMessage.value = "Vos préférences de notification ont été mises à jour avec succès.";
-
-    setTimeout(() => {
-      successMessage.value = "";
-    }, SUCCESS_MESSAGE_TIMEOUT);
   } catch (error) {
+    if (userId !== userStore.user?.id) return;
     console.error("Error updating email preferences:", error);
     errorMessage.value = "Erreur lors de la mise à jour de vos préférences. Veuillez réessayer.";
 
     emailNotificationsEnabled.value = !emailNotificationsEnabled.value;
   } finally {
     isUpdating.value = false;
+    if (typeof userStore.user?.emailNotificationsEnabled === "boolean") {
+      emailNotificationsEnabled.value = userStore.user.emailNotificationsEnabled;
+    }
     // 12.8 : conserver le focus sur le champ après l'opération (le :disabled le retire pendant la requête).
     await nextTick();
     toggleRef.value?.$el?.querySelector("input")?.focus();
@@ -123,13 +132,18 @@ onMounted(async () => {
       <h2 class="fr-h6">Préférences de notification</h2>
       <DsfrToggleSwitch
         ref="toggleRef"
+        input-id="user-email-notifications"
         v-model="emailNotificationsEnabled"
         label="Recevoir les notifications par email"
-        aria-label="Recevoir des notifications par email lorsque des changements sont apportés à vos applications suivies."
+        hint="Lorsque des changements sont apportés à vos applications suivies."
         data-testid="user-profile-email-notifications-checkbox"
         :disabled="isUpdating"
         @update:model-value="handleToggleEmailNotifications"
       />
+      <p role="status" aria-live="polite" aria-atomic="true" class="fr-valid-text" data-testid="email-preferences-success">
+        {{ successMessage }}
+      </p>
+      <p v-if="errorMessage" role="alert" class="fr-error-text" data-testid="email-preferences-error">{{ errorMessage }}</p>
     </div>
   </div>
 </template>

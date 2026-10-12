@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { createProductPowerpoint } from "./product-powerpoint";
+import { createProductHtml } from "./product-html";
 
 // La fiche produit reprend uniquement les informations générales lisibles avec
 // AppRead. Ni dette technique, ni contacts, ni données d'exploitation sensibles.
@@ -29,6 +30,14 @@ export class ApplicationProductExportService {
   constructor(private readonly prisma: PrismaService) {}
 
   async exportProductCard(applicationId: string): Promise<Buffer> {
+    return createProductPowerpoint(await this.getProductCard(applicationId));
+  }
+
+  async exportProductCardToHtml(applicationId: string): Promise<Buffer> {
+    return createProductHtml(await this.getProductCard(applicationId));
+  }
+
+  private async getProductCard(applicationId: string): Promise<ProductCard> {
     const application = await this.prisma.application.findUnique({
       where: { id: applicationId },
       select: productCardSelect,
@@ -36,6 +45,6 @@ export class ApplicationProductExportService {
     if (!application) {
       throw new NotFoundException("Application non trouvée.");
     }
-    return createProductPowerpoint(application);
+    return application;
   }
 }

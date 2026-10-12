@@ -158,7 +158,15 @@ async function deleteHostingOption() {
       />
     </form>
 
-    <DsfrAlert v-if="errorMessage" :description="errorMessage" type="error" small class="fr-mb-2w" data-testid="hosting-option-error" />
+    <DsfrAlert
+      alert
+      v-if="errorMessage"
+      :description="errorMessage"
+      type="error"
+      small
+      class="fr-mb-2w"
+      data-testid="hosting-option-error"
+    />
 
     <template #footer>
       <DsfrButton label="Annuler" secondary data-testid="admin-cancel-btn" title="Annuler la modification" @click="closeEditModal" />

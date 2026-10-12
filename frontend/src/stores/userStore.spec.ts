@@ -436,6 +436,53 @@ describe("userStore — niveau d'authentification (#1985)", () => {
     return store.unsubscribeFromApp("app-1");
   }
 
+  it.each(mutations)("propage le refus HTTP de %s sans annoncer une mutation réussie", async (mutation) => {
+    const original = {
+      ...me(undefined),
+      emailNotificationsEnabled: false,
+      followedApplications: [{ id: "app-1", label: "Application suivie" }],
+    };
+    const response = {
+      data: { ...original, emailNotificationsEnabled: true, followedApplications: [] },
+      response: { ok: false, status: 403 },
+    };
+    updateMeMock.mockResolvedValue(response);
+    subscribeMock.mockResolvedValue(response);
+    unsubscribeMock.mockResolvedValue(response);
+    const store = useUserStore();
+    store.user = original;
+
+    await expect(startMutation(store, mutation)).rejects.toThrow(/a échoué/);
+    expect(store.user?.emailNotificationsEnabled).toBe(false);
+    expect(store.user?.followedApplications).toEqual(original.followedApplications);
+  });
+
+  it.each(mutations)("propage une réponse de %s sans données au lieu d'un faux succès", async (mutation) => {
+    const response = { response: { ok: true, status: 200 } };
+    updateMeMock.mockResolvedValue(response);
+    subscribeMock.mockResolvedValue(response);
+    unsubscribeMock.mockResolvedValue(response);
+    const store = useUserStore();
+    store.user = me(undefined);
+
+    await expect(startMutation(store, mutation)).rejects.toThrow(/a échoué/);
+    expect(store.user?.id).toBe("u-1");
+  });
+
+  it.each(mutations)("ignore le refus de %s provenant d'une session terminée", async (mutation) => {
+    const pending = deferred<{ response: { ok: boolean; status: number } }>();
+    updateMeMock.mockReturnValue(pending.promise);
+    subscribeMock.mockReturnValue(pending.promise);
+    unsubscribeMock.mockReturnValue(pending.promise);
+    const store = useUserStore();
+    store.user = me(undefined);
+    const updating = startMutation(store, mutation);
+    oidcEvents.unloaded();
+    pending.resolve({ response: { ok: false, status: 403 } });
+    await expect(updating).resolves.toBeUndefined();
+    expect(store.user).toBeUndefined();
+  });
+
   it.each(mutations)("une réponse %s ne remplace pas les droits plus récents", async (mutation) => {
     const pending = deferred<ReturnType<typeof okResponse>>();
     updateMeMock.mockReturnValue(pending.promise);

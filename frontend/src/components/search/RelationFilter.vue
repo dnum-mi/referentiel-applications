@@ -154,7 +154,7 @@ watch(
       <template #label>
         <span style="display: inline-flex; align-items: center; gap: 0.25rem">
           {{ label }}
-          <DsfrTooltip :id="`relation-${field}-tooltip-desc`" :content="tooltip" />
+          <DsfrTooltip :aria-label="`Afficher l’aide sur le filtre ${label}`" :id="`relation-${field}-tooltip-desc`" :content="tooltip" />
         </span>
       </template>
     </DsfrSelect>

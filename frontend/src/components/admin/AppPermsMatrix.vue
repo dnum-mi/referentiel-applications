@@ -182,7 +182,7 @@ async function createActorType() {
       </tr>
     </template>
     <tr v-for="perms in sortedMatrix" :key="perms.actorTypeId" :data-testid="`app-perms-row-${perms.actorTypeId}`">
-      <td>{{ actorTypeStore.actorTypes.find((at) => at.id === perms.actorTypeId)?.label ?? perms.actorTypeId }}</td>
+      <th scope="row">{{ actorTypeStore.actorTypes.find((at) => at.id === perms.actorTypeId)?.label ?? perms.actorTypeId }}</th>
       <td v-for="perm in gridKeys" :key="perm">
         <PermissionSelect
           v-if="perm === 'App'"
@@ -220,6 +220,7 @@ async function createActorType() {
           v-else-if="perm === 'PriorityRestart'"
           :id="`${perms.actorTypeId}-${perm}`"
           :checked="perms.AppWritePriority"
+          :actor-type-label="actorTypeStore.actorTypes.find((at) => at.id === perms.actorTypeId)?.label ?? perms.actorTypeId"
           :data-testid="`app-perms-select-${perms.actorTypeId}-${perm}`"
           @update:model-value="(value: boolean) => updateWritePriorityRestart(perms.actorTypeId, value)"
         />
@@ -261,7 +262,6 @@ async function createActorType() {
       class="fr-mt-2w"
       data-testid="app-perms-save-btn"
       title="Enregistrer la matrice des permissions"
-      aria-label="Enregistrer la matrice des permissions"
       @click="saveAppPermsMatrix"
     >
       Enregistrer les modifications
@@ -270,7 +270,6 @@ async function createActorType() {
       class="fr-mt-2w fr-ml-2w"
       data-testid="app-perms-reload-btn"
       title="Recharger la matrice des permissions"
-      aria-label="Recharger la matrice des permissions"
       @click="$emit('reload')"
     >
       Recharger les permissions

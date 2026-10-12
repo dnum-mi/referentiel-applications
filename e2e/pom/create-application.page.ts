@@ -125,12 +125,19 @@ export class CreateApplicationPage extends BasePage {
 
   /**
    * RGA-01 (RGAA 12.9) : clique le textarea sans sélectionner de texte puis envoie Tab.
-   * Le `handleKeydown` du MarkdownEditor ne consomme Tab que lorsque du texte est sélectionné ;
-   * sans sélection le comportement natif est préservé → le focus quitte le champ.
+   * Tab conserve la navigation native, avec ou sans sélection.
    */
   async focusDescriptionAndPressTab(): Promise<void> {
     await this.descriptionTextarea().click();
     await this.page.keyboard.press("Tab");
+  }
+
+  async selectDescriptionAndPressTab(shiftKey: boolean): Promise<void> {
+    const textarea = this.descriptionTextarea();
+    await textarea.fill("Première ligne\nDeuxième ligne");
+    await textarea.selectText();
+    await this.page.keyboard.press(shiftKey ? "Shift+Tab" : "Tab");
+    await expect(textarea).toHaveValue("Première ligne\nDeuxième ligne");
   }
 
   /**

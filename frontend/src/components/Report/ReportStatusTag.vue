@@ -71,7 +71,14 @@ watch(
     :label="statusDictionary[statusValue]"
     :data-testid="`issues-row-${report.id}-status`"
   />
-  <DsfrSelect v-else v-model="statusValue" :options="options" />
+  <DsfrSelect
+    v-else
+    :select-id="`report-status-${report.id}`"
+    v-model="statusValue"
+    :label="`Statut du signalement : ${report.description || report.id}`"
+    hide-label
+    :options="options"
+  />
 </template>
 
 <style scoped>

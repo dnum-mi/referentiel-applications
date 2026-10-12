@@ -122,6 +122,15 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     downloadBlob(blob, `applications_export_${date}.xlsx`);
   };
 
+  const downloadHtml = async (filters: Filters): Promise<void> => {
+    const query = cleanFilters(filters);
+    query.pageSize = 0;
+    const response = await api.applicationControllerExportHtml({ query, parseAs: "blob" });
+    if (!isApiSuccess(response) || !response.data) throw new Error("Erreur lors de l’export HTML.");
+    const date = new Date().toISOString().split("T")[0];
+    downloadBlob(new Blob([response.data], { type: "text/html;charset=utf-8" }), `applications_export_${date}.html`);
+  };
+
   const downloadProductPowerpoint = async (applicationId: string): Promise<void> => {
     const response = await api.applicationControllerExportProductPowerpoint({
       path: { applicationId },
@@ -132,6 +141,12 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     }
     const blob = new Blob([response.data], { type: "application/vnd.openxmlformats-officedocument.presentationml.presentation" });
     downloadBlob(blob, `fiche-produit-${applicationId}.pptx`);
+  };
+
+  const downloadProductHtml = async (applicationId: string): Promise<void> => {
+    const response = await api.applicationControllerExportProductHtml({ path: { applicationId }, parseAs: "blob" });
+    if (!isApiSuccess(response) || !response.data) throw new Error("Erreur lors de l’export de la fiche produit HTML.");
+    downloadBlob(new Blob([response.data], { type: "text/html;charset=utf-8" }), `fiche-produit-${applicationId}.html`);
   };
 
   return {
@@ -146,7 +161,9 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     patchApplicationsQuality,
     deleteApplication,
     downloadExcel,
+    downloadHtml,
     downloadProductPowerpoint,
+    downloadProductHtml,
   };
 });
 

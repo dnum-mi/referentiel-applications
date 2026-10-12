@@ -36,8 +36,9 @@ body,
 .filter-block {
   padding: 0.5rem;
   border-radius: 6px;
-  border: 1px solid #e2e8f0;
-  background-color: #fff;
+  border: 1px solid var(--border-default-grey);
+  background-color: var(--background-default-grey);
+  color: var(--text-default-grey);
   font-size: 0.85rem;
   gap: 0.25rem;
   height: auto;
@@ -68,7 +69,7 @@ body,
   border: none;
   font-size: 1rem;
   cursor: pointer;
-  color: #3a3a3a;
+  color: var(--text-default-grey);
   line-height: 1;
 }
 .tag-remove:hover {
@@ -138,4 +139,15 @@ body,
   z-index: 2;
   background-color: var(--background-alt-grey);
   box-shadow: inset 0 -1px 0 var(--border-plain-grey);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

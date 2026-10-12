@@ -72,4 +72,38 @@ describe("GET /applications/export/excel — export non paginé (B13)", () => {
 
     expect(ids).toEqual(createdIds);
   });
+
+  it("exporte les mêmes lignes et le même tri en HTML sans limiter la pagination", async () => {
+    const response = await request(app().getHttpServer())
+      .get("/applications/export/html")
+      .query({
+        search: prefix,
+        page: 1,
+        pageSize: 1,
+        sortBy: "label",
+        order: "asc",
+      })
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    expect(response.headers["content-type"]).toMatch(
+      /^text\/html;\s*charset=utf-8$/i,
+    );
+    expect(response.headers["content-disposition"]).toBe(
+      "attachment; filename=applications_export.html",
+    );
+    expect(response.headers["cache-control"]).toBe("no-store");
+    const applications = response.text
+      .split('id="section-1"')[1]
+      .split("</section>")[0];
+    expect(applications.match(/<caption>/g)).toHaveLength(16);
+    const positions = createdIds.map((id) => applications.indexOf(id));
+    expect(positions.every((position) => position >= 0)).toBe(true);
+    expect(positions).toEqual([...positions].sort((a, b) => a - b));
+  });
+
+  it("refuse le téléchargement HTML sans authentification", async () => {
+    await request(app().getHttpServer())
+      .get("/applications/export/html")
+      .expect(401);
+  });
 });

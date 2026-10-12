@@ -330,6 +330,7 @@ async function save() {
         <DsfrAlert
           v-if="showEcoIndexUrlWarning"
           type="warning"
+          alert
           title="Attention"
           description="Modifier l'URL réinitialisera les valeurs de l'éco-index."
           class="fr-mt-2w"

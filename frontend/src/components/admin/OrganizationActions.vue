@@ -390,6 +390,7 @@ async function deleteOrganization() {
 
     <div v-if="scopedAdmins.length" data-testid="organization-delete-scoped-admins-alert">
       <DsfrAlert
+        alert
         title="Des administrateurs ont cette organisation pour périmètre"
         description="Réaffectez leur périmètre à une autre organisation avant de supprimer celle-ci."
         type="error"

@@ -6,6 +6,7 @@ import { PrismaQueryBuilder } from "./prisma-query-builder.service";
 import { Requestor } from "src/user/entities/user.entity";
 import { CheckPermissions } from "src/common/service/check-permissions.service";
 import { Permission } from "@prisma/client";
+import type { ApplicationWithAllRelations } from "./types/application.type";
 
 @Injectable()
 export class ApplicationExportService {
@@ -20,6 +21,24 @@ export class ApplicationExportService {
     searchParams: ApplicationSearchDto,
     requestor: Requestor,
   ): Promise<Buffer> {
+    return this.exportApplicationsUseCase.executeWithApps(
+      await this.getSearchResults(searchParams, requestor),
+    );
+  }
+
+  async exportSearchResultsToHtml(
+    searchParams: ApplicationSearchDto,
+    requestor: Requestor,
+  ): Promise<Buffer> {
+    return this.exportApplicationsUseCase.executeHtmlWithApps(
+      await this.getSearchResults(searchParams, requestor),
+    );
+  }
+
+  private async getSearchResults(
+    searchParams: ApplicationSearchDto,
+    requestor: Requestor,
+  ): Promise<ApplicationWithAllRelations[]> {
     const hasAppList = await this.checkPermissions.can(
       [Permission.AppList],
       requestor,
@@ -29,7 +48,7 @@ export class ApplicationExportService {
       requestor,
     );
     if (!hasAppList && !hasAppRead) {
-      return this.exportApplicationsUseCase.executeWithApps([]);
+      return [];
     }
 
     // Filtrage et tri en base, sans pagination : l'export porte sur toutes les
@@ -46,11 +65,6 @@ export class ApplicationExportService {
     );
     const { sortBy = "shortName", order = "asc" } = searchParams;
     const orderBy = this.prismaQueryBuilder.buildOrderBy(sortBy, order);
-    const applications = await this.repository.findAllWithFullRelations(
-      where,
-      orderBy,
-    );
-
-    return this.exportApplicationsUseCase.executeWithApps(applications);
+    return this.repository.findAllWithFullRelations(where, orderBy);
   }
 }

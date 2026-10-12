@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/vue";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/vue";
 import { createMemoryHistory, createRouter } from "vue-router";
 import type { DataApplicationDto } from "@/client/types.gen";
 import { routeNames } from "@/router/route-names";
@@ -7,6 +7,7 @@ import DataApplicationDetail from "./DataApplicationDetail.vue";
 afterEach(() => cleanup());
 
 const findOneMock = vi.fn();
+const hasPermissionsMock = vi.fn().mockReturnValue(false);
 
 vi.mock("@/api/index", () => ({
   default: {
@@ -29,7 +30,7 @@ vi.mock("@/stores/toasterStore", () => ({
 
 vi.mock("@/stores/userStore", () => ({
   useUserStore: () => ({
-    hasPermissions: vi.fn().mockReturnValue(false),
+    hasPermissions: (...args: unknown[]) => hasPermissionsMock(...args),
   }),
 }));
 
@@ -66,6 +67,64 @@ function dataApplicationFixture(overrides: Partial<DataApplicationDto> = {}): Da
 describe("dataApplicationDetail — tags métier cliquables", () => {
   beforeEach(() => {
     findOneMock.mockReset();
+    hasPermissionsMock.mockReset().mockReturnValue(false);
+  });
+
+  it("nomme les aides des données dans les états où leurs champs sont affichés", async () => {
+    findOneMock.mockResolvedValue({
+      response: { ok: true },
+      data: dataApplicationFixture({
+        volumetry: 100,
+        monthlyVolumetry: 5,
+        isReference: true,
+        example: "Exemple d'adresse",
+        conservation: "Cinq ans",
+        businessUsage: "Acheminement du courrier",
+        dataDescription: { id: "desc-1", name: "Adresse", description: "Adresse postale", officialUrl: "https://example.fr" },
+      }),
+    });
+    render(DataApplicationDetail, {
+      props: { applicationId: "app-1", dataApplicationId: "data-app-1" },
+      global: { plugins: [makeRouter()] },
+    });
+    await waitFor(() => screen.getByTestId("data-application-detail-name"));
+    const helps = screen.getAllByRole("button", { name: /^Aide :/ });
+    expect(helps).toHaveLength(8);
+    for (const help of helps) expect(help).toHaveAccessibleName();
+  });
+
+  it("conserve les commandes et le contenu pendant l'actualisation après une édition", async () => {
+    hasPermissionsMock.mockReturnValue(true);
+    let resolve!: (result: { response: { ok: boolean }; data: DataApplicationDto }) => void;
+    findOneMock.mockResolvedValueOnce({ response: { ok: true }, data: dataApplicationFixture() }).mockImplementationOnce(
+      () =>
+        new Promise((res) => {
+          resolve = res;
+        }),
+    );
+    render(DataApplicationDetail, {
+      props: { applicationId: "app-1", dataApplicationId: "data-app-1" },
+      global: {
+        plugins: [makeRouter()],
+        stubs: {
+          DataApplicationModal: {
+            emits: ["dataUpdated"],
+            template: '<button data-testid="save-data-fixture" @click="$emit(\'dataUpdated\')">Modifier</button>',
+          },
+        },
+      },
+    });
+    await waitFor(() => screen.getByTestId("data-application-detail-edit-btn"));
+    const title = screen.getByTestId("data-application-detail-name");
+    const edit = screen.getByTestId("data-application-detail-edit-btn");
+    await fireEvent.click(edit);
+    await fireEvent.click(screen.getByTestId("save-data-fixture"));
+    expect(screen.getByTestId("data-application-detail-name")).toBe(title);
+    expect(edit).toBeInTheDocument();
+    expect(screen.getByTestId("data-application-detail")).toHaveAttribute("aria-busy", "true");
+    resolve({ response: { ok: true }, data: dataApplicationFixture() });
+    await waitFor(() => expect(screen.getByTestId("data-application-detail")).toHaveAttribute("aria-busy", "false"));
+    expect(screen.getByTestId("data-application-detail-name")).toBe(title);
   });
 
   it("renders each business tag as a link to the application search page filtered by that tag", async () => {

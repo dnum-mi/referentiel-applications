@@ -1,4 +1,5 @@
 import JSZip from "jszip";
+import pptxgen from "pptxgenjs";
 import type { ProductCard } from "./product-export.service";
 import { createProductPowerpoint } from "./product-powerpoint";
 
@@ -41,6 +42,64 @@ function readText(xml: string) {
 }
 
 describe("Fiche produit PowerPoint (#434)", () => {
+  it("donne un titre natif à chaque diapositive, une langue française et des identifiants uniques", async () => {
+    const buffer = await createProductPowerpoint({
+      ...product,
+      description: "Texte détaillé à conserver. ".repeat(80),
+    });
+    const zip = await JSZip.loadAsync(buffer);
+    const { slides } = await readSlides(buffer);
+    expect(slides.length).toBeGreaterThan(1);
+    const titles = slides.map((xml) => readText(xml)[0]);
+    expect(new Set(titles).size).toBe(titles.length);
+    for (const xml of slides) {
+      const firstShape = xml.match(/<p:sp>.*?<\/p:sp>/s)?.[0];
+      expect(firstShape).toMatch(/<p:ph[^>]*type="title"/);
+      expect(firstShape).toContain("<a:t>");
+      const ids = Array.from(
+        xml.matchAll(/<p:cNvPr id="(\d+)"/g),
+        ([, id]) => id,
+      );
+      expect(new Set(ids).size).toBe(ids.length);
+      const languages = Array.from(
+        xml.matchAll(/(?:<a:rPr|<a:endParaRPr)[^>]*\blang="([^"]+)"/g),
+        ([, lang]) => lang,
+      );
+      expect(languages.length).toBeGreaterThan(0);
+      expect(new Set(languages)).toEqual(new Set(["fr-FR"]));
+    }
+    const notes = Object.keys(zip.files).filter((path) =>
+      /^ppt\/notesSlides\/notesSlide\d+\.xml$/.test(path),
+    );
+    for (const path of notes) {
+      const xml = await zip.file(path)!.async("string");
+      expect(xml).toContain("Source : informations générales");
+      expect(xml).not.toContain('lang="en-US"');
+      expect(xml).toContain('lang="fr-FR"');
+    }
+  });
+
+  it("conserve des IDs distincts avec plusieurs tables et garde l'anglais par défaut hors RefApp", async () => {
+    const presentation = new pptxgen();
+    const slide = presentation.addSlide();
+    slide.addText("Title", { x: 0, y: 0, w: 4, h: 1 });
+    slide.addTable([[{ text: "One" }]], { x: 0, y: 1, w: 4, h: 1 });
+    slide.addTable([[{ text: "Two" }]], { x: 0, y: 2, w: 4, h: 1 });
+    slide.addNotes("Notes in English");
+    const buffer = await presentation.write({ outputType: "nodebuffer" });
+    if (!Buffer.isBuffer(buffer)) throw new Error("PPTX attendu");
+    const zip = await JSZip.loadAsync(buffer);
+    const xml = await zip.file("ppt/slides/slide1.xml")!.async("string");
+    const ids = Array.from(
+      xml.matchAll(/<p:cNvPr id="(\d+)"/g),
+      ([, id]) => id,
+    );
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(
+      await zip.file("ppt/notesSlides/notesSlide1.xml")!.async("string"),
+    ).toContain('lang="en-US"');
+  });
+
   it("génère une fiche modifiable avec les informations générales et la date", async () => {
     const buffer = await createProductPowerpoint(
       product,
@@ -80,7 +139,7 @@ describe("Fiche produit PowerPoint (#434)", () => {
     expect(slides.length).toBeGreaterThan(1);
     expect(text).toContain("voir détails");
     const descriptionDetails = slides
-      .filter((xml) => /<a:t>Description(?: \(suite\))?<\/a:t>/.test(xml))
+      .filter((xml) => /^Description(?: \(\d+\/\d+\))?$/.test(readText(xml)[0]))
       .flatMap((xml) => readText(xml).slice(1, -1))
       .join("");
     expect(descriptionDetails.replace(/\s+/g, "")).toBe(

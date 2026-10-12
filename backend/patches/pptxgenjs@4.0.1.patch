@@ -1,5 +1,5 @@
 diff --git a/dist/pptxgen.cjs.js b/dist/pptxgen.cjs.js
-index 143dfa3e7fb54054153bad16b6c991697c0d31e7..4292e0ec26fa87a21f25028d64f34ebb7a18c337 100644
+index 143dfa3e7fb54054153bad16b6c991697c0d31e7..f774e694d932686fd53005c3beb4b1f64f3785a5 100644
 --- a/dist/pptxgen.cjs.js
 +++ b/dist/pptxgen.cjs.js
 @@ -4841,8 +4841,8 @@ function encodeSlideMediaRels(layout) {
@@ -13,6 +13,24 @@ index 143dfa3e7fb54054153bad16b6c991697c0d31e7..4292e0ec26fa87a21f25028d64f34ebb
          })
          : () => __awaiter(this, void 0, void 0, function* () { });
      // Immediately start it when we know we’re in Node
+@@ -5181,7 +5181,7 @@ function slideObjectToXml(slide) {
+                 });
+                 // STEP 1: Start Table XML
+                 // NOTE: Non-numeric cNvPr id values will trigger "presentation needs repair" type warning in MS-PPT-2013
+-                strXml = `<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="${intTableNum * slide._slideNum + 1}" name="${slideItemObj.options.objectName}"/>`;
++                strXml = `<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="${idx + 2}" name="${slideItemObj.options.objectName}"/>`;
+                 strXml +=
+                     '<p:cNvGraphicFramePr><a:graphicFrameLocks noGrp="1"/></p:cNvGraphicFramePr>' +
+                         '  <p:nvPr><p:extLst><p:ext uri="{D42A27DB-BD31-4B8C-83A1-F6EECF244321}"><p14:modId xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" val="1579011935"/></p:ext></p:extLst></p:nvPr>' +
+@@ -5304,7 +5304,7 @@ function slideObjectToXml(slide) {
+                         // 2: OPTIONS: Build/set cell options
+                         const cellOpts = cell.options || {};
+                         cell.options = cellOpts;
+-                        ['align', 'bold', 'border', 'color', 'fill', 'fontFace', 'fontSize', 'margin', 'textDirection', 'underline', 'valign'].forEach(name => {
++                        ['align', 'bold', 'border', 'color', 'fill', 'fontFace', 'fontSize', 'lang', 'margin', 'textDirection', 'underline', 'valign'].forEach(name => {
+                             if (objTabOpts[name] && !cellOpts[name] && cellOpts[name] !== 0)
+                                 cellOpts[name] = objTabOpts[name];
+                         });
 @@ -6349,8 +6349,8 @@ function makeXmlContTypes(slides, slideLayouts, masterSlide) {
      // STEP 2: Add presentation and slide master(s)/slide(s)
      strXml += '<Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>';
@@ -23,7 +41,19 @@ index 143dfa3e7fb54054153bad16b6c991697c0d31e7..4292e0ec26fa87a21f25028d64f34ebb
          strXml += `<Override PartName="/ppt/slides/slide${idx + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>`;
          // Add charts if any
          slide._relsChart.forEach(rel => {
-@@ -7203,8 +7203,8 @@ class PptxGenJS {
+@@ -6525,7 +6525,10 @@ function makeXmlNotesMaster() {
+  * @return {string} XML
+  */
+ function makeXmlNotesSlide(slide) {
+-    return (`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>${CRLF}<p:notes xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr><p:sp><p:nvSpPr><p:cNvPr id="2" name="Slide Image Placeholder 1"/><p:cNvSpPr><a:spLocks noGrp="1" noRot="1" noChangeAspect="1"/></p:cNvSpPr><p:nvPr><p:ph type="sldImg"/></p:nvPr></p:nvSpPr><p:spPr/></p:sp><p:sp><p:nvSpPr><p:cNvPr id="3" name="Notes Placeholder 2"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr><p:ph type="body" idx="1"/></p:nvPr></p:nvSpPr><p:spPr/><p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:r><a:rPr lang="en-US" dirty="0"/><a:t>${encodeXmlEntities(getNotesFromSlide(slide))}</a:t></a:r><a:endParaRPr lang="en-US" dirty="0"/></a:p></p:txBody></p:sp><p:sp><p:nvSpPr><p:cNvPr id="4" name="Slide Number Placeholder 3"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr><p:ph type="sldNum" sz="quarter" idx="10"/></p:nvPr></p:nvSpPr><p:spPr/><p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:fld id="${SLDNUMFLDID}" type="slidenum"><a:rPr lang="en-US"/><a:t>${slide._slideNum}</a:t></a:fld><a:endParaRPr lang="en-US"/></a:p></p:txBody></p:sp></p:spTree><p:extLst><p:ext uri="{BB962C8B-B14F-4D97-AF65-F5344CB8AC3E}"><p14:creationId xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" val="1024086991"/></p:ext></p:extLst></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:notes>`);
++    // Notes inherit the language of the slide content instead of always English.
++    const textObject = slide._slideObjects.find(object => object.options && object.options.lang);
++    const language = encodeXmlEntities(textObject ? textObject.options.lang : 'en-US');
++    return (`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>${CRLF}<p:notes xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr><p:sp><p:nvSpPr><p:cNvPr id="2" name="Slide Image Placeholder 1"/><p:cNvSpPr><a:spLocks noGrp="1" noRot="1" noChangeAspect="1"/></p:cNvSpPr><p:nvPr><p:ph type="sldImg"/></p:nvPr></p:nvSpPr><p:spPr/></p:sp><p:sp><p:nvSpPr><p:cNvPr id="3" name="Notes Placeholder 2"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr><p:ph type="body" idx="1"/></p:nvPr></p:nvSpPr><p:spPr/><p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:r><a:rPr lang="${language}" dirty="0"/><a:t>${encodeXmlEntities(getNotesFromSlide(slide))}</a:t></a:r><a:endParaRPr lang="${language}" dirty="0"/></a:p></p:txBody></p:sp><p:sp><p:nvSpPr><p:cNvPr id="4" name="Slide Number Placeholder 3"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr><p:ph type="sldNum" sz="quarter" idx="10"/></p:nvPr></p:nvSpPr><p:spPr/><p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:fld id="${SLDNUMFLDID}" type="slidenum"><a:rPr lang="${language}"/><a:t>${slide._slideNum}</a:t></a:fld><a:endParaRPr lang="${language}"/></a:p></p:txBody></p:sp></p:spTree><p:extLst><p:ext uri="{BB962C8B-B14F-4D97-AF65-F5344CB8AC3E}"><p14:creationId xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" val="1024086991"/></p:ext></p:extLst></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:notes>`);
+ }
+ /**
+  * Generates the XML layout resource from a layout object
+@@ -7203,8 +7206,8 @@ class PptxGenJS {
              const data = yield this.exportPresentation({ compression, outputType });
              // STEP 4: Write the file out
              if (isNode) {
@@ -35,9 +65,27 @@ index 143dfa3e7fb54054153bad16b6c991697c0d31e7..4292e0ec26fa87a21f25028d64f34ebb
                  yield writeFile(fileName, data);
                  return fileName;
 diff --git a/dist/pptxgen.es.js b/dist/pptxgen.es.js
-index 449038cbf3d367c7e5a51bf692793a25bd06a86e..e84bba1ae25a7177300789f1285f5a5d376e1dec 100644
+index 449038cbf3d367c7e5a51bf692793a25bd06a86e..cf7d10eb010d4a01980f07b3698cb6fff4ee1f23 100644
 --- a/dist/pptxgen.es.js
 +++ b/dist/pptxgen.es.js
+@@ -5179,7 +5179,7 @@ function slideObjectToXml(slide) {
+                 });
+                 // STEP 1: Start Table XML
+                 // NOTE: Non-numeric cNvPr id values will trigger "presentation needs repair" type warning in MS-PPT-2013
+-                strXml = `<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="${intTableNum * slide._slideNum + 1}" name="${slideItemObj.options.objectName}"/>`;
++                strXml = `<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="${idx + 2}" name="${slideItemObj.options.objectName}"/>`;
+                 strXml +=
+                     '<p:cNvGraphicFramePr><a:graphicFrameLocks noGrp="1"/></p:cNvGraphicFramePr>' +
+                         '  <p:nvPr><p:extLst><p:ext uri="{D42A27DB-BD31-4B8C-83A1-F6EECF244321}"><p14:modId xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" val="1579011935"/></p:ext></p:extLst></p:nvPr>' +
+@@ -5302,7 +5302,7 @@ function slideObjectToXml(slide) {
+                         // 2: OPTIONS: Build/set cell options
+                         const cellOpts = cell.options || {};
+                         cell.options = cellOpts;
+-                        ['align', 'bold', 'border', 'color', 'fill', 'fontFace', 'fontSize', 'margin', 'textDirection', 'underline', 'valign'].forEach(name => {
++                        ['align', 'bold', 'border', 'color', 'fill', 'fontFace', 'fontSize', 'lang', 'margin', 'textDirection', 'underline', 'valign'].forEach(name => {
+                             if (objTabOpts[name] && !cellOpts[name] && cellOpts[name] !== 0)
+                                 cellOpts[name] = objTabOpts[name];
+                         });
 @@ -6347,8 +6347,8 @@ function makeXmlContTypes(slides, slideLayouts, masterSlide) {
      // STEP 2: Add presentation and slide master(s)/slide(s)
      strXml += '<Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>';
@@ -48,3 +96,15 @@ index 449038cbf3d367c7e5a51bf692793a25bd06a86e..e84bba1ae25a7177300789f1285f5a5d
          strXml += `<Override PartName="/ppt/slides/slide${idx + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>`;
          // Add charts if any
          slide._relsChart.forEach(rel => {
+@@ -6523,7 +6523,10 @@ function makeXmlNotesMaster() {
+  * @return {string} XML
+  */
+ function makeXmlNotesSlide(slide) {
+-    return (`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>${CRLF}<p:notes xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr><p:sp><p:nvSpPr><p:cNvPr id="2" name="Slide Image Placeholder 1"/><p:cNvSpPr><a:spLocks noGrp="1" noRot="1" noChangeAspect="1"/></p:cNvSpPr><p:nvPr><p:ph type="sldImg"/></p:nvPr></p:nvSpPr><p:spPr/></p:sp><p:sp><p:nvSpPr><p:cNvPr id="3" name="Notes Placeholder 2"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr><p:ph type="body" idx="1"/></p:nvPr></p:nvSpPr><p:spPr/><p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:r><a:rPr lang="en-US" dirty="0"/><a:t>${encodeXmlEntities(getNotesFromSlide(slide))}</a:t></a:r><a:endParaRPr lang="en-US" dirty="0"/></a:p></p:txBody></p:sp><p:sp><p:nvSpPr><p:cNvPr id="4" name="Slide Number Placeholder 3"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr><p:ph type="sldNum" sz="quarter" idx="10"/></p:nvPr></p:nvSpPr><p:spPr/><p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:fld id="${SLDNUMFLDID}" type="slidenum"><a:rPr lang="en-US"/><a:t>${slide._slideNum}</a:t></a:fld><a:endParaRPr lang="en-US"/></a:p></p:txBody></p:sp></p:spTree><p:extLst><p:ext uri="{BB962C8B-B14F-4D97-AF65-F5344CB8AC3E}"><p14:creationId xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" val="1024086991"/></p:ext></p:extLst></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:notes>`);
++    // Notes inherit the language of the slide content instead of always English.
++    const textObject = slide._slideObjects.find(object => object.options && object.options.lang);
++    const language = encodeXmlEntities(textObject ? textObject.options.lang : 'en-US');
++    return (`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>${CRLF}<p:notes xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr><p:sp><p:nvSpPr><p:cNvPr id="2" name="Slide Image Placeholder 1"/><p:cNvSpPr><a:spLocks noGrp="1" noRot="1" noChangeAspect="1"/></p:cNvSpPr><p:nvPr><p:ph type="sldImg"/></p:nvPr></p:nvSpPr><p:spPr/></p:sp><p:sp><p:nvSpPr><p:cNvPr id="3" name="Notes Placeholder 2"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr><p:ph type="body" idx="1"/></p:nvPr></p:nvSpPr><p:spPr/><p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:r><a:rPr lang="${language}" dirty="0"/><a:t>${encodeXmlEntities(getNotesFromSlide(slide))}</a:t></a:r><a:endParaRPr lang="${language}" dirty="0"/></a:p></p:txBody></p:sp><p:sp><p:nvSpPr><p:cNvPr id="4" name="Slide Number Placeholder 3"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr><p:ph type="sldNum" sz="quarter" idx="10"/></p:nvPr></p:nvSpPr><p:spPr/><p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:fld id="${SLDNUMFLDID}" type="slidenum"><a:rPr lang="${language}"/><a:t>${slide._slideNum}</a:t></a:fld><a:endParaRPr lang="${language}"/></a:p></p:txBody></p:sp></p:spTree><p:extLst><p:ext uri="{BB962C8B-B14F-4D97-AF65-F5344CB8AC3E}"><p14:creationId xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" val="1024086991"/></p:ext></p:extLst></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:notes>`);
+ }
+ /**
+  * Generates the XML layout resource from a layout object

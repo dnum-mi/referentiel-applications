@@ -37,7 +37,7 @@ const showMissingRightsAlert = computed(() => !hasFullReadRights.value && !missi
 
 const isSubscriptionLoading = ref(false);
 const isSubscribed = computed(() => userStore.isSubscribed(id));
-const subscribeBtn = ref<{ $el?: HTMLElement } | null>(null);
+const subscribeBtn = ref<{ focus: () => void } | null>(null);
 
 async function toggleSubscription() {
   isSubscriptionLoading.value = true;
@@ -53,7 +53,7 @@ async function toggleSubscription() {
     isSubscriptionLoading.value = false;
     // 12.8 : le bouton reste monté (seul le label change) → conserver le focus dessus après la bascule.
     await nextTick();
-    subscribeBtn.value?.$el?.querySelector("button")?.focus();
+    subscribeBtn.value?.focus();
   }
 }
 
@@ -249,6 +249,7 @@ function formatMetadataAuthor(metadata: MetadataDto): string {
         class="fr-btn--tertiary-no-outline fr-btn--icon-left"
         :class="isSubscribed ? 'fr-icon-notification-3-fill' : 'fr-icon-notification-3-line'"
         :disabled="isSubscriptionLoading"
+        :aria-busy="isSubscriptionLoading"
         @click="toggleSubscription"
         :title="
           isSubscribed
@@ -261,8 +262,8 @@ function formatMetadataAuthor(metadata: MetadataDto): string {
       <DsfrButton
         class="fr-btn--tertiary-no-outline fr-btn--icon-left fr-icon-links-line"
         data-testid="application-copy-link-btn"
-        title="Copier le lien de cette application"
-        aria-label="Copier le lien de cette application"
+        title="Copier le lien de la fiche application"
+        aria-label="Copier le lien de la fiche application"
         @click="copyToClipboard"
       >
         Copier le lien de la fiche application
@@ -311,7 +312,6 @@ function formatMetadataAuthor(metadata: MetadataDto): string {
         class="application-delete-btn fr-btn--secondary fr-btn--icon-left fr-icon-delete-line"
         data-testid="application-delete-btn"
         title="Supprimer définitivement cette application"
-        aria-label="Supprimer définitivement cette application"
         @click="deleteModalOpened = true"
       >
         Supprimer l’application
@@ -324,7 +324,6 @@ function formatMetadataAuthor(metadata: MetadataDto): string {
       :actions="actions"
       data-testid="application-delete-modal"
       @close="resetModal"
-      aria-labelledby="application-delete-modal-title"
     >
       <DsfrAlert
         id="application-delete-alert"
@@ -342,7 +341,7 @@ function formatMetadataAuthor(metadata: MetadataDto): string {
         data-testid="application-delete-input"
         title="Entrez le nom de l’application pour confirmer"
         aria-label="Entrer le nom de l’application pour confirmer"
-        :aria-describedby="'application-delete-alert'"
+        description-id="application-delete-alert"
       ></DsfrInput>
     </DsfrModal>
   </div>
@@ -358,7 +357,7 @@ function formatMetadataAuthor(metadata: MetadataDto): string {
 .subtitle {
   font-weight: 600;
   font-size: 1rem;
-  color: #666;
+  color: var(--text-mention-grey);
   margin: 0.25rem 0;
 }
 

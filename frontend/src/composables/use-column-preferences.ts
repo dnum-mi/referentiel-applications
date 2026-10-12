@@ -2,6 +2,7 @@ import { useUserStore } from "@/stores/userStore";
 import { AVAILABLE_COLUMNS, DEFAULT_VISIBLE_COLUMNS, type ColumnConfig } from "@/types/columns";
 import type { TableColumn } from "@/types/table";
 import { computed, ref, watch } from "vue";
+import { DEFAULT_COLUMN_WIDTH, normalizeColumnWidth } from "@/utils/column-width";
 
 const STORAGE_KEY = "app-table-column-preferences";
 
@@ -79,7 +80,7 @@ export function useColumnPreferences() {
       field: col.field,
       header: col.header,
       sortable: col.sortable,
-      width: columnWidths.value[col.field] || col.defaultWidth,
+      width: `${getColumnWidth(col.field)}px`,
     }));
   });
 
@@ -102,11 +103,18 @@ export function useColumnPreferences() {
   };
 
   const setColumnWidth = (field: string, width: string) => {
+    const normalizedWidth = normalizeColumnWidth(width);
+    if (!AVAILABLE_COLUMNS.some((column) => column.field === field) || normalizedWidth === undefined) return;
     columnWidths.value = {
       ...columnWidths.value,
-      [field]: width,
+      [field]: `${normalizedWidth}px`,
     };
   };
+
+  const getColumnWidth = (field: string) =>
+    normalizeColumnWidth(columnWidths.value[field]) ??
+    normalizeColumnWidth(AVAILABLE_COLUMNS.find((column) => column.field === field)?.defaultWidth) ??
+    DEFAULT_COLUMN_WIDTH;
 
   const resetToDefaults = () => {
     preferences.value = {
@@ -124,6 +132,7 @@ export function useColumnPreferences() {
     toggleColumn,
     setVisibleColumns,
     setColumnWidth,
+    getColumnWidth,
     resetToDefaults,
     isColumnVisible: (field: string) => preferences.value.visibleColumns.includes(field),
   };

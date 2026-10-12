@@ -192,6 +192,28 @@ export class ChromePage extends BasePage {
     await expect(this.quickSearchListbox()).toBeHidden();
   }
 
+  /** Le dialogue mobile isole le fond et boucle le clavier sur ses commandes. */
+  async expectMobileSearchFocusCycle(): Promise<void> {
+    await this.page.setViewportSize({ width: 320, height: 800 });
+    const trigger = this.byTestId("open-search-btn");
+    await expect(trigger).toBeVisible();
+    await trigger.press("Enter");
+    const dialog = this.page.getByRole("dialog", {
+      name: "Recherche d’une application",
+    });
+    const input = dialog.getByRole("combobox");
+    const close = dialog.getByRole("button", { name: "Fermer la recherche" });
+    await expect(dialog).toBeVisible();
+    await expect(input).toBeFocused();
+    await input.press("Shift+Tab");
+    await expect(close).toBeFocused();
+    await close.press("Tab");
+    await expect(input).toBeFocused();
+    await input.press("Escape");
+    await expect(dialog).toHaveCount(0);
+    await expect(trigger).toBeFocused();
+  }
+
   // --- Assertions RGAA (RGA-03, RGA-04) ---
 
   /**

@@ -242,13 +242,13 @@ watch(
 
       <!-- SENSIBILITÉ — badge coloré depuis la couleur BD -->
       <template #body-sensibility="{ data }">
-        <span
-          v-if="data.sensibility"
-          class="fr-badge"
-          :style="
-            data._sensibilityColor ? { backgroundColor: data._sensibilityColor, color: '#fff', borderColor: data._sensibilityColor } : {}
-          "
-        >
+        <span v-if="data.sensibility" class="fr-badge">
+          <span
+            v-if="data._sensibilityColor"
+            class="sensibility-color"
+            :style="{ backgroundColor: data._sensibilityColor }"
+            aria-hidden="true"
+          />
           {{ data.sensibility }}
         </span>
         <span v-else class="fr-text-mention--grey">—</span>
@@ -307,7 +307,8 @@ watch(
           tertiary
           size="sm"
           icon="fr-icon-edit-line"
-          title="Modifier"
+          :title="`Modifier la donnée ${data.name}`"
+          :aria-label="`Modifier la donnée ${data.name}`"
           class="fr-mr-1w"
           :data-testid="`data-application-edit-btn-${data.id}`"
           @click="openEditModal(data._raw)"
@@ -316,7 +317,8 @@ watch(
           tertiary
           size="sm"
           icon="fr-icon-delete-bin-line"
-          title="Détacher"
+          :title="`Détacher la donnée ${data.name}`"
+          :aria-label="`Détacher la donnée ${data.name}`"
           :data-testid="`data-application-delete-btn-${data.id}`"
           @click="openDeleteModal(data._raw)"
         />
@@ -357,5 +359,14 @@ watch(
 
 .application-source-tag:hover {
   text-decoration: underline;
+}
+
+.sensibility-color {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-inline-end: 0.375rem;
+  border: 1px solid var(--border-default-grey);
+  border-radius: 50%;
 }
 </style>

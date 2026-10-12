@@ -12,16 +12,8 @@ import { routeNames } from "@/router/route-names";
       data-testid="not-found-error"
     >
       <template #default>
-        <router-link :to="{ name: routeNames.SEARCHAPP }">
-          <DsfrButton
-            variant="secondary"
-            size="small"
-            data-testid="not-found-home-btn"
-            title="Retourner à la page d’accueil"
-            aria-label="Retourner à la page d’accueil"
-          >
-            Retour à l'accueil
-          </DsfrButton>
+        <router-link :to="{ name: routeNames.ACCUEIL }" class="fr-btn fr-btn--secondary fr-btn--sm" data-testid="not-found-home-btn">
+          Retour à l'accueil
         </router-link>
       </template>
     </DsfrErrorPage>

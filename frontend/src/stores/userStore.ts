@@ -153,6 +153,8 @@ export const useUserStore = defineStore("userStore", () => {
     const response = await client.userControllerUpdateMe({
       body: { emailNotificationsEnabled },
     });
+    if (generation !== sessionGeneration || sequence !== preferencesSequence) return;
+    if (!isApiSuccess(response) || !response.data) throw new Error("La mise à jour des préférences de notification a échoué.");
 
     if (
       generation === sessionGeneration &&
@@ -175,6 +177,8 @@ export const useUserStore = defineStore("userStore", () => {
     const response = await client.userControllerSubscribe({
       path: { appId },
     });
+    if (generation !== sessionGeneration) return;
+    if (!isApiSuccess(response) || !response.data) throw new Error("L’abonnement à l’application a échoué.");
 
     if (generation === sessionGeneration && user.value && response.data?.id === user.value.id && isApiSuccess(response)) {
       user.value.followedApplications = response.data.followedApplications;
@@ -186,6 +190,8 @@ export const useUserStore = defineStore("userStore", () => {
     const response = await client.userControllerUnsubscribe({
       path: { appId },
     });
+    if (generation !== sessionGeneration) return;
+    if (!isApiSuccess(response) || !response.data) throw new Error("Le désabonnement de l’application a échoué.");
 
     if (generation === sessionGeneration && user.value && response.data?.id === user.value.id && isApiSuccess(response)) {
       user.value.followedApplications = response.data.followedApplications;

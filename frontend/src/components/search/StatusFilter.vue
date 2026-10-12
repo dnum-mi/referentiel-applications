@@ -44,7 +44,11 @@ const selectedStatuses = computed({
         <template #label>
           <span style="display: inline-flex; align-items: center; gap: 0.25rem">
             Sans statut
-            <DsfrTooltip id="status-none-tooltip-desc" content="Affiche uniquement les applications sans statut renseigné." />
+            <DsfrTooltip
+              aria-label="Afficher l’aide sur le filtre Sans statut"
+              id="status-none-tooltip-desc"
+              content="Affiche uniquement les applications sans statut renseigné."
+            />
           </span>
         </template>
       </DsfrCheckbox>
@@ -54,6 +58,7 @@ const selectedStatuses = computed({
         <span style="display: inline-flex; align-items: center; gap: 0.25rem">
           Statut de l'application
           <DsfrTooltip
+            aria-label="Afficher l’aide sur les filtres de statut de l’application"
             content="Filtre les applications selon leur statut de cycle de vie (en construction, en production, décommissionnée…)."
           />
         </span>

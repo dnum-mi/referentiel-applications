@@ -22,6 +22,7 @@ const isReportMissingOpen = ref(false);
 const isCreateCampaignOpen = ref(false);
 
 const reportStatusMessage = ref("");
+const exportFormat = ref<"Excel" | "HTML" | null>(null);
 
 let lastFocusedElement: Element | null = null;
 
@@ -42,12 +43,17 @@ function createModalHandlers(isOpen: Ref<boolean>) {
 const { open: openReport, close: closeReport } = createModalHandlers(isReportMissingOpen);
 const { open: openCreateCampaign, close: closeCreateCampaign } = createModalHandlers(isCreateCampaignOpen);
 
-async function exportToExcel() {
+async function exportApplications(format: "Excel" | "HTML") {
+  if (exportFormat.value) return;
+  exportFormat.value = format;
   try {
-    await applicationStore.downloadExcel(filters.value);
+    if (format === "Excel") await applicationStore.downloadExcel(filters.value);
+    else await applicationStore.downloadHtml(filters.value);
   } catch (error) {
     console.error("Erreur lors de l'exportation Excel", error);
-    toaster.addErrorMessage("Une erreur est survenue lors de l'exportation Excel. Veuillez réessayer.");
+    toaster.addErrorMessage(`Une erreur est survenue lors de l'exportation ${format}. Veuillez réessayer.`);
+  } finally {
+    exportFormat.value = null;
   }
 }
 
@@ -77,6 +83,7 @@ const hasQualityCampaignPermissions = computed(() => {
 <template>
   <div class="fr-container-fluid" data-testid="application-search-actions">
     <output aria-live="polite" class="sr-only">{{ reportStatusMessage }}</output>
+    <p role="status" class="fr-sr-only">{{ exportFormat ? `Préparation de l’export ${exportFormat}…` : "" }}</p>
 
     <div class="actions">
       <DsfrButton
@@ -96,14 +103,14 @@ const hasQualityCampaignPermissions = computed(() => {
         secondary
         icon="fr-icon-alert-line"
         aria-haspopup="dialog"
-        aria-controls="modal-report-missing"
+        :aria-controls="isReportMissingOpen ? 'fr-modal-1' : undefined"
         type="button"
         :disabled="!hasCreateGlobalReport"
         data-testid="report-missing-app"
         class="action-btn icon-left report-btn"
         @click="openReport"
         title="Signalement général (pour signaler une application manquante de façon globale)"
-        aria-label="Signaler une application manquante (signalement général)"
+        aria-label="Faire un signalement pour une application manquante (signalement général)"
         :aria-expanded="isReportMissingOpen ? 'true' : 'false'"
       >
         Faire un signalement
@@ -116,7 +123,9 @@ const hasQualityCampaignPermissions = computed(() => {
         secondary
         data-testid="application-export-btn"
         class="action-btn icon-left hide-on-mobile"
-        @click="exportToExcel"
+        :disabled="!!exportFormat"
+        :aria-busy="!!exportFormat"
+        @click="exportApplications('Excel')"
         aria-label="Exporter en Excel les applications correspondant aux filtres actuels"
         title="Exporter en excel les applications correspondant aux filtres actuels"
       ></DsfrButton>
@@ -128,10 +137,25 @@ const hasQualityCampaignPermissions = computed(() => {
         secondary
         data-testid="application-export-btn-mobile"
         class="action-btn icon-left show-on-mobile"
-        @click="exportToExcel"
+        :disabled="!!exportFormat"
+        :aria-busy="!!exportFormat"
+        @click="exportApplications('Excel')"
         aria-label="Exporter en Excel les applications correspondant aux filtres actuels"
         title="Exporter en excel les applications correspondant aux filtres actuels"
       ></DsfrButton>
+
+      <DsfrButton
+        v-if="hasExportPermissions"
+        label="Exporter en HTML"
+        icon="fr-icon-download-line"
+        secondary
+        data-testid="applications-export-html-btn"
+        class="action-btn icon-left"
+        :disabled="!!exportFormat"
+        :aria-busy="!!exportFormat"
+        @click="exportApplications('HTML')"
+        aria-label="Exporter en HTML les applications correspondant aux filtres actuels"
+      />
 
       <DsfrButton
         label="Créer une campagne qualité"
@@ -142,7 +166,7 @@ const hasQualityCampaignPermissions = computed(() => {
         class="action-btn icon-left"
         @click="openCreateCampaign"
         title="Créer une campagne de mise en qualité à partir des filtres actuels"
-        aria-label="Créer une campagne de mise en qualité à partir des filtres actuels"
+        aria-label="Créer une campagne qualité à partir des filtres actuels"
       ></DsfrButton>
 
       <ColumnCustomization data-testid="column-customization" />
@@ -150,7 +174,6 @@ const hasQualityCampaignPermissions = computed(() => {
   </div>
 
   <ReportModal
-    id="modal-report-missing"
     :opened="isReportMissingOpen"
     context="global"
     @close="closeReport"

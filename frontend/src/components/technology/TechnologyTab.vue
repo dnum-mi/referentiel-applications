@@ -294,6 +294,7 @@ function cancelDelete() {
     </p>
 
     <RefAppTable
+      caption="Technologies de l’application"
       :items="tableRows"
       :columns="columns"
       :total-records="tableRows.length"

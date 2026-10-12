@@ -18,6 +18,7 @@ import EmailPreviewModal from "./components/EmailPreviewModal.vue";
 import ImpersonationBanner from "./components/ImpersonationBanner.vue";
 import WeakAuthBanner from "./components/WeakAuthBanner.vue";
 import AppToaster from "./components/AppToaster.vue";
+import AppUpdateNotice from "./components/AppUpdateNotice.vue";
 import { useScheme } from "@gouvminint/vue-dsfr";
 import { useRgaaGlobalA11y } from "./composables/use-rgaa-a11y";
 import { accessibilityDeclaration } from "./constants/accessibility-declaration";
@@ -30,7 +31,7 @@ const route = useRoute();
 const router = useRouter();
 
 const pageTitleAnnouncer = ref<HTMLElement | null>(null);
-const currentPageTitle = ref("");
+const currentPageTitle = ref((route.meta.title as string) ?? document.title);
 
 // 12.8 / 7.1 : simuler un rechargement de page pour les TA après chaque navigation SPA.
 // On ignore les navigations qui ne changent que la query string (ex. filtres de recherche mis à jour
@@ -73,7 +74,6 @@ interface QuickLink {
   label: string;
   to: { name: string } | string;
   icon?: string;
-  iconAttrs?: Record<string, string>;
 }
 
 getConfig().then((config) => {
@@ -88,13 +88,11 @@ const authenticatedQuickLinks = computed<QuickLink[]>(() => {
       label: "Mon profil",
       to: { name: routeNames.PROFILE },
       icon: "ri-user-line",
-      iconAttrs: { title: "Accéder à mon profil" },
     },
     {
       label: "Déconnexion",
       to: { name: routeNames.LOGOUT },
       icon: "ri-logout-box-r-line",
-      iconAttrs: { title: "Déconnexion" },
     },
   ];
   if (userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE])) {
@@ -102,7 +100,6 @@ const authenticatedQuickLinks = computed<QuickLink[]>(() => {
       label: "Admin",
       to: { name: routeNames.ADMINPAGE },
       icon: "ri-user-settings-line",
-      iconAttrs: { title: "Admin" },
     });
   }
   return baseLinks;
@@ -120,7 +117,6 @@ const unauthenticatedQuickLinks = computed<QuickLink[]>(() => [
     label: "Se connecter",
     to: { name: routeNames.SIGNIN },
     icon: "ri-lock-line",
-    iconAttrs: { title: "Se connecter" },
   },
 ]);
 
@@ -209,26 +205,22 @@ const afterMandatoryLinks = computed(() => [
   {
     label: "Paramètres d'affichage",
     button: true,
-    title: themeButtonTitle.value,
+    "aria-label": themeButtonTitle.value,
+    type: "button",
     class: "fr-icon-theme-fill fr-link--icon-left fr-px-2v",
-    to: "/settings",
-    onclick: changeTheme,
+    onClick: changeTheme,
   },
 ]);
 
 useRgaaGlobalA11y();
 
-useAppUpdate();
+const { needRefresh, updateServiceWorker } = useAppUpdate();
 </script>
 
 <template>
-  <h1 ref="pageTitleAnnouncer" class="fr-sr-only" tabindex="-1" data-testid="page-title-announcer">
-    {{ currentPageTitle }}
-  </h1>
-
   <DsfrSkipLinks
     :links="[
-      { id: 'app-search', text: 'Aller à la recherche' },
+      ...(userStore.hasApplicationAccess ? [{ id: 'app-search-shortcut', text: 'Aller à la recherche' }] : []),
       { id: 'header-nav', text: 'Aller à la navigation' },
       { id: 'main-content', text: 'Aller au contenu principal' },
       { id: 'footer', text: 'Aller au pied de page' },
@@ -268,7 +260,11 @@ useAppUpdate();
       <p v-else class="fr-sr-only" id="header-nav">Navigation non disponible</p>
     </template>
   </DsfrHeader>
+  <AppUpdateNotice :available="needRefresh" :update="() => updateServiceWorker(true)" />
   <main class="fr-mt-3w fr-mt-md-5w fr-mb-5w" id="main-content" role="main">
+    <h1 ref="pageTitleAnnouncer" class="fr-sr-only" tabindex="-1" data-testid="page-title-announcer">
+      {{ currentPageTitle }}
+    </h1>
     <WeakAuthBanner v-if="userStore.isAuthDowngraded" />
     <RouterView
       v-else-if="userStore.hasApplicationAccess || (userStore.sessionInitialized && !userStore.authenticated && !route.meta.requiresAuth)"
@@ -281,6 +277,7 @@ useAppUpdate();
   </main>
 
   <DsfrFooter
+    id="footer"
     :logo-text="logoText"
     desc-text="Référentiel des applications du ministère de l'Intérieur : recensement des applications, de leurs données et de leurs relations."
     :operator-img-src="operatorImgSrc"

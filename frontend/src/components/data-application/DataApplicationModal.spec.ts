@@ -1,9 +1,10 @@
-import { mount } from "@vue/test-utils";
+import { enableAutoUnmount, mount } from "@vue/test-utils";
 import DataApplicationModal from "./DataApplicationModal.vue";
 
-const { findDescriptions, createApplicationData } = vi.hoisted(() => ({
+const { findDescriptions, createApplicationData, createFamily } = vi.hoisted(() => ({
   findDescriptions: vi.fn(),
   createApplicationData: vi.fn(),
+  createFamily: vi.fn(),
 }));
 
 vi.mock("@/api/index", () => ({
@@ -12,6 +13,7 @@ vi.mock("@/api/index", () => ({
     dataCatalogControllerCreateApplicationData: createApplicationData,
     dataSensibilityControllerFindAll: async () => ({ data: { results: [] } }),
     dataFamilyControllerFindAll: async () => ({ data: { results: [] } }),
+    dataFamilyControllerCreate: createFamily,
   },
 }));
 vi.mock("@/stores/toasterStore", () => ({
@@ -19,19 +21,16 @@ vi.mock("@/stores/toasterStore", () => ({
 }));
 
 const description = { id: "description-1", name: "Adresse", families: [{ id: "family-1", path: "Identité" }] };
+enableAutoUnmount(afterEach);
 
 async function renderModal() {
   const wrapper = mount(DataApplicationModal, {
-    shallow: true,
+    attachTo: document.body,
     props: { applicationId: "app-1", errorMessage: "" },
     global: {
       stubs: {
         DsfrModal: { template: "<div><slot /></div>" },
-        DsfrInputGroup: {
-          props: ["modelValue", "errorMessage"],
-          emits: ["update:modelValue"],
-          template: '<input :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)">',
-        },
+        AccessibleAutocomplete: true,
       },
     },
   });
@@ -43,10 +42,68 @@ beforeEach(() => {
   vi.useFakeTimers();
   findDescriptions.mockReset();
   createApplicationData.mockReset().mockResolvedValue({ response: { ok: true } });
+  createFamily.mockReset();
 });
 afterEach(() => vi.useRealTimers());
 
 describe("DataApplicationModal — recherche de descriptions", () => {
+  it("nomme la recherche, les aides et relie l'erreur au champ réellement ciblé", async () => {
+    const wrapper = await renderModal();
+    const input = wrapper.get('[data-testid="data-description-search-input"]');
+    expect(input.element).toHaveAccessibleName(/Donnée d'application \(obligatoire\)/);
+    expect(input.element).toBeRequired();
+    expect(input.element).toHaveAttribute("aria-describedby", "data-description-search-tooltip-desc");
+    for (const tooltip of wrapper.findAll(".fr-btn--tooltip")) expect(tooltip.element).toHaveAccessibleName();
+
+    await wrapper.get("form").trigger("submit");
+    await vi.advanceTimersByTimeAsync(0);
+    expect(input.element).toHaveFocus();
+    expect(input.element).toHaveAttribute("aria-invalid", "true");
+    expect(input.element).toHaveAttribute("aria-describedby", "data-description-search-tooltip-desc data-description-search-error");
+    expect(wrapper.get("#data-description-search-error").text()).toContain("Veuillez sélectionner une donnée existante");
+    expect(createApplicationData).not.toHaveBeenCalled();
+  });
+
+  it("affiche les erreurs de nom et de famille, avec focus, sans perdre la saisie", async () => {
+    const wrapper = await renderModal();
+    await wrapper.get('[data-testid="data-application-create-description-toggle"]').trigger("click");
+    const name = wrapper.get('[data-testid="new-description-name-input"]');
+    expect(name.element).toHaveAccessibleName(/Nom de la donnée \(obligatoire\)/);
+    expect(name.element).toHaveFocus();
+    await name.setValue("   ");
+    await wrapper.get("form").trigger("submit");
+    await vi.advanceTimersByTimeAsync(0);
+    expect(name.element).toHaveFocus();
+    expect(name.element).toHaveAttribute("aria-invalid", "true");
+    expect(name.element).toHaveAttribute("aria-describedby", "new-description-name-tooltip-desc new-description-name-error");
+    expect(wrapper.get("#new-description-name-error").text()).toBe("Veuillez renseigner un nom.");
+
+    await name.setValue("Adresse postale");
+    await wrapper.get('[data-testid="new-description-create-family-toggle"]').trigger("click");
+    const family = wrapper.get('[data-testid="new-family-path-input"]');
+    expect(family.element).toHaveFocus();
+    await wrapper.get('[data-testid="new-family-add-btn"]').trigger("click");
+    expect(family.element).toHaveFocus();
+    expect(family.element).toHaveAttribute("aria-invalid", "true");
+    expect(family.element).toHaveAttribute("aria-describedby", "new-family-path-error");
+    expect(wrapper.get("#new-family-path-error").text()).toBe("Veuillez renseigner un chemin de famille.");
+    expect(name.element).toHaveValue("Adresse postale");
+    expect(createFamily).not.toHaveBeenCalled();
+    expect(createApplicationData).not.toHaveBeenCalled();
+  });
+
+  it("garde un nom pendant l'enregistrement", async () => {
+    findDescriptions.mockResolvedValue({ data: [description] });
+    createApplicationData.mockReturnValue(new Promise(() => {}));
+    const wrapper = await renderModal();
+    await wrapper.get('[data-testid="data-description-search-input"]').setValue("Adresse (Identité)");
+    await vi.advanceTimersByTimeAsync(300);
+    await wrapper.get("form").trigger("submit");
+    await vi.advanceTimersByTimeAsync(0);
+    expect(wrapper.get('[data-testid="data-application-submit-btn"]').element).toHaveAccessibleName("Rattacher");
+    expect(wrapper.get('[data-testid="data-application-submit-btn"]').element).toBeDisabled();
+  });
+
   it("conserve la sélection nom + famille sans la rechercher à nouveau", async () => {
     findDescriptions.mockResolvedValue({ data: [description] });
     const wrapper = await renderModal();
@@ -85,7 +142,7 @@ describe("DataApplicationModal — recherche de descriptions", () => {
     resolve({ data: [description] });
     await vi.advanceTimersByTimeAsync(300);
 
-    expect(wrapper.findAll("option")).toHaveLength(0);
+    expect(wrapper.findAll("#dataDescriptionsList option")).toHaveLength(0);
     expect(findDescriptions).toHaveBeenCalledTimes(1);
     wrapper.unmount();
   });

@@ -101,6 +101,47 @@ describe("OrganizationSearchSelect", () => {
     wrapper.unmount();
   });
 
+  it("annonce l'échec dans une alerte permanente, puis retrouve le statut de recherche sans perdre la sélection", async () => {
+    let finish!: (value: (typeof organization)[]) => void;
+    find
+      .mockResolvedValueOnce([organization])
+      .mockRejectedValueOnce(new Error("Recherche indisponible"))
+      .mockImplementationOnce(() => new Promise((resolve) => (finish = resolve)));
+    const wrapper = renderSearch();
+    const error = wrapper.get('[data-testid="org-search-error"]');
+    const status = wrapper.get('[data-testid="org-search-status"]');
+    const alertElement = error.element;
+    expect(error.attributes()).toMatchObject({ role: "alert", "aria-live": "assertive", "aria-atomic": "true" });
+    expect(error.text()).toBe("");
+
+    await wrapper.get("input").setValue("Direction");
+    await vi.advanceTimersByTimeAsync(300);
+    await wrapper.get("select").setValue(organization.id);
+    await wrapper.get("input").setValue("autre organisation");
+    await vi.advanceTimersByTimeAsync(300);
+
+    expect(wrapper.get('[data-testid="org-search-error"]').element).toBe(alertElement);
+    expect(error.text()).toBe("Erreur lors de la recherche d'organisations.");
+    expect(status.text()).toBe("");
+    expect(wrapper.get("select").element.value).toBe(organization.id);
+    expect(wrapper.get("select").element).not.toBeDisabled();
+
+    await wrapper.get("input").setValue("Direction");
+    expect(error.text()).toBe("");
+    await vi.advanceTimersByTimeAsync(300);
+    expect(status.text()).toBe("Recherche en cours…");
+    expect(wrapper.get("select").element).toBeDisabled();
+    expect(wrapper.get("select").element.value).toBe(organization.id);
+
+    finish([organization]);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(error.text()).toBe("");
+    expect(status.text()).toBe("1 résultat trouvé");
+    expect(wrapper.get("select").element).not.toBeDisabled();
+    expect(wrapper.get("select").element.value).toBe(organization.id);
+    wrapper.unmount();
+  });
+
   it("ignore une réponse qui arrive après que la saisie est repassée sous le seuil", async () => {
     let resolve!: (value: (typeof organization)[]) => void;
     find.mockImplementation(

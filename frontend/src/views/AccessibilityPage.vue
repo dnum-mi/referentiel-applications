@@ -17,8 +17,13 @@ import { accessibilityDeclaration } from "@/constants/accessibility-declaration"
     <p>
       Le référentiel des applications est
       <strong>{{ accessibilityDeclaration.complianceStatus }}</strong>
-      au {{ accessibilityDeclaration.rgaaVersion }} (Référentiel Général d'Amélioration de l'Accessibilité) en raison des non-conformités
-      énumérées ci-dessous.
+      au {{ accessibilityDeclaration.rgaaVersion }} (Référentiel Général d'Amélioration de l'Accessibilité), selon les résultats de l'audit
+      initial présenté ci-dessous.
+    </p>
+
+    <p>
+      Ces résultats correspondent à l'audit initial. Le taux sera actualisé après une nouvelle évaluation de conformité, incluant la
+      restitution avec les technologies d'assistance.
     </p>
 
     <h2 class="fr-h2">Résultats des tests</h2>

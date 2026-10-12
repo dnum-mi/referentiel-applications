@@ -5,6 +5,7 @@ const props = withDefaults(
   defineProps<{
     checked: boolean;
     id: string;
+    actorTypeLabel?: string;
   }>(),
   {},
 );
@@ -14,6 +15,10 @@ const emit = defineEmits<{
 }>();
 
 const value = computed(() => (props.checked ? "write" : "none"));
+const permissionLabel = computed(
+  () =>
+    `${permDict[value.value].label} — Écriture de la priorisation et du redémarrage${props.actorTypeLabel ? ` pour ${props.actorTypeLabel}` : ""}`,
+);
 
 const permDict = {
   none: {
@@ -30,10 +35,18 @@ const permDict = {
 <template>
   <!-- Assign class for feedback when clicked -->
   <DsfrButton
+    :id="id"
     class="toggle-permission"
     tertiary
     small
     :class="permDict[value].class ?? 'permission-error'"
+    :aria-label="permissionLabel"
+    :aria-pressed="checked"
+    :title="
+      checked
+        ? 'Retirer le droit d’écriture de la priorisation et du redémarrage'
+        : 'Accorder le droit d’écriture de la priorisation et du redémarrage'
+    "
     data-testid="permission-toggle"
     @click="emit('update:model-value', !checked)"
   >

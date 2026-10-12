@@ -1,5 +1,9 @@
 import { Injectable } from "@nestjs/common";
-import { ExcelBuilderService } from "src/common/service/excel-builder.service";
+import {
+  ExcelBuilderService,
+  type ExcelSheetConfig,
+} from "src/common/service/excel-builder.service";
+import { createApplicationsHtml } from "../export-html";
 import { sheetLabels } from "src/applications/constants/application-export.sheet-labels";
 import { ApplicationWithAllRelations } from "src/applications/types/application.type";
 import { columnLabels } from "src/applications/columnLabels/application-export.columnLabels";
@@ -21,6 +25,18 @@ export class ExportApplicationsUseCase {
   constructor(private readonly excelBuilder: ExcelBuilderService) {}
 
   async executeWithApps(apps: ApplicationWithAllRelations[]): Promise<Buffer> {
+    return this.excelBuilder.buildWorkbook(this.createSheets(apps));
+  }
+
+  async executeHtmlWithApps(
+    apps: ApplicationWithAllRelations[],
+  ): Promise<Buffer> {
+    return createApplicationsHtml(this.createSheets(apps));
+  }
+
+  private createSheets(
+    apps: ApplicationWithAllRelations[],
+  ): ExcelSheetConfig[] {
     const col = (key: string, width: number) => ({
       header: columnLabels[key],
       key,
@@ -141,7 +157,7 @@ export class ExportApplicationsUseCase {
         rows: apps.flatMap(mapReports),
       },
       {
-        name: sheetLabels.RelationsAsTarget,
+        name: sheetLabels.RelationsAsSource,
         columns: [
           col("applicationId", 30),
           col("applicationLabel", 30),
@@ -153,7 +169,7 @@ export class ExportApplicationsUseCase {
         rows: apps.flatMap(mapRelationsOut),
       },
       {
-        name: sheetLabels.RelationsAsSource,
+        name: sheetLabels.RelationsAsTarget,
         columns: [
           col("applicationId", 30),
           col("applicationLabel", 30),
@@ -176,6 +192,6 @@ export class ExportApplicationsUseCase {
       },
     ];
 
-    return this.excelBuilder.buildWorkbook(sheets);
+    return sheets;
   }
 }

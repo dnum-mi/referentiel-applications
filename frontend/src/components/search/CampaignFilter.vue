@@ -40,6 +40,7 @@ onMounted(loadActiveCampaigns);
         <span style="display: inline-flex; align-items: center; gap: 0.25rem">
           Campagne dette IT (millésime)
           <DsfrTooltip
+            aria-label="Afficher l’aide sur le filtre Campagne dette IT"
             id="campaign-millesime-tooltip-desc"
             content="Sélectionne l’année (millésime) de la campagne de collecte de la dette technique à afficher."
           />

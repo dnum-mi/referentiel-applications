@@ -54,7 +54,7 @@ function removeTag(index: number) {
   <fieldset class="tag-search-fieldset" v-bind="$attrs">
     <legend class="fr-label tag-search-legend">
       Tags
-      <DsfrTooltip v-if="tooltipContent" :content="tooltipContent" />
+      <DsfrTooltip v-if="tooltipContent" aria-label="Afficher l’aide sur le filtre Tags" :content="tooltipContent" />
     </legend>
     <ul class="fr-tags-group" data-testid="info-tags">
       <li v-for="(tag, index) in props.tags" :key="index" class="tag-item">

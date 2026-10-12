@@ -58,9 +58,12 @@ function getActorTypeLabel(typeId: string): string {
 const tableRows = computed(() =>
   actors.value.map((actor) => {
     const org = actor.organizationId ? orgStore.organizations[actor.organizationId] : undefined;
+    const name = [actor.firstname, actor.lastname].filter(Boolean).join(" ").trim();
+    const identity = name && actor.email ? `${name} (${actor.email})` : name || actor.email || `Acteur ${actor.id}`;
     return {
       id: actor.id,
       Sélection: actor.id,
+      Identité: identity,
       organisationId: actor.organizationId ?? undefined,
       Organisation: org?.sigle || org?.path || "",
       Type: getActorTypeLabel(actor.actorTypeId),
@@ -118,32 +121,46 @@ onBeforeMount(async () => {
 // RGAA-059 (7.5 / 12.8) : message de statut restitué aux TA + focus rendu au bouton déclencheur.
 const statusMessage = ref("");
 const lastTrigger = ref<HTMLElement | null>(null);
+const actorActions = ref<HTMLDivElement | null>(null);
+const actorTable = ref<HTMLDivElement | null>(null);
 function rememberTrigger(event: Event) {
   lastTrigger.value = (event.currentTarget as HTMLElement) ?? null;
 }
 
 async function handleSaveActors(actor: CreateActorDto & { id?: string }) {
   loading.value = true;
-  actorModal.closeModal();
+  let saved = false;
 
   try {
     if (actor.id) {
       await updateActor(actor, props.application.id, actor.id);
     } else {
-      await api.applicationActorsControllerCreate({
+      const response = await api.applicationActorsControllerCreate({
         path: { applicationId: props.application.id },
         body: actor,
       });
+      if (!isApiSuccess(response)) throw new Error("Actor creation failed");
     }
+    actorModal.closeModal();
+    saved = true;
     await fetchActorsByApplication(props.application.id);
     statusMessage.value = "Acteur sauvegardé avec succès !";
     toaster.addSuccessMessage("Acteur sauvegardé avec succès !");
-    await nextTick();
-    lastTrigger.value?.focus();
   } catch {
     toaster.addErrorMessage("Erreur lors de la sauvegarde de l’acteur.");
   } finally {
     loading.value = false;
+  }
+  if (saved) {
+    await nextTick();
+    const selectedRow = Array.from(actorTable.value?.querySelectorAll<HTMLInputElement>('input[type="checkbox"]') ?? [])
+      .find((input) => input.value === actor.id)
+      ?.closest("tr");
+    const trigger = lastTrigger.value?.isConnected
+      ? lastTrigger.value
+      : selectedRow?.querySelector<HTMLElement>('[data-testid="actor-edit-btn"]') ||
+        actorActions.value?.querySelector<HTMLElement>('[data-testid="actor-add-btn"]');
+    trigger?.focus();
   }
 }
 
@@ -217,7 +234,7 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
 
 <template>
   <p class="fr-sr-only" aria-live="polite" aria-atomic="true" data-testid="actor-status">{{ statusMessage }}</p>
-  <div class="fr-grid-row fr-grid-row--middle fr-mb-3w" v-bind="$attrs" data-testid="actor-tab">
+  <div ref="actorActions" class="fr-grid-row fr-grid-row--middle fr-mb-3w" v-bind="$attrs" data-testid="actor-tab">
     <div class="fr-col">
       <h3 class="fr-mb-0">Gestion des acteurs</h3>
     </div>
@@ -245,7 +262,7 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
     <p>Aucun acteur enregistré.</p>
   </div>
 
-  <div v-else data-testid="actor-table">
+  <div v-else ref="actorTable" data-testid="actor-table">
     <div v-if="!props.isMobile" class="global-delete">
       <DsfrButton
         type="button"
@@ -276,7 +293,13 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
         @page="onPage"
       >
         <template #body-Sélection="{ data }">
-          <input v-model="selectedActorIds" type="checkbox" :value="data.Sélection" :data-testid="`actor-row-select-${data.Sélection}`" />
+          <input
+            v-model="selectedActorIds"
+            type="checkbox"
+            :value="data.Sélection"
+            :aria-label="`Sélectionner ${data.Identité} — ${data.Type}`"
+            :data-testid="`actor-row-select-${data.Sélection}`"
+          />
         </template>
 
         <template #body-Organisation="{ data }">
@@ -309,8 +332,8 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
 
         <template #body-Actions="{ data }">
           <DsfrButton
-            title="Modifier les informations de l'acteur"
-            aria-label="Modifier l'acteur"
+            :title="`Modifier ${data.Identité}`"
+            :aria-label="`Modifier ${data.Identité}`"
             tertiary
             size="sm"
             icon="fr-icon-edit-line"

@@ -72,6 +72,7 @@ async function submitReport() {
 
 function resetForm() {
   description.value = "";
+  errorMessage.value = "";
 }
 
 function closeModal() {
@@ -97,6 +98,7 @@ function closeModal() {
         v-model.trim="description"
         is-textarea
         :label="fieldLabel"
+        label-visible
         :placeholder="placeholder"
         required
         rows="4"

@@ -44,10 +44,10 @@ onMounted(load);
 
 <template>
   <div>
-    <div v-if="loading" class="fr-alert fr-alert--info">Chargement…</div>
-    <div v-else-if="error" class="fr-alert fr-alert--error">
+    <div v-if="loading" class="fr-alert fr-alert--info" role="status">Chargement…</div>
+    <div v-else-if="error" class="fr-alert fr-alert--error" role="alert">
       {{ error }}
-      <DsfrButton size="sm" class="fr-ml-2w" title="R" aria-label="R" @click="load"> Réessayer </DsfrButton>
+      <DsfrButton size="sm" class="fr-ml-2w" @click="load"> Réessayer </DsfrButton>
     </div>
     <AppPermsMatrix v-else-if="appPermsMatrix" :app-perms-matrix="appPermsMatrix" @reload="load" @update:app-perms-matrix="save" />
   </div>

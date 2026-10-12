@@ -30,4 +30,17 @@ describe("EmailTemplateService.render (#2380)", () => {
     // aucune duplication du contenu autour du placeholder
     expect(html.match(/APRES/g)?.length).toBe(1);
   });
+
+  it("conserve les accolades utilisateur sans substitution récursive ni suppression de texte", () => {
+    readFileSync
+      .mockReturnValueOnce("{{content}}")
+      .mockReturnValueOnce("<p>{{actorName}}</p>");
+    const service = new EmailTemplateService(logger);
+    const html = service.render("whatever", {
+      actorName: "Nom {{applicationName}} & <test>",
+      applicationName: "Remplacement indésirable",
+    });
+    expect(html).toBe("<p>Nom {{applicationName}} &amp; &lt;test&gt;</p>");
+    expect(html).not.toContain("Remplacement indésirable");
+  });
 });

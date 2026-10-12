@@ -5,7 +5,7 @@ import { useRelationStore } from "@/stores/relationStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import type { TableColumn } from "@/types/table";
 import type { DataTablePageEvent } from "primevue/datatable";
-import { computed, ref } from "vue";
+import { computed, ref, watch, onMounted } from "vue";
 import RefAppTable from "./RefAppTable.vue";
 import RelationshipGraph from "./RelationShipGraph.vue";
 import { Permission, type RelationDto } from "@/client";
@@ -80,28 +80,24 @@ function setViewMode(mode: "list" | "graph") {
 }
 
 // --- Boutons principaux ---
-const mainButtons = computed(() =>
-  props.isMobile
-    ? []
-    : [
-        {
-          label: "Liste",
-          title: "Vue liste des relations",
-          icon: "fr-icon-list-unordered",
-          onClick: () => setViewMode("list"),
-          tertiary: viewMode.value !== "list",
-          "aria-current": viewMode.value === "list" ? ("true" as const) : undefined,
-        },
-        {
-          label: "Graphe",
-          title: "Vue graphe des relations",
-          icon: "fr-icon-eye-line",
-          onClick: () => setViewMode("graph"),
-          tertiary: viewMode.value !== "graph",
-          "aria-current": viewMode.value === "graph" ? ("true" as const) : undefined,
-        },
-      ],
-);
+const mainButtons = computed(() => [
+  {
+    label: "Liste",
+    title: "Vue liste des relations",
+    icon: "fr-icon-list-unordered",
+    onClick: () => setViewMode("list"),
+    tertiary: viewMode.value !== "list",
+    "aria-pressed": viewMode.value === "list",
+  },
+  {
+    label: "Graphe",
+    title: "Vue graphe des relations",
+    icon: "fr-icon-eye-line",
+    onClick: () => setViewMode("graph"),
+    tertiary: viewMode.value !== "graph",
+    "aria-pressed": viewMode.value === "graph",
+  },
+]);
 
 const addRelationButton = computed(() => ({
   label: "Ajouter une relation",
@@ -138,6 +134,13 @@ function onPage(event: DataTablePageEvent) {
 }
 
 const relationsStore = useRelationStore();
+const graphRefreshKey = ref(0);
+watch(
+  () => relationsStore.relations,
+  () => {
+    graphRefreshKey.value++;
+  },
+);
 
 onMounted(async () => {
   isLoading.value = true;
@@ -166,13 +169,15 @@ onMounted(async () => {
       </div>
     </div>
   </div>
-  <!-- Graph View Desktop Only -->
-  <div v-if="viewMode === 'graph' && !props.isMobile">
-    <RelationshipGraph :application-id="props.application.id" />
-  </div>
+  <RelationshipGraph v-if="!isLoading" :application-id="props.application.id" :view-mode="viewMode" :refresh-key="graphRefreshKey" />
 
   <!-- List View -->
-  <div v-else>
+  <details v-if="!isLoading && viewMode === 'list'" class="fr-mt-4w" open>
+    <summary class="fr-h4">Gérer les relations directes de l’application</summary>
+    <p>
+      Cette section permet de modifier les relations directes. La liste complète du réseau, à la profondeur choisie, est présentée
+      au-dessus.
+    </p>
     <!-- Delete selected button -->
     <div v-if="!props.isMobile" class="global-delete" data-testid="relations-delete-container">
       <DsfrButton
@@ -211,7 +216,7 @@ onMounted(async () => {
             v-model="selectedRelationIds"
             type="checkbox"
             :value="data.selection"
-            :aria-label="`Sélectionner la relation ${data.applicationSource} - ${data.applicationCible.label} (${data.relation})`"
+            :aria-label="`Sélectionner la relation ${data.applicationSource} - ${data.applicationCible} (${data.relation})`"
             :data-testid="`relation-row-select-${data.selection}`"
           />
         </template>
@@ -318,7 +323,7 @@ onMounted(async () => {
         </DsfrCard>
       </div>
     </div>
-  </div>
+  </details>
 
   <!-- Modals -->
   <RelationModal
@@ -374,6 +379,7 @@ input[type="checkbox"] {
 
 .main-buttons-row > div {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
   align-items: center;
 }

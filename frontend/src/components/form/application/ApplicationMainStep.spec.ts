@@ -23,6 +23,17 @@ function renderMain(errors: ApplicationFormErrors = {}) {
 }
 
 describe("ApplicationMainStep", () => {
+  it("indique et expose l'obligation de description avant toute validation", () => {
+    const { wrapper } = renderMain();
+    const description = wrapper.get('[data-testid="markdown-textarea"]');
+    expect(wrapper.get('label[for="application-description"]').text()).toBe("Description (obligatoire)");
+    expect(description.element).toHaveAccessibleName("Description (obligatoire)");
+    expect(description.element).toHaveAttribute("title", "Description");
+    expect(description.element).not.toHaveAttribute("aria-label");
+    expect(description.element).toBeRequired();
+    expect(description.element).not.toHaveAttribute("aria-invalid");
+  });
+
   it("relie les erreurs aux vrais champs et place le focus sur le nom", async () => {
     const { wrapper } = renderMain({ label: "Le nom est obligatoire.", description: "La description est obligatoire." });
     const label = wrapper.get('[data-testid="application-label"]');

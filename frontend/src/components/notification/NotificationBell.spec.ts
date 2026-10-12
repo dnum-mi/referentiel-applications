@@ -129,6 +129,22 @@ describe("NotificationBell", () => {
     await fireEvent.click(screen.getByTestId("notification-item"));
 
     expect(storeMock.markAsRead).toHaveBeenCalledWith("notif-1");
-    expect(storeMock.openEmailPreview).toHaveBeenCalledWith("notif-1");
+    await waitFor(() => expect(storeMock.openEmailPreview).toHaveBeenCalledWith("notif-1"));
+    expect(screen.getByTestId("notification-bell-button")).toHaveFocus();
+  });
+
+  it("expose l’e-mail comme un bouton et restaure le focus après Échap", async () => {
+    storeMock.notifications = [notificationFixture({ emailLogId: "email-log-1" })];
+    render(NotificationBell, { global: { plugins: [makeRouter()] } });
+    const bell = screen.getByTestId("notification-bell-button");
+    await fireEvent.click(bell);
+    await waitFor(() => screen.getByTestId("notification-item"));
+    expect(screen.getByTestId("notification-item").tagName).toBe("BUTTON");
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    const email = screen.getByTestId("notification-item");
+    email.focus();
+    await fireEvent.keyDown(email, { key: "Escape" });
+    await waitFor(() => expect(screen.queryByTestId("notification-bell-panel")).not.toBeInTheDocument());
+    expect(bell).toHaveFocus();
   });
 });

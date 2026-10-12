@@ -111,7 +111,6 @@ async function runMaiaActorSync() {
         :disabled="isLoading"
         data-testid="admin-quality-recompute-btn"
         title="Lance le calcul de l'indice de qualité pour toutes les applications"
-        aria-label="Calculer l'indice de qualité"
         @click="recomputeQuality()"
       />
     </div>

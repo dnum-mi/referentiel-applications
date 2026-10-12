@@ -34,11 +34,12 @@ const timeouts: Record<string, ReturnType<typeof setTimeout>> = {};
 
 // function taking a Message or a string and return a well formatted Message
 export function formatMessage(message: Message | string): Message {
-  const defaultTimeout = 15000;
+  const defaultTimeout = 0;
   if (typeof message === "string") {
     return {
       description: message,
       type: "info",
+      closeable: true,
       timeout: defaultTimeout,
       id: getRandomHtmlId("toaster"),
     };
@@ -49,7 +50,7 @@ export function formatMessage(message: Message | string): Message {
     titleTag: message.titleTag || "h3",
     closeable: message.closeable ?? true,
     type: message.type || "info",
-    timeout: message.timeout || defaultTimeout,
+    timeout: message.timeout ?? defaultTimeout,
   };
 }
 
@@ -68,7 +69,9 @@ export const useToasterStore = defineStore("toaster", () => {
     }
 
     messages.value.push({ ...message, description: `${message.description}` });
-    timeouts[message.id] = setTimeout(() => removeMessage(message.id), message.timeout);
+    if (message.timeout > 0) {
+      timeouts[message.id] = setTimeout(() => removeMessage(message.id), message.timeout);
+    }
   };
 
   const addSuccessMessage = (message: Message | string) => {

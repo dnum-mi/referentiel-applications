@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="T">
 import { onClickOutside, watchDebounced } from "@vueuse/core";
-import { computed, nextTick, ref, watch } from "vue";
+import { computed, nextTick, ref, useId, watch } from "vue";
 import { useAsyncSearch } from "@/composables/use-async-search";
 
 export interface Props<T> {
@@ -35,7 +35,8 @@ const containerEl = ref<HTMLElement | null>(null);
 
 // Ids propres à l'instance : évite les collisions d'id d'options (et
 // l'ambiguïté d'aria-activedescendant) si plusieurs autocomplete coexistent.
-const optionIdPrefix = computed(() => props.id ?? "autocomplete");
+const generatedId = `autocomplete-${useId()}`;
+const optionIdPrefix = computed(() => props.id ?? generatedId);
 const listId = computed(() => `${optionIdPrefix.value}-list`);
 const optionId = (index: number) => `${optionIdPrefix.value}-item-${index}`;
 
@@ -67,8 +68,10 @@ function select(item: T) {
   // (clear() depuis onChange), c'est son intention qui doit gagner en dernier.
   inputValue.value = props.displayLabel(item);
   showList.value = false;
+  highlightedIndex.value = -1;
   props.onChange?.(item);
   emit("onChange", item);
+  nextTick(() => inputEl.value?.focus());
 }
 
 async function scrollHighlightedIntoView() {
@@ -80,24 +83,29 @@ function onKeydown(e: KeyboardEvent) {
   if (e.key === "Escape") {
     // Liste déjà fermée : on remonte la demande de fermeture au parent
     // (ex. overlay de recherche mobile).
-    if (showList.value) showList.value = false;
-    else emit("close");
+    if (isPopupRendered.value) {
+      e.preventDefault();
+      e.stopPropagation();
+      showList.value = false;
+      highlightedIndex.value = -1;
+    } else emit("close");
     return;
   }
-  if (!showList.value) return;
   const count = results.value.length;
   const current = Number.isInteger(highlightedIndex.value) ? highlightedIndex.value : -1;
   if (e.key === "ArrowDown") {
     e.preventDefault();
     if (!count) return;
+    showList.value = true;
     highlightedIndex.value = (current + 1) % count;
     scrollHighlightedIntoView();
   } else if (e.key === "ArrowUp") {
     e.preventDefault();
     if (!count) return;
-    highlightedIndex.value = (current - 1 + count) % count;
+    showList.value = true;
+    highlightedIndex.value = current < 0 ? count - 1 : (current - 1 + count) % count;
     scrollHighlightedIntoView();
-  } else if (e.key === "Enter" && current >= 0 && current < count) {
+  } else if (e.key === "Enter" && isListRendered.value && current >= 0 && current < count) {
     e.preventDefault();
     select(results.value[current]);
   }
@@ -129,19 +137,21 @@ const showEmpty = computed(
 
 // La liste n'est rendue que si elle a un contenu : aria-expanded / aria-controls
 // doivent refléter ce rendu réel, pas seulement l'intention d'ouverture.
-const isListRendered = computed(() => showList.value && (hasResults.value || showEmpty.value || loading.value || !!error.value));
+const isPopupRendered = computed(() => showList.value && (hasResults.value || showEmpty.value || loading.value || !!error.value));
+const isListRendered = computed(() => showList.value && hasResults.value && !loading.value && !error.value);
 
 const ariaActiveDescendant = computed(() => {
-  if (highlightedIndex.value >= 0 && showList.value) return optionId(highlightedIndex.value);
+  if (highlightedIndex.value >= 0 && highlightedIndex.value < results.value.length && isListRendered.value)
+    return optionId(highlightedIndex.value);
   return undefined;
 });
 
-const ariaDescribedById = computed(() => (props.id ? `${props.id}-helptext` : undefined));
+const ariaDescribedById = computed(() => `${optionIdPrefix.value}-helptext`);
 
 const liveRegionText = computed(() => {
   if (!showList.value) return "";
   if (loading.value) return "Recherche en cours…";
-  if (error.value) return error.value;
+  if (error.value) return "";
   if (!hasSearched.value) return "";
   if (results.value.length === 0) return props.displayNoResult ? "Aucun résultat" : "";
   const n = results.value.length;
@@ -156,7 +166,7 @@ onClickOutside(containerEl, () => {
 <template>
   <div ref="containerEl" class="autocomplete" @keydown="onKeydown">
     <input
-      :id="id"
+      :id="optionIdPrefix"
       ref="inputEl"
       type="text"
       class="fr-input"
@@ -164,6 +174,7 @@ onClickOutside(containerEl, () => {
       :title="title"
       v-model="inputValue"
       @input="onInput"
+      @blur="showList = false"
       autocomplete="off"
       role="combobox"
       aria-autocomplete="list"
@@ -172,37 +183,38 @@ onClickOutside(containerEl, () => {
       :aria-expanded="isListRendered"
       :aria-describedby="ariaDescribedById"
     />
-    <div v-if="id" :id="ariaDescribedById" class="visually-hidden">
+    <div :id="ariaDescribedById" class="visually-hidden">
       Utilisez les flèches haut et bas pour naviguer dans la liste, Entrée pour sélectionner.
     </div>
 
     <ul v-if="isListRendered" :id="listId" class="autocomplete-list" role="listbox" :aria-label="listLabel ?? 'Suggestions'">
-      <li v-if="loading" class="autocomplete-status" role="presentation">Recherche en cours…</li>
-
-      <template v-else>
-        <li v-for="(item, index) in results" :key="index" role="presentation">
-          <button
-            type="button"
-            class="autocomplete-item"
-            :id="optionId(index)"
-            :class="{ highlighted: index === highlightedIndex }"
-            tabindex="-1"
-            role="option"
-            :aria-selected="index === highlightedIndex ? 'true' : 'false'"
-            @click="select(item)"
-          >
-            <slot name="suggestion" :item="item">
-              {{ props.displayLabel(item) }}
-            </slot>
-          </button>
-        </li>
-
-        <li v-if="showEmpty" class="no-result" role="presentation">Aucun résultat</li>
-        <li v-if="error" class="no-result" role="presentation">{{ error }}</li>
-      </template>
+      <li v-for="(item, index) in results" :key="index" role="presentation">
+        <button
+          type="button"
+          class="autocomplete-item"
+          :id="optionId(index)"
+          :class="{ highlighted: index === highlightedIndex }"
+          tabindex="-1"
+          role="option"
+          :aria-selected="index === highlightedIndex ? 'true' : 'false'"
+          @mousedown.prevent
+          @click="select(item)"
+        >
+          <slot name="suggestion" :item="item">
+            {{ props.displayLabel(item) }}
+          </slot>
+        </button>
+      </li>
     </ul>
 
-    <div class="visually-hidden" aria-live="polite" aria-atomic="true">{{ liveRegionText }}</div>
+    <div v-else-if="isPopupRendered" class="autocomplete-list">
+      <p v-if="loading" class="autocomplete-status">Recherche en cours…</p>
+      <p v-else-if="showEmpty" class="no-result">Aucun résultat</p>
+      <p v-else-if="error" class="no-result">{{ error }}</p>
+    </div>
+
+    <div class="visually-hidden" role="status" aria-atomic="true">{{ liveRegionText }}</div>
+    <div class="visually-hidden" role="alert" aria-atomic="true">{{ showList && error ? error : "" }}</div>
   </div>
 </template>
 
@@ -219,8 +231,9 @@ onClickOutside(containerEl, () => {
   left: 0;
   z-index: 10;
   width: 100%;
-  background: white;
-  border: 1px solid #dcdcdc;
+  background: var(--background-default-grey);
+  color: var(--text-default-grey);
+  border: 1px solid var(--border-default-grey);
   border-radius: 0 0 0.5rem 0.5rem;
   max-height: 18rem;
   overflow-y: auto;
@@ -239,12 +252,14 @@ onClickOutside(containerEl, () => {
 }
 .autocomplete-item.highlighted,
 .autocomplete-item:hover {
-  background: #e5e7eb;
+  background: var(--background-contrast-grey);
+  outline: 2px solid var(--border-action-high-blue-france);
+  outline-offset: -2px;
 }
 .no-result,
 .autocomplete-status {
   padding: 0.5rem 0.75rem;
-  color: #6b7280;
+  color: var(--text-mention-grey);
 }
 .visually-hidden {
   position: absolute !important;

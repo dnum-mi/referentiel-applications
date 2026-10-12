@@ -101,8 +101,15 @@ onMounted(() => {
         />
         <template #footer>
           <DsfrButtonGroup :inline-layout-when="true" :reverse="true">
-            <DsfrButton label="Annuler" secondary @click="closeSaveModal" />
-            <DsfrButton label="Sauvegarder" :disabled="!filterName.trim()" data-testid="confirm-save-filter-button" @click="confirmSave" />
+            <li><DsfrButton label="Annuler" secondary @click="closeSaveModal" /></li>
+            <li>
+              <DsfrButton
+                label="Sauvegarder"
+                :disabled="!filterName.trim()"
+                data-testid="confirm-save-filter-button"
+                @click="confirmSave"
+              />
+            </li>
           </DsfrButtonGroup>
         </template>
       </DsfrModal>

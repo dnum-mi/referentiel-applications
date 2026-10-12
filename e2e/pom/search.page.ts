@@ -516,6 +516,38 @@ export class SearchPage extends BasePage {
     await waitForSearchParams(this.page, (p) => !!p.get("relationAppId"));
   }
 
+  /** La recherche de relations peut se terminer entièrement au clavier. */
+  async filterByRelationTargetKeyboard(
+    query: string,
+    expectedId: string,
+  ): Promise<void> {
+    const group = this.byTestId("relation-suggestions-input");
+    await this.openAccordion("sidebar-accordion-relations", group);
+    const input = group.getByRole("combobox");
+    await input.fill(query);
+    const list = group.getByRole("listbox");
+    await expect(list.getByRole("option").first()).toBeVisible();
+    await input.press("ArrowDown");
+    const selectedId = await list
+      .getByRole("option")
+      .first()
+      .getAttribute("id");
+    if (!selectedId)
+      throw new Error("La suggestion n'a pas d'identifiant accessible.");
+    await expect(input).toHaveAttribute("aria-activedescendant", selectedId);
+    await input.press("Escape");
+    await expect(input).toHaveAttribute("aria-expanded", "false");
+    await expect(input).toHaveValue(query);
+    await input.press("ArrowDown");
+    await input.press("Enter");
+    await waitForSearchParams(
+      this.page,
+      (params) => params.get("relationAppId") === expectedId,
+    );
+    await expect(input).toBeFocused();
+    await expect(input).toHaveAttribute("aria-expanded", "false");
+  }
+
   /** Replie puis ré-affiche la sidebar des filtres via son bouton de bascule. */
   async toggleSidebarTwice(): Promise<void> {
     const initiallyVisible = await this.sidebar().isVisible();

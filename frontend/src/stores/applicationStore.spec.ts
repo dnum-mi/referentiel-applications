@@ -1,16 +1,25 @@
 import { createPinia, setActivePinia } from "pinia";
 import { useApplicationStore } from "./applicationStore";
 
-const { removeMock, exportPowerpointMock, addErrorMessage, addSuccessMessage, push } = vi.hoisted(() => ({
-  removeMock: vi.fn(),
-  exportPowerpointMock: vi.fn(),
-  addErrorMessage: vi.fn(),
-  addSuccessMessage: vi.fn(),
-  push: vi.fn(),
-}));
+const { removeMock, exportPowerpointMock, exportHtmlMock, exportProductHtmlMock, addErrorMessage, addSuccessMessage, push } = vi.hoisted(
+  () => ({
+    removeMock: vi.fn(),
+    exportPowerpointMock: vi.fn(),
+    exportHtmlMock: vi.fn(),
+    exportProductHtmlMock: vi.fn(),
+    addErrorMessage: vi.fn(),
+    addSuccessMessage: vi.fn(),
+    push: vi.fn(),
+  }),
+);
 
 vi.mock("@/api/index", () => ({
-  default: { applicationControllerRemove: removeMock, applicationControllerExportProductPowerpoint: exportPowerpointMock },
+  default: {
+    applicationControllerRemove: removeMock,
+    applicationControllerExportProductPowerpoint: exportPowerpointMock,
+    applicationControllerExportHtml: exportHtmlMock,
+    applicationControllerExportProductHtml: exportProductHtmlMock,
+  },
 }));
 
 vi.mock("@/router", () => ({
@@ -73,6 +82,46 @@ describe("applicationStore.deleteApplication — retour d'erreur (#2542)", () =>
     expect(push).toHaveBeenCalledTimes(1);
     expect(addSuccessMessage).toHaveBeenCalledWith("Application supprimée définitivement avec succès.");
     expect(addErrorMessage).not.toHaveBeenCalled();
+  });
+});
+
+describe("applicationStore — versions HTML des exports", () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    exportHtmlMock.mockReset();
+    exportProductHtmlMock.mockReset();
+    vi.stubGlobal("URL", { createObjectURL: vi.fn(() => "blob:export"), revokeObjectURL: vi.fn() });
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("conserve tous les filtres et le tri de l'export, indépendamment de la pagination", async () => {
+    exportHtmlMock.mockResolvedValueOnce({ response: { ok: true, status: 200 }, data: "<!doctype html><html lang='fr'></html>" });
+    await useApplicationStore().downloadHtml({
+      label: "Portail",
+      page: 3,
+      pageSize: 15,
+      sortBy: "label",
+      order: "desc",
+      tag: [],
+      hostingSite: undefined,
+    });
+    expect(exportHtmlMock).toHaveBeenCalledExactlyOnceWith({
+      query: { label: "Portail", page: 3, pageSize: 0, sortBy: "label", order: "desc" },
+      parseAs: "blob",
+    });
+    expect(HTMLAnchorElement.prototype.click).toHaveBeenCalledOnce();
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:export");
+  });
+
+  it("demande la même fiche produit par identifiant et signale une erreur avant tout téléchargement", async () => {
+    exportProductHtmlMock.mockResolvedValueOnce({ response: { ok: false, status: 403 }, error: { message: "Forbidden" } });
+    await expect(useApplicationStore().downloadProductHtml("app-1")).rejects.toThrow("Erreur lors de l’export de la fiche produit HTML.");
+    expect(exportProductHtmlMock).toHaveBeenCalledExactlyOnceWith({ path: { applicationId: "app-1" }, parseAs: "blob" });
+    expect(HTMLAnchorElement.prototype.click).not.toHaveBeenCalled();
   });
 });
 

@@ -27,6 +27,7 @@ export const useStatisticsStore = defineStore("statisticsStore", () => {
   const error = ref<string | null>(null);
   const iqStats = ref<GetIqAvgGroupedDto[]>([]);
   const totalCompliances = ref<number>(0);
+  let latestIqRequest = 0;
 
   async function countApplications(force = false) {
     // Le total (non filtré) ne bouge pas au fil des recherches : on ne le
@@ -48,16 +49,22 @@ export const useStatisticsStore = defineStore("statisticsStore", () => {
   }
 
   async function fetchIqStats(from?: string, to?: string, groupBy: "day" | "week" | "month" | "year" = "month") {
+    const request = ++latestIqRequest;
     isLoading.value = true;
     error.value = null;
-    const response = await api.statsControllerGetIqAvgGrouped({ query: { from, to, groupBy } });
-    if (!isApiSuccess(response)) {
-      throw new Error("Erreur lors de la récupération des stats IQ");
+    try {
+      const response = await api.statsControllerGetIqAvgGrouped({ query: { from, to, groupBy } });
+      if (request !== latestIqRequest) return;
+      if (!isApiSuccess(response)) throw new Error("Erreur lors de la récupération des stats IQ");
+      if (!response.data || !Array.isArray(response.data)) throw new Error("Données de stats IQ invalides");
+      iqStats.value = response.data;
+    } catch (cause) {
+      if (request !== latestIqRequest) return;
+      error.value = "Impossible de charger les statistiques IQ pour la période sélectionnée.";
+      throw cause;
+    } finally {
+      if (request === latestIqRequest) isLoading.value = false;
     }
-    if (!response.data || !Array.isArray(response.data)) {
-      throw new Error("Données de stats IQ invalides");
-    }
-    iqStats.value = response.data;
   }
 
   // fetch total compliance count

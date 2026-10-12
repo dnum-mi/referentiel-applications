@@ -88,8 +88,7 @@ const searchLabel = computed(() => {
 // RGAA-040 / RGAA-058 / RGAA-087 (7.5) : message de statut unique restitué aux TA
 // via une région live (nombre de suggestions / recherche en cours / absence de résultat).
 const searchStatus = computed(() => {
-  if (!searchQuery.value) return "";
-  if (searchError.value) return searchError.value;
+  if (!searchQuery.value || searchError.value) return "";
   if (isLoading.value) return "Recherche en cours…";
   const n = organizations.value.length;
   if (n === 0) return "Aucune organisation trouvée";
@@ -189,6 +188,10 @@ watchDebounced(searchQuery, onQuery, { debounce: 300 });
         label="Choisir une organisation de votre choix"
         label-visible
       />
+    </div>
+
+    <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="org-search-error">
+      <p v-if="searchError" class="fr-error-text">{{ searchError }}</p>
     </div>
 
     <div class="fr-mt-1w" aria-live="polite" aria-atomic="true" data-testid="org-search-status">

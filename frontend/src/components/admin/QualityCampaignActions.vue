@@ -175,6 +175,7 @@ async function changeStatus(status: UpdateQualityCampaignStatusDto["status"]) {
     @close="closeEditModal"
   >
     <DsfrAlert
+      alert
       v-if="errorMessage"
       type="error"
       :description="errorMessage"
@@ -232,13 +233,15 @@ async function changeStatus(status: UpdateQualityCampaignStatusDto["status"]) {
 
     <template #footer>
       <DsfrButtonGroup :inline-layout-when="true" :reverse="true">
-        <DsfrButton label="Annuler" secondary data-testid="admin-quality-campaign-cancel-btn" @click="closeEditModal" />
-        <DsfrButton
-          :label="isSaving ? 'Enregistrement…' : 'Enregistrer'"
-          :disabled="isSaving"
-          data-testid="admin-quality-campaign-save-btn"
-          @click="saveCampaign"
-        />
+        <li><DsfrButton label="Annuler" secondary data-testid="admin-quality-campaign-cancel-btn" @click="closeEditModal" /></li>
+        <li>
+          <DsfrButton
+            :label="isSaving ? 'Enregistrement…' : 'Enregistrer'"
+            :disabled="isSaving"
+            data-testid="admin-quality-campaign-save-btn"
+            @click="saveCampaign"
+          />
+        </li>
       </DsfrButtonGroup>
     </template>
   </DsfrModal>
@@ -259,14 +262,16 @@ async function changeStatus(status: UpdateQualityCampaignStatusDto["status"]) {
 
     <template #footer>
       <DsfrButtonGroup :inline-layout-when="true" :reverse="true">
-        <DsfrButton label="Annuler" secondary data-testid="admin-quality-campaign-delete-cancel-btn" @click="closeDeleteModal" />
-        <DsfrButton
-          label="Supprimer"
-          danger
-          :disabled="isDeleting"
-          data-testid="admin-quality-campaign-delete-confirm-btn"
-          @click="deleteCampaign"
-        />
+        <li><DsfrButton label="Annuler" secondary data-testid="admin-quality-campaign-delete-cancel-btn" @click="closeDeleteModal" /></li>
+        <li>
+          <DsfrButton
+            label="Supprimer"
+            danger
+            :disabled="isDeleting"
+            data-testid="admin-quality-campaign-delete-confirm-btn"
+            @click="deleteCampaign"
+          />
+        </li>
       </DsfrButtonGroup>
     </template>
   </DsfrModal>

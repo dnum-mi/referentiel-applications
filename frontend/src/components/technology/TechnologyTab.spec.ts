@@ -471,10 +471,11 @@ describe("technologyTab — chargement en erreur, dates et liens (#2521, #2522, 
     expect(summary).toHaveTextContent("1 en fin de vie proche");
   });
 
-  it("nomme le tableau par son nombre de lignes", async () => {
+  it("nomme le tableau et conserve les lignes de technologies", async () => {
     renderWithTechnologies([makeTechnology({ id: "t-1" }), makeTechnology({ id: "t-2" })]);
     await screen.findByTestId("technology-eol-unchecked-t-2");
-    expect(screen.getByLabelText("Tableau de 2 éléments")).toBeInTheDocument();
+    const table = screen.getByRole("table", { name: "Technologies de l’application" });
+    expect(table.querySelectorAll("tbody tr")).toHaveLength(2);
   });
 
   it("trie la colonne « Fin de vie » chronologiquement et non par jour du mois (#2522)", async () => {
@@ -483,7 +484,7 @@ describe("technologyTab — chargement en erreur, dates et liens (#2521, #2522, 
       makeResolvedTechnology({ id: "early", product: "Early", eolDate: new Date("2026-12-01T00:00:00.000Z") }),
     ]);
     await screen.findByTestId("technology-eol-link-late");
-    await fireEvent.click(screen.getByRole("button", { name: /Fin de vie/ }));
+    await fireEvent.click(screen.getByRole("button", { name: /^Fin de vie$/ }));
     await waitFor(() => {
       const products = screen
         .getAllByRole("row")

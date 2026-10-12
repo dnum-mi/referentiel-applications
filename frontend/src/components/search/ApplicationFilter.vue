@@ -9,14 +9,18 @@ const { filters, setFilter } = useApplicationSearch();
     <DsfrInput
       :model-value="filters.search"
       label-visible
-      aria-describedby="search-tooltip-desc"
+      description-id="search-tooltip-desc"
       data-testid="application-filter-label"
       @update:model-value="setFilter({ search: $event?.toString(), page: 0 })"
     >
       <template #label>
         <span style="display: inline-flex; align-items: center; gap: 0.25rem">
           Nom de l’application
-          <DsfrTooltip id="search-tooltip-desc" content="Recherche les applications dont le nom contient le texte saisi." />
+          <DsfrTooltip
+            aria-label="Afficher l’aide sur le filtre Nom de l’application"
+            id="search-tooltip-desc"
+            content="Recherche les applications dont le nom contient le texte saisi."
+          />
         </span>
       </template>
     </DsfrInput>
@@ -29,7 +33,7 @@ const { filters, setFilter } = useApplicationSearch();
     <DsfrInput
       :model-value="filters.link"
       label-visible
-      aria-describedby="link-tooltip-desc"
+      description-id="link-tooltip-desc"
       data-testid="application-filter-link"
       @update:model-value="setFilter({ link: $event?.toString(), page: 0 })"
     >
@@ -37,6 +41,7 @@ const { filters, setFilter } = useApplicationSearch();
         <span style="display: inline-flex; align-items: center; gap: 0.25rem">
           Lien externe
           <DsfrTooltip
+            aria-label="Afficher l’aide sur le filtre Lien externe"
             id="link-tooltip-desc"
             content="Recherche les applications par URL d’une ressource externe associée (documentation, service, supervision…)."
           />

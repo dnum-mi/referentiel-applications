@@ -1,7 +1,10 @@
 <script lang="ts" setup>
 import type { Message } from "../stores/toasterStore";
+import { computed } from "vue";
 
-defineProps<{ messages: Message[] }>();
+const props = defineProps<{ messages: Message[] }>();
+const statusMessages = computed(() => props.messages.filter((message) => message.type !== "error"));
+const errorMessages = computed(() => props.messages.filter((message) => message.type === "error"));
 const emit = defineEmits<{
   closeMessage: [id: string];
 }>();
@@ -11,16 +14,39 @@ const close = (id: string) => emit("closeMessage", id);
 
 <template>
   <div class="toaster-container" data-testid="app-toaster">
-    <TransitionGroup mode="out-in" name="list" tag="div" class="toasters">
-      <template v-for="message in messages" :key="message.id">
+    <div class="toasters">
+      <TransitionGroup
+        name="list"
+        tag="div"
+        class="message-group"
+        role="status"
+        aria-live="polite"
+        aria-atomic="false"
+        aria-relevant="additions text"
+      >
+        <template v-for="message in statusMessages" :key="message.id">
+          <DsfrAlert class="app-alert" v-bind="message" :data-testid="`app-toaster-message-${message.id}`" @close="close(message.id)" />
+        </template>
+      </TransitionGroup>
+      <TransitionGroup
+        name="list"
+        tag="div"
+        class="message-group"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="false"
+        aria-relevant="additions text"
+      >
         <DsfrAlert
+          v-for="message in errorMessages"
+          :key="message.id"
           class="app-alert"
           v-bind="message"
           :data-testid="`app-toaster-message-${message.id}`"
-          @close="close(message.id as string)"
+          @close="close(message.id)"
         />
-      </template>
-    </TransitionGroup>
+      </TransitionGroup>
+    </div>
   </div>
 </template>
 
@@ -33,6 +59,14 @@ const close = (id: string) => emit("closeMessage", id);
   z-index: 1750; /* To be on top of .fr-modal which has z-index: 1750 */
 }
 .toasters {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+.message-group {
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;

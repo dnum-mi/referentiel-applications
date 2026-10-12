@@ -1,33 +1,54 @@
 import type { GraphEdgeDto, GraphNodeDto } from "@/client";
 import * as d3 from "d3";
-import { statusApplicationDictionary } from "../constants/dictionary";
+import { relationTypeLabels, statusApplicationDictionary } from "@/constants/dictionary";
 import { useGraphStyles, isDirectedRelation } from "./use-graph-style";
-import { sanitizeLabel } from "./use-sanitize-utils";
-
-type GraphStyles = ReturnType<ReturnType<typeof useGraphStyles>["getGraphStyles"]>;
 
 export interface D3Node extends d3.SimulationNodeDatum {
   id: string;
   label: string;
   isRoot: boolean;
   status?: string;
-  x?: number;
-  y?: number;
-  fx?: number | null;
-  fy?: number | null;
 }
 
 export interface D3Link extends d3.SimulationLinkDatum<D3Node> {
   source: string | D3Node;
   target: string | D3Node;
-  type: string;
+  type: GraphEdgeDto["type"];
+}
+
+interface GraphAccessibility {
+  title: string;
+  descriptionId: string;
+  detailsId: string;
+  nodeHref: (id: string) => string;
+}
+
+function nodeName(node: D3Node) {
+  const status = node.status && statusApplicationDictionary[node.status as keyof typeof statusApplicationDictionary];
+  return [node.label, node.isRoot ? "application racine" : "", status || node.status].filter(Boolean).join(" — ");
+}
+
+/** Le nom complet est conservé dans le lien, son titre et la transcription HTML. */
+function labelLines(label: string): string[] {
+  const words = label.split(/\s+/);
+  const lines: string[] = [];
+  let line = "";
+  for (const word of words) {
+    if (line && `${line} ${word}`.length > 21) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = line ? `${line} ${word}` : word;
+    }
+  }
+  if (line) lines.push(line);
+  return lines
+    .slice(0, 3)
+    .map((value, index) => (value.length > 21 || (index === 2 && lines.length > 3) ? `${value.slice(0, 20)}…` : value));
 }
 
 export function useD3Graph() {
   const { getGraphStyles } = useGraphStyles();
-
-  // Constants for node masking
-  const MASKED_NODE_OPACITY = 0.05;
 
   function createInteractiveGraph(
     container: HTMLElement,
@@ -35,336 +56,282 @@ export function useD3Graph() {
     edges: GraphEdgeDto[],
     rootId: string,
     onNodeClick: (nodeId: string) => void,
-    visibleNodeIds?: Set<string>,
+    _visibleNodeIds?: Set<string>,
+    accessibility?: GraphAccessibility,
   ) {
     const styles = getGraphStyles();
-    const width = container.clientWidth || 800;
+    const width = Math.max(container.clientWidth || 800, 600);
     const height = Math.max(container.clientHeight || 600, 600);
-
+    const prefix = (container.id || "relations-graph").replace(/[^\w-]/g, "_");
     d3.select(container).selectAll("*").remove();
 
     const svg = d3
       .select(container)
       .append("svg")
       .attr("width", "100%")
-      .attr("height", "100%")
+      .attr("height", height)
       .attr("viewBox", `0 0 ${width} ${height}`)
-      .attr("style", "max-width: 100%; height: auto; cursor: grab;");
+      .attr("role", "img")
+      .attr("aria-labelledby", `${prefix}-title`)
+      .attr("aria-describedby", [`${prefix}-description`, accessibility?.descriptionId].filter(Boolean).join(" "))
+      .attr("aria-details", accessibility?.detailsId || null)
+      .style("min-width", "600px")
+      .style("cursor", "grab");
+    svg
+      .append("title")
+      .attr("id", `${prefix}-title`)
+      .text(accessibility?.title || "Graphe des relations entre applications");
+    svg
+      .append("desc")
+      .attr("id", `${prefix}-description`)
+      .text(
+        `${nodes.length} applications. ${edges.length} relations. ` +
+          nodes
+            .map(
+              (n) =>
+                `${n.label}${n.id === rootId ? " (application racine)" : ""}${n.status ? `, ${statusApplicationDictionary[n.status]}` : ""}`,
+            )
+            .join(" ; ") +
+          ". " +
+          edges
+            .map(
+              (e) =>
+                `${e.sourceLabel} ${relationTypeLabels[e.type]} ${e.targetLabel}${isDirectedRelation(e.type) ? "" : " (relation réciproque)"}`,
+            )
+            .join(" ; ") +
+          ". Chaque application est un lien. Majuscule et les flèches déplacent le nœud sélectionné. Les commandes à côté du graphe permettent aussi de déplacer chaque nœud, de zoomer et de déplacer la vue. La liste complète avec les liens des applications est disponible après le graphe.",
+      );
 
     const defs = svg.append("defs");
-
-    const edgeStyles = styles.edge as Record<string, { color: string; style: string; width: number }>;
-
-    Object.keys(edgeStyles).forEach((type) => {
-      const safeType = type.replace(/[^\w-]/g, "_");
-      const color = edgeStyles[type]?.color || styles.node.stroke;
-
+    for (const [type, style] of Object.entries(styles.edge)) {
       defs
         .append("marker")
-        .attr("id", `arrow-${safeType}`)
+        .attr("id", `${prefix}-arrow-${type}`)
         .attr("viewBox", "0 -5 10 10")
         .attr("refX", styles.node.width / 2 + 10)
-        .attr("refY", 0)
-        .attr("markerWidth", 4)
-        .attr("markerHeight", 4)
+        .attr("markerWidth", 5)
+        .attr("markerHeight", 5)
         .attr("orient", "auto-start-reverse")
-        .attr("markerUnits", "strokeWidth")
+        .attr("markerUnits", "userSpaceOnUse")
         .append("path")
         .attr("d", "M0,-5L10,0L0,5")
-        .attr("fill", color);
-    });
+        .attr("fill", style.color);
+    }
 
     const g = svg.append("g");
-
     const zoom = d3
       .zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.1, 4])
-      .on("zoom", (event) => {
-        g.attr("transform", event.transform);
-      });
-
-    svg.call(zoom);
+      .extent([
+        [0, 0],
+        [width, height],
+      ])
+      .scaleExtent([0.25, 4])
+      .on("zoom", (event) => g.attr("transform", event.transform));
+    svg.call(zoom).on("dblclick.zoom", null);
 
     const d3Nodes: D3Node[] = nodes.map((node) => ({
       id: node.id,
-      label: sanitizeLabel(node.label?.trim() || node.id.slice(0, 8)),
+      label: node.label?.trim() || node.id,
       isRoot: node.id === rootId,
       status: node.status,
     }));
+    const d3Links: D3Link[] = edges.map((edge) => ({ source: edge.sourceId, target: edge.targetId, type: edge.type }));
 
-    const d3Links: D3Link[] = edges.map((edge) => ({
-      source: edge.sourceId,
-      target: edge.targetId,
-      type: edge.type,
-    }));
-
+    // Calculer une disposition stable avant affichage évite un mouvement automatique continu.
     const simulation = d3
-      .forceSimulation<D3Node>(d3Nodes)
+      .forceSimulation(d3Nodes)
+      .stop()
       .force(
         "link",
         d3
           .forceLink<D3Node, D3Link>(d3Links)
-          .id((d) => d.id)
-          .distance(150),
+          .id((node) => node.id)
+          .distance(240),
       )
-      .force("charge", d3.forceManyBody().strength(-300))
+      .force("charge", d3.forceManyBody().strength(-500))
       .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("collision", d3.forceCollide().radius(styles.root.width / 2 + 10));
+      .force("collision", d3.forceCollide<D3Node>().radius(styles.root.width / 2 + 12));
+    simulation.tick(200);
 
     const link = g
       .append("g")
-      .attr("stroke-opacity", 0.6)
+      .attr("aria-hidden", "true")
       .selectAll("line")
       .data(d3Links)
       .join("line")
-      .attr("stroke-width", (d) => edgeStyles[d.type]?.width || 2)
-      .attr("stroke", (d) => edgeStyles[d.type]?.color || styles.node.stroke)
-      .attr("stroke-dasharray", (d) => {
-        if (edgeStyles[d.type]?.style === "dashed") return "6, 4";
-        if (edgeStyles[d.type]?.style === "dotted") return "2, 3";
-        return "0";
-      })
-      .attr("marker-end", (d) => {
-        // Une relation symétrique (corrélation) n'a pas de direction : la
-        // flèche suivrait l'ordre des identifiants, pas le métier.
-        if (!isDirectedRelation(d.type || "")) return null;
-        const safeType = (d.type || "").replace(/[^\w-]/g, "_");
-        return `url(#arrow-${safeType})`;
-      });
+      .attr("stroke-width", (d) => styles.edge[d.type].width)
+      .attr("stroke", (d) => styles.edge[d.type].color)
+      .attr("stroke-dasharray", (d) => styles.edge[d.type].dasharray)
+      .attr("marker-end", (d) => (isDirectedRelation(d.type) ? `url(#${prefix}-arrow-${d.type})` : null));
+
+    const edgeLabels = g
+      .append("g")
+      .attr("aria-hidden", "true")
+      .selectAll("text")
+      .data(d3Links)
+      .join("text")
+      .attr("text-anchor", "middle")
+      .attr("font-size", "12px")
+      .attr("fill", "var(--text-default-grey)")
+      .attr("stroke", "var(--background-default-grey)")
+      .attr("stroke-width", 5)
+      .attr("paint-order", "stroke")
+      .attr("pointer-events", "none")
+      .text((d) => relationTypeLabels[d.type]);
 
     const node = g
       .append("g")
-      .attr("stroke-linecap", "round")
-      .attr("stroke-linejoin", "round")
-      .selectAll<SVGGElement, D3Node>("g")
+      .selectAll<SVGAElement, D3Node>("a")
       .data(d3Nodes)
-      .join("g")
+      .join<SVGAElement>("a")
+      .attr(
+        "href",
+        (d) => accessibility?.nodeHref(d.id) || `${import.meta.env.BASE_URL.replace(/\/$/, "")}/applications/${encodeURIComponent(d.id)}`,
+      )
+      .attr("tabindex", 0)
+      .attr("aria-label", nodeName)
+      .attr("data-node-id", (d) => d.id)
       .attr("cursor", "pointer")
-      .style("opacity", (d) => {
-        if (!visibleNodeIds || visibleNodeIds.size === 0) return 1;
-        return visibleNodeIds.has(d.id) ? 1 : MASKED_NODE_OPACITY;
-      })
-      .style("pointer-events", (d) => {
-        if (!visibleNodeIds || visibleNodeIds.size === 0) return "auto";
-        return visibleNodeIds.has(d.id) ? "auto" : "none";
-      })
-      .call(d3.drag<SVGGElement, D3Node>().on("start", dragstarted).on("drag", dragged).on("end", dragended));
-
-    // Add rectangles for nodes
-    node
+      .call(
+        d3.drag<SVGAElement, D3Node>().on("drag", (event, d) => {
+          d.x = event.x;
+          d.y = event.y;
+          updatePositions();
+        }),
+      );
+    node.append("title").text(nodeName);
+    const nodeRect = node
       .append("rect")
+      .attr("aria-hidden", "true")
       .attr("width", (d) => (d.isRoot ? styles.root.width : styles.node.width))
       .attr("height", (d) => (d.isRoot ? styles.root.height : styles.node.height))
-      .attr("x", (d) => (d.isRoot ? -styles.root.width / 2 : -styles.node.width / 2))
-      .attr("y", (d) => (d.isRoot ? -styles.root.height / 2 : -styles.node.height / 2))
-      .attr("rx", (d) => (d.isRoot ? styles.root.borderRadius : styles.node.borderRadius))
-      .attr("ry", (d) => (d.isRoot ? styles.root.borderRadius : styles.node.borderRadius))
+      .attr("x", (d) => -(d.isRoot ? styles.root.width : styles.node.width) / 2)
+      .attr("y", (d) => -(d.isRoot ? styles.root.height : styles.node.height) / 2)
       .attr("fill", (d) => (d.isRoot ? styles.root.fill : styles.node.fill))
       .attr("stroke", (d) => (d.isRoot ? styles.root.stroke : styles.node.stroke))
-      .attr("stroke-width", (d) => (d.isRoot ? 3 : 2));
-
-    // Cache for text layout calculations
-    const textLayoutCache = new Map<string, { lines: string[]; fontSize: number; totalHeight: number }>();
-
-    function getTextLayout(
-      label: string,
-      isRoot: boolean,
-      status: string | undefined,
-      styles: GraphStyles,
-      textElem: SVGTextElement,
-    ): { lines: string[]; fontSize: number; totalHeight: number } {
-      const cacheKey = JSON.stringify([label, isRoot, status]);
-      if (textLayoutCache.has(cacheKey)) {
-        return textLayoutCache.get(cacheKey)!;
-      }
-      const maxTextWidth = isRoot ? styles.root.width - 10 : styles.node.width - 10;
-      const maxHeight = isRoot ? styles.root.height - 20 : styles.node.height - 20;
-      const words = label.split(/\s+/);
-      const lineHeight = 1.1;
-      let fontSize = 11;
-      const minFontSize = 6;
-      const maxLines = Math.floor(maxHeight / fontSize / lineHeight);
-      const lines: string[] = [];
-      let line = "";
-      let lineNumber = 0;
-
-      // Create a temporary tspan for measurement
-      const text = d3.select(textElem);
-      text.text("");
-      let tspan = text.append("tspan").attr("x", 0).attr("dy", "0em").text("");
-
-      for (const word of words) {
-        const testLine = line + (line === "" ? "" : " ") + word;
-        tspan.text(testLine);
-        if (tspan.node()!.getComputedTextLength() > maxTextWidth && line !== "") {
-          lines.push(line);
-          lineNumber++;
-          if (lineNumber >= maxLines) {
-            lines[lines.length - 1] = `${line}…`;
-            break;
-          }
-          tspan = text.append("tspan").attr("x", 0).attr("dy", `${lineHeight}em`).text(word);
-          line = word;
-        } else {
-          line = testLine;
-        }
-      }
-      if (line && lines.length < maxLines) {
-        lines.push(line);
-      }
-
-      // Adjust font size if needed
-      text.attr("font-size", `${fontSize}px`);
-      while (text.node()!.getBBox().width > maxTextWidth && fontSize > minFontSize) {
-        fontSize--;
-        text.attr("font-size", `${fontSize}px`);
-      }
-      // Remove all tspans after measurement
-      text.selectAll("tspan").remove();
-      const totalHeight = (lines.length - 1) * lineHeight;
-      const result = { lines, fontSize, totalHeight };
-      textLayoutCache.set(cacheKey, result);
-      return result;
-    }
-
+      .attr("stroke-width", 2);
     node
       .append("text")
+      .attr("aria-hidden", "true")
       .attr("text-anchor", "middle")
-      .attr("font-weight", (d) => (d.isRoot ? "bold" : "normal"))
-      .attr("fill", (d) => (d.isRoot ? styles.root.text : styles.node.text))
+      .attr("font-size", "14px")
+      .attr("fill", styles.node.text)
       .attr("pointer-events", "none")
+      .attr("font-weight", (d) => (d.isRoot ? "bold" : "normal"))
       .each(function (d) {
-        const text = d3.select(this);
-        // Use memoized layout calculation
-        const { lines, fontSize, totalHeight } = getTextLayout(d.label, d.isRoot, d.status, styles, this as SVGTextElement);
-        text.attr("font-size", `${fontSize}px`);
-        text.text("");
-        lines.forEach((line, i) => {
-          text
+        labelLines(d.label).forEach((line, i) =>
+          d3
+            .select(this)
             .append("tspan")
             .attr("x", 0)
-            .attr("dy", i === 0 ? "0em" : "1.1em")
-            .text(line);
-        });
-        // Adjust dy based on status and totalHeight
-        text.attr("dy", d.status ? `-${totalHeight / 2 - 0.6}em` : `-${totalHeight / 2}em`);
-        text.append("title").text(d.label);
+            .attr("y", -20 + i * 16)
+            .text(line),
+        );
       });
-
     node
       .filter((d) => Boolean(d.status))
       .append("text")
-      .text((d) => {
-        const statusLabel =
-          d.status && d.status in statusApplicationDictionary
-            ? statusApplicationDictionary[d.status as keyof typeof statusApplicationDictionary]
-            : d.status;
-        return statusLabel || "";
-      })
+      .attr("aria-hidden", "true")
       .attr("text-anchor", "middle")
-      .attr("dy", "-1.2em")
-      .attr("font-size", "9px")
-      .attr("font-style", "italic")
-      .attr("fill", (d) => (d.isRoot ? styles.root.text : styles.node.text))
-      .attr("opacity", 0.8)
-      .attr("pointer-events", "none");
-
-    node.on("click", (event, d) => {
-      event.stopPropagation();
-      onNodeClick(d.id);
-    });
+      .attr("y", 34)
+      .attr("font-size", "13px")
+      .attr("fill", styles.node.text)
+      .attr("pointer-events", "none")
+      .text((d) => statusApplicationDictionary[d.status as keyof typeof statusApplicationDictionary] || d.status || "");
 
     node
-      .on("mouseenter", function () {
-        d3.select(this).select("rect").attr("stroke-width", 4).attr("stroke", "var(--border-action-high-blue-france, #000091)");
+      .on("click", (event: MouseEvent, d) => {
+        if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        event.stopPropagation();
+        onNodeClick(d.id);
       })
-      .on("mouseleave", function (event, d) {
-        d3.select(this)
-          .select("rect")
-          .attr("stroke-width", d.isRoot ? 3 : 2)
-          .attr("stroke", d.isRoot ? styles.root.stroke : styles.node.stroke);
+      .on("keydown", (event: KeyboardEvent, d) => {
+        const moves: Record<string, [number, number]> = { ArrowLeft: [-20, 0], ArrowRight: [20, 0], ArrowUp: [0, -20], ArrowDown: [0, 20] };
+        const move = moves[event.key];
+        if (event.shiftKey && move) {
+          event.preventDefault();
+          event.stopPropagation();
+          moveNode(d.id, move[0], move[1]);
+        }
+      })
+      .on("focus mouseenter", function () {
+        d3.select(this).select("rect").attr("stroke-width", 4).attr("stroke", "var(--border-action-high-blue-france)");
+      })
+      .on("blur mouseleave", function () {
+        if (document.activeElement === this) return;
+        nodeRect.attr("stroke-width", 2).attr("stroke", (d) => (d.isRoot ? styles.root.stroke : styles.node.stroke));
       });
 
-    simulation.on("tick", () => {
+    function updatePositions() {
       link
         .attr("x1", (d) => (d.source as D3Node).x ?? 0)
         .attr("y1", (d) => (d.source as D3Node).y ?? 0)
         .attr("x2", (d) => (d.target as D3Node).x ?? 0)
         .attr("y2", (d) => (d.target as D3Node).y ?? 0);
-
-      node.attr("transform", (d) => `translate(${d.x},${d.y})`);
-    });
-
-    function dragstarted(event: d3.D3DragEvent<SVGGElement, D3Node, D3Node>, d: D3Node) {
-      if (!event.active) simulation.alphaTarget(0.3).restart();
-      d.fx = d.x;
-      d.fy = d.y;
-      svg.style("cursor", "grabbing");
+      edgeLabels
+        .attr("x", (d) => (((d.source as D3Node).x ?? 0) + ((d.target as D3Node).x ?? 0)) / 2)
+        .attr("y", (d) => (((d.source as D3Node).y ?? 0) + ((d.target as D3Node).y ?? 0)) / 2 - 6);
+      node.attr("transform", (d) => `translate(${d.x ?? 0},${d.y ?? 0})`);
     }
 
-    function dragged(event: d3.D3DragEvent<SVGGElement, D3Node, D3Node>, d: D3Node) {
-      d.fx = event.x;
-      d.fy = event.y;
+    function moveNode(id: string, dx: number, dy: number) {
+      const target = d3Nodes.find((item) => item.id === id);
+      if (!target) return;
+      target.x = (target.x ?? 0) + dx;
+      target.y = (target.y ?? 0) + dy;
+      updatePositions();
     }
-
-    function dragended(event: d3.D3DragEvent<SVGGElement, D3Node, D3Node>, d: D3Node) {
-      if (!event.active) simulation.alphaTarget(0);
-      d.fx = null;
-      d.fy = null;
-      svg.style("cursor", "grab");
-    }
+    updatePositions();
 
     return {
       cleanup: () => {
         simulation.stop();
-        d3.select(container).selectAll("*").remove();
+        svg.on(".zoom", null);
+        svg.remove();
       },
-      resetZoom: () => {
-        svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
-      },
+      resetZoom: () => svg.call(zoom.transform, d3.zoomIdentity),
+      zoomIn: () => svg.call(zoom.scaleBy, 1.25),
+      zoomOut: () => svg.call(zoom.scaleBy, 0.8),
+      pan: (dx: number, dy: number) => svg.call(zoom.translateBy, dx, dy),
+      moveNode,
       exportSVG: () => {
-        const svgElement = svg.node();
-        if (!svgElement) return;
-
-        const serializer = new XMLSerializer();
-        let svgString = serializer.serializeToString(svgElement);
-
-        if (!/^<\?xml/.test(svgString)) {
-          svgString = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n${svgString}`;
+        const element = svg.node();
+        if (!element) return;
+        const clone = element.cloneNode(true) as SVGSVGElement;
+        clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+        clone.setAttribute("aria-describedby", `${prefix}-description`);
+        clone.removeAttribute("aria-details");
+        // Résoudre les couleurs du thème pour un SVG utilisable hors de l'application.
+        const originalChildren = [element, ...element.querySelectorAll("*")];
+        const clonedChildren = [clone, ...clone.querySelectorAll("*")];
+        originalChildren.forEach((original, i) => {
+          const computed = getComputedStyle(original);
+          for (const name of ["fill", "stroke"]) {
+            if (original.getAttribute(name)?.includes("var(")) clonedChildren[i]?.setAttribute(name, computed.getPropertyValue(name));
+          }
+        });
+        const background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        background.setAttribute("width", "100%");
+        background.setAttribute("height", "100%");
+        background.setAttribute("fill", getComputedStyle(container).backgroundColor);
+        background.setAttribute("aria-hidden", "true");
+        clone.insertBefore(background, clone.querySelector("g"));
+        clone.style.fontFamily = getComputedStyle(element).fontFamily;
+        for (const anchor of clone.querySelectorAll("a[href]")) {
+          anchor.setAttribute("href", new URL(anchor.getAttribute("href")!, globalThis.location.href).href);
         }
-
-        if (!svgString.includes('xmlns="http://www.w3.org/2000/svg"')) {
-          svgString = svgString.replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg"');
-        }
-
-        const styleElement = `
-          <style>
-            text { font-family: "Marianne", arial, sans-serif; }
-          </style>
-        `;
-
-        if (svgString.includes("</defs>")) {
-          svgString = svgString.replace("</defs>", `${styleElement}</defs>`);
-        } else if (svgString.includes("<defs>")) {
-          svgString = svgString.replace("<defs>", `<defs>${styleElement}`);
-        } else {
-          svgString = svgString.replace("<svg", `<svg><defs>${styleElement}</defs>`);
-        }
-
-        const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `graph-relations-${new Date().toISOString().slice(0, 10)}.svg`;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
+        const serialized = `<?xml version="1.0" encoding="UTF-8"?>\n${new XMLSerializer().serializeToString(clone)}`;
+        const url = URL.createObjectURL(new Blob([serialized], { type: "image/svg+xml;charset=utf-8" }));
+        const download = document.createElement("a");
+        download.href = url;
+        download.download = `graph-relations-${new Date().toISOString().slice(0, 10)}.svg`;
+        document.body.appendChild(download);
+        download.click();
+        download.remove();
         URL.revokeObjectURL(url);
       },
     };
   }
-
-  return {
-    createInteractiveGraph,
-  };
+  return { createInteractiveGraph };
 }

@@ -1,10 +1,21 @@
 <script setup lang="ts">
-import { ref, watch, computed, nextTick } from "vue";
+import { ref, watch, computed, nextTick, useId } from "vue";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 
-const props = defineProps<{ modelValue: string; disabled: boolean; ariaLabel?: string; describedby?: string; invalid?: boolean }>();
+const props = defineProps<{
+  modelValue: string;
+  disabled: boolean;
+  id?: string;
+  required?: boolean;
+  title?: string;
+  ariaLabel?: string;
+  describedby?: string;
+  invalid?: boolean;
+}>();
 const emit = defineEmits<{ (e: "update:modelValue", value: string): void }>();
+const editorId = useId();
+const contentId = `markdown-content-${editorId}`;
 
 const localValue = ref(props.modelValue);
 watch(
@@ -27,7 +38,7 @@ const emitChange = () => emit("update:modelValue", localValue.value);
 
 function wrapSelection(before: string, after: string) {
   const textarea = textareaRef.value;
-  if (!textarea) return;
+  if (!textarea || props.disabled) return;
   const start = textarea.selectionStart;
   const end = textarea.selectionEnd;
   const selected = localValue.value.slice(start, end);
@@ -42,7 +53,7 @@ function wrapSelection(before: string, after: string) {
 
 function insertAtStart(prefix: string) {
   const textarea = textareaRef.value;
-  if (!textarea) return;
+  if (!textarea || props.disabled) return;
   const start = textarea.selectionStart;
   const end = textarea.selectionEnd;
   const lines = localValue.value.slice(start, end).split("\n");
@@ -57,7 +68,7 @@ function insertAtStart(prefix: string) {
 
 function insertAtCursor(text: string) {
   const textarea = textareaRef.value;
-  if (!textarea) return;
+  if (!textarea || props.disabled) return;
   const start = textarea.selectionStart;
   localValue.value = localValue.value.slice(0, start) + text + localValue.value.slice(start);
   emitChange();
@@ -80,26 +91,9 @@ function handleKeydown(event: KeyboardEvent) {
   const textarea = textareaRef.value;
   if (!textarea) return;
   const start = textarea.selectionStart;
-  const end = textarea.selectionEnd;
 
-  // 12.9 : Tab sans sélection → comportement natif (sortie du champ). Indentation uniquement sur sélection.
-  if (event.key === "Tab" && start !== end) {
-    event.preventDefault();
-    const lines = localValue.value.slice(start, end).split("\n");
-    const isShift = event.shiftKey;
-    const outdentLine = (line: string) => (line.startsWith("  ") ? line.slice(2) : line.replace(/^\t/, ""));
-    const modifiedLines = lines.map((line) => {
-      return isShift ? outdentLine(line) : `  ${line}`;
-    });
-    const newText = modifiedLines.join("\n");
-    localValue.value = localValue.value.slice(0, start) + newText + localValue.value.slice(end);
-    emitChange();
-    nextTick(() => {
-      const offset = isShift ? -2 : 2;
-      textarea.setSelectionRange(start + offset, end + offset);
-    });
-    return;
-  }
+  // Tab et Maj+Tab conservent toujours la navigation native, même avec une sélection.
+  if (event.key === "Tab") return;
 
   if (event.key === "Enter") {
     const before = localValue.value.slice(0, start);
@@ -153,7 +147,7 @@ const renderedHtml = computed(() => DOMPurify.sanitize(marked.parse(localValue.v
 <template>
   <div class="markdown-editor" data-testid="markdown-editor">
     <div class="editor-container">
-      <div class="tab-column">
+      <div class="tab-column" role="group" aria-label="Affichage de l'éditeur">
         <button
           v-for="tab in tabs"
           :key="tab.value"
@@ -162,7 +156,8 @@ const renderedHtml = computed(() => DOMPurify.sanitize(marked.parse(localValue.v
           type="button"
           class="icon-button"
           :class="{ active: currentTab === tab.value }"
-          :aria-current="currentTab === tab.value ? 'true' : undefined"
+          :aria-pressed="currentTab === tab.value"
+          :aria-controls="contentId"
           @click="currentTab = tab.value"
         >
           <i :class="`fr-icon-${tab.icon}`" aria-hidden="true" />
@@ -170,17 +165,20 @@ const renderedHtml = computed(() => DOMPurify.sanitize(marked.parse(localValue.v
         </button>
       </div>
 
-      <div class="main">
+      <div :id="contentId" class="main">
         <textarea
           v-if="currentTab === 'edit'"
           ref="textareaRef"
+          :id="id"
           v-model="localValue"
           class="editor fr-input"
           :disabled
+          :required="required"
+          :aria-required="required ? true : undefined"
           :aria-label="ariaLabel"
           :aria-describedby="describedby"
           :aria-invalid="invalid ? true : undefined"
-          :title="ariaLabel"
+          :title="title || ariaLabel"
           rows="10"
           data-testid="markdown-textarea"
           @input="emitChange"
@@ -190,7 +188,7 @@ const renderedHtml = computed(() => DOMPurify.sanitize(marked.parse(localValue.v
         <div v-else v-use-mermaid class="preview" data-testid="markdown-preview" v-html="renderedHtml" />
       </div>
 
-      <div class="toolbar">
+      <div class="toolbar" role="group" aria-label="Mise en forme du texte">
         <button
           v-for="(action, index) in toolbarActions"
           :key="index"
@@ -198,9 +196,11 @@ const renderedHtml = computed(() => DOMPurify.sanitize(marked.parse(localValue.v
           type="button"
           class="icon-button"
           :title="action.title"
+          :disabled="disabled"
           @click="action.handler"
         >
           <i :class="`fr-icon-${action.icon}`" aria-hidden="true" />
+          <span class="fr-sr-only">{{ action.title }}</span>
         </button>
       </div>
     </div>
@@ -214,19 +214,20 @@ const renderedHtml = computed(() => DOMPurify.sanitize(marked.parse(localValue.v
 }
 .editor-container {
   display: flex;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-default-grey);
   border-radius: 4px;
   min-height: 250px;
 }
 .tab-column {
   display: flex;
   flex-direction: column;
-  border-right: 1px solid #ccc;
+  border-right: 1px solid var(--border-default-grey);
   padding: 0.5rem;
   gap: 0.5rem;
 }
 .main {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
 }
@@ -242,7 +243,7 @@ const renderedHtml = computed(() => DOMPurify.sanitize(marked.parse(localValue.v
 .toolbar {
   display: flex;
   flex-direction: column;
-  border-left: 1px solid #ccc;
+  border-left: 1px solid var(--border-default-grey);
 }
 
 .icon-button {
@@ -251,20 +252,21 @@ const renderedHtml = computed(() => DOMPurify.sanitize(marked.parse(localValue.v
   padding: 0.6rem;
   font-size: 1rem;
   cursor: pointer;
+  color: var(--text-default-grey);
 }
 
-.icon-button:focus {
-  outline: 2px solid #000;
+.icon-button:focus-visible {
+  outline: 2px solid var(--border-plain-blue-france);
   outline-offset: 2px;
 }
-.icon-button:hover {
-  background: #f0f0f0;
+.icon-button:hover:enabled {
+  background: var(--background-default-grey-hover);
 }
 
 .icon-button.active {
-  background: #e3e6f3;
-  color: #242424;
-  box-shadow: inset 0 2px 6px #b1b7c2;
+  background: var(--background-action-low-blue-france);
+  color: var(--text-action-high-blue-france);
+  box-shadow: inset 0 0 0 2px var(--border-active-blue-france);
   border-radius: 8px;
   transform: translateY(2px) scale(0.97);
   transition:
@@ -274,11 +276,19 @@ const renderedHtml = computed(() => DOMPurify.sanitize(marked.parse(localValue.v
 }
 
 .icon-button.active i {
-  color: #242424;
+  color: inherit;
 }
 
-.icon-button:active {
-  background: #cfd6e6;
+.icon-button:active:enabled {
+  background: var(--background-action-low-blue-france-active);
   transform: translateY(3px) scale(0.96);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon-button.active,
+  .icon-button:active:enabled {
+    transform: none;
+    transition: none;
+  }
 }
 </style>

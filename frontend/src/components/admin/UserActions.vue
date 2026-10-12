@@ -338,7 +338,7 @@ const isScopeDisabled = computed(() => {
         :danger="!user.isBlocked"
         data-testid="admin-user-block-btn"
         :title="user.isBlocked ? `Rétablir l'accès de cet utilisateur` : `Bloquer l'accès de cet utilisateur`"
-        :aria-label="user.isBlocked ? `Rétablir l'accès de cet utilisateur` : `Bloquer l'accès de cet utilisateur`"
+        :aria-label="user.isBlocked ? `Débloquer l'accès de cet utilisateur` : `Bloquer l'accès de cet utilisateur`"
         @click="openBlockModal"
       />
     </div>
@@ -364,23 +364,27 @@ const isScopeDisabled = computed(() => {
 
       <template #footer>
         <DsfrButtonGroup :inline-layout-when="true" :reverse="true">
-          <DsfrButton
-            label="Annuler"
-            secondary
-            data-testid="admin-block-user-cancel-btn"
-            title="Annuler"
-            aria-label="Annuler"
-            @click="closeBlockModal"
-          />
-          <DsfrButton
-            :label="user.isBlocked ? 'Rétablir' : 'Bloquer'"
-            :danger="!user.isBlocked"
-            :disabled="isTogglingBlock"
-            data-testid="admin-block-user-confirm-btn"
-            title="Confirmer"
-            aria-label="Confirmer"
-            @click="toggleBlock"
-          />
+          <li>
+            <DsfrButton
+              label="Annuler"
+              secondary
+              data-testid="admin-block-user-cancel-btn"
+              title="Annuler"
+              aria-label="Annuler"
+              @click="closeBlockModal"
+            />
+          </li>
+          <li>
+            <DsfrButton
+              :label="user.isBlocked ? 'Rétablir' : 'Bloquer'"
+              :danger="!user.isBlocked"
+              :disabled="isTogglingBlock"
+              data-testid="admin-block-user-confirm-btn"
+              title="Confirmer"
+              aria-label="Confirmer"
+              @click="toggleBlock"
+            />
+          </li>
         </DsfrButtonGroup>
       </template>
     </DsfrModal>

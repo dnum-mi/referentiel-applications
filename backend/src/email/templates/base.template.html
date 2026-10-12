@@ -19,6 +19,9 @@
         border-collapse: collapse;
         border-spacing: 0;
       }
+      td {
+        padding: 0;
+      }
       img {
         border: 0;
         outline: none;
@@ -55,26 +58,26 @@
     <!-- Wrapper table pour la compatibilité -->
     <table
       role="presentation"
-      width="100%"
-      cellpadding="0"
-      cellspacing="0"
-      border="0"
-      style="background-color: #f6f6f6"
+      style="
+        background-color: #f6f6f6;
+        border-collapse: collapse;
+        border-spacing: 0;
+        width: 100%;
+      "
     >
       <tr>
-        <td align="center" style="padding: 20px 0">
+        <td style="padding: 20px 0; text-align: center">
           <!-- Conteneur principal -->
           <table
             role="presentation"
-            width="600"
-            cellpadding="0"
-            cellspacing="0"
-            border="0"
             style="
               max-width: 600px;
               width: 100%;
               background-color: #ffffff;
               border: 1px solid #eeeeee;
+              border-collapse: collapse;
+              border-spacing: 0;
+              margin: 0 auto;
             "
           >
             <!-- En-tête (Header) DSFR -->
@@ -89,13 +92,14 @@
               >
                 <table
                   role="presentation"
-                  width="100%"
-                  cellpadding="0"
-                  cellspacing="0"
-                  border="0"
+                  style="
+                    border-collapse: collapse;
+                    border-spacing: 0;
+                    width: 100%;
+                  "
                 >
                   <tr>
-                    <td>
+                    <td style="padding: 0">
                       <!-- Logo Graphique (remplace le logo texte) -->
 
                       <div
@@ -138,9 +142,22 @@
                   color: #161616;
                   font-size: 16px;
                   line-height: 1.5;
+                  text-align: left;
                 "
               >
-                {{content}}
+                <main style="display: block">
+                  <h1
+                    style="
+                      margin: 0 0 24px;
+                      font-size: 22px;
+                      line-height: 1.3;
+                      color: #000091;
+                    "
+                  >
+                    {{title}}
+                  </h1>
+                  {{content}}
+                </main>
               </td>
             </tr>
 
@@ -156,10 +173,11 @@
               >
                 <table
                   role="presentation"
-                  width="100%"
-                  cellpadding="0"
-                  cellspacing="0"
-                  border="0"
+                  style="
+                    border-collapse: collapse;
+                    border-spacing: 0;
+                    width: 100%;
+                  "
                 >
                   <tr>
                     <td
@@ -171,6 +189,7 @@
                         font-size: 14px;
                         line-height: 1.5;
                         text-align: left;
+                        padding: 0;
                       "
                     >
                       <!-- Bloc Marque (graphique) -->
@@ -238,11 +257,13 @@
           <!-- Spacer / Copyright -->
           <table
             role="presentation"
-            width="600"
-            cellpadding="0"
-            cellspacing="0"
-            border="0"
-            style="max-width: 600px; width: 100%"
+            style="
+              max-width: 600px;
+              width: 100%;
+              border-collapse: collapse;
+              border-spacing: 0;
+              margin: 0 auto;
+            "
           >
             <tr>
               <!-- Alignement gauche pour être conforme DSFR -->

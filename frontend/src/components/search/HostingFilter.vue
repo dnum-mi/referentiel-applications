@@ -96,7 +96,11 @@ const tooltips: Record<HostingField, string> = {
       <template #label>
         <span class="content" style="display: inline-flex; align-items: center; gap: 0.25rem">
           Sans hébergement
-          <DsfrTooltip id="hosting-missing-tooltip-desc" content="Affiche uniquement les applications sans hébergement renseigné." />
+          <DsfrTooltip
+            aria-label="Afficher l’aide sur le filtre Sans hébergement"
+            id="hosting-missing-tooltip-desc"
+            content="Affiche uniquement les applications sans hébergement renseigné."
+          />
         </span>
       </template>
     </DsfrCheckbox>
@@ -114,7 +118,11 @@ const tooltips: Record<HostingField, string> = {
       <template #label>
         <span style="display: inline-flex; align-items: center; gap: 0.25rem">
           {{ labels[field] }}
-          <DsfrTooltip :id="`hosting-${field}-tooltip-desc`" :content="tooltips[field]" />
+          <DsfrTooltip
+            :aria-label="`Afficher l’aide sur le filtre ${labels[field]}`"
+            :id="`hosting-${field}-tooltip-desc`"
+            :content="tooltips[field]"
+          />
         </span>
       </template>
     </DsfrSelect>

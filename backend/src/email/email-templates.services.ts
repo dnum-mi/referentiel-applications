@@ -3,6 +3,8 @@ import * as path from "node:path";
 import { Injectable } from "@nestjs/common";
 import { convert } from "html-to-text";
 import { LoggerService } from "src/logger/logger.service";
+import { escapeHtml } from "src/utils/escape-html.util";
+import { safeExportLink } from "src/utils/export.util";
 
 @Injectable()
 export class EmailTemplateService {
@@ -30,10 +32,10 @@ export class EmailTemplateService {
       );
       this.logger.warn("Using fallback base template");
       this.baseTemplate = `<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><title>{{title}}</title></head>
+<html lang="fr">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{{title}}</title></head>
 <body>
-  <div>{{content}}</div>
+  <main><h1>{{title}}</h1>{{content}}</main>
   <footer><p>L'équipe Référentiel des Applications</p></footer>
 </body>
 </html>`;
@@ -66,12 +68,31 @@ export class EmailTemplateService {
         "<p>Message automatique du système référentiel des applications</p>";
     }
 
-    content = this.replaceVariables(content, variables);
+    // Seuls ces fragments sont construits en HTML par EmailService ; les
+    // autres valeurs restent du texte et ne peuvent altérer le document.
+    const htmlFragments = new Set([
+      "messageBlock",
+      "applicationsSummary",
+      "targetsRows",
+      "changedFields",
+    ]);
+    const safeVariables = Object.fromEntries(
+      Object.entries(variables).map(([key, value]) => [
+        key,
+        htmlFragments.has(key)
+          ? value
+          : escapeHtml(
+              key === "applicationUrl" ? (safeExportLink(value) ?? "") : value,
+            ),
+      ]),
+    );
+    content = this.replaceVariables(content, safeVariables);
 
     const html = this.replaceVariables(this.baseTemplate, {
-      title:
-        variables.title || "Notification from Référentiel des Applications",
-      headerTitle: variables.headerTitle || "Notification",
+      title: escapeHtml(
+        variables.title || "Notification du Référentiel des applications",
+      ),
+      headerTitle: escapeHtml(variables.headerTitle || "Notification"),
       content,
     });
 
@@ -82,26 +103,23 @@ export class EmailTemplateService {
     template: string,
     variables: Record<string, string>,
   ): string {
-    let result = template;
+    const missing = new Set<string>();
+    // Un seul passage sur le modèle : les motifs $ et {{...}} provenant d'une
+    // valeur restent littéraux et ne sont jamais réinterprétés comme du HTML.
+    const result = template.replace(
+      /\{\{([^{}]+)\}\}/g,
+      (placeholder: string, key: string) => {
+        if (Object.hasOwn(variables, key)) return variables[key] ?? "";
+        missing.add(placeholder);
+        return "";
+      },
+    );
 
-    for (const [key, value] of Object.entries(variables)) {
-      const regex = new RegExp(`{{${key}}}`, "g");
-      // Fonction de remplacement (et non chaîne) : neutralise les motifs spéciaux de String.replace
-      // ($&, $', $`, $1…) qu'une valeur utilisateur pouvait sinon exploiter pour dupliquer ou
-      // décaler le contenu du template (#2380).
-      const replacement = value ?? "";
-      result = result.replace(regex, () => replacement);
-    }
-
-    const unreplacedVariables = result.match(/\{\{[^}]+\}\}/g);
-    if (unreplacedVariables && unreplacedVariables.length > 0) {
+    if (missing.size > 0) {
       this.logger.warn(
-        `Found unreplaced variables in template: ${unreplacedVariables.join(", ")}`,
+        `Found unreplaced variables in template: ${[...missing].join(", ")}`,
       );
     }
-
-    result = result.replace(/\{\{[^}]+\}\}/g, "");
-
     return result;
   }
 
@@ -114,7 +132,9 @@ export class EmailTemplateService {
       wordwrap: false,
       selectors: [
         { selector: "img", format: "skip" },
-        { selector: "a", options: { ignoreHref: true } },
+        { selector: "h1", options: { uppercase: false } },
+        { selector: "h2", options: { uppercase: false } },
+        { selector: "a", options: { ignoreHref: false } },
       ],
     });
   }

@@ -162,8 +162,8 @@ function handleSubmit() {
       tertiary
       :disabled="isSyncingFromMaia || !form.email"
       data-testid="admin-user-sync-maia-btn"
-      title="Synchroniser l'organisation depuis MAIA"
-      aria-label="Synchroniser l'organisation depuis MAIA"
+      title="Synchroniser depuis MAIA (par email)"
+      aria-label="Synchroniser depuis MAIA (par email)"
       @click="syncFromMaiaByEmail"
       style="margin-bottom: 1rem"
     />
@@ -202,6 +202,7 @@ function handleSubmit() {
       <DsfrButton
         type="submit"
         :disabled="isSubmitting || !isFormValid"
+        :aria-busy="isSubmitting"
         :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'"
         data-testid="actor-submit-btn"
       >

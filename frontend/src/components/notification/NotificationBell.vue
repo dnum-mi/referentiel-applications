@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { NotificationDto } from "@/client/types.gen";
-import { computed, ref } from "vue";
+import { computed, nextTick, ref, useId } from "vue";
 import { onClickOutside } from "@vueuse/core";
 import { useRouter } from "vue-router";
 import { useNotificationStore } from "@/stores/notificationStore";
@@ -13,6 +13,16 @@ const notificationStore = useNotificationStore();
 const isOpen = ref(false);
 const panelRef = ref<HTMLElement | null>(null);
 const buttonRef = ref<HTMLElement | null>(null);
+const panelId = `notifications-${useId()}`;
+
+function closePanel(event?: KeyboardEvent) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  isOpen.value = false;
+  nextTick(() => buttonRef.value?.focus());
+}
 
 onClickOutside(
   panelRef,
@@ -39,6 +49,8 @@ async function togglePanel() {
 
 async function onSelect(notification: NotificationDto) {
   isOpen.value = false;
+  await nextTick();
+  buttonRef.value?.focus();
   await notificationStore.markAsRead(notification.id);
   if (notification.emailLogId) {
     await notificationStore.openEmailPreview(notification.id);
@@ -58,13 +70,14 @@ async function goToHistory() {
 </script>
 
 <template>
-  <div class="notification-bell">
+  <div class="notification-bell" @keydown.esc="isOpen && closePanel($event)">
     <button
       ref="buttonRef"
       type="button"
       class="fr-btn fr-btn--tertiary-no-outline fr-icon-notification-3-line notification-bell__button"
       :aria-label="buttonLabel"
       :aria-expanded="isOpen"
+      :aria-controls="isOpen ? panelId : undefined"
       data-testid="notification-bell-button"
       @click="togglePanel"
     >
@@ -78,9 +91,16 @@ async function goToHistory() {
       </span>
     </button>
 
-    <div v-if="isOpen" ref="panelRef" class="notification-bell__panel" role="menu" data-testid="notification-bell-panel">
+    <section
+      v-if="isOpen"
+      :id="panelId"
+      ref="panelRef"
+      class="notification-bell__panel"
+      :aria-labelledby="`${panelId}-title`"
+      data-testid="notification-bell-panel"
+    >
       <div class="notification-bell__header fr-p-2w">
-        <span class="fr-text--bold fr-mb-0">Notifications</span>
+        <h2 :id="`${panelId}-title`" class="fr-text--bold fr-mb-0 fr-text--md">Notifications</h2>
         <button
           v-if="notificationStore.unreadCount > 0"
           type="button"
@@ -92,20 +112,17 @@ async function goToHistory() {
         </button>
       </div>
 
-      <div class="notification-bell__list">
-        <p v-if="notificationStore.notifications.length === 0" class="fr-p-2w fr-text--sm">Aucune notification.</p>
-        <NotificationListItem
-          v-for="notification in notificationStore.notifications"
-          :key="notification.id"
-          :notification="notification"
-          @select="onSelect"
-        />
-      </div>
+      <ul class="notification-bell__list">
+        <li v-if="notificationStore.notifications.length === 0"><p class="fr-p-2w fr-text--sm" role="status">Aucune notification.</p></li>
+        <li v-for="notification in notificationStore.notifications" :key="notification.id">
+          <NotificationListItem :notification="notification" @select="onSelect" />
+        </li>
+      </ul>
 
       <div class="notification-bell__footer fr-p-2w">
         <button type="button" class="fr-btn fr-btn--tertiary-no-outline fr-btn--sm" @click="goToHistory">Voir tout l'historique</button>
       </div>
-    </div>
+    </section>
   </div>
 </template>
 
@@ -162,6 +179,9 @@ async function goToHistory() {
 }
 
 .notification-bell__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
   max-height: 24rem;
   overflow-y: auto;
 }

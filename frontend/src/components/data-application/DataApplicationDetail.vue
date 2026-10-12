@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { isApiSuccess } from "@/api/api-result";
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/api/index";
 import { Permission, type DataApplicationDto, type DataExposureDto } from "@/client/types.gen";
@@ -33,6 +33,8 @@ const applicationStore = useApplicationStore();
 
 const item = ref<DataApplicationDto | null>(null);
 const isLoading = ref(false);
+const loadError = ref("");
+const detailTitle = ref<HTMLHeadingElement | null>(null);
 const myPerms = ref<Set<APP_PERMISSIONS>>(new Set());
 
 const canEdit = useAppPermission(myPerms, [Permission.DATA_WRITE]);
@@ -49,19 +51,21 @@ const isDeleteExposureModalOpen = ref(false);
 const exposureErrorMessage = ref("");
 
 async function fetchOne() {
-  item.value = null;
   isLoading.value = true;
+  loadError.value = "";
   try {
     const response = await api.dataCatalogControllerFindOneApplicationData({
       path: { applicationId: props.applicationId, dataApplicationId: props.dataApplicationId },
     });
     if (!isApiSuccess(response)) {
-      toaster.addErrorMessage("Donnée introuvable.");
+      loadError.value = item.value ? "Impossible d'actualiser la donnée." : "Donnée introuvable.";
+      toaster.addErrorMessage(loadError.value);
       return;
     }
     item.value = response.data ?? null;
   } catch {
-    toaster.addErrorMessage("Erreur lors du chargement de la donnée.");
+    loadError.value = item.value ? "Impossible d'actualiser la donnée." : "Erreur lors du chargement de la donnée.";
+    toaster.addErrorMessage(loadError.value);
   } finally {
     isLoading.value = false;
   }
@@ -105,7 +109,10 @@ async function confirmExposureDeletion() {
     });
     if (!isApiSuccess(response)) throw new Error("delete failed");
     toaster.addSuccessMessage("Exposition supprimée avec succès");
+    isDeleteExposureModalOpen.value = false;
     await fetchOne();
+    await nextTick();
+    detailTitle.value?.focus();
   } catch (error) {
     console.error(error);
     exposureErrorMessage.value = "Erreur lors de la suppression de l'exposition.";
@@ -208,7 +215,7 @@ function tagSearchLink(tag: string) {
 </script>
 
 <template>
-  <div class="fr-py-4w fr-px-4w" data-testid="data-application-detail">
+  <div class="fr-py-4w fr-px-4w" data-testid="data-application-detail" :aria-busy="isLoading">
     <!-- ── Retour + actions ───────────────────────────────────────── -->
     <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
       <div class="fr-col">
@@ -250,18 +257,26 @@ function tagSearchLink(tag: string) {
     </output>
 
     <!-- ── Not found ──────────────────────────────────────────────── -->
-    <div v-else-if="!item" role="alert" class="fr-alert fr-alert--warning fr-mt-2w" data-testid="data-application-detail-not-found">
-      <p>Donnée introuvable.</p>
+    <div
+      v-if="!isLoading && !item"
+      role="alert"
+      class="fr-alert fr-alert--warning fr-mt-2w"
+      data-testid="data-application-detail-not-found"
+    >
+      <p>{{ loadError || "Donnée introuvable." }}</p>
     </div>
+    <p v-if="item && loadError" role="alert" class="fr-error-text">{{ loadError }}</p>
 
     <!-- ── Contenu principal ──────────────────────────────────────── -->
-    <template v-else>
+    <template v-if="item">
       <!-- ── En-tête : titre + badge + famille ───────────────────── -->
       <div class="fr-grid-row fr-grid-row--middle fr-mb-4w">
         <div class="fr-col">
           <!-- Titre + badge Source de vérité -->
           <div class="detail-title-row">
-            <h1 class="fr-h3 fr-mb-0" data-testid="data-application-detail-name">{{ item?.dataDescription?.name ?? "—" }}</h1>
+            <h1 ref="detailTitle" tabindex="-1" class="fr-h3 fr-mb-0" data-testid="data-application-detail-name">
+              {{ item?.dataDescription?.name ?? "—" }}
+            </h1>
             <span v-if="item?.isReference" class="fr-badge fr-badge--success fr-badge--icon-left fr-icon-check-line">
               Source de vérité
             </span>
@@ -286,7 +301,11 @@ function tagSearchLink(tag: string) {
               <p class="fr-text--sm fr-mb-0 kpi-label">
                 <span class="tooltip-label">
                   Volumétrie totale
-                  <DsfrTooltip id="detail-volumetry-tooltip-desc" content="Nombre total estimé d'enregistrements de cette donnée." />
+                  <DsfrTooltip
+                    id="detail-volumetry-tooltip-desc"
+                    aria-label="Aide : volumétrie totale"
+                    content="Nombre total estimé d'enregistrements de cette donnée."
+                  />
                 </span>
               </p>
               <strong class="fr-h4 fr-mb-0">
@@ -306,6 +325,7 @@ function tagSearchLink(tag: string) {
                   Ajouts mensuels
                   <DsfrTooltip
                     id="detail-monthly-volumetry-tooltip-desc"
+                    aria-label="Aide : volumétrie mensuelle"
                     content="Nombre d'enregistrements ajoutés en moyenne chaque mois."
                   />
                 </span>
@@ -327,6 +347,7 @@ function tagSearchLink(tag: string) {
                   Fréquence de MAJ
                   <DsfrTooltip
                     id="detail-kpi-update-frequency-tooltip-desc"
+                    aria-label="Aide : fréquence de mise à jour"
                     content="Fréquence à laquelle la donnée est mise à jour dans cette application."
                   />
                 </span>
@@ -356,6 +377,7 @@ function tagSearchLink(tag: string) {
                 Source officielle&nbsp;:
                 <DsfrTooltip
                   id="detail-official-url-tooltip-desc"
+                  aria-label="Aide : URL officielle"
                   content="Lien vers la source officielle faisant référence pour cette donnée (ex : référentiel externe, documentation métier)."
                 />
               </strong>
@@ -378,6 +400,7 @@ function tagSearchLink(tag: string) {
                 Description&nbsp;:
                 <DsfrTooltip
                   id="detail-description-tooltip-desc"
+                  aria-label="Aide : description de la donnée"
                   content="Description détaillée de la donnée, utile aux autres équipes qui envisagent de la réutiliser."
                 />
               </strong>
@@ -390,6 +413,7 @@ function tagSearchLink(tag: string) {
                 Exemple de contenu&nbsp;:
                 <DsfrTooltip
                   id="detail-example-tooltip-desc"
+                  aria-label="Aide : exemple de valeur"
                   content="Exemple concret de contenu de la donnée, pour aider à sa compréhension."
                 />
               </strong>
@@ -402,6 +426,7 @@ function tagSearchLink(tag: string) {
                 Tags métier&nbsp;:
                 <DsfrTooltip
                   id="detail-tags-tooltip-desc"
+                  aria-label="Aide : tags métier"
                   content="Mots-clés libres facilitant la recherche et le filtrage de cette donnée dans le catalogue."
                 />
               </strong>
@@ -442,6 +467,7 @@ function tagSearchLink(tag: string) {
                   Application utilisant cette donnée
                   <DsfrTooltip
                     id="detail-usage-application-tooltip-desc"
+                    aria-label="Aide : application utilisatrice"
                     content="Application dont vous consultez la fiche : elle réutilise cette donnée. Cliquez le tag pour accéder à sa fiche."
                   />
                 </span>
@@ -463,6 +489,7 @@ function tagSearchLink(tag: string) {
                   Applications source
                   <DsfrTooltip
                     id="detail-source-applications-tooltip-desc"
+                    aria-label="Aide : applications source"
                     content="Applications RefApp qui produisent ou possèdent cette donnée à l'origine. Cliquez un tag pour accéder à sa fiche."
                   />
                 </span>
@@ -487,18 +514,18 @@ function tagSearchLink(tag: string) {
                   Sensibilité
                   <DsfrTooltip
                     id="detail-sensibility-tooltip-desc"
+                    aria-label="Aide : sensibilité"
                     content="Niveau de sensibilité de la donnée dans le contexte de cette application (ex : RGPD, donnée sensible)."
                   />
                 </span>
               </p>
-              <span
-                class="fr-badge"
-                :style="
-                  item.sensibility.color
-                    ? { backgroundColor: item.sensibility.color, color: '#fff', borderColor: item.sensibility.color }
-                    : {}
-                "
-              >
+              <span class="fr-badge">
+                <span
+                  v-if="item.sensibility.color"
+                  class="sensibility-color"
+                  :style="{ backgroundColor: item.sensibility.color }"
+                  aria-hidden="true"
+                />
                 {{ item?.sensibility?.label }}
               </span>
             </div>
@@ -510,6 +537,7 @@ function tagSearchLink(tag: string) {
                   Fréquence de MAJ
                   <DsfrTooltip
                     id="detail-update-frequency-tooltip-desc"
+                    aria-label="Aide : fréquence de mise à jour"
                     content="Fréquence à laquelle la donnée est mise à jour dans cette application."
                   />
                 </span>
@@ -526,6 +554,7 @@ function tagSearchLink(tag: string) {
                   Statut open data
                   <DsfrTooltip
                     id="detail-open-data-tooltip-desc"
+                    aria-label="Aide : statut open data"
                     content="Indique si cette donnée est exposée, exposable ou non exposable en open data."
                   />
                 </span>
@@ -542,6 +571,7 @@ function tagSearchLink(tag: string) {
                   Donnée référentielle
                   <DsfrTooltip
                     id="detail-is-reference-tooltip-desc"
+                    aria-label="Aide : donnée de référence"
                     content="« Oui » si cette application est la source de vérité pour cette donnée (le référentiel faisant autorité)."
                   />
                 </span>
@@ -558,6 +588,7 @@ function tagSearchLink(tag: string) {
                   Conservation
                   <DsfrTooltip
                     id="detail-conservation-tooltip-desc"
+                    aria-label="Aide : durée de conservation"
                     content="Durée pendant laquelle la donnée est conservée dans cette application."
                   />
                 </span>
@@ -572,6 +603,7 @@ function tagSearchLink(tag: string) {
                   Usage métier
                   <DsfrTooltip
                     id="detail-business-usage-tooltip-desc"
+                    aria-label="Aide : usage métier"
                     content="Description de l'usage métier fait de cette donnée dans cette application."
                   />
                 </span>
@@ -694,7 +726,8 @@ function tagSearchLink(tag: string) {
                   tertiary
                   size="sm"
                   icon="fr-icon-edit-line"
-                  title="Modifier"
+                  :title="`Modifier l'exposition ${data.type}`"
+                  :aria-label="`Modifier l'exposition ${data.type}`"
                   class="fr-mr-1w"
                   :data-testid="`data-exposure-edit-btn-${data.id}`"
                   @click="openEditExposureModal(data)"
@@ -703,7 +736,8 @@ function tagSearchLink(tag: string) {
                   tertiary
                   size="sm"
                   icon="fr-icon-delete-bin-line"
-                  title="Supprimer"
+                  :title="`Supprimer l'exposition ${data.type}`"
+                  :aria-label="`Supprimer l'exposition ${data.type}`"
                   :data-testid="`data-exposure-delete-btn-${data.id}`"
                   @click="openDeleteExposureModal(data)"
                 />
@@ -846,46 +880,49 @@ function tagSearchLink(tag: string) {
 
 /* ── KPI cards ───────────────────────────────────────────────── */
 .kpi-card {
-  background-color: #f6f6f6;
+  background-color: var(--background-contrast-grey);
+  color: var(--text-default-grey);
   display: flex;
   align-items: center;
   border-radius: 8px;
 }
 
 .kpi-label {
-  color: #666;
+  color: var(--text-default-grey);
 }
 
 /* ── Section cards ───────────────────────────────────────────── */
 .section-card {
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-default-grey);
   border-radius: 4px;
   height: 100%;
 }
 
 .usage-card {
-  background-color: #f6f6f6;
+  background-color: var(--background-contrast-grey);
+  color: var(--text-default-grey);
   border-radius: 4px;
   height: 100%;
 }
 
 .section-card--mt {
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-default-grey);
   border-radius: 4px;
   margin-top: 1rem;
 }
 
 .app-card {
-  background-color: #f6f6f6;
-  border: 1px solid #eee;
+  background-color: var(--background-contrast-grey);
+  color: var(--text-default-grey);
+  border: 1px solid var(--border-default-grey);
   border-radius: 4px;
   height: 100%;
 }
 
 /* ── Code block ──────────────────────────────────────────────── */
 .code-block {
-  background-color: #1e1e1e;
-  color: #d4d4d4;
+  background-color: var(--background-contrast-grey);
+  color: var(--text-default-grey);
   padding: 1rem;
   border-radius: 4px;
   overflow-x: auto;
@@ -907,5 +944,14 @@ function tagSearchLink(tag: string) {
 
 .application-link-tag:hover {
   text-decoration: underline;
+}
+
+.sensibility-color {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-inline-end: 0.375rem;
+  border: 1px solid var(--border-default-grey);
+  border-radius: 50%;
 }
 </style>

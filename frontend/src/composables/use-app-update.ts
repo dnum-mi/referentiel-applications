@@ -1,23 +1,27 @@
 import { useRegisterSW } from "virtual:pwa-register/vue";
+import { onScopeDispose } from "vue";
 
 export const UPDATE_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 
 /**
- * Mise à jour automatique de l'application (#2149).
- *
- * Le service worker est en mode "autoUpdate" (cf. vite.config.ts) : dès qu'une
- * nouvelle version est activée, vite-plugin-pwa recharge la page — l'utilisateur
- * n'a rien à faire. Le navigateur ne vérifiant le service worker qu'au
- * chargement de la page, on force en plus une vérification périodique pour les
- * onglets de SPA restant ouverts longtemps.
+ * Recherche périodique d'une nouvelle version. Son activation reste une action
+ * explicite pour ne pas interrompre la lecture ou une saisie en cours.
  */
 export function useAppUpdate() {
-  useRegisterSW({
+  let interval: ReturnType<typeof setInterval> | undefined;
+  let disposed = false;
+  const registrationState = useRegisterSW({
     onRegisteredSW(swUrl, registration) {
-      if (!registration) return;
-      setInterval(() => checkForUpdate(swUrl, registration), UPDATE_CHECK_INTERVAL_MS);
+      if (!registration || disposed) return;
+      if (interval) clearInterval(interval);
+      interval = setInterval(() => checkForUpdate(swUrl, registration), UPDATE_CHECK_INTERVAL_MS);
     },
   });
+  onScopeDispose(() => {
+    disposed = true;
+    if (interval) clearInterval(interval);
+  });
+  return registrationState;
 }
 
 export async function checkForUpdate(swUrl: string, registration: ServiceWorkerRegistration) {

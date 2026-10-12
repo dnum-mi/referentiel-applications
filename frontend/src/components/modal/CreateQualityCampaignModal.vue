@@ -93,6 +93,7 @@ async function confirmCreate() {
       <DsfrAlert
         v-if="errorMessage"
         type="error"
+        alert
         :description="errorMessage"
         small
         class="fr-mb-3w"
@@ -148,13 +149,15 @@ async function confirmCreate() {
 
       <template #footer>
         <DsfrButtonGroup :inline-layout-when="true" :reverse="true">
-          <DsfrButton label="Annuler" secondary data-testid="create-quality-campaign-cancel-btn" @click="close" />
-          <DsfrButton
-            :label="isSaving ? 'Création…' : 'Créer la campagne'"
-            :disabled="isSaving"
-            data-testid="create-quality-campaign-confirm-btn"
-            @click="confirmCreate"
-          />
+          <li><DsfrButton label="Annuler" secondary data-testid="create-quality-campaign-cancel-btn" @click="close" /></li>
+          <li>
+            <DsfrButton
+              :label="isSaving ? 'Création…' : 'Créer la campagne'"
+              :disabled="isSaving"
+              data-testid="create-quality-campaign-confirm-btn"
+              @click="confirmCreate"
+            />
+          </li>
         </DsfrButtonGroup>
       </template>
     </DsfrModal>

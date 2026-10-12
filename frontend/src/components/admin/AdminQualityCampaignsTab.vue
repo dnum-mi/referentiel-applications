@@ -153,7 +153,7 @@ onMounted(fetchCampaigns);
 
     <template #footer>
       <DsfrButtonGroup :inline-layout-when="true" :reverse="true">
-        <DsfrButton label="Fermer" secondary data-testid="admin-quality-campaign-sponsors-close-btn" @click="closeSponsorsModal" />
+        <li><DsfrButton label="Fermer" secondary data-testid="admin-quality-campaign-sponsors-close-btn" @click="closeSponsorsModal" /></li>
       </DsfrButtonGroup>
     </template>
   </DsfrModal>

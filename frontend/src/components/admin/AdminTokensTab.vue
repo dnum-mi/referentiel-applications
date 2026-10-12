@@ -283,7 +283,7 @@ onMounted(() => {
   <div>
     <h1 class="fr-h1" data-testid="admin-tokens-title">Gestion des tokens</h1>
 
-    <DsfrAlert v-if="error" type="error" :title="error" class="fr-mb-2w" closeable @close="error = null" />
+    <DsfrAlert alert v-if="error" type="error" :title="error" class="fr-mb-2w" closeable @close="error = null" />
 
     <DsfrAlert
       v-if="successMessage && !newlyCreatedToken"
@@ -463,8 +463,8 @@ onMounted(() => {
       <p>Êtes-vous sûr de vouloir révoquer ce token ? Cette action est irréversible.</p>
       <template #footer>
         <DsfrButtonGroup :inline-layout-when="true" :reverse="true">
-          <DsfrButton label="Annuler" secondary @click="cancelRevokeToken" />
-          <DsfrButton label="Révoquer" @click="confirmRevokeToken" />
+          <li><DsfrButton label="Annuler" secondary @click="cancelRevokeToken" /></li>
+          <li><DsfrButton label="Révoquer" @click="confirmRevokeToken" /></li>
         </DsfrButtonGroup>
       </template>
     </DsfrModal>
