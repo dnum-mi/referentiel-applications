@@ -6,7 +6,7 @@ export function iqDistribution(counts: CountByIqDto[]) {
   for (const { iq, total } of counts) {
     if (!Number.isFinite(iq) || iq < 0 || iq > 100) continue;
     const index = Math.floor(Math.round(iq) / 5);
-    rows[index]!.total += total;
+    rows[index].total += total;
   }
   return rows;
 }

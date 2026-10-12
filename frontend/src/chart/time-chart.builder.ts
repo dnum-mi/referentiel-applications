@@ -253,8 +253,10 @@ export class TimeChartBuilder {
     };
     const values = (d: TechnicalDebtPoint) =>
       `Maturité technique : ${d.technicalDebtInfo?.technicalMaturity ?? "non renseignée"}. Maturité métier : ${d.technicalDebtInfo?.businessMaturity ?? "non renseignée"}. Maîtrise des coûts MCO : ${d.technicalDebtInfo?.costContainment ?? "non renseignée"}.`;
-    const hasCost = (d: TechnicalDebtPoint) =>
-      typeof d.technicalDebtInfo?.costContainment === "number" && Number.isFinite(d.technicalDebtInfo.costContainment);
+    const costValue = (d: TechnicalDebtPoint) => {
+      const cost = d.technicalDebtInfo?.costContainment;
+      return typeof cost === "number" && Number.isFinite(cost) ? cost : null;
+    };
     const show = (point: SVGAElement, d: TechnicalDebtPoint) => {
       dismissed = false;
       cancelHide();
@@ -305,11 +307,10 @@ export class TimeChartBuilder {
       .attr("href", (d) => `${import.meta.env.BASE_URL.replace(/\/$/, "")}/applications/${encodeURIComponent(d.id)}`)
       .attr("tabindex", 0)
       .attr("data-application-id", (d) => d.id)
-      .attr(
-        "aria-label",
-        (d) =>
-          `${d.label}${d.shortName && d.shortName !== d.label ? ` (${d.shortName})` : ""}. ${values(d)} Ouvrir la fiche de l’application.`,
-      )
+      .attr("aria-label", (d) => {
+        const shortName = d.shortName && d.shortName !== d.label ? ` (${d.shortName})` : "";
+        return `${d.label}${shortName}. ${values(d)} Ouvrir la fiche de l’application.`;
+      })
       .on("mouseenter", function (_, d) {
         hoveredPoint = { element: this, data: d };
         show(this, d);
@@ -333,9 +334,15 @@ export class TimeChartBuilder {
       .attr("aria-hidden", "true")
       .attr("cx", (d) => x(d.technicalDebtInfo?.businessMaturity ?? 0))
       .attr("cy", (d) => y(d.technicalDebtInfo?.technicalMaturity ?? 0))
-      .attr("r", (d) => (hasCost(d) ? radius(d.technicalDebtInfo!.costContainment!) : 8))
-      .attr("fill", (d) => (hasCost(d) ? color(d.technicalDebtInfo!.costContainment!) : "var(--background-default-grey)"))
-      .attr("stroke-dasharray", (d) => (hasCost(d) ? null : "3 2"))
+      .attr("r", (d) => {
+        const cost = costValue(d);
+        return cost === null ? 8 : radius(cost);
+      })
+      .attr("fill", (d) => {
+        const cost = costValue(d);
+        return cost === null ? "var(--background-default-grey)" : color(cost);
+      })
+      .attr("stroke-dasharray", (d) => (costValue(d) === null ? "3 2" : null))
       .attr("stroke", "var(--text-default-grey)")
       .attr("stroke-width", 2)
       .attr("cursor", "pointer")

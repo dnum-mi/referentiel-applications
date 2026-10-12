@@ -140,9 +140,9 @@ onMounted(async () => {
         :disabled="isUpdating"
         @update:model-value="handleToggleEmailNotifications"
       />
-      <p role="status" aria-live="polite" aria-atomic="true" class="fr-valid-text" data-testid="email-preferences-success">
+      <output aria-live="polite" aria-atomic="true" class="fr-valid-text" data-testid="email-preferences-success">
         {{ successMessage }}
-      </p>
+      </output>
       <p v-if="errorMessage" role="alert" class="fr-error-text" data-testid="email-preferences-error">{{ errorMessage }}</p>
     </div>
   </div>

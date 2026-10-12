@@ -63,7 +63,8 @@ async function renderGraph() {
   const data = filteredGraph.value;
   if (!graphContainer.value || !data || props.viewMode !== "graph") return;
   const activeElement = document.activeElement;
-  const focusedNodeId = activeElement && graphContainer.value.contains(activeElement) ? activeElement.getAttribute("data-node-id") : null;
+  const focusedNodeId =
+    activeElement instanceof SVGElement && graphContainer.value.contains(activeElement) ? activeElement.dataset.nodeId : null;
   graphInstance.value?.cleanup();
   graphInstance.value = null;
   if (!data.nodes.length) return;
@@ -87,7 +88,7 @@ async function renderGraph() {
     );
     if (focusedNodeId) {
       const replacement = Array.from(graphContainer.value.querySelectorAll<SVGAElement>("a[data-node-id]")).find(
-        (node) => node.getAttribute("data-node-id") === focusedNodeId,
+        (node) => node.dataset.nodeId === focusedNodeId,
       );
       if (replacement) replacement.focus();
       else graphContainer.value.focus();
@@ -231,15 +232,14 @@ onBeforeUnmount(() => {
         <template v-if="filteredGraph">
           <template v-if="props.viewMode === 'graph'">
             <a class="fr-link fr-mb-2w" :href="`#${transcriptionId}`">Consulter la liste complète du graphe</a>
-            <div
+            <section
               ref="graphContainer"
               :id="`${id}-svg-container`"
               class="graph-container"
-              role="region"
               aria-label="Graphe des relations, zone défilante"
               :aria-describedby="descriptionId"
               tabindex="0"
-            ></div>
+            ></section>
           </template>
           <RelationGraphList :graph="filteredGraph" :depth="loadedDepth" :id="transcriptionId" class="fr-mt-3w" />
         </template>

@@ -6,7 +6,7 @@ const moduleUrl = import.meta.url;
 const templatesPath = new NodeURL("../../../backend/src/email/templates/", moduleUrl);
 const baseTemplate = readFileSync(new NodeURL("base.template.html", templatesPath), "utf8");
 const parse = (html: string) => new DOMParser().parseFromString(html, "text/html");
-const bodyText = (html: string) => parse(html).body.textContent?.replace(/\s+/g, " ").trim();
+const bodyText = (html: string) => parse(html).body.textContent?.replaceAll(/\s+/g, " ").trim();
 const legacyEmail = `<!doctype html><html lang="fr"><head><title>Droits modifiés</title></head><body>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">
     <table role="presentation" width="600" style="max-width:600px;width:100%">
@@ -77,5 +77,19 @@ describe("createEmailWebPreview", () => {
     expect(document.querySelector("main")?.textContent).toContain("Message conservé");
     expect(document.title).toBe("Aperçu sûr");
     expect(document.querySelector('meta[http-equiv="Content-Security-Policy"]')?.getAttribute("content")).toContain("default-src 'none'");
+  });
+
+  it("reconstruit les métadonnées tout en préservant le style du corps assaini", () => {
+    const preview = createEmailWebPreview(`<html lang="ar" dir="rtl" onload="alert(1)"><head><title>Message &amp; status</title>
+      <base href="https://example.test"><meta http-equiv="refresh" content="0; url=https://example.test"></head>
+      <body bgcolor="#ffffff" style="padding:12px" onclick="alert(1)"><p>مرحبا 123</p></body></html>`);
+    const document = parse(preview);
+    expect(document.title).toBe("Message & status");
+    expect(document.documentElement.lang).toBe("ar");
+    expect(document.documentElement.dir).toBe("rtl");
+    expect(document.body.style.padding).toBe("12px");
+    expect(document.body.style.backgroundColor).toBe("rgb(255, 255, 255)");
+    expect(document.querySelector("main")?.textContent).toBe("مرحبا 123");
+    expect(document.querySelector('base,[onload],[onclick],meta[http-equiv="refresh"],[bgcolor]')).toBeNull();
   });
 });

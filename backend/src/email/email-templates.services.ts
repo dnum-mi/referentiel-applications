@@ -77,14 +77,12 @@ export class EmailTemplateService {
       "changedFields",
     ]);
     const safeVariables = Object.fromEntries(
-      Object.entries(variables).map(([key, value]) => [
-        key,
-        htmlFragments.has(key)
-          ? value
-          : escapeHtml(
-              key === "applicationUrl" ? (safeExportLink(value) ?? "") : value,
-            ),
-      ]),
+      Object.entries(variables).map(([key, value]) => {
+        if (htmlFragments.has(key)) return [key, value];
+        const text =
+          key === "applicationUrl" ? (safeExportLink(value) ?? "") : value;
+        return [key, escapeHtml(text)];
+      }),
     );
     content = this.replaceVariables(content, safeVariables);
 
@@ -106,7 +104,7 @@ export class EmailTemplateService {
     const missing = new Set<string>();
     // Un seul passage sur le modèle : les motifs $ et {{...}} provenant d'une
     // valeur restent littéraux et ne sont jamais réinterprétés comme du HTML.
-    const result = template.replace(
+    const result = template.replaceAll(
       /\{\{([^{}]+)\}\}/g,
       (placeholder: string, key: string) => {
         if (Object.hasOwn(variables, key)) return variables[key] ?? "";

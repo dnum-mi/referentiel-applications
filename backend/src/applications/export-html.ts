@@ -46,7 +46,13 @@ ${content}</main>
 }
 
 export function createApplicationsHtml(sheets: ExcelSheetConfig[]): Buffer {
-  const navigation = `<nav aria-label="Sections de l’export"><h2>Sommaire</h2><ul>${sheets.map((sheet, index) => `<li><a href="#section-${index + 1}">${escapeHtml(sheet.name)}</a></li>`).join("")}</ul></nav>`;
+  const navigationItems = sheets
+    .map(
+      (sheet, index) =>
+        `<li><a href="#section-${index + 1}">${escapeHtml(sheet.name)}</a></li>`,
+    )
+    .join("");
+  const navigation = `<nav aria-label="Sections de l’export"><h2>Sommaire</h2><ul>${navigationItems}</ul></nav>`;
   const sections = sheets
     .map((sheet, index) => {
       // Une table verticale par ligne conserve toutes les colonnes, même sur un

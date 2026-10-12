@@ -151,13 +151,13 @@ watch(
         data-testid="issues-search-bar"
       />
     </div>
-    <p role="status" class="fr-sr-only">
+    <output class="fr-sr-only" aria-live="polite" aria-atomic="true">
       {{
         isLoading
           ? "Chargement des signalements…"
           : `${data.total} signalement${data.total > 1 ? "s" : ""} trouvé${data.total > 1 ? "s" : ""}.`
       }}
-    </p>
+    </output>
     <div v-if="errorMessage" role="alert" class="fr-error-text">
       <p>{{ errorMessage }}</p>
       <button class="fr-btn fr-btn--secondary" type="button" @click="fetchAllReportsDirect">Réessayer</button>

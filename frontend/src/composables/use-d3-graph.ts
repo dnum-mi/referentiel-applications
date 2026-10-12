@@ -87,10 +87,11 @@ export function useD3Graph() {
       .text(
         `${nodes.length} applications. ${edges.length} relations. ` +
           nodes
-            .map(
-              (n) =>
-                `${n.label}${n.id === rootId ? " (application racine)" : ""}${n.status ? `, ${statusApplicationDictionary[n.status]}` : ""}`,
-            )
+            .map((n) => {
+              const rootDescription = n.id === rootId ? " (application racine)" : "";
+              const statusDescription = n.status ? `, ${statusApplicationDictionary[n.status]}` : "";
+              return `${n.label}${rootDescription}${statusDescription}`;
+            })
             .join(" ; ") +
           ". " +
           edges

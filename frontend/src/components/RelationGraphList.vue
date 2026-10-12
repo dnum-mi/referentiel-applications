@@ -21,13 +21,7 @@ defineProps<{ graph: RelationGraphDto; depth: number; id: string }>();
         <span v-if="node.status"> — {{ statusApplicationDictionary[node.status] || node.status }}</span>
       </li>
     </ul>
-    <div
-      v-if="graph.edges.length"
-      class="fr-table graph-table"
-      role="region"
-      :aria-label="`Relations du réseau, profondeur ${depth}`"
-      tabindex="0"
-    >
+    <section v-if="graph.edges.length" class="fr-table graph-table" :aria-label="`Relations du réseau, profondeur ${depth}`" tabindex="0">
       <table>
         <caption>
           Relations du réseau — profondeur
@@ -60,7 +54,7 @@ defineProps<{ graph: RelationGraphDto; depth: number; id: string }>();
           </tr>
         </tbody>
       </table>
-    </div>
+    </section>
     <p v-else>Aucune relation à afficher pour les types sélectionnés.</p>
   </section>
 </template>

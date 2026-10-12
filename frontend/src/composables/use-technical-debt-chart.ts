@@ -24,7 +24,7 @@ export function useTechnicalDebtChart(props: { data: TechnicalDebtPoint[]; heigh
     const svgEl = svgRef.value;
     const activeElement = document.activeElement;
     const focusedPointId =
-      svgEl && activeElement && svgEl.contains(activeElement) ? activeElement.getAttribute("data-application-id") : null;
+      svgEl && activeElement instanceof SVGElement && svgEl.contains(activeElement) ? activeElement.dataset.applicationId : null;
     destroyChart();
     if (!root || !svgEl) return;
 
@@ -66,7 +66,7 @@ export function useTechnicalDebtChart(props: { data: TechnicalDebtPoint[]; heigh
     builder.drawTitle().drawAxes().drawQuadrants().drawAxisLegends().drawBubbles().drawColorLegend();
     if (focusedPointId) {
       const replacement = Array.from(svgEl.querySelectorAll<SVGAElement>("a[data-application-id]")).find(
-        (point) => point.getAttribute("data-application-id") === focusedPointId,
+        (point) => point.dataset.applicationId === focusedPointId,
       );
       if (replacement) replacement.focus();
       else svgEl.parentElement?.focus();

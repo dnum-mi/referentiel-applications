@@ -23,7 +23,7 @@ function sortBy(field: string) {
 </script>
 
 <template>
-  <div :id="id" class="fr-table statistics-table" role="region" :aria-label="caption" tabindex="0">
+  <section :id="id" class="fr-table statistics-table" :aria-label="caption" tabindex="0">
     <table>
       <caption>
         {{
@@ -63,7 +63,7 @@ function sortBy(field: string) {
         </tr>
       </tbody>
     </table>
-  </div>
+  </section>
 </template>
 
 <style scoped>

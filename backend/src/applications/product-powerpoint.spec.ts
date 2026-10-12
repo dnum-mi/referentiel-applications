@@ -24,7 +24,7 @@ async function readSlides(buffer: Buffer) {
     .filter((path) => /^ppt\/slides\/slide\d+\.xml$/.test(path))
     .sort((a, b) => a.localeCompare(b, "en", { numeric: true }));
   const slides = await Promise.all(
-    paths.map((path) => zip.file(path)!.async("string")),
+    paths.map((path) => zip.file(path).async("string")),
   );
   const text = slides.flatMap(readText).join("\n");
   return { slides, text };
@@ -53,7 +53,7 @@ describe("Fiche produit PowerPoint (#434)", () => {
     const titles = slides.map((xml) => readText(xml)[0]);
     expect(new Set(titles).size).toBe(titles.length);
     for (const xml of slides) {
-      const firstShape = xml.match(/<p:sp>.*?<\/p:sp>/s)?.[0];
+      const firstShape = /<p:sp>.*?<\/p:sp>/s.exec(xml)?.[0];
       expect(firstShape).toMatch(/<p:ph[^>]*type="title"/);
       expect(firstShape).toContain("<a:t>");
       const ids = Array.from(
@@ -72,7 +72,7 @@ describe("Fiche produit PowerPoint (#434)", () => {
       /^ppt\/notesSlides\/notesSlide\d+\.xml$/.test(path),
     );
     for (const path of notes) {
-      const xml = await zip.file(path)!.async("string");
+      const xml = await zip.file(path).async("string");
       expect(xml).toContain("Source : informations générales");
       expect(xml).not.toContain('lang="en-US"');
       expect(xml).toContain('lang="fr-FR"');
@@ -89,14 +89,14 @@ describe("Fiche produit PowerPoint (#434)", () => {
     const buffer = await presentation.write({ outputType: "nodebuffer" });
     if (!Buffer.isBuffer(buffer)) throw new Error("PPTX attendu");
     const zip = await JSZip.loadAsync(buffer);
-    const xml = await zip.file("ppt/slides/slide1.xml")!.async("string");
+    const xml = await zip.file("ppt/slides/slide1.xml").async("string");
     const ids = Array.from(
       xml.matchAll(/<p:cNvPr id="(\d+)"/g),
       ([, id]) => id,
     );
     expect(new Set(ids).size).toBe(ids.length);
     expect(
-      await zip.file("ppt/notesSlides/notesSlide1.xml")!.async("string"),
+      await zip.file("ppt/notesSlides/notesSlide1.xml").async("string"),
     ).toContain('lang="en-US"');
   });
 
@@ -149,7 +149,7 @@ describe("Fiche produit PowerPoint (#434)", () => {
     // Une référence à une partie absente déclenche la réparation du fichier
     // dans PowerPoint, même si certains outils arrivent à le rendre.
     const zip = await JSZip.loadAsync(buffer);
-    const contentTypes = await zip.file("[Content_Types].xml")!.async("string");
+    const contentTypes = await zip.file("[Content_Types].xml").async("string");
     for (const [, part] of contentTypes.matchAll(/PartName="\/([^"]+)"/g)) {
       expect(zip.file(part)).not.toBeNull();
     }

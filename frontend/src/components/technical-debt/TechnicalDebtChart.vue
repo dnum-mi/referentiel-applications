@@ -59,7 +59,7 @@ const transcriptionRows = computed(() =>
         <a class="fr-link fr-mb-2w" :href="`#${id}-table`" @click="transcriptionRef && (transcriptionRef.open = true)"
           >Consulter le tableau complet du diagramme TIME</a
         >
-        <div class="td-diagram-scroller" role="region" aria-label="Diagramme TIME, zone défilante" tabindex="0">
+        <section class="td-diagram-scroller" aria-label="Diagramme TIME, zone défilante" tabindex="0">
           <svg
             :id="`${id}-svg`"
             ref="svgRef"
@@ -70,14 +70,13 @@ const transcriptionRows = computed(() =>
             :aria-details="`${id}-table`"
             preserveAspectRatio="xMidYMid meet"
           ></svg>
-        </div>
+        </section>
       </details>
 
       <details ref="transcriptionRef" class="td-accordion fr-mt-2w" data-testid="technical-debt-transcription">
         <summary :id="`${id}-transcription-title`">Tableau de synthèse TIME</summary>
-        <div
+        <section
           class="fr-table fr-table--bordered fr-mt-1w td-table"
-          role="region"
           aria-label="Tableau complet du diagramme TIME, zone défilante"
           tabindex="0"
         >
@@ -109,7 +108,7 @@ const transcriptionRows = computed(() =>
               </tr>
             </tbody>
           </table>
-        </div>
+        </section>
       </details>
     </template>
     <p v-else class="fr-text--sm fr-text--italic fr-mt-2w" data-testid="technical-debt-empty">

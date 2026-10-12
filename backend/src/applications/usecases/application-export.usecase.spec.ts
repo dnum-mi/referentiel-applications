@@ -48,8 +48,8 @@ describe("Export des applications en XLSX et HTML", () => {
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(buffer as unknown as ExcelJS.Buffer);
     expect(workbook.worksheets).toHaveLength(10);
-    const incoming = workbook.getWorksheet("Relations entrantes")!;
-    const outgoing = workbook.getWorksheet("Relations sortantes")!;
+    const incoming = workbook.getWorksheet("Relations entrantes");
+    const outgoing = workbook.getWorksheet("Relations sortantes");
     expect(incoming.getRow(2).values).toEqual(
       expect.arrayContaining([
         "application-centre",
@@ -79,13 +79,7 @@ describe("Export des applications en XLSX et HTML", () => {
       sheet.eachRow((row, index) => {
         if (index > 1)
           row.eachCell((cell) => {
-            const value =
-              typeof cell.value === "object" &&
-              cell.value &&
-              "text" in cell.value
-                ? cell.value.text
-                : cell.value;
-            expect(convert(html, { wordwrap: false })).toContain(String(value));
+            expect(convert(html, { wordwrap: false })).toContain(cell.text);
           });
       });
     }
@@ -99,19 +93,19 @@ describe("Export des applications en XLSX et HTML", () => {
     );
     expect(tables).toHaveLength(10);
     for (const path of tables) {
-      const xml = await zip.file(path)!.async("string");
+      const xml = await zip.file(path).async("string");
       expect(xml).toContain("<tableColumns");
       expect(xml).toContain("<autoFilter");
     }
-    const core = await zip.file("docProps/core.xml")!.async("string");
+    const core = await zip.file("docProps/core.xml").async("string");
     expect(core).toContain("<dc:title>Export des applications</dc:title>");
     expect(core).toContain("<dc:language>fr-FR</dc:language>");
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(buffer as unknown as ExcelJS.Buffer);
-    expect(workbook.getWorksheet("Applications")!.getCell("D2").hyperlink).toBe(
+    expect(workbook.getWorksheet("Applications").getCell("D2").hyperlink).toBe(
       application.logo,
     );
-    const resources = workbook.getWorksheet("Ressources externes")!;
+    const resources = workbook.getWorksheet("Ressources externes");
     expect(resources.getCell("C2").hyperlink).toBe("https://example.test/doc");
     expect(resources.getCell("C3").hyperlink).toBeUndefined();
     expect(resources.getCell("C3").value).toBe("javascript:alert(1)");

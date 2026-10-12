@@ -221,7 +221,7 @@ onMounted(() => {
     </p>
 
     <div ref="messageRef">
-      <p role="status" aria-live="polite" aria-atomic="true" class="fr-sr-only">{{ successMessage }}</p>
+      <output aria-live="polite" aria-atomic="true" class="fr-sr-only">{{ successMessage }}</output>
       <DsfrAlert v-if="error" alert type="error" :title="error" class="fr-mb-2w" closeable @close="error = null" />
 
       <DsfrAlert
@@ -323,7 +323,13 @@ onMounted(() => {
       </form>
     </div>
 
-    <div v-if="isLoading && tokens.length === 0" role="status" class="fr-py-6w fr-text--center">Chargement...</div>
+    <output
+      v-if="isLoading && tokens.length === 0"
+      class="token-loading-status fr-py-6w fr-text--center"
+      aria-live="polite"
+      aria-atomic="true"
+      >Chargement...</output
+    >
 
     <div v-else-if="tokens.length === 0" class="fr-card fr-p-3w">
       <p class="fr-text--center fr-mb-0">Aucun token créé pour le moment.</p>
@@ -372,6 +378,10 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.token-loading-status {
+  display: block;
+}
+
 .token-display {
   display: flex;
   align-items: center;

@@ -32,7 +32,7 @@ describe("TIME — transcription et infobulles", () => {
         constructor(callback: ResizeObserverCallback) {
           resize = callback;
         }
-        observe() {}
+        observe = vi.fn();
         disconnect = disconnect;
       },
     );
@@ -144,15 +144,15 @@ describe("TIME — transcription et infobulles", () => {
     const { container } = await renderChart([point, { ...point, id: "app-2", label: "Bulle survolée" }]);
     vi.useFakeTimers();
     const [focused, hovered] = container.querySelectorAll("svg a");
-    await fireEvent.focus(focused!);
-    await fireEvent.mouseEnter(hovered!);
+    await fireEvent.focus(focused);
+    await fireEvent.mouseEnter(hovered);
     expect(screen.getByRole("tooltip")).toHaveTextContent("Bulle survolée");
-    await fireEvent.mouseLeave(hovered!);
+    await fireEvent.mouseLeave(hovered);
     vi.advanceTimersByTime(250);
     expect(screen.getByRole("tooltip")).toHaveTextContent(point.label);
     expect(screen.getByRole("tooltip")).not.toHaveTextContent("Bulle survolée");
     await fireEvent.keyDown(document, { key: "Escape" });
-    await fireEvent.blur(focused!);
+    await fireEvent.blur(focused);
     vi.advanceTimersByTime(250);
     expect(container.querySelector(".td-tooltip")).not.toBeVisible();
   });

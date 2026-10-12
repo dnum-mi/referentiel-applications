@@ -113,7 +113,9 @@ async function goToHistory() {
       </div>
 
       <ul class="notification-bell__list">
-        <li v-if="notificationStore.notifications.length === 0"><p class="fr-p-2w fr-text--sm" role="status">Aucune notification.</p></li>
+        <li v-if="notificationStore.notifications.length === 0">
+          <output class="notification-bell__empty fr-p-2w fr-text--sm" aria-live="polite" aria-atomic="true">Aucune notification.</output>
+        </li>
         <li v-for="notification in notificationStore.notifications" :key="notification.id">
           <NotificationListItem :notification="notification" @select="onSelect" />
         </li>
@@ -127,6 +129,11 @@ async function goToHistory() {
 </template>
 
 <style scoped>
+.notification-bell__empty {
+  display: block;
+  margin: var(--text-spacing);
+}
+
 .notification-bell {
   position: relative;
 }

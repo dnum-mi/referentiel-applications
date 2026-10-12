@@ -92,12 +92,12 @@ describe("Relations — navigation et alternative du réseau", () => {
     const root = container.querySelector<SVGAElement>('svg a[data-node-id="root"]')!;
     root.focus();
     const checkboxes = screen.getAllByRole("checkbox");
-    await fireEvent.click(checkboxes[0]!);
+    await fireEvent.click(checkboxes[0]);
     await flushPromises();
     expect(document.activeElement).toBe(container.querySelector('svg a[data-node-id="root"]'));
     const beta = container.querySelector<SVGAElement>('svg a[data-node-id="b"]')!;
     beta.focus();
-    await fireEvent.click(checkboxes[2]!);
+    await fireEvent.click(checkboxes[2]);
     await flushPromises();
     expect(document.activeElement).toBe(screen.getByRole("region", { name: "Graphe des relations, zone défilante" }));
   });
@@ -136,10 +136,10 @@ describe("Relations — navigation et alternative du réseau", () => {
     await fireEvent.click(command);
     expect(node.getAttribute("transform")).not.toBe(original);
     expect(document.activeElement).toBe(command);
-    await fireEvent.click(screen.getAllByRole("checkbox")[0]!);
+    await fireEvent.click(screen.getAllByRole("checkbox")[0]);
     await flushPromises();
     expect(selection).toHaveValue("b");
-    await fireEvent.click(screen.getAllByRole("checkbox")[2]!);
+    await fireEvent.click(screen.getAllByRole("checkbox")[2]);
     await flushPromises();
     expect(selection).toHaveValue("root");
     expect(within(selection).queryByRole("option", { name: "Beta" })).not.toBeInTheDocument();

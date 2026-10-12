@@ -1,4 +1,5 @@
 import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils";
+import { within } from "@testing-library/vue";
 import UserTokensTab from "./UserTokensTab.vue";
 
 const { createToken } = vi.hoisted(() => ({ createToken: vi.fn() }));
@@ -95,13 +96,13 @@ describe("Création de token — erreurs et date", () => {
     expect(writeText).toHaveBeenCalledWith("EXAMPLE_TEST_TOKEN_ONLY");
     expect(copyButton.element).toHaveFocus();
     if (result === "succès") {
-      expect(wrapper.get('[role="status"]').text()).toBe("Token copié dans le presse-papier");
+      expect(within(wrapper.get("div").element).getByRole("status")).toHaveTextContent("Token copié dans le presse-papier");
       expect(wrapper.get(".fr-valid-text").text()).toBe("Token copié dans le presse-papier");
     } else {
       expect(wrapper.get('[role="alert"]').text()).toContain(
         "Impossible de copier le token. Sélectionnez sa valeur pour le copier manuellement.",
       );
-      expect(wrapper.get('[role="status"]').text()).toBe("");
+      expect(within(wrapper.get("div").element).getByRole("status")).toBeEmptyDOMElement();
     }
   });
 });

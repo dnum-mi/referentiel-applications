@@ -347,6 +347,13 @@ export class SearchPage extends BasePage {
     await expect(filters).toBeHidden();
     await expect(toggle).toBeFocused();
 
+    await toggle.click();
+    await expect(filters).toBeVisible();
+    await this.byTestId("sidebar-reset-filters-button").focus();
+    await toggle.click();
+    await expect(filters).toBeHidden();
+    await expect(toggle).toBeFocused();
+
     await this.page.setViewportSize({ width: 1280, height: 900 });
     await expect(filters).toBeVisible();
     await this.byTestId("sidebar-reset-filters-button").focus();

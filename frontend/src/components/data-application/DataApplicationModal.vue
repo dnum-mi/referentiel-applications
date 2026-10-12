@@ -448,12 +448,18 @@ async function handleSubmit() {
     <form ref="formElement" data-testid="data-application-form" @submit.prevent="handleSubmit">
       <p class="fr-text--sm fr-mb-2w" data-testid="required-fields-hint">Les champs obligatoires sont indiqués dans leur étiquette.</p>
 
-      <div v-if="isLoadingOptions" role="status" class="fr-text--center fr-mb-2w" data-testid="data-application-options-loading">
+      <output
+        v-if="isLoadingOptions"
+        class="options-loading-status fr-text--center fr-mb-2w"
+        data-testid="data-application-options-loading"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         <span class="fr-loading fr-loading--sm" data-testid="data-application-options-spinner">
           <span class="fr-loading__icon" aria-hidden="true" />
         </span>
         Chargement des options...
-      </div>
+      </output>
       <div v-else class="fr-form-group">
         <template v-if="!isCreatingNewDescription">
           <DsfrInputGroup
@@ -984,6 +990,10 @@ async function handleSubmit() {
 </template>
 
 <style scoped>
+.options-loading-status {
+  display: block;
+}
+
 /* `DsfrTooltip` positionne sa bulle via un `transform` calculé en JS par rapport à la largeur de LA
    FENÊTRE entière, pas de la modale (plus étroite et centrée) : la bulle peut rester « dans l'écran »
    selon son propre calcul tout en débordant largement de la modale (bug constaté, y compris après

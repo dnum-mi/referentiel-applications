@@ -29,7 +29,8 @@ describe("PaginationFooter", () => {
 
     expect(wrapper.findAll("a")).toHaveLength(0);
     expect(wrapper.get('[aria-current="page"]').attributes("aria-label")).toBe("Page 1 sur 3");
-    const status = wrapper.get('[role="status"]');
+    const status = wrapper.get('[data-testid="pagination-page-status"]');
+    expect(status.element.tagName).toBe("OUTPUT");
     await wrapper.setProps({ page: 1 });
     expect(status.text()).toBe("Page 2 sur 3");
     expect(status.attributes("aria-atomic")).toBe("true");
@@ -70,7 +71,7 @@ describe("PaginationFooter", () => {
     expect(wrapper.findAll('button[aria-label^="Page "]:not([data-testid])')).toHaveLength(7);
     expect(wrapper.get('[aria-current="page"]').text()).toBe("1001");
     await wrapper.setProps({ totalFiltered: 0, page: 0 });
-    expect(wrapper.get('[role="status"]').text()).toBe("Page 1 sur 1");
+    expect(wrapper.get('[data-testid="pagination-page-status"]').text()).toBe("Page 1 sur 1");
     expect(wrapper.findAll('button[aria-disabled="true"]')).toHaveLength(4);
   });
 

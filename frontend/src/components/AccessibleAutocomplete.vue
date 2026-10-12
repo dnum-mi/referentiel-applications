@@ -213,7 +213,7 @@ onClickOutside(containerEl, () => {
       <p v-else-if="error" class="no-result">{{ error }}</p>
     </div>
 
-    <div class="visually-hidden" role="status" aria-atomic="true">{{ liveRegionText }}</div>
+    <output class="visually-hidden" aria-atomic="true" aria-live="polite">{{ liveRegionText }}</output>
     <div class="visually-hidden" role="alert" aria-atomic="true">{{ showList && error ? error : "" }}</div>
   </div>
 </template>

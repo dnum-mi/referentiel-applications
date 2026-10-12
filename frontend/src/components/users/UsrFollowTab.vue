@@ -81,9 +81,14 @@ const unsubscribe = async (appId: string) => {
       </table>
     </div>
 
-    <p role="status" aria-live="polite" aria-atomic="true" :class="successMessage ? 'fr-alert fr-alert--success fr-mt-2w' : ''">
+    <output
+      aria-live="polite"
+      aria-atomic="true"
+      :class="successMessage ? 'fr-alert fr-alert--success fr-mt-2w' : ''"
+      class="follow-status"
+    >
       {{ successMessage }}
-    </p>
+    </output>
 
     <div v-if="errorMessage" class="fr-mt-2w">
       <div class="fr-alert fr-alert--error" role="alert">
@@ -92,3 +97,12 @@ const unsubscribe = async (appId: string) => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.follow-status {
+  display: block;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  margin: var(--text-spacing);
+}
+</style>

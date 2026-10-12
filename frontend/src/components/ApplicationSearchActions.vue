@@ -83,7 +83,9 @@ const hasQualityCampaignPermissions = computed(() => {
 <template>
   <div class="fr-container-fluid" data-testid="application-search-actions">
     <output aria-live="polite" class="sr-only">{{ reportStatusMessage }}</output>
-    <p role="status" class="fr-sr-only">{{ exportFormat ? `Préparation de l’export ${exportFormat}…` : "" }}</p>
+    <output class="fr-sr-only" aria-live="polite" aria-atomic="true">{{
+      exportFormat ? `Préparation de l’export ${exportFormat}…` : ""
+    }}</output>
 
     <div class="actions">
       <DsfrButton

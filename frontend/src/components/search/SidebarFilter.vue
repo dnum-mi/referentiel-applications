@@ -37,6 +37,12 @@ const sidebarRef = ref<HTMLElement | null>(null);
 const toggleRef = ref<HTMLButtonElement | null>(null);
 const sidebarId = `application-filters-${useId()}`;
 
+function toggleSidebar() {
+  sidebarOpen.value = !sidebarOpen.value;
+  // WebKit ne focalise pas toujours un bouton au clic : ne pas cacher le contrôle actif.
+  toggleRef.value?.focus();
+}
+
 watch(isMobile, async (mobile) => {
   const restoreFocus = mobile && sidebarRef.value?.contains(document.activeElement);
   sidebarOpen.value = !mobile;
@@ -88,7 +94,7 @@ const total = computed(() => {
     :aria-label="sidebarOpen ? 'Fermer les filtres' : 'Ouvrir les filtres'"
     :aria-expanded="sidebarOpen"
     :aria-controls="sidebarId"
-    @click="sidebarOpen = !sidebarOpen"
+    @click="toggleSidebar"
   >
     <VIcon :name="sidebarOpen ? 'ri-arrow-left-s-line' : 'ri-arrow-right-s-line'" class="sidebar-toggle-icon" aria-hidden="true" />
     <span v-if="isMobile">{{ sidebarOpen ? "Fermer les filtres" : "Ouvrir les filtres" }}</span>

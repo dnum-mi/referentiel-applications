@@ -15,10 +15,10 @@ const emit = defineEmits<{
 }>();
 
 const value = computed(() => (props.checked ? "write" : "none"));
-const permissionLabel = computed(
-  () =>
-    `${permDict[value.value].label} — Écriture de la priorisation et du redémarrage${props.actorTypeLabel ? ` pour ${props.actorTypeLabel}` : ""}`,
-);
+const permissionLabel = computed(() => {
+  const actorSuffix = props.actorTypeLabel ? ` pour ${props.actorTypeLabel}` : "";
+  return `${permDict[value.value].label} — Écriture de la priorisation et du redémarrage${actorSuffix}`;
+});
 
 const permDict = {
   none: {

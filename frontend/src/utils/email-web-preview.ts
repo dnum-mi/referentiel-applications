@@ -31,7 +31,14 @@ const PRESENTATION_ATTRIBUTES = [
 const DIMENSION_ELEMENTS = new Set(["IMG", "OBJECT", "EMBED", "CANVAS", "SVG"]);
 
 function cssLength(value: string | null) {
-  return value && /^\d+(?:\.\d+)?%?$/.test(value.trim()) ? `${value.trim()}${value.includes("%") ? "" : "px"}` : undefined;
+  if (!value || !/^\d+(?:\.\d+)?%?$/.test(value.trim())) return undefined;
+  return value.includes("%") ? value.trim() : `${value.trim()}px`;
+}
+
+function setTableCellPadding(table: HTMLTableElement, padding: string) {
+  for (const cell of table.querySelectorAll<HTMLElement>("td,th")) {
+    if (cell.closest("table") === table && !cell.style.padding) cell.style.padding = padding;
+  }
 }
 
 function convertPresentationAttributes(element: HTMLElement) {
@@ -52,11 +59,7 @@ function convertPresentationAttributes(element: HTMLElement) {
   const spacing = cssLength(element.getAttribute("cellspacing"));
   if (spacing) setStyle("border-spacing", spacing);
   const padding = cssLength(element.getAttribute("cellpadding"));
-  if (padding && element instanceof HTMLTableElement) {
-    for (const cell of element.querySelectorAll<HTMLElement>("td,th")) {
-      if (cell.closest("table") === element && !cell.style.padding) cell.style.padding = padding;
-    }
-  }
+  if (padding && element instanceof HTMLTableElement) setTableCellPadding(element, padding);
   for (const dimension of ["width", "height"]) {
     if (!DIMENSION_ELEMENTS.has(element.tagName)) {
       setStyle(dimension, cssLength(element.getAttribute(dimension)));
@@ -126,7 +129,8 @@ function flattenLayoutTables(document: Document) {
     const structuralElements = Array.from(table.querySelectorAll("caption,thead,tbody,tfoot,tr,td,th")).filter(
       (element) => element.closest("table") === table,
     );
-    for (const element of structuralElements.reverse()) constrainLayoutBox(replaceElement(document, element, "div"));
+    structuralElements.reverse();
+    for (const element of structuralElements) constrainLayoutBox(replaceElement(document, element, "div"));
     const container = replaceElement(document, table, "div");
     constrainLayoutBox(container);
     container.removeAttribute("role");
@@ -137,13 +141,27 @@ function flattenLayoutTables(document: Document) {
 
 /** Crée une copie web ; ne modifie jamais le HTML archivé ou le document de l’application. */
 export function createEmailWebPreview(html: string, fallbackTitle = "Contenu de l’e-mail") {
-  const sanitized = DOMPurify.sanitize(html, {
-    WHOLE_DOCUMENT: true,
+  const source = new DOMParser().parseFromString(html, "text/html");
+  const title = source.title || fallbackTitle;
+  const language = source.documentElement.lang || "fr";
+  const direction = source.documentElement.dir;
+  // Assainir uniquement un fragment. L'enveloppe HTML et ses métadonnées sont reconstruites ici.
+  // Le conteneur temporaire conserve aussi les styles et attributs historiques du body.
+  const content = source.createElement("div");
+  for (const attribute of Array.from(source.body.attributes)) content.setAttribute(attribute.name, attribute.value);
+  content.append(...Array.from(source.body.childNodes));
+  const sanitized = DOMPurify.sanitize(content.outerHTML, {
+    WHOLE_DOCUMENT: false,
     FORBID_TAGS: ["script", "style", "link", "meta", "base", "iframe", "object", "embed", "form", "input", "button", "select", "textarea"],
   });
   const document = new DOMParser().parseFromString(sanitized, "text/html");
-  const title = document.title || fallbackTitle;
-  document.documentElement.lang ||= "fr";
+  const sanitizedContent = document.body.firstElementChild;
+  if (sanitizedContent) {
+    for (const attribute of Array.from(sanitizedContent.attributes)) document.body.setAttribute(attribute.name, attribute.value);
+    document.body.replaceChildren(...Array.from(sanitizedContent.childNodes));
+  }
+  document.documentElement.lang = language;
+  if (["ltr", "rtl", "auto"].includes(direction)) document.documentElement.dir = direction;
   structureEmailRegions(document);
   for (const element of document.querySelectorAll<HTMLElement>("*")) convertPresentationAttributes(element);
   flattenLayoutTables(document);

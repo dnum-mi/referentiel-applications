@@ -51,7 +51,7 @@ function updateChart() {
     (s) =>
       (groupBy.value === "week" ? "Semaine du " : "") +
       new Date(s.label + (groupBy.value === "month" ? "-01" : "")).toLocaleDateString("fr-FR", {
-        day: groupBy.value !== "month" ? "2-digit" : undefined,
+        day: groupBy.value === "month" ? undefined : "2-digit",
         month: "short",
         year: "numeric",
       }),

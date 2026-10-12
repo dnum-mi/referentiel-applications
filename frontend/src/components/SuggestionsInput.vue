@@ -63,9 +63,9 @@ const statusText = computed(() => {
   if (isLoading.value) return "Recherche en cours…";
   if (!hasSearched.value || error.value) return "";
   const count = suggestions.value.length;
-  return count
-    ? `${count} suggestion${count > 1 ? "s" : ""} disponible${count > 1 ? "s" : ""}. Utilisez les flèches haut et bas, puis Entrée pour sélectionner.`
-    : "Aucun résultat.";
+  if (!count) return "Aucun résultat.";
+  const plural = count > 1 ? "s" : "";
+  return `${count} suggestion${plural} disponible${plural}. Utilisez les flèches haut et bas, puis Entrée pour sélectionner.`;
 });
 
 function selectSuggestion(suggestion: Pick<ApplicationDto, "id" | "label">) {
@@ -121,8 +121,11 @@ async function onKeydown(event: KeyboardEvent) {
     event.preventDefault();
     isOpen.value = true;
     const direction = event.key === "ArrowDown" ? 1 : -1;
-    highlightedIndex.value =
-      highlightedIndex.value < 0 ? (direction > 0 ? 0 : count - 1) : (highlightedIndex.value + direction + count) % count;
+    if (highlightedIndex.value < 0) {
+      highlightedIndex.value = direction > 0 ? 0 : count - 1;
+    } else {
+      highlightedIndex.value = (highlightedIndex.value + direction + count) % count;
+    }
     await nextTick();
     document.getElementById(optionId(highlightedIndex.value))?.scrollIntoView({ block: "nearest" });
   } else if (event.key === "Enter" && isListOpen.value && highlightedIndex.value >= 0) {
@@ -164,7 +167,7 @@ async function onKeydown(event: KeyboardEvent) {
     />
 
     <div v-if="isLoading" data-testid="suggestions-loading">Chargement ...</div>
-    <p :id="statusId" class="fr-sr-only" role="status" aria-atomic="true">{{ statusText }}</p>
+    <output :id="statusId" class="fr-sr-only" aria-atomic="true" aria-live="polite">{{ statusText }}</output>
     <p class="fr-error-text" role="alert" aria-atomic="true">{{ error }}</p>
     <ul
       v-if="isListOpen"

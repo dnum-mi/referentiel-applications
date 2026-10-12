@@ -65,5 +65,5 @@ La restitution effective avec les lecteurs d'écran de l'environnement de test r
 
 ### RGA-09 — Filtres mobiles sans recouvrement des résultats ✅
 
-- **Action** : ouvrir et fermer les filtres à 375 pixels avec Entrée et Espace, parcourir le début du panneau au clavier, puis réduire la fenêtre alors qu'un filtre possède le focus.
+- **Action** : ouvrir et fermer les filtres à 375 pixels avec Entrée et Espace, parcourir le début du panneau au clavier, le refermer à la souris alors qu'un filtre possède le focus, puis réduire la fenêtre alors qu'un filtre possède le focus.
 - **Résultat attendu** : le panneau est initialement replié ; son bouton expose son état et le panneau contrôlé. Une fois ouvert, il précède les résultats sans les recouvrir. Le repli lors du redimensionnement restitue le focus au bouton.

@@ -179,7 +179,7 @@ describe("Statistiques — données équivalentes et commandes de lecture", () =
     render(IqChart, { global });
     await flushPromises();
     const figure = screen.getByRole("figure");
-    const caption = figure.querySelector("figcaption")?.textContent?.replace(/\s+/g, " ").trim();
+    const caption = figure.querySelector("figcaption")?.textContent?.replaceAll(/\s+/g, " ").trim();
     expect(figure).toHaveAttribute("role", "figure");
     expect(figure).toHaveAttribute("aria-label", caption);
     expect(figure).toHaveAccessibleName(/Évolution de l’IQ moyen du.*IQ moyen en pourcentage/);

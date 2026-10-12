@@ -44,7 +44,7 @@ onMounted(load);
 
 <template>
   <div>
-    <div v-if="loading" class="fr-alert fr-alert--info" role="status">Chargement…</div>
+    <output v-if="loading" class="matrix-loading-status fr-alert fr-alert--info" aria-live="polite" aria-atomic="true">Chargement…</output>
     <div v-else-if="error" class="fr-alert fr-alert--error" role="alert">
       {{ error }}
       <DsfrButton size="sm" class="fr-ml-2w" @click="load"> Réessayer </DsfrButton>
@@ -52,3 +52,9 @@ onMounted(load);
     <AppPermsMatrix v-else-if="appPermsMatrix" :app-perms-matrix="appPermsMatrix" @reload="load" @update:app-perms-matrix="save" />
   </div>
 </template>
+
+<style scoped>
+.matrix-loading-status {
+  display: block;
+}
+</style>

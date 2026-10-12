@@ -78,11 +78,11 @@ describe("Structure des e-mails réellement rendus", () => {
       targetsRows:
         '<tr><th scope="row">Application test</th><td>50</td><td>60</td><td>+10 pts</td><td>Action</td></tr>',
     });
-    const table = html.match(/<table\b[^>]*>\s*<caption[\s\S]*?<\/table>/)?.[0];
+    const table = /<table\b[^>]*>\s*<caption[\s\S]*?<\/table>/.exec(html)?.[0];
     expect(table).toBeDefined();
     expect(table).not.toContain('role="presentation"');
     expect(table).toContain("Campagne &amp; données");
-    expect(table!.match(/scope="col"/g)).toHaveLength(5);
+    expect(table?.match(/scope="col"/g)).toHaveLength(5);
     expect(table).toContain('scope="row"');
     expect(table).toContain("<thead>");
     expect(table).toContain("<tbody>");
@@ -99,12 +99,12 @@ describe("Structure des e-mails réellement rendus", () => {
     const config = {
       get: (key: string, fallback?: unknown) => configValues[key] ?? fallback,
     } as unknown as ConfigService;
-    const log = jest.fn(
-      async (email: { html: string; text: string; subject: string }) => {
-        void email;
-        return null;
-      },
-    );
+    const log = jest
+      .fn<
+        Promise<null>,
+        [email: { html: string; text: string; subject: string }]
+      >()
+      .mockResolvedValue(null);
     const service = new EmailService(
       config,
       templateService,

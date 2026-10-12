@@ -258,7 +258,7 @@ watch(
         </button>
       </form>
     </details>
-    <p role="status" class="fr-sr-only">{{ widthStatus }}</p>
+    <output class="fr-sr-only">{{ widthStatus }}</output>
     <DataTable
       v-model:selection="selection"
       :value="items"

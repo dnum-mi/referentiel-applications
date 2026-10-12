@@ -316,6 +316,7 @@ onMounted(() => {
       <div v-if="showCreateForm" class="fr-card fr-p-3w fr-mb-3w">
         <h3 class="fr-h5 fr-mb-2w">Nouveau token applicatif</h3>
         <form @submit.prevent="createServiceToken">
+          <p class="fr-text--sm" data-testid="admin-token-required-fields-hint">* = champs obligatoires</p>
           <DsfrRadioButtonSet
             v-model="newToken.serviceMode"
             legend="Mode d’accès"

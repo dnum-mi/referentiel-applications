@@ -90,6 +90,11 @@ describe("AdminTokensTab : modes des tokens applicatifs", () => {
     expect(screen.getByText(/Chaque appel exige le JWT de l’utilisateur/)).toBeInTheDocument();
     expect(screen.getByText(/Le token suffit ; les droits et le périmètre du service s’appliquent/)).toBeInTheDocument();
     expect(screen.getByText(/Ce mode reste identique après régénération/)).toBeInTheDocument();
+    const hint = screen.getByTestId("admin-token-required-fields-hint");
+    expect(hint).toHaveTextContent("* = champs obligatoires");
+    const firstRequiredMarker = hint.closest("form")?.querySelector(".required");
+    expect(firstRequiredMarker).toBeInTheDocument();
+    expect(firstRequiredMarker && hint.compareDocumentPosition(firstRequiredMarker) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it.each([

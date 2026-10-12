@@ -1,5 +1,6 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { defineComponent, h } from "vue";
+import { within } from "@testing-library/vue";
 import AccessibleAutocomplete from "./AccessibleAutocomplete.vue";
 
 function renderAutocomplete(search: (query: string) => Promise<string[]>) {
@@ -19,12 +20,12 @@ describe("AccessibleAutocomplete", () => {
     await wrapper.get("input").setValue("aucun");
     await vi.advanceTimersByTimeAsync(300);
     await flushPromises();
-    expect(wrapper.get('[role="status"]').text()).toBe("Aucun résultat");
+    expect(within(wrapper.get("div").element).getByRole("status")).toHaveTextContent("Aucun résultat");
     expect(wrapper.find('[role="listbox"]').exists()).toBe(false);
     expect(wrapper.get("input").attributes("aria-expanded")).toBe("false");
     expect(wrapper.get("input").attributes("aria-controls")).toBeUndefined();
     await wrapper.get("input").trigger("keydown", { key: "Escape" });
-    expect(wrapper.get('[role="status"]').text()).toBe("");
+    expect(within(wrapper.get("div").element).getByRole("status")).toBeEmptyDOMElement();
     expect(wrapper.emitted("close")).toBeUndefined();
   });
 
@@ -35,7 +36,7 @@ describe("AccessibleAutocomplete", () => {
     await vi.advanceTimersByTimeAsync(300);
     await flushPromises();
     expect(wrapper.get('[role="alert"]').text()).not.toBe("");
-    expect(wrapper.get('[role="status"]').text()).toBe("");
+    expect(within(wrapper.get("div").element).getByRole("status")).toBeEmptyDOMElement();
     expect(wrapper.find('[role="listbox"]').exists()).toBe(false);
     expect(wrapper.get("input").attributes("aria-expanded")).toBe("false");
     expect(wrapper.get("input").attributes("aria-controls")).toBeUndefined();

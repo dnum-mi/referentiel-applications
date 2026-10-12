@@ -22,12 +22,9 @@ const card = {
 
 describe("Périmètre de la fiche produit dans les deux formats", () => {
   it("réutilise exactement la sélection autorisée et n'élargit pas aux contacts ou à la dette", async () => {
-    const findUnique = jest.fn(
-      async (query: Prisma.ApplicationFindUniqueArgs) => {
-        void query;
-        return card;
-      },
-    );
+    const findUnique = jest
+      .fn<Promise<ProductCard>, [query: Prisma.ApplicationFindUniqueArgs]>()
+      .mockResolvedValue(card);
     const service = new ApplicationProductExportService({
       application: { findUnique },
     } as unknown as PrismaService);

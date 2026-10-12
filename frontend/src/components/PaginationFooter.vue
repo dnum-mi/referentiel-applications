@@ -125,9 +125,9 @@ function pageLabel(label: string, destination: number) {
       </ul>
     </component>
 
-    <p role="status" aria-live="polite" aria-atomic="true" class="fr-sr-only" data-testid="pagination-page-status">
+    <output aria-live="polite" aria-atomic="true" class="fr-sr-only" data-testid="pagination-page-status">
       Page {{ currentPage + 1 }} sur {{ pageCount }}
-    </p>
+    </output>
 
     <p class="footer-item total-count" data-testid="pagination-total-count">{{ totalFiltered }} résultat(s)</p>
   </div>
