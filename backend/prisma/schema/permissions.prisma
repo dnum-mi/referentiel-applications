@@ -106,6 +106,9 @@ enum Permission {
   /// Consulter la vue transverse Technologies dans son périmètre fonctionnel (#2801).
   /// Accordée par le rôle administrateur ; déléguable aux lecteurs et contributeurs.
   TechnologyList
+  /// Synchroniser toutes les applications vers le document Grist configuré (GRIST_DOC_ID).
+  /// Jamais accordée par un rôle, même administrateur : déléguée explicitement (couche 2).
+  GristSync
 
   // --- Permissions applicatives (par app) ---
   // Couple read/write classique

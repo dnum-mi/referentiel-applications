@@ -5,6 +5,7 @@ import {
   Permission,
   type AuthLevelDto,
   type UserEntity,
+  type UpdateUserPreferencesDto,
   type UserFollowedApplicationDto,
   type UserWithPermissions,
 } from "@/client/types.gen";
@@ -33,6 +34,7 @@ export const useUserStore = defineStore("userStore", () => {
   let sessionGeneration = 0;
   let fetchSequence = 0;
   let preferencesSequence = 0;
+  let gristSettingsSequence = 0;
 
   function invalidateSession() {
     sessionGeneration += 1;
@@ -166,6 +168,24 @@ export const useUserStore = defineStore("userStore", () => {
     }
   }
 
+  /// Met à jour la configuration Grist du profil : seuls les champs fournis changent, `null` efface
+  /// l'URL ou la clé. La clé n'est jamais relue : le profil indique seulement si elle est enregistrée.
+  /// Lève une erreur si le backend refuse la configuration (identifiant ou URL mal formés…).
+  async function updateGristSettings(settings: Pick<UpdateUserPreferencesDto, "gristDocIds" | "gristUrl" | "gristApiKey">) {
+    const generation = sessionGeneration;
+    const sequence = ++gristSettingsSequence;
+    const response = await client.userControllerUpdateMe({ body: settings });
+    if (!isApiSuccess(response)) {
+      throw new Error("Erreur lors de la mise à jour de la configuration Grist.");
+    }
+
+    if (generation === sessionGeneration && sequence === gristSettingsSequence && user.value && response.data?.id === user.value.id) {
+      user.value.gristDocIds = response.data.gristDocIds;
+      user.value.gristUrl = response.data.gristUrl;
+      user.value.hasGristApiKey = response.data.hasGristApiKey;
+    }
+  }
+
   function isSubscribed(appId: string): boolean {
     return user.value?.followedApplications?.some((app: UserFollowedApplicationDto) => app.id === appId) ?? false;
   }
@@ -266,6 +286,7 @@ export const useUserStore = defineStore("userStore", () => {
     authenticated,
     fetchUser,
     updateEmailPreferences,
+    updateGristSettings,
     isSubscribed,
     subscribeToApp,
     unsubscribeFromApp,

@@ -142,3 +142,20 @@ describe("roleToPermissions — gestion des campagnes non accordée par défaut 
     expect(DELEGABLE_PERMISSIONS).toContain(Permission.MditCampaignManage);
   });
 });
+
+// GristSync écrit dans un outil externe : comme les campagnes, aucun rôle ne l'accorde.
+describe("roleToPermissions — GristSync non accordée par défaut", () => {
+  it("aucun rôle n'a GristSync par défaut, ADMIN scopé ou non compris", () => {
+    for (const role of Object.values(Roles)) {
+      for (const scoped of [false, true]) {
+        expect(roleToPermissions(role, { scoped })).not.toContain(
+          Permission.GristSync,
+        );
+      }
+    }
+  });
+
+  it("GristSync reste déléguable explicitement (additionalPermissions)", () => {
+    expect(DELEGABLE_PERMISSIONS).toContain(Permission.GristSync);
+  });
+});

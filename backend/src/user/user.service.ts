@@ -25,6 +25,7 @@ import { EmailService } from "src/email/email.service";
 import { emailEquals, normalizeEmail } from "src/common/utils/email.utils";
 import { MaiaUnavailableException } from "./errors/maia-unavailable.exception";
 import { DELEGATED_AUTH } from "src/permissions/delegated-auth";
+import { encryptGristApiKey } from "src/grist/grist-api-key";
 
 @Injectable()
 export class UserService {
@@ -317,8 +318,29 @@ export class UserService {
       data: {
         emailNotificationsEnabled:
           updateUserPreferencesDto.emailNotificationsEnabled,
+        gristDocIds: updateUserPreferencesDto.gristDocIds && [
+          ...new Set(updateUserPreferencesDto.gristDocIds),
+        ],
+        // L'API Grist est servie à la racine de l'instance : une URL de document collée telle
+        // quelle est ramenée à son origine.
+        gristUrl:
+          updateUserPreferencesDto.gristUrl &&
+          new URL(updateUserPreferencesDto.gristUrl).origin,
+        // Chiffrée en base ; null efface la clé, undefined la laisse inchangée.
+        gristApiKey:
+          updateUserPreferencesDto.gristApiKey &&
+          encryptGristApiKey(updateUserPreferencesDto.gristApiKey),
       },
     });
+  }
+
+  /// La clé d'API Grist n'est jamais renvoyée : le profil indique seulement si elle est renseignée.
+  async hasGristApiKey(id: string): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: { gristApiKey: true },
+    });
+    return !!user?.gristApiKey;
   }
 
   async findAll(
@@ -424,8 +446,11 @@ export class UserService {
     };
   }
 
-  getCurrentUser(requestor: UserEntity): UserEntity {
-    return requestor;
+  async getCurrentUser(requestor: UserEntity): Promise<UserEntity> {
+    return {
+      ...requestor,
+      hasGristApiKey: await this.hasGristApiKey(requestor.id),
+    };
   }
 
   findPermissionLogs(userId: string) {
