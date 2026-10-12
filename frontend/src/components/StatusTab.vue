@@ -11,7 +11,7 @@ import { useApplicationStore } from "@/stores/applicationStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import type { TableColumn } from "@/types/table";
 import { useMediaQuery } from "@vueuse/core";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import AppLoader from "./AppLoader.vue";
 import StatusForm from "./form/StatusForm.vue";
 import RefAppTable from "./RefAppTable.vue";
@@ -42,6 +42,8 @@ const statuses = ref<ApplicationStatusDto[]>([]);
 const isLoading = ref(false);
 const isSubmitting = ref(false);
 const errorMessage = ref("");
+const formError = ref("");
+watch([formModal.isModalOpen, formModal.isCreateModalOpen], () => (formError.value = ""));
 
 const canEdit = useAppPermission(() => props.application.myPerms, [Permission.APP_WRITE]);
 const deleteModalActions = computed(() => [
@@ -157,6 +159,7 @@ function getStatusCardButtons(status: ApplicationStatusDto) {
 }
 
 async function handleFormSubmit(formData: StatusFormData) {
+  formError.value = "";
   const isEdit = !!selectedStatus.value;
   if (isEdit) {
     await updateStatus(formData);
@@ -184,13 +187,14 @@ async function createStatus(formData: StatusFormData) {
     }
   } catch (error) {
     console.error("Error creating status:", error);
-    toaster.addErrorMessage("Erreur lors de la création du statut");
+    formError.value = "Erreur lors de la création du statut. Votre saisie est conservée.";
   } finally {
     isSubmitting.value = false;
   }
 }
 
 function openEditModal(status: ApplicationStatusDto) {
+  formError.value = "";
   formModal.openModal(status);
 }
 
@@ -220,7 +224,7 @@ async function updateStatus(formData: StatusFormData) {
     }
   } catch (error) {
     console.error("Error updating status:", error);
-    toaster.addErrorMessage("Erreur lors de la modification du statut");
+    formError.value = "Erreur lors de la modification du statut. Votre saisie est conservée.";
   } finally {
     isSubmitting.value = false;
   }
@@ -310,6 +314,9 @@ onMounted(() => {
     data-testid="status-form-modal"
     @close="formModal.closeModal"
   >
+    <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="status-form-error">
+      <p v-if="formError" class="fr-error-text">{{ formError }}</p>
+    </div>
     <StatusForm
       v-if="formModal.isCreateModalOpen.value || formModal.isModalOpen.value"
       :is-submitting="isSubmitting"
@@ -338,15 +345,17 @@ onMounted(() => {
     <p>Êtes-vous sûr de vouloir supprimer ce statut ?</p>
   </DsfrModal>
 
-  <div v-if="errorMessage" class="fr-alert fr-alert--error" data-testid="statuses-error">
-    <p>{{ errorMessage }}</p>
+  <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="statuses-error">
+    <div v-if="errorMessage" class="fr-alert fr-alert--error">
+      <p>{{ errorMessage }}</p>
+    </div>
   </div>
 
-  <div v-else-if="!isLoading && statuses.length === 0" class="text-center" data-testid="statuses-empty">
+  <div v-if="!errorMessage && !isLoading && statuses.length === 0" class="text-center" data-testid="statuses-empty">
     <p>Aucun statut enregistré.</p>
   </div>
 
-  <div v-else>
+  <div v-else-if="!errorMessage">
     <AppLoader v-if="isLoading" data-testid="statuses-loader"></AppLoader>
     <div v-else>
       <template v-if="!isMobile">

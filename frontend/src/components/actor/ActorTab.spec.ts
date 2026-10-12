@@ -50,11 +50,11 @@ async function renderTab() {
     global: {
       stubs: {
         RefAppTable: {
-          props: ["items"],
+          props: ["items", "columns"],
           template:
-            '<table><tbody><tr v-for="item in items" :key="item.id"><td><slot name="body-Sélection" :data="item" /></td><td><slot name="body-Actions" :data="item" /></td></tr></tbody></table>',
+            '<table><thead><tr><th v-for="column in columns" :key="column.field" :data-field="column.field">{{ column.header }}<slot v-if="column.field === \'Groupe\'" name="header-Groupe" /></th></tr></thead><tbody><tr v-for="item in items" :key="item.id"><td><slot name="body-Sélection" :data="item" /></td><td><slot name="body-Actions" :data="item" /></td></tr></tbody></table>',
         },
-        ActorForm: { emits: ["submit"], template: "<div>Formulaire</div>" },
+        ActorForm: { props: ["errorMessage"], emits: ["submit"], template: '<div>Formulaire<p role="alert">{{ errorMessage }}</p></div>' },
         DsfrModal: { props: ["opened"], template: '<div v-if="opened"><slot /></div>' },
         DeleteConfirmationModal: true,
       },
@@ -72,6 +72,24 @@ beforeEach(() => {
 });
 
 describe("ActorTab — sélection et focus", () => {
+  it("conserve le titre Rattaché(e) et ouvre l’aide depuis une commande explicite, fermable avec Échap", async () => {
+    const wrapper = await renderTab();
+    const button = wrapper.get('button[aria-label="Afficher l’aide sur le rattachement des acteurs"]');
+    expect(wrapper.get('[data-field="Groupe"]').text()).toContain("Rattaché(e)");
+    expect(button.element).toHaveAccessibleName("Afficher l’aide sur le rattachement des acteurs");
+    const tooltipId = button.attributes("aria-describedby");
+    const tooltip = wrapper.get(`[id="${tooltipId}"]`);
+    expect(tooltip.classes()).not.toContain("fr-tooltip--shown");
+    await button.trigger("click");
+    expect(tooltip.classes()).toContain("fr-tooltip--shown");
+    expect(tooltip.text()).toContain("Établir le lien entre une personne physique et une boîte e-mail fonctionnelle");
+    (button.element as HTMLButtonElement).focus();
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    await flushPromises();
+    expect(tooltip.classes()).not.toContain("fr-tooltip--shown");
+    expect(document.activeElement).toBe(button.element);
+  });
+
   it("nomme individuellement la sélection et la modification de chaque acteur", async () => {
     const wrapper = await renderTab();
     const selection = wrapper.get('[data-testid="actor-row-select-actor-1"]');
@@ -101,6 +119,9 @@ describe("ActorTab — sélection et focus", () => {
     wrapper.findComponent(ActorForm).vm.$emit("submit", { actorTypeId: "moa", email: "contact@example.fr" });
     await flushPromises();
     expect(wrapper.findComponent(ActorForm).exists()).toBe(true);
-    expect(toastError).toHaveBeenCalledWith("Erreur lors de la sauvegarde de l’acteur.");
+    expect(wrapper.findComponent(ActorForm).props("errorMessage")).toBe(
+      "Erreur lors de la sauvegarde de l’acteur. Votre saisie est conservée.",
+    );
+    expect(wrapper.get('[role="alert"]').text()).toBe("Erreur lors de la sauvegarde de l’acteur. Votre saisie est conservée.");
   });
 });

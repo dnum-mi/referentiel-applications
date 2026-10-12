@@ -281,7 +281,7 @@ onMounted(() => {
 
 <template>
   <div>
-    <h1 class="fr-h1" data-testid="admin-tokens-title">Gestion des tokens</h1>
+    <h2 class="fr-h1" data-testid="admin-tokens-title">Gestion des tokens</h2>
 
     <DsfrAlert alert v-if="error" type="error" :title="error" class="fr-mb-2w" closeable @close="error = null" />
 
@@ -306,7 +306,7 @@ onMounted(() => {
 
     <section class="fr-mb-6w">
       <div class="header-row fr-mb-2w">
-        <h2 class="fr-h3 fr-mb-0">Tokens applicatifs</h2>
+        <h3 class="fr-h3 fr-mb-0">Tokens applicatifs</h3>
         <DsfrButton v-if="!showCreateForm" icon="ri-add-line" data-testid="admin-token-create-btn" @click="toggleCreateForm">
           Créer un token applicatif
         </DsfrButton>
@@ -314,7 +314,7 @@ onMounted(() => {
       <p class="fr-text--sm">Tokens permettant à des systèmes tiers d'accéder à l'API du référentiel.</p>
 
       <div v-if="showCreateForm" class="fr-card fr-p-3w fr-mb-3w">
-        <h3 class="fr-h5 fr-mb-2w">Nouveau token applicatif</h3>
+        <h4 class="fr-h5 fr-mb-2w">Nouveau token applicatif</h4>
         <form @submit.prevent="createServiceToken">
           <p class="fr-text--sm" data-testid="admin-token-required-fields-hint">* = champs obligatoires</p>
           <DsfrRadioButtonSet
@@ -416,7 +416,7 @@ onMounted(() => {
     </section>
 
     <section>
-      <h2 class="fr-h3 fr-mb-2w">Tokens utilisateurs</h2>
+      <h3 class="fr-h3 fr-mb-2w">Tokens utilisateurs</h3>
       <p class="fr-text--sm">Tokens personnels créés par les utilisateurs depuis leur profil.</p>
 
       <div v-if="isPersonalLoading && personalTokens.length === 0" class="fr-py-6w fr-text--center">Chargement...</div>

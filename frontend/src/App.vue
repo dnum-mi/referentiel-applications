@@ -95,7 +95,7 @@ const authenticatedQuickLinks = computed<QuickLink[]>(() => {
       icon: "ri-logout-box-r-line",
     },
   ];
-  if (userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE])) {
+  if (userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE, Permission.QUALITY_CAMPAIGN_MANAGE, Permission.MDIT_CAMPAIGN_MANAGE])) {
     baseLinks.unshift({
       label: "Admin",
       to: { name: routeNames.ADMINPAGE },
@@ -135,10 +135,30 @@ const baseNavItems = computed(() =>
 );
 
 const publicNavItems = computed(() => buildPublicNavItems());
+const hasMainNavigation = computed(() => userStore.hasApplicationAccess || (userStore.sessionInitialized && !userStore.authenticated));
 
 const navItemsComputed = computed(() => {
   return userStore.authenticated ? baseNavItems.value : publicNavItems.value;
 });
+
+function focusSkipLinkTarget(event: MouseEvent) {
+  if (!(event.target instanceof Element)) return;
+  const href = event.target.closest("a")?.getAttribute("href");
+  if (href === "#app-search-shortcut") {
+    // DSFR donne déjà le focus à la cible, qui ouvre la recherche mobile.
+    // Le saut natif vers l'ancre reprendrait ensuite le focus hors du dialogue.
+    event.preventDefault();
+    return;
+  }
+  if (href !== "#header-nav") return;
+  // Sur mobile, le menu est masqué : rejoindre sa commande d'ouverture, plutôt
+  // que l'ancre invisible qui fait poursuivre la tabulation dans le contenu.
+  const menuButton = document.getElementById("button-menu");
+  const target = menuButton?.getClientRects().length ? menuButton : document.querySelector<HTMLElement>("#header-nav a[href]");
+  if (!target) return;
+  event.preventDefault();
+  target.focus();
+}
 
 const logoText = ["Ministère", "de l'intérieur"];
 const serviceDescription = "Une application pour les réunir toutes";
@@ -161,11 +181,15 @@ const ecosystemLinks = computed(() => {
   if (appConfig.value?.footerLinks) {
     links.push(...appConfig.value.footerLinks);
   }
-  // RGAA-015 : ces liens sont rendus par DSFR avec target="_blank" → l'indiquer dans l'intitulé.
-  return links.map((link) => ({
-    ...link,
-    title: link.title?.includes("nouvelle fenêtre") ? link.title : `${link.title ?? link.label} - nouvelle fenêtre`,
-  }));
+  // Une destination non renseignée ne doit pas ouvrir la page courante sous un autre intitulé.
+  return links
+    .map((link) => ({ ...link, href: link.href.trim() }))
+    .filter((link) => link.href && link.href !== "#")
+    .map((link) => ({
+      ...link,
+      // DSFR ouvre ces liens dans une nouvelle fenêtre.
+      title: link.title?.includes("nouvelle fenêtre") ? link.title : `${link.title ?? link.label} - nouvelle fenêtre`,
+    }));
 });
 const mandatoryLinks = computed(() => [
   { label: accessibilityDeclaration.complianceMention, title: "Aller à la page d'accessibilité", to: { name: routeNames.ACCESSIBILITE } },
@@ -219,9 +243,10 @@ const { needRefresh, updateServiceWorker } = useAppUpdate();
 
 <template>
   <DsfrSkipLinks
+    @click="focusSkipLinkTarget"
     :links="[
       ...(userStore.hasApplicationAccess ? [{ id: 'app-search-shortcut', text: 'Aller à la recherche' }] : []),
-      { id: 'header-nav', text: 'Aller à la navigation' },
+      ...(hasMainNavigation ? [{ id: 'header-nav', text: 'Aller à la navigation' }] : []),
       { id: 'main-content', text: 'Aller au contenu principal' },
       { id: 'footer', text: 'Aller au pied de page' },
     ]"
@@ -256,8 +281,7 @@ const { needRefresh, updateServiceWorker } = useAppUpdate();
     </template>
 
     <template #mainnav>
-      <DsfrNavigation v-if="userStore.hasApplicationAccess" :nav-items="navItemsComputed" id="header-nav" data-testid="main-navigation" />
-      <p v-else class="fr-sr-only" id="header-nav">Navigation non disponible</p>
+      <DsfrNavigation v-if="hasMainNavigation" :nav-items="navItemsComputed" id="header-nav" data-testid="main-navigation" />
     </template>
   </DsfrHeader>
   <AppUpdateNotice :available="needRefresh" :update="() => updateServiceWorker(true)" />

@@ -93,7 +93,7 @@ onMounted(fetchCampaigns);
 </script>
 
 <template>
-  <h1 class="fr-h1" data-testid="admin-quality-campaigns-title">Campagnes de mise en qualité</h1>
+  <h2 class="fr-h1" data-testid="admin-quality-campaigns-title">Campagnes de mise en qualité</h2>
 
   <p class="fr-text--sm fr-hint-text fr-mb-3w" style="white-space: normal">
     Une campagne cible un sous-ensemble d'applications via un filtre et relance par email les acteurs (MOA/MOE) de ces applications pour les

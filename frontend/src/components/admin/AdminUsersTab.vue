@@ -125,7 +125,7 @@ onMounted(fetchUsers);
 
 <template>
   <div>
-    <h1 class="fr-h1" data-testid="admin-users-title">Gestion des utilisateurs</h1>
+    <h2 class="fr-h1" data-testid="admin-users-title">Gestion des utilisateurs</h2>
 
     <div class="fr-mb-4w">
       <DsfrSearchBar

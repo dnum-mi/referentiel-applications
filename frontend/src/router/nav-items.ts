@@ -34,5 +34,8 @@ export function buildNavItems(canManageGlobalAdmin: boolean, canListTechnologies
 
 /** Menu réduit d'un visiteur non authentifié. */
 export function buildPublicNavItems(): NavItem[] {
-  return [{ to: { name: routeNames.ACCUEIL }, text: "Accueil" }];
+  return [
+    { to: { name: routeNames.ACCUEIL }, text: "Accueil" },
+    { to: { name: routeNames.ACCESSIBILITE }, text: "Accessibilité" },
+  ];
 }

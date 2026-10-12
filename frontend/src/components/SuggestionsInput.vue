@@ -168,7 +168,7 @@ async function onKeydown(event: KeyboardEvent) {
 
     <div v-if="isLoading" data-testid="suggestions-loading">Chargement ...</div>
     <output :id="statusId" class="fr-sr-only" aria-atomic="true" aria-live="polite">{{ statusText }}</output>
-    <p class="fr-error-text" role="alert" aria-atomic="true">{{ error }}</p>
+    <p :class="error ? 'fr-error-text' : undefined" role="alert" aria-atomic="true">{{ error }}</p>
     <ul
       v-if="isListOpen"
       :id="listId"

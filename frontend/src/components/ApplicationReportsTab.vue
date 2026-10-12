@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import api from "@/api";
+import { isApiSuccess } from "@/api/api-result";
 import { Permission, type PaginatedReportDto, type ReportDto } from "@/client/types.gen";
 import type { ApplicationWithPerms } from "@/models/Application";
 import { useToasterStore } from "@/stores/toasterStore";
 import type { TableColumn, TableSortEvent } from "@/types/table";
 import type { DataTablePageEvent } from "primevue/datatable";
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref } from "vue";
 import RefAppTable from "./RefAppTable.vue";
 import { useAppPermission } from "@/composables/use-app-permission";
 
@@ -17,6 +18,7 @@ const toaster = useToasterStore();
 
 const issues = ref<PaginatedReportDto>({ results: [], total: 0 });
 const isLoading = ref(false);
+const loadError = ref("");
 const currentPage = ref(0);
 const pageSize = ref(5);
 const firstIndex = computed(() => currentPage.value * pageSize.value);
@@ -32,16 +34,16 @@ const canPost = useAppPermission(() => props.application.myPerms, [Permission.RE
 
 async function fetchIssues() {
   isLoading.value = true;
+  loadError.value = "";
   try {
     const response = await api.applicationReportsControllerFindAll({
       path: { applicationId: props.application.id },
       query: { limit: 10000 },
     });
-    if (!response.data) {
-      issues.value = { results: [], total: 0 };
-      return;
-    }
+    if (!isApiSuccess(response) || !response.data) throw new Error("Reports unavailable");
     issues.value = response.data;
+  } catch {
+    loadError.value = "Erreur lors du chargement des signalements.";
   } finally {
     isLoading.value = false;
   }
@@ -64,23 +66,38 @@ function onPage(event: DataTablePageEvent) {
 
 const reportText = ref("");
 const submitting = ref(false);
+const submissionError = ref("");
+const reportForm = ref<HTMLDivElement | null>(null);
 
 async function submitReport() {
+  if (submitting.value || !reportText.value.trim()) return;
+  submissionError.value = "";
+  let saved = false;
+  const submitButton = reportForm.value?.querySelector<HTMLButtonElement>('[data-testid="report-issue-submit-btn"]');
   try {
     submitting.value = true;
     const applicationId = props.application?.id;
     if (!applicationId) throw new Error("Application ID is undefined");
 
-    await api.applicationReportsControllerCreate({ path: { applicationId }, body: { applicationId, description: reportText.value } });
+    const response = await api.applicationReportsControllerCreate({
+      path: { applicationId },
+      body: { applicationId, description: reportText.value },
+    });
+    if (!isApiSuccess(response)) throw new Error("Report creation failed");
+    saved = true;
     await fetchIssues();
 
     reportText.value = "";
     toaster.addSuccessMessage("Votre proposition sera prise en compte prochainement.");
   } catch (error) {
     console.error("Erreur lors de l'envoi du signalement:", error);
-    toaster.addErrorMessage("Oops ! Une erreur est survenue, contactez l’administrateur du référentiel si le problème persiste.");
+    submissionError.value = "Erreur lors de l'envoi du signalement. Votre saisie est conservée ; vous pouvez réessayer.";
   } finally {
     submitting.value = false;
+    if (saved && (document.activeElement === document.body || document.activeElement === submitButton)) {
+      await nextTick();
+      reportForm.value?.querySelector<HTMLTextAreaElement>("textarea")?.focus();
+    }
   }
 }
 
@@ -102,9 +119,13 @@ const loading = computed(() => isLoading.value);
 </script>
 
 <template>
+  <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="reports-load-error">
+    <p v-if="loadError" class="fr-error-text">{{ loadError }}</p>
+  </div>
   <AppLoader v-if="loading" data-testid="reports-loader" />
   <div v-else v-bind="$attrs">
     <RefAppTable
+      v-if="!loadError"
       :items="reportRows"
       :columns="tableColumns"
       :paginator="true"
@@ -123,7 +144,7 @@ const loading = computed(() => isLoading.value);
       </template>
     </RefAppTable>
   </div>
-  <div v-if="canPost" data-testid="reports-report-issue">
+  <div v-if="canPost" ref="reportForm" data-testid="reports-report-issue">
     <h4>Proposer un signalement</h4>
     <DsfrInput
       v-model="reportText"
@@ -136,8 +157,17 @@ const loading = computed(() => isLoading.value);
       rows="2"
       data-testid="report-issue-textarea"
     />
-    <DsfrButton :disabled="!reportText || submitting" data-testid="report-issue-submit-btn" @click="submitReport">
-      Envoyer mon signalement
+    <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="report-issue-error">
+      <p v-if="submissionError" class="fr-error-text">{{ submissionError }}</p>
+    </div>
+    <DsfrButton
+      :disabled="!reportText"
+      :aria-disabled="submitting"
+      :aria-busy="submitting"
+      data-testid="report-issue-submit-btn"
+      @click="submitReport"
+    >
+      {{ submitting ? "Envoi…" : "Envoyer mon signalement" }}
     </DsfrButton>
   </div>
 </template>

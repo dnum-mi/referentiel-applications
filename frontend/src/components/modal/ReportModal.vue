@@ -2,6 +2,7 @@
 import { ref, computed } from "vue";
 import { useReportStore } from "@/stores/reportStore";
 import { useToasterStore } from "@/stores/toasterStore";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = withDefaults(
   defineProps<{
@@ -24,6 +25,7 @@ const reportStore = useReportStore();
 
 const description = ref("");
 const isSubmitting = ref(false);
+useSubmissionFocus(isSubmitting);
 const errorMessage = ref<string>("");
 
 const titleMapper = {
@@ -63,7 +65,7 @@ async function submitReport() {
     toaster.addSuccessMessage("Merci pour votre signalement !");
     closeModal();
   } catch (error) {
-    toaster.addErrorMessage("Une erreur est survenue lors de l'envoi du signalement");
+    errorMessage.value = "Une erreur est survenue lors de l'envoi du signalement. Votre saisie est conservée.";
     console.error("❌ submitReport:", error);
   } finally {
     isSubmitting.value = false;
@@ -84,16 +86,16 @@ function closeModal() {
 <template>
   <DsfrModal :opened="props.opened" :title="title" @close="closeModal">
     <div data-testid="report-modal">
-      <DsfrAlert
-        v-show="errorMessage.length > 0"
-        class="mb-4"
-        tabindex="-1"
-        type="error"
-        role="alert"
-        aria-live="assertive"
-        title="Une erreur est survenue"
-        :description="errorMessage"
-      />
+      <div role="alert" aria-live="assertive" aria-atomic="true">
+        <DsfrAlert
+          v-if="errorMessage.length > 0"
+          class="mb-4"
+          tabindex="-1"
+          type="error"
+          title="Une erreur est survenue"
+          :description="errorMessage"
+        />
+      </div>
       <DsfrInput
         v-model.trim="description"
         is-textarea

@@ -103,8 +103,22 @@ describe("adminPage (#2419, regroupement en tuiles thématiques)", () => {
     render(AdminPage);
 
     const tile = screen.getByTestId("admin-theme-tile-users-rights");
-    expect(tile).toHaveTextContent("Gestion des utilisateurs, Gestion des acteurs.");
-    expect(tile).not.toHaveTextContent("matrice des permissions");
+    expect(tile).toHaveAccessibleDescription("Gestion des utilisateurs, Gestion des acteurs.");
+    expect(tile).not.toHaveAccessibleDescription(/matrice des permissions/i);
+  });
+
+  it("sépare le titre, la commande native et sa description sans contenu de bloc dans le bouton", async () => {
+    hasPermissionsMock.mockReturnValue(true);
+    render(AdminPage);
+    const tile = screen.getByTestId("admin-theme-tile-management");
+    expect(tile.tagName).toBe("BUTTON");
+    expect(tile).toHaveAccessibleName("Gestion");
+    expect(tile.closest("h2")).toHaveTextContent("Gestion");
+    expect(tile.querySelector("div,p,h1,h2,h3,h4,h5,h6,a,button")).toBeNull();
+    expect(tile).toHaveAttribute("aria-pressed", "false");
+    await fireEvent.click(tile);
+    expect(tile).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByTestId("panel-tags")).toBeInTheDocument();
   });
 
   it("un ADMIN global sans MditCampaignManage ni QualityCampaignManage explicites voit Revue datasteward mais aucun onglet de campagne dédié (#2608)", async () => {

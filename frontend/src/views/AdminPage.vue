@@ -255,21 +255,28 @@ const tabsStyle = ref({ "--tabs-height": "auto" });
   <div class="fr-container admin-page-container">
     <div class="fr-grid-row fr-grid-row--gutters fr-mb-3w" data-testid="admin-theme-tiles">
       <div v-for="theme in visibleThemes" :key="theme.id" class="fr-col-12 fr-col-sm-4">
-        <button
-          type="button"
-          class="fr-tile fr-tile--sm fr-enlarge-link admin-theme-tile"
+        <div
+          class="fr-tile fr-tile--sm fr-enlarge-button admin-theme-tile"
           :class="{ 'admin-theme-tile--active': theme.id === currentThemeId }"
-          :aria-pressed="theme.id === currentThemeId"
-          :data-testid="`admin-theme-tile-${theme.id}`"
-          @click="selectTheme(theme.id)"
         >
           <div class="fr-tile__body">
             <div class="fr-tile__content">
-              <h3 class="fr-tile__title">{{ theme.title }}</h3>
-              <p class="fr-tile__desc fr-text--sm">{{ themeDescription(theme) }}</p>
+              <h2 class="fr-tile__title">
+                <button
+                  type="button"
+                  class="fr-tile__link"
+                  :aria-pressed="theme.id === currentThemeId"
+                  :aria-describedby="`admin-theme-description-${theme.id}`"
+                  :data-testid="`admin-theme-tile-${theme.id}`"
+                  @click="selectTheme(theme.id)"
+                >
+                  {{ theme.title }}
+                </button>
+              </h2>
+              <p :id="`admin-theme-description-${theme.id}`" class="fr-tile__desc fr-text--sm">{{ themeDescription(theme) }}</p>
             </div>
           </div>
-        </button>
+        </div>
       </div>
     </div>
 

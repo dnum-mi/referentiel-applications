@@ -28,7 +28,7 @@ describe("Export de fiche produit PowerPoint", () => {
     vi.resetAllMocks();
   });
 
-  it("désactive le bouton pendant la préparation et le réactive après le téléchargement", async () => {
+  it("signale l'indisponibilité sans retirer le bouton du parcours clavier pendant la préparation", async () => {
     let finish!: () => void;
     downloadProductPowerpoint.mockReturnValue(
       new Promise<void>((resolve) => {
@@ -38,12 +38,14 @@ describe("Export de fiche produit PowerPoint", () => {
     const wrapper = render();
     await wrapper.get('[data-testid="application-export-powerpoint-btn"]').trigger("click");
     expect(downloadProductPowerpoint).toHaveBeenCalledWith("app-1");
-    expect(wrapper.get('[data-testid="application-export-powerpoint-btn"]').attributes("disabled")).toBeDefined();
+    expect(wrapper.get('[data-testid="application-export-powerpoint-btn"]').attributes("disabled")).toBeUndefined();
+    expect(wrapper.get('[data-testid="application-export-powerpoint-btn"]').attributes("aria-disabled")).toBe("true");
     expect(wrapper.get('[data-testid="application-export-powerpoint-btn"]').attributes("aria-busy")).toBe("true");
     expect(wrapper.text()).toContain("Préparation du PowerPoint");
     finish();
     await flushPromises();
     expect(wrapper.get('[data-testid="application-export-powerpoint-btn"]').attributes("disabled")).toBeUndefined();
+    expect(wrapper.get('[data-testid="application-export-powerpoint-btn"]').attributes("aria-disabled")).toBe("false");
     expect(wrapper.get('[data-testid="application-export-powerpoint-btn"]').attributes("aria-busy")).toBe("false");
     expect(addErrorMessage).not.toHaveBeenCalled();
   });
@@ -74,8 +76,12 @@ describe("Export de fiche produit PowerPoint", () => {
     await wrapper.get('[data-testid="application-export-html-btn"]').trigger("click");
     expect(downloadProductHtml).toHaveBeenCalledWith("app-1");
     expect(downloadProductPowerpoint).not.toHaveBeenCalled();
-    expect(wrapper.get('[data-testid="application-export-powerpoint-btn"]').attributes("disabled")).toBeDefined();
-    expect(wrapper.get('[role="status"]').text()).toContain("Préparation de la fiche HTML");
+    expect(wrapper.get('[data-testid="application-export-powerpoint-btn"]').attributes("aria-disabled")).toBe("true");
+    expect(wrapper.get("output").text()).toContain("Préparation de la fiche HTML");
+    await wrapper.get('[data-testid="application-export-html-btn"]').trigger("click");
+    await wrapper.get('[data-testid="application-export-powerpoint-btn"]').trigger("click");
+    expect(downloadProductHtml).toHaveBeenCalledTimes(1);
+    expect(downloadProductPowerpoint).not.toHaveBeenCalled();
     finish();
     await flushPromises();
     expect(wrapper.get('[data-testid="application-export-html-btn"]').attributes("disabled")).toBeUndefined();

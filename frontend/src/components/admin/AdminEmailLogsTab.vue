@@ -73,7 +73,7 @@ onActivated(fetchLogs);
 
 <template>
   <div>
-    <h1 class="fr-h1" data-testid="admin-email-logs-title">Historique des e-mails envoyés</h1>
+    <h2 class="fr-h1" data-testid="admin-email-logs-title">Historique des e-mails envoyés</h2>
 
     <div v-if="errorMessage" class="fr-alert fr-alert--error fr-mb-2w" data-testid="admin-email-logs-error">
       <p>{{ errorMessage }}</p>

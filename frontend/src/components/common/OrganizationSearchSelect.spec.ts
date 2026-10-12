@@ -58,6 +58,8 @@ describe("OrganizationSearchSelect", () => {
       expect(document.getElementById(field.attributes("aria-describedby")!)).toHaveTextContent("L'organisation est obligatoire.");
     }
     expect(select.element).toHaveAttribute("aria-required", "true");
+    expect(select.element).toBeRequired();
+    expect(select.element).toHaveAccessibleName("Choisir une organisation de votre choix *");
     wrapper.vm.focus();
     expect(select.element).toHaveFocus();
 

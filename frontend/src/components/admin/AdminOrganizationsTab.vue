@@ -102,7 +102,7 @@ onMounted(fetchOrganizations);
 
 <template>
   <div class="header-row">
-    <h1 class="fr-h1" data-testid="admin-organizations-title">Gestion des organisations</h1>
+    <h2 class="fr-h1" data-testid="admin-organizations-title">Gestion des organisations</h2>
 
     <OrganizationActions @fetch-organizations="fetchOrganizations" />
   </div>

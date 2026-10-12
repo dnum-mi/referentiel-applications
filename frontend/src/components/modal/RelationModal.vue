@@ -101,16 +101,16 @@ function submitRelation() {
 <template>
   <DsfrModal :opened="opened" :title="title" :data-testid="`${testIdPrefix}-modal`" @close="emit('close')">
     <template #default>
-      <DsfrAlert
-        v-show="errorMessage.length > 0"
-        class="mb-4"
-        tabindex="-1"
-        type="error"
-        role="alert"
-        aria-live="assertive"
-        title="Une erreur est survenue"
-        :description="errorMessage"
-      />
+      <div role="alert" aria-live="assertive" aria-atomic="true">
+        <DsfrAlert
+          v-if="errorMessage.length > 0"
+          class="mb-4"
+          tabindex="-1"
+          type="error"
+          title="Une erreur est survenue"
+          :description="errorMessage"
+        />
+      </div>
       <div class="relation-type">
         <DsfrSelect
           v-model="relationType"

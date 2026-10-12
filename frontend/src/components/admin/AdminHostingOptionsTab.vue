@@ -78,7 +78,7 @@ onMounted(fetchHostingOptions);
 <template>
   <div>
     <div class="header-row">
-      <h1 class="fr-h1" data-testid="admin-hosting-options-title">Gestion des plateformes d'hébergement</h1>
+      <h2 class="fr-h1" data-testid="admin-hosting-options-title">Gestion des plateformes d'hébergement</h2>
 
       <HostingOptionActions @fetch-hosting-options="fetchHostingOptions" />
     </div>

@@ -52,9 +52,173 @@ export class ChromePage extends BasePage {
   async expectMainNavigationVisible(): Promise<void> {
     await expect(this.mainNav()).toBeVisible();
   }
-  /** En mode public, la navigation principale n'est pas rendue. */
+  /** Un accès bloqué ne présente aucune navigation applicative. */
   async expectMainNavigationAbsent(): Promise<void> {
     await expect(this.mainNav()).toHaveCount(0);
+  }
+  /** Le menu public donne accès aux pages publiques, sans liens protégés. */
+  async expectPublicNavigation(): Promise<void> {
+    await expect(this.mainNav()).toBeVisible();
+    await expect(this.mainNav().getByRole("link")).toHaveText([
+      "Accueil",
+      "Accessibilité",
+    ]);
+  }
+
+  async expectNavigationShortcut(width: number): Promise<void> {
+    await this.page.setViewportSize({ width, height: 900 });
+    const shortcut = this.page.getByRole("link", {
+      name: "Aller à la navigation",
+      exact: true,
+    });
+    await shortcut.press("Enter");
+    if (width >= 992) {
+      await expect(this.mainNav().getByRole("link").first()).toBeFocused();
+      return;
+    }
+    const menuButton = this.byTestId("open-menu-btn");
+    await expect(menuButton).toBeFocused();
+    await menuButton.press("Enter");
+    const menu = this.page.getByRole("dialog", { name: "Menu", exact: true });
+    await expect(menu).toBeVisible();
+    await expect(
+      menu.getByRole("button", { name: "Fermer", exact: true }),
+    ).toBeFocused();
+    await this.page.keyboard.press("Escape");
+    await expect(menu).toHaveCount(0);
+    await expect(menuButton).toBeFocused();
+    const homeLink = this.header().getByRole("link").first();
+    await homeLink.focus();
+    await homeLink.press("Escape");
+    await expect(homeLink).toBeFocused();
+  }
+
+  async expectPublicSiteMapAndContentShortcut(): Promise<void> {
+    await this.footer()
+      .getByRole("link", { name: "Plan du site", exact: true })
+      .click();
+    await expect(this.page).toHaveURL(/\/plan-du-site$/);
+    const siteMap = this.byTestId("sitemap-page");
+    await expect(
+      siteMap.getByRole("heading", { name: "Plan du site", exact: true }),
+    ).toBeVisible();
+    const links = siteMap.getByRole("link");
+    await expect(links).toHaveText(["Accessibilité", "Accueil"]);
+    await expect(links.nth(0)).toHaveAttribute("href", "/accessibilite");
+    await expect(links.nth(1)).toHaveAttribute("href", "/");
+    const contentShortcut = this.page.getByRole("link", {
+      name: "Aller au contenu principal",
+      exact: true,
+    });
+    await contentShortcut.focus();
+    await expect
+      .poll(() =>
+        contentShortcut.evaluate((link) => {
+          const rect = link.getBoundingClientRect();
+          return (
+            rect.top >= 0 &&
+            rect.left >= 0 &&
+            rect.bottom <= innerHeight &&
+            rect.right <= innerWidth
+          );
+        }),
+      )
+      .toBe(true);
+    await contentShortcut.press("Enter");
+    // WebKit macOS suit le réglage système : Option+Tab inclut les liens.
+    const tabKey =
+      this.page.context().browser()?.browserType().name() === "webkit"
+        ? "Alt+Tab"
+        : "Tab";
+    await this.page.keyboard.press(tabKey);
+    await expect(links.nth(0)).toBeFocused();
+    await links.nth(0).press("Enter");
+    await expect(this.page).toHaveURL(/\/accessibilite$/);
+    await expect(
+      this.page
+        .getByRole("main")
+        .getByRole("heading", { name: "Accessibilité", exact: true }),
+    ).toBeVisible();
+    await this.mainNav()
+      .getByRole("link", { name: "Accueil", exact: true })
+      .press("Enter");
+    await expect(this.page).toHaveURL(/\/$/);
+    await expect(
+      this.page.getByRole("main").getByRole("heading", {
+        name: "Le référentiel des applications",
+        exact: true,
+      }),
+    ).toBeVisible();
+    await this.page
+      .getByRole("link", { name: "Aller au pied de page", exact: true })
+      .press("Enter");
+    await this.page.keyboard.press(tabKey);
+    await expect(this.footer().getByRole("link").first()).toBeFocused();
+  }
+
+  /** Vérifie les vraies destinations publiées, puis compare le gabarit commun. */
+  async expectConnectedSiteMapDestinations() {
+    const planLink = this.footer().getByRole("link", {
+      name: "Plan du site",
+      exact: true,
+    });
+    await planLink.click();
+    const siteMap = this.byTestId("sitemap-page");
+    await expect(
+      siteMap.getByRole("heading", { name: "Espace connecté", exact: true }),
+    ).toBeVisible();
+    const destinations = await siteMap.getByRole("link").evaluateAll((links) =>
+      links.map((link) => ({
+        name: link.textContent?.trim() ?? "",
+        href: link.getAttribute("href") ?? "",
+      })),
+    );
+    expect(destinations.length).toBeGreaterThan(2);
+    expect(
+      destinations.every(
+        (link) => link.href.startsWith("/") && !link.href.startsWith("/oidc/"),
+      ),
+    ).toBe(true);
+    const expectedMenu = await this.mainNav()
+      .getByRole("link")
+      .allTextContents();
+    const results = [];
+    for (const destination of destinations) {
+      await siteMap
+        .getByRole("link", { name: destination.name, exact: true })
+        .click();
+      await expect
+        .poll(() => new URL(this.page.url()).pathname)
+        .toBe(destination.href);
+      // Certaines vues précisent leur titre après chargement (historique →
+      // « Modifications - page 1 »). Le titre de navigation conserve la rubrique.
+      await expect(this.byTestId("page-title-announcer")).toContainText(
+        destination.name,
+      );
+      await expect(this.mainNav().getByRole("link")).toHaveText(expectedMenu);
+      await expect(this.quickSearch()).toBeVisible();
+      await expect(planLink).toHaveAttribute("href", "/plan-du-site");
+      const structure = await this.page.evaluate(() =>
+        [
+          ...document.querySelectorAll(
+            '[role="banner"], #header-nav, main, [role="contentinfo"]',
+          ),
+        ].map((element) => element.tagName.toLowerCase()),
+      );
+      expect(structure).toEqual(["header", "nav", "main", "footer"]);
+      results.push({
+        ...destination,
+        title: await this.page.title(),
+        headings: await this.page
+          .getByRole("main")
+          .getByRole("heading", { level: 1 })
+          .allTextContents(),
+        structure,
+      });
+      await planLink.click();
+      await expect(siteMap).toBeVisible();
+    }
+    return results;
   }
   async expectNavItem(label: string): Promise<void> {
     await expect(
@@ -208,6 +372,14 @@ export class ChromePage extends BasePage {
     await input.press("Shift+Tab");
     await expect(close).toBeFocused();
     await close.press("Tab");
+    await expect(input).toBeFocused();
+    await input.press("Escape");
+    await expect(dialog).toHaveCount(0);
+    await expect(trigger).toBeFocused();
+    await this.page
+      .getByRole("link", { name: "Aller à la recherche", exact: true })
+      .press("Enter");
+    await expect(dialog).toBeVisible();
     await expect(input).toBeFocused();
     await input.press("Escape");
     await expect(dialog).toHaveCount(0);

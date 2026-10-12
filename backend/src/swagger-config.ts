@@ -12,6 +12,7 @@ import {
   swaggerDownloadUrlPlugin,
 } from "./swagger-ui-accessibility";
 import { API_KEY_HEADER } from "./utils/constants.util";
+import { swaggerDocumentationLanguage } from "./swagger-documentation-language";
 
 const API_PREFIX = "/api/v2";
 const SWAGGER_PATH = "/swagger";
@@ -83,6 +84,9 @@ export function setupSwagger(
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
+  Object.assign(document, {
+    "x-refapp-documentation-language": swaggerDocumentationLanguage,
+  });
 
   SwaggerModule.setup(SWAGGER_PATH, app, document, {
     explorer: true,

@@ -333,6 +333,7 @@ const actorDisplayName = computed(() => {
     data-testid="admin-edit-all-actor-modal"
     @close="closeEditAllModal"
   >
+    <p class="fr-text--sm fr-mb-3w" data-testid="required-fields-hint">* = champs obligatoires</p>
     <DsfrAlert
       :description="`Les acteurs avec l'email « ${actor.email} » dans les applications sélectionnées seront modifiés.`"
       type="info"
@@ -420,24 +421,29 @@ const actorDisplayName = computed(() => {
       data-testid="admin-actor-all-is-group-checkbox"
       class="fr-mb-3w checkbox-align"
     />
-    <template v-if="!isEditAllGroup">
-      <DsfrInput
-        v-model="editAllForm.firstname"
-        label="Prénom"
-        label-visible
-        placeholder="Prénom"
-        data-testid="admin-actor-all-firstname-input"
-        class="fr-mb-3w"
-      />
-      <DsfrInput
-        v-model="editAllForm.lastname"
-        label="Nom"
-        label-visible
-        placeholder="Nom de famille"
-        data-testid="admin-actor-all-lastname-input"
-        class="fr-mb-3w"
-      />
-    </template>
+    <fieldset v-if="!isEditAllGroup" class="fr-fieldset fr-mb-3w">
+      <legend class="fr-fieldset__legend">Identité des acteurs</legend>
+      <div class="fr-fieldset__element">
+        <DsfrInput
+          v-model="editAllForm.firstname"
+          label="Prénom"
+          label-visible
+          placeholder="Prénom"
+          data-testid="admin-actor-all-firstname-input"
+          class="fr-mb-3w"
+        />
+      </div>
+      <div class="fr-fieldset__element">
+        <DsfrInput
+          v-model="editAllForm.lastname"
+          label="Nom"
+          label-visible
+          placeholder="Nom de famille"
+          data-testid="admin-actor-all-lastname-input"
+          class="fr-mb-3w"
+        />
+      </div>
+    </fieldset>
     <template #footer>
       <DsfrButton label="Annuler" secondary @click="closeEditAllModal" />
       <DsfrButton

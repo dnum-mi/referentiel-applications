@@ -4,6 +4,7 @@ import { ref, watch, onMounted, nextTick } from "vue";
 import api from "@/api/index";
 import { useToasterStore } from "@/stores/toasterStore";
 import type { LabelDto, LabelSourceDto } from "@/client/types.gen";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps<{
   applicationId: string;
@@ -22,6 +23,8 @@ const labelSourcesList = ref<LabelSourceDto[]>([]);
 const isLoadingSources = ref(false);
 const labelSourceSearch = ref("");
 const isSubmitting = ref(false);
+const submissionError = ref("");
+useSubmissionFocus(isSubmitting);
 const valueError = ref<string | undefined>(undefined);
 const toaster = useToasterStore();
 
@@ -66,6 +69,7 @@ watch(() => props.initialLabel, setInitialValues, { immediate: true });
 watch(labelSourcesList, setInitialValues, { immediate: true });
 
 async function handleSubmit() {
+  submissionError.value = "";
   valueError.value = labelForm.value.value.trim() ? undefined : "Veuillez compléter le champ : Valeur";
   if (valueError.value) return;
 
@@ -77,7 +81,6 @@ async function handleSubmit() {
         body: labelForm.value,
       });
       if (!isApiSuccess(response)) {
-        toaster.addErrorMessage("Erreur lors de la mise à jour du nom alternatif");
         throw response.error ?? new Error("Erreur lors de la mise à jour du nom alternatif.");
       }
       toaster.addSuccessMessage("Nom alternatif mis à jour avec succès");
@@ -88,7 +91,6 @@ async function handleSubmit() {
         body: labelForm.value,
       });
       if (!isApiSuccess(response)) {
-        toaster.addErrorMessage("Erreur lors de la création du nom alternatif");
         throw response.error ?? new Error("Erreur lors de la création du nom alternatif.");
       }
       toaster.addSuccessMessage("Nom alternatif créé avec succès");
@@ -96,7 +98,7 @@ async function handleSubmit() {
     }
     emit("close");
   } catch {
-    toaster.addErrorMessage("Une erreur est survenue lors de l'enregistrement du nom alternatif");
+    submissionError.value = "Une erreur est survenue lors de l'enregistrement du nom alternatif. Votre saisie est conservée.";
   } finally {
     isSubmitting.value = false;
   }
@@ -110,17 +112,20 @@ async function handleSubmit() {
     data-testid="label-modal"
     @close="$emit('close')"
   >
-    <DsfrAlert
-      v-show="props.initialLabel && props.errorMessage.length > 0"
-      class="mb-4"
-      tabindex="-1"
-      type="error"
-      role="alert"
-      aria-live="assertive"
-      title="Une erreur est survenue"
-      :description="props.errorMessage"
-    />
+    <div role="alert" aria-live="assertive" aria-atomic="true">
+      <DsfrAlert
+        v-if="props.initialLabel && props.errorMessage.length > 0"
+        class="mb-4"
+        tabindex="-1"
+        type="error"
+        title="Une erreur est survenue"
+        :description="props.errorMessage"
+      />
+    </div>
     <form data-testid="label-form" @submit.prevent="handleSubmit">
+      <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="label-form-error">
+        <p v-if="submissionError" class="fr-error-text">{{ submissionError }}</p>
+      </div>
       <p class="fr-text--sm fr-mb-2w" data-testid="required-fields-hint">Tous les champs avec un * sont obligatoires</p>
       <div v-if="isLoadingSources" class="fr-text--center fr-mb-2w" data-testid="label-sources-loading">
         <span class="fr-loading fr-loading--sm" data-testid="label-sources-spinner">

@@ -8,10 +8,12 @@ import { useToasterStore } from "@/stores/toasterStore";
 import type { PropType } from "vue";
 import { computed, ref, watch } from "vue";
 import OrganizationSearchSelect from "../common/OrganizationSearchSelect.vue";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps({
   initialData: Object as PropType<CreateActorDto>,
   isSubmitting: Boolean,
+  errorMessage: { type: String, default: "" },
   application: {
     type: Object as PropType<Application>,
     required: true,
@@ -23,6 +25,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["submit", "cancel"]);
+useSubmissionFocus(() => props.isSubmitting);
 
 const organizationStore = useOrganizationStore();
 const toaster = useToasterStore();
@@ -137,6 +140,10 @@ function handleSubmit() {
 
 <template>
   <form data-testid="actor-form" @submit.prevent="handleSubmit">
+    <p class="fr-text--sm fr-mb-3w" data-testid="required-fields-hint">* = champs obligatoires</p>
+    <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="actor-form-error">
+      <p v-if="errorMessage" class="fr-error-text">{{ errorMessage }}</p>
+    </div>
     <DsfrSelect
       v-model="form.actorTypeId"
       label="Type d'acteur"

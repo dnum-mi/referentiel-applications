@@ -185,6 +185,7 @@ watchDebounced(searchQuery, onQuery, { debounce: 300 });
         :aria-describedby="errorMessage ? errorId : undefined"
         :aria-invalid="errorMessage ? true : undefined"
         :aria-required="required || undefined"
+        :required="required"
         label="Choisir une organisation de votre choix"
         label-visible
       />

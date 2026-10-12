@@ -1,7 +1,16 @@
 diff --git a/dist/vue-dsfr.js b/dist/vue-dsfr.js
-index a437ecea2645779b318954776838c39739b1610c..57c10e5dbcbaab5341c98eb01d1189bf2a867894 100644
+index a437ecea2645779b318954776838c39739b1610c..2397383fc1a8e65d9358df068d429968e33f64c6 100644
 --- a/dist/vue-dsfr.js
 +++ b/dist/vue-dsfr.js
+@@ -2990,7 +2990,7 @@ var FocusTrapProps = defineFocusTrapProps({
+ 		let r = e, i = n, a = useSlots(), p = toRef(r, "languageSelector"), m = ref(!1), h = ref(!1), g = ref(!1), _ = () => {
+ 			g.value = !1, m.value = !1, h.value = !1, document.getElementById("button-menu")?.focus();
+ 		}, y = (e) => {
+-			e.key === "Escape" && _();
++			e.key === "Escape" && g.value && _();
+ 		};
+ 		onMounted(() => {
+ 			document.addEventListener("keydown", y);
 @@ -3284,7 +3284,7 @@ var FocusTrapProps = defineFocusTrapProps({
  		}, f = computed(() => r.isAlert ? "alertdialog" : "dialog"), p = ref(null), m = ref();
  		watch(() => r.opened, (e) => {

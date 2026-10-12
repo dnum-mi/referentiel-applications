@@ -5,6 +5,34 @@ import DataTable from "primevue/datatable";
 import { primeVueFrenchLocale } from "@/constants/primevue-locale";
 
 describe("RefAppTable", () => {
+  it("conserve le tri avec une commande d’aide distincte et laisse le navigateur activer son bouton au clavier", async () => {
+    const wrapper = mount(RefAppTable, {
+      props: {
+        items: [{ label: "Bravo" }, { label: "Alpha" }],
+        columns: [{ field: "label", header: "Application", sortable: true }],
+      },
+      slots: { "header-label": '<button type="button">Afficher l’aide</button>' },
+      global: { plugins: [[PrimeVue, { unstyled: true }]] },
+    });
+    const sort = wrapper.get<HTMLButtonElement>(".ref-table-sort-button");
+    expect(sort.element).toHaveAccessibleName("Application");
+    expect(wrapper.get("th").findAll("button")).toHaveLength(2);
+    for (const [key, code] of [
+      ["Enter", "Enter"],
+      [" ", "Space"],
+    ]) {
+      const event = new KeyboardEvent("keydown", { key, code, bubbles: true, cancelable: true });
+      sort.element.dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(false);
+    }
+    await sort.trigger("click");
+    expect(wrapper.emitted("sort")).toEqual([[{ sortField: "label", sortOrder: 1 }]]);
+    expect(wrapper.findAll("tbody td").map((cell) => cell.text())).toEqual(["Alpha", "Bravo"]);
+    await wrapper.get('th button[type="button"]:not(.ref-table-sort-button)').trigger("click");
+    expect(wrapper.emitted("sort")).toHaveLength(1);
+    wrapper.unmount();
+  });
+
   it("applique une largeur depuis le formulaire sans tri ni pagination", async () => {
     const wrapper = mount(RefAppTable, {
       props: {

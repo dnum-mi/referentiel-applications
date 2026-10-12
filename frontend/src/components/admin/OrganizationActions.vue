@@ -14,6 +14,7 @@ import type {
 import { useToasterStore } from "@/stores/toasterStore";
 import { backendErrorMessage } from "@/utils/api-error";
 import { computed, ref } from "vue";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 interface BadRequestResponse {
   error: string;
@@ -34,6 +35,7 @@ const toaster = useToasterStore();
 const isEditModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
 const isSaving = ref(false);
+useSubmissionFocus(isSaving);
 const isDeleting = ref(false);
 const errorMessage = ref("");
 const isCreateMode = computed(() => !props.organization?.id);
@@ -284,6 +286,7 @@ async function deleteOrganization() {
     :data-testid="isCreateMode ? 'admin-create-organization-modal' : 'admin-edit-organization-modal'"
     @close="closeEditModal"
   >
+    <p class="fr-text--sm fr-mb-3w" data-testid="required-fields-hint">* = champs obligatoires</p>
     <DsfrInputGroup
       v-model="form.path"
       class="fr-mb-2w"

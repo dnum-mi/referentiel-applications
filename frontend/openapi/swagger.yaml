@@ -12387,3 +12387,125 @@ components:
 security:
   - oauth2: []
   - api_key: []
+x-refapp-documentation-language:
+  default: fr
+  englishTexts:
+    - Application ID
+    - Array of results
+    - Backend version
+    - Building (optional)
+    - Business division
+    - Business divisions MOA for the application
+    - Business maturity score (1-5). Omit / null = not rated.
+    - Compliance created or updated successfully
+    - Compliance found successfully
+    - Compliance updated successfully
+    - Cost containment score (1-5). Omit / null = not rated.
+    - Create a new compliance for an application
+    - Create a new hosting option
+    - Create a new link for an application
+    - Create technical debt info for an application
+    - Current status of the application
+    - Current status of the application with full details
+    - DIMA business impact of interruption
+    - DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
+    - DIMA last test date
+    - DIMA recovery manager
+    - DIMA recovery plan exists
+    - DIMA recovery solutions
+    - DIMA test result
+    - DSFR implemented
+    - DSFR version used
+    - Data application deleted successfully
+    - Data description deleted successfully
+    - Delete a link for an application
+    - Delete hosting option by ID
+    - Description of the application
+    - Description of the link
+    - EcoIndex greenhouse gas emissions (gCO2e)
+    - EcoIndex last calculation datetime
+    - EcoIndex score (0-100)
+    - EcoIndex target URL used for scan
+    - EcoIndex water consumption (cl)
+    - Environment label displayed in the header badge
+    - Exposure deleted successfully
+    - Footer links to display in the application footer
+    - Get all hosting options with optional filtering
+    - Get application greeting
+    - Get list of links for an application
+    - Homologation RSSI actor ID
+    - Homologation date end
+    - Homologation status
+    - Hosting option already exists
+    - Hosting option created successfully
+    - Hosting option deleted successfully
+    - Hosting option not found
+    - Hosting option updated successfully
+    - ID of the application
+    - ID of the application to which the label belongs
+    - ID of the hosting option
+    - ID of the label
+    - ID of the link to delete
+    - ID of the link to update
+    - Indicates whether the hosting is active, passif or not specified (null).
+    - Label of the application
+    - Link URL
+    - Link created successfully
+    - Link deleted successfully
+    - Link label
+    - Link title (tooltip)
+    - Link updated successfully
+    - List of links for the application
+    - Logo URL of the application
+    - Month in YYYY-MM format
+    - OAuth2 authentication using OIDC
+    - OIDC client ID
+    - OIDC configuration URL
+    - OIDC scopes requested by the frontend
+    - Optional description of the link
+    - PDMA backup frequency
+    - PDMA backup method used
+    - PDMA backup storage
+    - PDMA data types concerned
+    - PDMA duration in hours (one of 48, 24, 2, 0)
+    - PDMA last test date
+    - PDMA restoration manager
+    - PDMA test result
+    - Paginated list of hosting options
+    - Platform name
+    - Provider name
+    - Purposes of the application
+    - RGPD DPO name
+    - RGPD has AIPD
+    - Retrieve links for an application
+    - Retrieve the compliance for an application
+    - Retrieve the technical debt info for an application
+    - Returns a greeting message.
+    - Returns a simple greeting message from the application.
+    - Room (optional)
+    - Send Notification Email
+    - Short name of the application
+    - Source name
+    - Technical debt info already exists for this application
+    - Technical debt info created successfully
+    - Technical debt info found successfully
+    - Technical debt information for the application
+    - Technical maturity score (1-5). Omit / null = not rated.
+    - The URL of the link
+    - The user who reported the issue
+    - Token authentication
+    - Total number of applications for the month
+    - Total number of items
+    - Type of the application
+    - Type of the external resource
+    - URL of the application logo
+    - Unique identifier
+    - Unique identifier of the compliance record
+    - Unique identifier of the hosting option
+    - Unique identifier of the label source
+    - Unique identifier of the link
+    - Update a link for an application
+    - Update hosting option by ID
+    - Update the compliance for an application
+    - Value of the label
+    - population associated with the application

@@ -114,13 +114,13 @@ describe("RelationModal", () => {
     wrapper.findAllComponents(SuggestionsInput)[0].vm.$emit("update:selectedValue", relation.targetApplication);
     await wrapper.setProps({ opened: false });
     await wrapper.setProps({ opened: true });
-    expect(wrapper.get('[role="alert"]').isVisible()).toBe(false);
+    expect(wrapper.get('[role="alert"]').text()).toBe("");
     await wrapper.get('[data-testid="relation-save-btn"]').trigger("click");
     expect(wrapper.emitted("addRelation")).toBeUndefined();
     expect(wrapper.get('[role="alert"]').text()).toBe("L'application cible est requise.");
     await wrapper.setProps({ opened: false });
     await wrapper.setProps({ opened: true });
-    expect(wrapper.get('[role="alert"]').isVisible()).toBe(false);
+    expect(wrapper.get('[role="alert"]').text()).toBe("");
     wrapper.unmount();
   });
 

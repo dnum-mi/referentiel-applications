@@ -1,15 +1,16 @@
 # Protocole de non-régression — Accessibilité RGAA (`RGA-`)
 
 > Parcours de non-régression associés aux critères **7.1**, **7.3**, **7.5**, **10.7**, **11.1**,
-> **12.8** et **12.9** : formulaires, dialogues, recherche, pagination et filtres mobiles.
-> RGA-06 nécessite l'application `QA-GROUP-PARENT` ; RGA-08 nécessite plusieurs pages de résultats.
+> **12.1**, **12.3**, **12.6**, **12.7**, **12.8** et **12.9** : formulaires, dialogues, recherche,
+> pagination, filtres mobiles, navigation publique, plan du site et exports.
+> RGA-06 et RGA-13 nécessitent l'application `QA-GROUP-PARENT` ; RGA-08 nécessite plusieurs pages de résultats.
 > La configuration `playwright.rgaa.config.ts` réutilise les données présentes sans réinitialisation
 > ni provisionnement. Session par défaut : `admin` / `pass`.
 
 | Légende           |                                          |
 | :---------------- | :--------------------------------------- |
 | **Automatisé** ✅ | `e2e/tests/rgaa.spec.ts`                 |
-| **Périmètre**     | 12 scénarios par navigateur (POM strict) |
+| **Périmètre**     | 19 scénarios par navigateur (POM strict) |
 
 Ces contrôles de comportement ne constituent pas une validation intégrale des critères RGAA.
 La restitution effective avec les lecteurs d'écran de l'environnement de test reste à qualifier.
@@ -43,7 +44,7 @@ La restitution effective avec les lecteurs d'écran de l'environnement de test r
 
 ### RGA-05 — Dialogue de recherche mobile ✅
 
-- **Action** : ouvrir la recherche mobile au clavier, parcourir ses commandes puis fermer avec Échap.
+- **Action** : ouvrir la recherche mobile au clavier depuis son bouton puis depuis le raccourci « Aller à la recherche », parcourir ses commandes puis fermer avec Échap.
 - **Résultat attendu** : le focus reste dans le dialogue ouvert et revient sur le bouton d'ouverture à la fermeture.
 
 ### RGA-06 — Suggestions de relation au clavier ✅
@@ -67,3 +68,24 @@ La restitution effective avec les lecteurs d'écran de l'environnement de test r
 
 - **Action** : ouvrir et fermer les filtres à 375 pixels avec Entrée et Espace, parcourir le début du panneau au clavier, le refermer à la souris alors qu'un filtre possède le focus, puis réduire la fenêtre alors qu'un filtre possède le focus.
 - **Résultat attendu** : le panneau est initialement replié ; son bouton expose son état et le panneau contrôlé. Une fois ouvert, il précède les résultats sans les recouvrir. Le repli lors du redimensionnement restitue le focus au bouton.
+
+### RGA-10 — Accès rapide à la navigation publique et connectée ✅
+
+- **Action** : activer « Aller à la navigation » au clavier à 1 280 puis 320 pixels, sans session puis connecté.
+- **Résultat attendu** : le premier lien du menu reçoit le focus sur grand écran. Sur mobile, le bouton Menu reçoit le focus ; Entrée ouvre le menu et Échap le ferme en rendant le focus au bouton. Une fois le menu fermé, Échap depuis un autre lien conserve le focus sur ce lien.
+
+### RGA-11 — Plan du site public et accès rapide au contenu ✅
+
+- **Action** : ouvrir le plan du site sans session, utiliser l'accès rapide au contenu, activer ses liens au clavier, puis utiliser le raccourci vers le pied de page.
+- **Résultat attendu** : le plan propose Accueil et Accessibilité sans liens techniques OIDC. La tabulation après le raccourci contenu rejoint le premier lien du plan ; chaque lien mène à la page annoncée.
+
+### RGA-12 — Destinations du plan connecté et gabarit commun ✅
+
+- **Action** : connecté comme administrateur, activer successivement tous les liens publiés dans le plan du site et y revenir par le pied de page.
+- **Résultat attendu** : chaque destination correspond à son intitulé et reste dans l'application ; les liens techniques OIDC sont absents. Le menu, la recherche et le lien Plan du site restent disponibles, avec le même ordre en-tête, navigation, contenu et pied de page.
+
+### RGA-13 — Focus lors de l’export d’une fiche produit ✅
+
+- **Datafeature** : application existante `QA-GROUP-PARENT` ; réponses d’export interceptées, sans appel métier au serveur.
+- **Action** : lancer l’export HTML avec Entrée, tenter une seconde activation pendant l’attente, recevoir une erreur simulée, puis réessayer avec un téléchargement simulé réussi.
+- **Résultat attendu** : la commande expose son indisponibilité et garde le focus pendant l’attente et après la réponse ; aucun export concurrent ne part. L’erreur est visible, puis la nouvelle tentative télécharge le fichier HTML attendu en conservant le focus.

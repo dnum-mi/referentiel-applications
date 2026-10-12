@@ -435,16 +435,16 @@ async function handleSubmit() {
     data-testid="data-application-modal"
     @close="$emit('close')"
   >
-    <DsfrAlert
-      v-show="props.initialItem && props.errorMessage.length > 0"
-      class="mb-4"
-      tabindex="-1"
-      type="error"
-      role="alert"
-      aria-live="assertive"
-      title="Une erreur est survenue"
-      :description="props.errorMessage"
-    />
+    <div role="alert" aria-live="assertive" aria-atomic="true">
+      <DsfrAlert
+        v-if="props.initialItem && props.errorMessage.length > 0"
+        class="mb-4"
+        tabindex="-1"
+        type="error"
+        title="Une erreur est survenue"
+        :description="props.errorMessage"
+      />
+    </div>
     <form ref="formElement" data-testid="data-application-form" @submit.prevent="handleSubmit">
       <p class="fr-text--sm fr-mb-2w" data-testid="required-fields-hint">Les champs obligatoires sont indiqués dans leur étiquette.</p>
 

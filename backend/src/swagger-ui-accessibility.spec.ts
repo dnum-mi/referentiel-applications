@@ -60,6 +60,125 @@ function browserTestContext(context: Record<string, unknown> = {}) {
 }
 
 describe("Swagger accessibility plugin", () => {
+  it("marks authored French and English text without forcing a language on Swagger's interface", () => {
+    const specification = {
+      toJS: jest.fn().mockReturnValue({
+        info: { description: "Texte français" },
+        paths: { "/test": { get: { summary: "Read the application" } } },
+        "x-refapp-documentation-language": {
+          default: "fr",
+          englishTexts: ["Read the application"],
+        },
+      }),
+    };
+    const plugin = swaggerAccessibilityPlugin({
+      React: createReactFixture(),
+      specSelectors: { specJson: () => specification },
+    });
+    const Original = () => null;
+    const Markdown = plugin.wrapComponents.Markdown(Original);
+    expect(
+      (Markdown({ source: "Texte\n français" }) as RenderedElement).props.lang,
+    ).toBe("fr");
+    expect(
+      (Markdown({ source: "Read the application" }) as RenderedElement).props
+        .lang,
+    ).toBe("en");
+    expect(
+      (Markdown({ source: "Swagger interface help" }) as RenderedElement)
+        .component,
+    ).toBe(Original);
+    expect(specification.toJS).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves a third-party specification without RefApp language metadata unchanged", () => {
+    const plugin = swaggerAccessibilityPlugin({
+      React: createReactFixture(),
+      specSelectors: {
+        specJson: () => ({
+          toJS: () => ({ info: { description: "English documentation" } }),
+        }),
+      },
+    });
+    const Original = () => null;
+    const Markdown = plugin.wrapComponents.Markdown(Original);
+    expect(
+      (Markdown({ source: "English documentation" }) as RenderedElement)
+        .component,
+    ).toBe(Original);
+  });
+
+  it("makes API groups and the global schema section sibling level-two headings", () => {
+    const plugin = swaggerAccessibilityPlugin({ React: createReactFixture() });
+    const Layout = plugin.wrapComponents.BaseLayout(() => null);
+    const layout = new Layout({});
+    const apiGroup = { textContent: "Applications", setAttribute: jest.fn() };
+    const schemas = { textContent: "Schemas", setAttribute: jest.fn() };
+    layout.container.current = {
+      querySelectorAll: (selector: string) =>
+        selector.includes("opblock-tag") ? [apiGroup, schemas] : [],
+    } as unknown as HTMLElement;
+    layout.componentDidUpdate();
+    for (const heading of [apiGroup, schemas]) {
+      expect(heading.setAttribute).toHaveBeenCalledWith("role", "heading");
+      expect(heading.setAttribute).toHaveBeenCalledWith("aria-level", "2");
+    }
+    expect(apiGroup.textContent).toBe("Applications");
+    expect(schemas.textContent).toBe("Schemas");
+  });
+
+  it.each([true, false])(
+    "uses the document's complete sprite only when already provided: %s",
+    (provided) => {
+      const pluginFactory = runInNewContext(
+        `(${swaggerAccessibilityPlugin.toString()})`,
+        browserTestContext({
+          document: {
+            getElementById: () =>
+              provided ? { tagName: "symbol", closest: () => null } : null,
+          },
+        }),
+      ) as typeof swaggerAccessibilityPlugin;
+      const plugin = pluginFactory({ React: createReactFixture() });
+      const Original = () => null;
+      const Assets = plugin.wrapComponents.SvgAssets(Original);
+      const rendered = Assets({});
+      if (provided) expect(rendered).toBeNull();
+      else expect((rendered as RenderedElement).component).toBe(Original);
+    },
+  );
+
+  it("reassociates parameter headings and new headers after an expansion update", () => {
+    const plugin = swaggerAccessibilityPlugin({ React: createReactFixture() });
+    const Parameters = plugin.wrapComponents.parameters(() => null);
+    const parameters = new Parameters({});
+    const heading = { id: "" };
+    const headers = [{ scope: "" }, { scope: "" }];
+    const table = {
+      closest: () => ({ querySelector: () => heading }),
+      setAttribute: jest.fn(),
+      querySelectorAll: () => headers,
+    };
+    parameters.container.current = {
+      querySelectorAll: () => [table],
+    } as unknown as HTMLElement;
+    parameters.componentDidMount();
+    const headingId = heading.id;
+    expect(headingId).toBeTruthy();
+    expect(table.setAttribute).toHaveBeenCalledWith(
+      "aria-labelledby",
+      headingId,
+    );
+    expect(headers.map((header) => header.scope)).toEqual(["col", "col"]);
+    headers.splice(0, headers.length, { scope: "" }, { scope: "" });
+    parameters.componentDidUpdate();
+    expect(heading.id).toBe(headingId);
+    expect(table.setAttribute).toHaveBeenLastCalledWith(
+      "aria-labelledby",
+      headingId,
+    );
+    expect(headers.map((header) => header.scope)).toEqual(["col", "col"]);
+  });
   it.each(["Apply credentials", "Apply given OAuth2 credentials"])(
     "keeps the visible Authorize text in the name %s without changing the action",
     (name) => {
@@ -132,7 +251,8 @@ describe("Swagger accessibility plugin", () => {
         }),
       },
     }) as RenderedElement;
-    const lookup = rendered.props.getComponent as (
+    const content = rendered.props.content as RenderedElement;
+    const lookup = content.props.getComponent as (
       name: string,
     ) => (props: Props) => RenderedElement;
     const actions = lookup("CopyToClipboardBtn")({ textToCopy: "/campaigns" });
@@ -152,7 +272,7 @@ describe("Swagger accessibility plugin", () => {
       props: { textToCopy: "/campaigns" },
       children: [],
     });
-    expect(rendered.props.toggleShown).toBe(toggleShown);
+    expect(content.props.toggleShown).toBe(toggleShown);
   });
 
   it("names the dialog and wraps the original authorizations with their original props", () => {
@@ -429,6 +549,10 @@ describe("Swagger accessibility integration", () => {
       "authorizeOperationBtn",
       "authorizationPopup",
       "responses",
+      "parameters",
+      "SvgAssets",
+      "BaseLayout",
+      "Markdown",
       "OperationSummaryPath",
       "OperationSummary",
       "Button",

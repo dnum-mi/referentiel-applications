@@ -30,6 +30,7 @@ interface SwaggerReact {
 
 interface SwaggerSystem {
   React: SwaggerReact;
+  specSelectors?: { specJson(): { toJS(): unknown } };
 }
 
 // Swagger UI's existing browser bundle; the declaration emits no server code.
@@ -47,6 +48,135 @@ export function swaggerAccessibilityPlugin(system: SwaggerSystem) {
   const React = system.React;
   let headingIndex = 0;
   let authorizationTrigger: HTMLElement | null = null;
+  let languageSpecification: object | undefined;
+  let defaultDocumentationLanguage: string | undefined;
+  let authoredTexts = new Set<string>();
+  let englishTexts = new Set<string>();
+
+  const normalizedText = (text: string) => text.replaceAll(/\s+/g, " ").trim();
+
+  function authoredTextLanguage(text: string) {
+    const specification = system.specSelectors?.specJson();
+    if (!specification) return undefined;
+    if (specification !== languageSpecification) {
+      languageSpecification = specification;
+      authoredTexts = new Set();
+      englishTexts = new Set();
+      defaultDocumentationLanguage = undefined;
+      const value = specification.toJS();
+      if (!value || typeof value !== "object") return undefined;
+      const document = value as Record<string, unknown>;
+      const metadata = document["x-refapp-documentation-language"];
+      if (!metadata || typeof metadata !== "object") return undefined;
+      const languages = metadata as Record<string, unknown>;
+      if (languages.default !== "fr" && languages.default !== "en")
+        return undefined;
+      defaultDocumentationLanguage = languages.default;
+      if (Array.isArray(languages.englishTexts)) {
+        englishTexts = new Set(
+          languages.englishTexts
+            .filter((entry): entry is string => typeof entry === "string")
+            .map(normalizedText),
+        );
+      }
+      const collect = (value: unknown) => {
+        if (!value || typeof value !== "object") return;
+        for (const [key, child] of Object.entries(value)) {
+          if (
+            ["title", "summary", "description"].includes(key) &&
+            typeof child === "string"
+          ) {
+            authoredTexts.add(normalizedText(child));
+          }
+          collect(child);
+        }
+      };
+      collect(document);
+    }
+    const value = normalizedText(text);
+    return authoredTexts.has(value)
+      ? englishTexts.has(value)
+        ? "en"
+        : defaultDocumentationLanguage
+      : undefined;
+  }
+
+  function wrapDocumentationLayout(Original: SwaggerComponent) {
+    return class AccessibleDocumentationLayout extends React.Component {
+      container = React.createRef<HTMLElement>();
+      observer: MutationObserver | null = null;
+
+      updateLanguage = () => {
+        for (const heading of Array.from(
+          this.container.current?.querySelectorAll<HTMLElement>(
+            "h3.opblock-tag, section.models > h4",
+          ) ?? [],
+        )) {
+          heading.setAttribute("role", "heading");
+          heading.setAttribute("aria-level", "2");
+        }
+        for (const element of Array.from(
+          this.container.current?.querySelectorAll<HTMLElement>(
+            ".info .title, .opblock-summary-description",
+          ) ?? [],
+        )) {
+          const text = element.matches(".info .title")
+            ? Array.from(element.childNodes)
+                .filter((node) => node.nodeType === Node.TEXT_NODE)
+                .map((node) => node.textContent ?? "")
+                .join("")
+            : (element.textContent ?? "");
+          const language = authoredTextLanguage(text);
+          if (language) element.lang = language;
+          else element.removeAttribute("lang");
+        }
+      };
+
+      componentDidMount() {
+        this.updateLanguage();
+        if (!this.container.current) return;
+        this.observer = new MutationObserver(this.updateLanguage);
+        this.observer.observe(this.container.current, {
+          childList: true,
+          characterData: true,
+          subtree: true,
+        });
+      }
+
+      componentDidUpdate() {
+        this.updateLanguage();
+      }
+
+      componentWillUnmount() {
+        this.observer?.disconnect();
+      }
+
+      render() {
+        return React.createElement(
+          "div",
+          { ref: this.container, style: { display: "contents" } },
+          React.createElement(Original, this.props),
+        );
+      }
+    };
+  }
+
+  function wrapDocumentationMarkdown(Original: SwaggerComponent) {
+    return (props: SwaggerProps) => {
+      const language =
+        typeof props.source === "string"
+          ? authoredTextLanguage(props.source)
+          : undefined;
+      const content = React.createElement(Original, props);
+      return language
+        ? React.createElement(
+            "div",
+            { lang: language, style: { display: "contents" } },
+            content,
+          )
+        : content;
+    };
+  }
 
   function wrapAuthorizeButton(Original: SwaggerComponent) {
     return (props: SwaggerProps) =>
@@ -88,6 +218,7 @@ export function swaggerAccessibilityPlugin(system: SwaggerSystem) {
           label.className = "refapp-swagger-url-label";
           label.htmlFor = input.id;
           label.textContent = "URL de la spécification OpenAPI";
+          label.lang = "fr";
           input.before(label);
         }
       };
@@ -334,6 +465,73 @@ export function swaggerAccessibilityPlugin(system: SwaggerSystem) {
     };
   }
 
+  function wrapParameters(Original: SwaggerComponent) {
+    return class AccessibleParameters extends React.Component {
+      container = React.createRef<HTMLElement>();
+
+      updateHeaders() {
+        const container = this.container.current;
+        if (!container) return;
+        for (const table of Array.from(
+          container.querySelectorAll<HTMLTableElement>("table"),
+        )) {
+          const heading = table
+            .closest(".opblock-section")
+            ?.querySelector<HTMLElement>(".opblock-section-header h4");
+          if (heading) {
+            heading.id ||= `refapp-swagger-parameters-heading-${++headingIndex}`;
+            table.setAttribute("aria-labelledby", heading.id);
+          }
+          for (const header of Array.from(
+            table.querySelectorAll<HTMLTableCellElement>("thead th"),
+          )) {
+            header.scope = "col";
+          }
+        }
+      }
+
+      componentDidMount() {
+        this.updateHeaders();
+      }
+
+      componentDidUpdate() {
+        this.updateHeaders();
+      }
+
+      render() {
+        return React.createElement(
+          "div",
+          { ref: this.container },
+          React.createElement(Original, this.props),
+        );
+      }
+    };
+  }
+
+  function wrapSvgAssets(Original: SwaggerComponent) {
+    return (props: SwaggerProps) => {
+      // Nest already provides Swagger UI's sprite outside the React root.
+      // Keep one definition of each symbol; the existing use hrefs still resolve.
+      const symbolIds = [
+        "unlocked",
+        "locked",
+        "close",
+        "large-arrow",
+        "large-arrow-down",
+        "jump-to",
+        "expand",
+      ];
+      const provided = symbolIds.every((id) => {
+        const symbol = document.getElementById(id);
+        return (
+          symbol?.tagName.toLowerCase() === "symbol" &&
+          !symbol.closest("#swagger-ui")
+        );
+      });
+      return provided ? null : React.createElement(Original, props);
+    };
+  }
+
   function wrapOperationSummaryPath(Original: SwaggerComponent) {
     return (props: SwaggerProps) => {
       const getComponent = props.getComponent as SwaggerGetComponent;
@@ -348,13 +546,78 @@ export function swaggerAccessibilityPlugin(system: SwaggerSystem) {
   }
 
   function wrapOperationSummary(Original: SwaggerComponent) {
+    class AccessibleSummaryMarkup extends React.Component {
+      container = React.createRef<HTMLElement>();
+      replacements = new Map<HTMLElement, HTMLElement>();
+
+      restoreMarkup() {
+        for (const [replacement, original] of this.replacements) {
+          while (replacement.firstChild)
+            original.appendChild(replacement.firstChild);
+          replacement.replaceWith(original);
+        }
+        this.replacements.clear();
+      }
+
+      updateMarkup() {
+        for (const original of Array.from(
+          this.container.current?.querySelectorAll<HTMLElement>(
+            "button.opblock-summary-control div",
+          ) ?? [],
+        )) {
+          const replacement = original.ownerDocument.createElement("span");
+          for (const attribute of Array.from(original.attributes)) {
+            replacement.setAttribute(attribute.name, attribute.value);
+          }
+          // Keep the visual layout while using phrasing content inside a button.
+          replacement.style.display = getComputedStyle(original).display;
+          while (original.firstChild)
+            replacement.appendChild(original.firstChild);
+          original.replaceWith(replacement);
+          this.replacements.set(replacement, original);
+        }
+      }
+
+      componentDidMount() {
+        this.updateMarkup();
+      }
+
+      getSnapshotBeforeUpdate() {
+        this.restoreMarkup();
+        return null;
+      }
+
+      componentDidUpdate() {
+        this.updateMarkup();
+      }
+
+      componentWillUnmount() {
+        this.restoreMarkup();
+      }
+
+      render() {
+        return React.createElement(
+          "div",
+          {
+            ref: this.container,
+            role: "heading",
+            "aria-level": "3",
+            style: { display: "contents" },
+          },
+          this.props.content,
+        );
+      }
+    }
+
     return (props: SwaggerProps) => {
       const getComponent = props.getComponent as SwaggerGetComponent;
       const operation = (
         props.operationProps as { toObject(): SwaggerOperation }
       ).toObject();
       if (!operation.isDeepLinkingEnabled) {
-        return React.createElement(Original, props);
+        return React.createElement(AccessibleSummaryMarkup, {
+          content: React.createElement(Original, props),
+        });
       }
       const Copy = getComponent("CopyToClipboardBtn", true);
       // Match Swagger's createDeepLinkPath, including spaces in operation tags.
@@ -371,6 +634,7 @@ export function swaggerAccessibilityPlugin(system: SwaggerSystem) {
               className: "refapp-swagger-permalink",
               href: `#/${path}`,
               "aria-label": `Lien direct vers ${operation.method.toUpperCase()} ${operation.path}`,
+              lang: "fr",
               onClick: (event: MouseEvent) => {
                 if (
                   event.button > 0 ||
@@ -387,12 +651,14 @@ export function swaggerAccessibilityPlugin(system: SwaggerSystem) {
           ),
           React.createElement(Copy, copyProps),
         );
-      return React.createElement(Original, {
-        ...props,
-        getComponent: (name: string, ...args: unknown[]) =>
-          name === "CopyToClipboardBtn"
-            ? CopyAndPermalink
-            : getComponent(name, ...args),
+      return React.createElement(AccessibleSummaryMarkup, {
+        content: React.createElement(Original, {
+          ...props,
+          getComponent: (name: string, ...args: unknown[]) =>
+            name === "CopyToClipboardBtn"
+              ? CopyAndPermalink
+              : getComponent(name, ...args),
+        }),
       });
     };
   }
@@ -404,6 +670,10 @@ export function swaggerAccessibilityPlugin(system: SwaggerSystem) {
       authorizeOperationBtn: wrapAuthorizeButton,
       authorizationPopup: wrapAuthorizationPopup,
       responses: wrapResponses,
+      parameters: wrapParameters,
+      SvgAssets: wrapSvgAssets,
+      BaseLayout: wrapDocumentationLayout,
+      Markdown: wrapDocumentationMarkdown,
       OperationSummaryPath: wrapOperationSummaryPath,
       OperationSummary: wrapOperationSummary,
       Button: (Original: SwaggerComponent) => (props: SwaggerProps) => {

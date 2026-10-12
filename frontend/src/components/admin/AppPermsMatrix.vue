@@ -7,6 +7,7 @@ import api from "@/api/index";
 import type { AppPermsDto, CreateActorTypeDto } from "@/client/types.gen";
 import AppPermsMatrixHistory from "./AppPermsMatrixHistory.vue";
 import PermissionWritePriorityRestart from "../PermissionWritePriorityRestart.vue";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps<{
   appPermsMatrix: AppPermsDto[];
@@ -107,9 +108,12 @@ const isHistoryModalOpen = ref(false);
 
 const isCreateActorTypeModalOpen = ref(false);
 const isCreatingActorType = ref(false);
+const createActorTypeError = ref("");
+useSubmissionFocus(isCreatingActorType);
 const newActorTypeForm = ref<CreateActorTypeDto>({ code: "", label: "", description: "" });
 
 function openCreateActorTypeModal() {
+  createActorTypeError.value = "";
   newActorTypeForm.value = { code: "", label: "", description: "" };
   isCreateActorTypeModalOpen.value = true;
 }
@@ -121,6 +125,7 @@ function closeCreateActorTypeModal() {
 const isNewActorTypeFormValid = computed(() => newActorTypeForm.value.code.trim() !== "" && newActorTypeForm.value.label.trim() !== "");
 
 async function createActorType() {
+  createActorTypeError.value = "";
   isCreatingActorType.value = true;
   try {
     const response = await api.actorTypeControllerCreate({
@@ -140,11 +145,11 @@ async function createActorType() {
       await actorTypeStore.fetchAll(true);
       emits("reload");
     } else {
-      toaster.addErrorMessage("Erreur lors de la création du type d'acteur");
+      createActorTypeError.value = "Erreur lors de la création du type d'acteur. Votre saisie est conservée.";
     }
   } catch (error) {
     console.error("Error creating actor type:", error);
-    toaster.addErrorMessage("Erreur lors de la création du type d'acteur");
+    createActorTypeError.value = "Erreur lors de la création du type d'acteur. Votre saisie est conservée.";
   } finally {
     isCreatingActorType.value = false;
   }
@@ -302,6 +307,10 @@ async function createActorType() {
     data-testid="create-actor-type-modal"
     @close="closeCreateActorTypeModal"
   >
+    <p class="fr-text--sm fr-mb-3w" data-testid="required-fields-hint">* = champs obligatoires</p>
+    <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="create-actor-type-error">
+      <p v-if="createActorTypeError" class="fr-error-text">{{ createActorTypeError }}</p>
+    </div>
     <DsfrInput
       v-model="newActorTypeForm.code"
       label="Code"

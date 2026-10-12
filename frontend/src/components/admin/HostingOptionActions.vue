@@ -4,6 +4,7 @@ import { computed, reactive, ref } from "vue";
 import type { CreateHostingOptionDto, HostingOptionWithUsageDto } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
 import api from "@/api";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps<{
   hostingOption?: HostingOptionWithUsageDto;
@@ -30,6 +31,7 @@ const isEditing = computed(() => !!props.hostingOption?.id);
 const isEditModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
 const isSaving = ref(false);
+useSubmissionFocus(isSaving);
 const isDeleting = ref(false);
 const errorMessage = ref("");
 const form = reactive<HostingOptionForm>({ provider: "", platform: "", site: "", building: "", room: "" });
@@ -144,6 +146,7 @@ async function deleteHostingOption() {
     @close="closeEditModal"
   >
     <form id="hosting-option-form" @submit.prevent="isFormValid && !isSaving && saveHostingOption()">
+      <p class="fr-text--sm fr-mb-3w" data-testid="required-fields-hint">* = champs obligatoires</p>
       <DsfrInputGroup
         v-for="field in fields"
         :key="field.key"

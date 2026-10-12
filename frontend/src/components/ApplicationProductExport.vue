@@ -29,26 +29,28 @@ async function exportProduct(format: "PowerPoint" | "HTML") {
 <template>
   <div class="product-exports" role="group" aria-label="Exporter la fiche produit">
     <DsfrButton
+      type="button"
       class="fr-btn--tertiary-no-outline fr-btn--icon-left fr-icon-download-line"
       data-testid="application-export-powerpoint-btn"
-      :disabled="isExporting"
+      :aria-disabled="isExporting"
       :aria-busy="isExporting"
       @click="exportProduct('PowerPoint')"
     >
       Exporter la fiche produit en PowerPoint
     </DsfrButton>
     <DsfrButton
+      type="button"
       class="fr-btn--tertiary-no-outline fr-btn--icon-left fr-icon-download-line"
       data-testid="application-export-html-btn"
-      :disabled="isExporting"
+      :aria-disabled="isExporting"
       :aria-busy="isExporting"
       @click="exportProduct('HTML')"
     >
       Exporter la fiche produit en HTML
     </DsfrButton>
-    <p class="fr-sr-only" role="status" aria-live="polite">
+    <output class="fr-sr-only" aria-live="polite">
       {{ exportingFormat ? `Préparation ${exportingFormat === "PowerPoint" ? "du PowerPoint" : "de la fiche HTML"}…` : "" }}
-    </p>
+    </output>
   </div>
 </template>
 
@@ -57,5 +59,10 @@ async function exportProduct(format: "PowerPoint" | "HTML") {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+.product-exports .fr-btn[aria-disabled="true"] {
+  color: var(--text-disabled-grey);
+  cursor: progress;
 }
 </style>

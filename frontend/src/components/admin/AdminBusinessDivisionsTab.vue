@@ -77,7 +77,7 @@ onMounted(fetchBusinessDivisions);
 
 <template>
   <div class="header-row">
-    <h1 class="fr-h1" data-testid="admin-business-divisions-title">Gestion des directions métier</h1>
+    <h2 class="fr-h1" data-testid="admin-business-divisions-title">Gestion des directions métier</h2>
 
     <BusinessDivisionActions @fetch-business-divisions="fetchBusinessDivisions" />
   </div>

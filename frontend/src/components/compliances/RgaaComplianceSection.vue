@@ -9,6 +9,8 @@ import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn } from "@/types/table";
 import type { ApplicationWithPerms } from "@/models/Application";
 import { useAppPermission } from "@/composables/use-app-permission";
+import { isApiSuccess } from "@/api/api-result";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps<{ applicationId: string; appPerms: ApplicationWithPerms["myPerms"] }>();
 
@@ -16,9 +18,12 @@ const toaster = useToasterStore();
 
 const items = ref<RgaaComplianceDto[]>([]);
 const isLoading = ref(false);
+const loadError = ref("");
 const showModal = ref(false);
 const editingItem = ref<RgaaComplianceDto | null>(null);
 const submitting = ref(false);
+const formError = ref("");
+useSubmissionFocus(submitting);
 
 const form = ref<Record<string, string | number | undefined>>({});
 
@@ -61,11 +66,13 @@ function scoreLabel(score: number | undefined | null): string {
 
 async function load() {
   isLoading.value = true;
+  loadError.value = "";
   try {
     const res = await rgaaControllerFindAll({ path: { applicationId: props.applicationId } });
-    items.value = res.data ?? [];
+    if (!isApiSuccess(res) || !res.data) throw new Error("RGAA compliances unavailable");
+    items.value = res.data;
   } catch {
-    toaster.addErrorMessage("Erreur lors du chargement des conformités RGAA.");
+    loadError.value = "Erreur lors du chargement des conformités RGAA.";
   } finally {
     isLoading.value = false;
   }
@@ -74,23 +81,26 @@ async function load() {
 onMounted(load);
 
 function openCreate() {
+  formError.value = "";
   editingItem.value = null;
   form.value = {};
   showModal.value = true;
 }
 
 function openEdit(item: RgaaComplianceDto) {
+  formError.value = "";
   editingItem.value = item;
   form.value = {
     service_url: item.service_url || undefined,
     accessibility_url: item.accessibility_url || undefined,
-    score_percentage: item.score_percentage || undefined,
+    score_percentage: item.score_percentage ?? undefined,
     audit_date: toDateInputValue(item.audit_date) || undefined,
   };
   showModal.value = true;
 }
 
 function closeModal() {
+  formError.value = "";
   showModal.value = false;
   form.value = {};
   editingItem.value = null;
@@ -111,8 +121,9 @@ async function saveUpdate(payload: CreateRgaaComplianceDto, editing: RgaaComplia
     path: { applicationId: props.applicationId, id: editing.id },
     body: payload,
   });
+  if (!isApiSuccess(res) || !res.data) throw new Error("RGAA compliance update failed");
   const idx = items.value.findIndex((i) => i.id === editing.id);
-  if (idx !== -1 && res.data) items.value[idx] = res.data;
+  if (idx !== -1) items.value[idx] = res.data;
   toaster.addSuccessMessage("Conformité RGAA mise à jour avec succès !");
 }
 
@@ -121,17 +132,15 @@ async function saveCreate(payload: CreateRgaaComplianceDto) {
     path: { applicationId: props.applicationId },
     body: payload,
   });
-  if (res?.error?.message) {
-    toaster.addErrorMessage(res.error.message);
-  }
-  if (res.data) {
-    items.value.push(res.data);
-    statusMessage.value = "Conformité RGAA créée.";
-    toaster.addSuccessMessage("Conformité RGAA créée avec succès !");
-  }
+  if (!isApiSuccess(res) || !res.data) throw new Error("RGAA compliance creation failed");
+  items.value.push(res.data);
+  statusMessage.value = "Conformité RGAA créée.";
+  toaster.addSuccessMessage("Conformité RGAA créée avec succès !");
 }
 
 async function save() {
+  if (submitting.value) return;
+  formError.value = "";
   submitting.value = true;
   const payload = buildPayload();
   const editing = editingItem.value;
@@ -144,9 +153,9 @@ async function save() {
     closeModal();
     focusAddButton();
   } catch {
-    toaster.addErrorMessage(
-      editing ? "Erreur lors de la modification de la conformité RGAA." : "Erreur lors de la création de la conformité RGAA.",
-    );
+    const message = editing ? "Erreur lors de la modification de la conformité RGAA." : "Erreur lors de la création de la conformité RGAA.";
+    if (showModal.value) formError.value = message;
+    else toaster.addErrorMessage(message);
   } finally {
     submitting.value = false;
   }
@@ -155,9 +164,10 @@ async function save() {
 async function remove(item: RgaaComplianceDto) {
   if (!confirm(`Supprimer la conformité RGAA pour « ${item.service_url ?? "ce site"} » ?`)) return;
   try {
-    await rgaaControllerDelete({
+    const response = await rgaaControllerDelete({
       path: { applicationId: props.applicationId, id: item.id },
     });
+    if (!isApiSuccess(response)) throw new Error("RGAA compliance deletion failed");
     items.value = items.value.filter((i) => i.id !== item.id);
     statusMessage.value = "Conformité RGAA supprimée.";
     toaster.addSuccessMessage("Conformité RGAA supprimée.");
@@ -170,7 +180,10 @@ async function remove(item: RgaaComplianceDto) {
 
 <template>
   <section data-testid="rgaa-section">
-    <p class="fr-sr-only" aria-live="polite" aria-atomic="true" data-testid="rgaa-status">{{ statusMessage }}</p>
+    <output class="fr-sr-only" aria-live="polite" aria-atomic="true" data-testid="rgaa-status">{{ statusMessage }}</output>
+    <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="rgaa-load-error">
+      <p v-if="loadError" class="fr-error-text">{{ loadError }}</p>
+    </div>
     <div class="fr-grid-row fr-grid-row--middle fr-justify-content-between fr-mb-2w">
       <h4 class="fr-mb-0">Conformités RGAA</h4>
       <DsfrButton
@@ -188,7 +201,7 @@ async function remove(item: RgaaComplianceDto) {
 
     <AppLoader v-if="isLoading" data-testid="rgaa-loader" />
 
-    <div v-else>
+    <div v-else-if="!loadError">
       <p v-if="items.length === 0" class="fr-text--sm fr-text--light" data-testid="rgaa-empty">
         Aucune conformité RGAA renseignée pour cette application.
       </p>
@@ -245,30 +258,53 @@ async function remove(item: RgaaComplianceDto) {
 
     <DsfrModal v-if="showModal" :title="modalTitle" :opened="showModal" @close="closeModal">
       <form @submit.prevent="save">
+        <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="rgaa-form-error">
+          <p v-if="formError" class="fr-error-text">{{ formError }}</p>
+        </div>
         <AppLoader v-if="submitting" />
-        <template v-else>
-          <DsfrInput v-model="form.service_url" label="URL du service" label-visible type="url" data-testid="rgaa-form-service-url" />
-          <DsfrInput
-            v-model="form.accessibility_url"
-            label="URL de la déclaration d'accessibilité"
-            label-visible
-            type="url"
-            data-testid="rgaa-form-accessibility-url"
-          />
-          <DsfrInput
-            v-model="form.score_percentage"
-            label="Score RGAA (%)"
-            label-visible
-            type="number"
-            input-mode="decimal"
-            min="0"
-            max="100"
-            step="0.01"
-            data-testid="rgaa-form-score"
-          />
-          <DsfrInput v-model="form.audit_date" label="Date d'audit" label-visible type="date" data-testid="rgaa-form-audit-date" />
-          <DsfrButton type="submit" label="Enregistrer" data-testid="rgaa-form-submit" />
-        </template>
+        <DsfrInput
+          v-model="form.service_url"
+          label="URL du service"
+          label-visible
+          type="url"
+          :disabled="submitting"
+          data-testid="rgaa-form-service-url"
+        />
+        <DsfrInput
+          v-model="form.accessibility_url"
+          label="URL de la déclaration d'accessibilité"
+          label-visible
+          type="url"
+          :disabled="submitting"
+          data-testid="rgaa-form-accessibility-url"
+        />
+        <DsfrInput
+          v-model="form.score_percentage"
+          label="Score RGAA (%)"
+          label-visible
+          type="number"
+          input-mode="decimal"
+          min="0"
+          max="100"
+          step="0.01"
+          :disabled="submitting"
+          data-testid="rgaa-form-score"
+        />
+        <DsfrInput
+          v-model="form.audit_date"
+          label="Date d'audit"
+          label-visible
+          type="date"
+          :disabled="submitting"
+          data-testid="rgaa-form-audit-date"
+        />
+        <DsfrButton
+          type="submit"
+          :label="submitting ? 'Enregistrement…' : 'Enregistrer'"
+          :disabled="submitting"
+          :aria-busy="submitting"
+          data-testid="rgaa-form-submit"
+        />
       </form>
     </DsfrModal>
   </section>

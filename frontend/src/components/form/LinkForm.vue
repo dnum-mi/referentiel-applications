@@ -3,6 +3,7 @@ import { ref, computed } from "vue";
 import type { PropType } from "vue";
 import type { LinkDto } from "@/client/types.gen";
 import { linkTypesDict } from "@/constants/dictionary";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps({
   initialData: {
@@ -16,6 +17,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["submit", "cancel"]);
+useSubmissionFocus(() => props.isSubmitting);
 
 const form = ref({ ...props.initialData });
 

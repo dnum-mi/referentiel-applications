@@ -43,6 +43,66 @@ export class ApplicationPage extends BasePage {
     await expect(this.root()).toBeVisible();
   }
 
+  /** Échec et nouvelle tentative simulés : aucun export ni journal métier côté serveur. */
+  async expectProductExportKeepsFocus(): Promise<void> {
+    const button = this.byTestId("application-export-html-btn");
+    let requestCount = 0;
+    let releaseResponse!: () => void;
+    const pendingResponse = new Promise<void>((resolve) => {
+      releaseResponse = resolve;
+    });
+    await this.page.route(
+      `**/api/v2/applications/${this.currentId}/export/html`,
+      async (route) => {
+        requestCount += 1;
+        await pendingResponse;
+        if (requestCount === 1) {
+          await route.fulfill({
+            status: 500,
+            contentType: "application/json",
+            body: JSON.stringify({
+              message: "Erreur simulée de qualification",
+            }),
+          });
+        } else {
+          await route.fulfill({
+            status: 200,
+            contentType: "text/html",
+            body: '<!doctype html><html lang="fr"><title>Fiche de test</title><main><h1>Fiche de test</h1></main></html>',
+          });
+        }
+      },
+    );
+    try {
+      await button.press("Enter");
+      await expect(button).toHaveAttribute("aria-busy", "true");
+      await expect(button).toHaveAttribute("aria-disabled", "true");
+      await expect(button).toBeFocused();
+      await this.page.keyboard.press("Enter");
+      releaseResponse();
+      await expect(button).toHaveAttribute("aria-busy", "false");
+      await expect(button).toBeFocused();
+      await expect(
+        this.page.getByRole("alert").filter({
+          hasText:
+            "Impossible d'exporter la fiche produit en HTML. Veuillez réessayer.",
+        }),
+      ).toBeVisible();
+      expect(requestCount).toBe(1);
+
+      const download = this.page.waitForEvent("download");
+      await button.press("Enter");
+      expect((await download).suggestedFilename()).toBe(
+        `fiche-produit-${this.currentId}.html`,
+      );
+      await expect(button).toHaveAttribute("aria-busy", "false");
+      await expect(button).toBeFocused();
+      expect(requestCount).toBe(2);
+    } finally {
+      releaseResponse();
+    }
+  }
+
   async expectTabActive(tab: AppTab): Promise<void> {
     await expect(this.tabContent(tab)).toBeVisible();
     await expect.poll(() => new URL(this.page.url()).pathname).toContain(tab);

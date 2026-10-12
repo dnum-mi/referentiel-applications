@@ -313,13 +313,21 @@ watch(
         :pt="{ headerCell: { 'data-column-field': column.field } }"
         :aria-label="column.header"
       >
-        <!-- RGAA-027 : en-tête personnalisé — soit le slot fourni par le parent, soit un bouton de tri accessible
-             (le th n'est plus focusable via pt.headerCell.tabindex ; le bouton déclenche le tri via requestSort). -->
+        <!-- Le bouton de tri reste distinct des commandes supplémentaires de l'en-tête.
+             PrimeVue ne doit pas annuler l'activation native du bouton avec Entrée ou Espace. -->
         <template v-if="$slots[`header-${column.field}`] || column.sortable" #header>
-          <slot v-if="$slots[`header-${column.field}`]" :name="`header-${column.field}`" />
-          <button v-else type="button" class="ref-table-sort-button" :title="sortTitle(column)" @click="requestSort(column)">
+          <button
+            v-if="column.sortable"
+            type="button"
+            class="ref-table-sort-button"
+            :title="sortTitle(column)"
+            @click="requestSort(column)"
+            @keydown.enter.stop
+            @keydown.space.stop
+          >
             {{ column.header }}
           </button>
+          <slot v-if="$slots[`header-${column.field}`]" :name="`header-${column.field}`" />
         </template>
         <template #body="slotProps">
           <Skeleton v-if="isSorting" width="80%" height="1rem" aria-label="Chargement en cours" />
@@ -475,7 +483,7 @@ watch(
    doux qu'un aplat bleu plein. Le style de PrimeVue est injecté dynamiquement en JS (useStyle) :
    comme pour les icônes de tri ci-dessus, seul `!important` le bat de façon fiable. */
 :deep(.p-checkbox-box) {
-  border-color: var(--border-default-grey) !important;
+  border-color: var(--text-mention-grey) !important;
 }
 
 :deep(.p-checkbox-box:hover) {
@@ -499,7 +507,8 @@ watch(
   color: var(--background-action-high-blue-france) !important;
 }
 
-:deep(.p-checkbox.p-focus .p-checkbox-box) {
+:deep(.p-checkbox.p-focus .p-checkbox-box),
+:deep(.p-checkbox:has(input:focus-visible) .p-checkbox-box) {
   outline-color: var(--background-action-high-blue-france) !important;
   box-shadow: 0 0 0 2px var(--background-action-high-blue-france) !important;
 }

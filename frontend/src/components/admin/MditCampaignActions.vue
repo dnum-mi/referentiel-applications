@@ -4,6 +4,7 @@ import { ref } from "vue";
 import type { MditCampaignDto } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
 import api from "@/api";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps<{
   campaign?: MditCampaignDto;
@@ -18,6 +19,7 @@ const toaster = useToasterStore();
 const isEditModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
 const isSaving = ref(false);
+useSubmissionFocus(isSaving);
 const isDeleting = ref(false);
 const editingYear = ref<number | undefined>(undefined);
 const editingLabel = ref<string>("");
@@ -134,6 +136,7 @@ async function deleteCampaign() {
     :data-testid="!campaign?.id ? 'admin-create-campaign-modal' : 'admin-edit-campaign-modal'"
     @close="closeEditModal"
   >
+    <p class="fr-text--sm fr-mb-3w" data-testid="required-fields-hint">* = champs obligatoires</p>
     <p class="fr-text--sm fr-hint-text fr-mb-3w" style="white-space: normal">
       Une campagne correspond à un millésime (année) de collecte de la dette IT. La campagne active la plus récente est présentée par défaut
       dans le diagramme Time.
@@ -195,7 +198,7 @@ async function deleteCampaign() {
           <DsfrButton
             :label="isSaving ? 'Enregistrement…' : 'Enregistrer'"
             title="Enregistrer"
-            aria-label="Enregistrer"
+            :aria-label="isSaving ? 'Enregistrement…' : 'Enregistrer'"
             :disabled="isSaving"
             data-testid="admin-campaign-save-btn"
             @click="saveCampaign"

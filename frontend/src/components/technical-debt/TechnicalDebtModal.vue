@@ -5,6 +5,7 @@ import type { TechnicalDebtInfoDto, CreateTechnicalDebtInfoDto } from "@/client/
 import { useToasterStore } from "@/stores/toasterStore";
 import { useMditCampaigns } from "@/composables/use-mdit-campaigns";
 import api from "@/api/index.js";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps<{
   applicationId: string;
@@ -18,6 +19,8 @@ const emit = defineEmits<{
 
 const toaster = useToasterStore();
 const isSubmitting = ref(false);
+const formError = ref("");
+useSubmissionFocus(isSubmitting);
 const isEditMode = computed(() => !!props.initialData);
 
 // Champ vide = score non noté (`null`). Une valeur saisie doit être comprise entre 1 et 5.
@@ -73,11 +76,13 @@ function isValidMillesime(value: string): boolean {
 }
 
 async function handleSubmit() {
+  if (isSubmitting.value) return;
+  formError.value = "";
   isSubmitting.value = true;
 
   if (!isValidMillesime(form.value.millesime)) {
     isSubmitting.value = false;
-    toaster.addErrorMessage("Le millésime doit être une année valide.");
+    formError.value = "Le millésime doit être une année valide.";
     return;
   }
 
@@ -87,7 +92,7 @@ async function handleSubmit() {
     !isValidScore(form.value.costContainment)
   ) {
     isSubmitting.value = false;
-    toaster.addErrorMessage("Les valeurs de maturité doivent être comprises entre 1 et 5 (ou laissées vides).");
+    formError.value = "Les valeurs de maturité doivent être comprises entre 1 et 5 (ou laissées vides).";
     return;
   }
 
@@ -103,7 +108,7 @@ async function handleSubmit() {
   isSubmitting.value = false;
 
   if (!isApiSuccess(response) || !response.data) {
-    toaster.addErrorMessage("Erreur lors de l'enregistrement des informations de dette technique.");
+    formError.value = "Erreur lors de l'enregistrement des informations de dette technique. Votre saisie est conservée.";
     return;
   }
 
@@ -121,6 +126,9 @@ async function handleSubmit() {
     @close="$emit('close')"
   >
     <form data-testid="technical-debt-form" @submit.prevent="handleSubmit">
+      <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="technical-debt-form-error">
+        <p v-if="formError" class="fr-error-text">{{ formError }}</p>
+      </div>
       <div class="fr-form-group">
         <DsfrSelect
           v-model="form.millesime"

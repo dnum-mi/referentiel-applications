@@ -11,7 +11,7 @@ import { useToasterStore } from "@/stores/toasterStore";
 import type { TableColumn } from "@/types/table";
 import type { DsfrButtonProps } from "@gouvminint/vue-dsfr";
 import type { DataTablePageEvent } from "primevue/datatable";
-import { computed, nextTick, onBeforeMount, ref } from "vue";
+import { computed, nextTick, onBeforeMount, ref, watch } from "vue";
 import RefAppTable from "../RefAppTable.vue";
 import ActorForm from "./ActorForm.vue";
 import { useAppPermission } from "@/composables/use-app-permission";
@@ -33,6 +33,8 @@ const selectedActorIds = ref<string[]>([]);
 const currentPage = ref(0);
 const showDeleteConfirmation = ref(false);
 const loading = ref(false);
+const formError = ref("");
+watch([actorModal.isModalOpen, actorModal.isCreateModalOpen], () => (formError.value = ""));
 const canEdit = useAppPermission(() => props.application.myPerms, [Permission.ACTOR_WRITE]);
 
 const columns: TableColumn[] = [
@@ -128,6 +130,7 @@ function rememberTrigger(event: Event) {
 }
 
 async function handleSaveActors(actor: CreateActorDto & { id?: string }) {
+  formError.value = "";
   loading.value = true;
   let saved = false;
 
@@ -147,7 +150,7 @@ async function handleSaveActors(actor: CreateActorDto & { id?: string }) {
     statusMessage.value = "Acteur sauvegardé avec succès !";
     toaster.addSuccessMessage("Acteur sauvegardé avec succès !");
   } catch {
-    toaster.addErrorMessage("Erreur lors de la sauvegarde de l’acteur.");
+    formError.value = "Erreur lors de la sauvegarde de l’acteur. Votre saisie est conservée.";
   } finally {
     loading.value = false;
   }
@@ -323,11 +326,11 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
 
         <template #header-Groupe>
           <DsfrTooltip
-            on-hover
+            aria-label="Afficher l’aide sur le rattachement des acteurs"
             content="Établir le lien entre une personne physique et une boîte e-mail fonctionnelle (ex: equipe, service)"
-          >
-            Rattaché(e)
-          </DsfrTooltip>
+            @keydown.enter.stop
+            @keydown.space.stop
+          />
         </template>
 
         <template #body-Actions="{ data }">
@@ -414,6 +417,7 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
     <ActorForm
       v-bind="{ application, initialData: actorModal.selectedItem.value ?? undefined }"
       :is-submitting="loading"
+      :error-message="formError"
       :actor-types="actorTypesList"
       data-testid="actor-form-container"
       @submit="handleSaveActors"

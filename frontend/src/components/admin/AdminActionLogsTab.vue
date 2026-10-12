@@ -105,7 +105,7 @@ onActivated(fetchLogs);
 
 <template>
   <div>
-    <h1 class="fr-h1" data-testid="admin-action-logs-title">Journal des actions</h1>
+    <h2 class="fr-h1" data-testid="admin-action-logs-title">Journal des actions</h2>
     <p>Journal centralisé de toutes les requêtes mutantes de l'application (créations, modifications, suppressions).</p>
 
     <div class="fr-grid-row fr-grid-row--gutters fr-mb-2w">

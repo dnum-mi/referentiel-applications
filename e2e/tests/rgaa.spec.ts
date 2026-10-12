@@ -4,6 +4,7 @@ import {
   CreateApplicationPage,
   SearchPage,
   ReportsPage,
+  ApplicationPage,
   loginAs,
 } from "../pom";
 
@@ -134,5 +135,55 @@ test.describe("RGAA — accessibilité", () => {
     const search = new SearchPage(page);
     await search.open();
     await search.expectMobileFiltersStayInFlow();
+  });
+
+  for (const authenticated of [false, true]) {
+    for (const width of [1280, 320]) {
+      test(`RGA-10 — le raccourci navigation fonctionne ${authenticated ? "connecté" : "en public"} à ${width} px`, async ({
+        page,
+      }) => {
+        if (authenticated) await loginAs(page, "admin");
+        const chrome = new ChromePage(page);
+        await chrome.open();
+        if (authenticated) await chrome.expectProfileLink();
+        else await chrome.expectSignInLink();
+        await chrome.expectNavigationShortcut(width);
+      });
+    }
+  }
+
+  test("RGA-11 — le plan public et le raccourci contenu conduisent aux pages annoncées", async ({
+    page,
+  }) => {
+    const chrome = new ChromePage(page);
+    await chrome.open();
+    await chrome.expectSignInLink();
+    await chrome.expectPublicSiteMapAndContentShortcut();
+  });
+
+  test("RGA-12 — les destinations du plan connecté gardent une navigation cohérente", async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(180_000);
+    await loginAs(page, "admin");
+    const chrome = new ChromePage(page);
+    await chrome.open();
+    await chrome.expectProfileLink();
+    const destinations = await chrome.expectConnectedSiteMapDestinations();
+    await testInfo.attach("destinations-plan-du-site", {
+      body: JSON.stringify(destinations, null, 2),
+      contentType: "application/json",
+    });
+  });
+
+  test("RGA-13 — l'export de fiche conserve le focus après une erreur et un nouvel essai", async ({
+    page,
+    data,
+  }) => {
+    const application = await data.applicationByLabel("QA-GROUP-PARENT");
+    if (!application) throw new Error("Fixture QA-GROUP-PARENT absente");
+    const app = new ApplicationPage(page);
+    await app.open(application.id);
+    await app.expectProductExportKeepsFocus();
   });
 });
