@@ -14,6 +14,7 @@ export default defineConfig({
     "nvda-ui.spec.ts",
     "nvda-forms.spec.ts",
     "nvda-suggestions.spec.ts",
+    "nvda-remaining.spec.ts",
   ],
   outputDir: "./test-results/interactive",
   fullyParallel: false,

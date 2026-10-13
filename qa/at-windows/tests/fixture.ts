@@ -185,7 +185,7 @@ export const normalizeSpeech = (text: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
-/** Enter the document using Firefox's native frame navigation, without clicking a control. */
+/** Prepare the reader on neutral content, without activating a product control. */
 export async function focusDocumentStart(page: Page, nvda: NVDAPlaywright) {
   // A body click can toggle the first <summary>, and Tab can leave a document
   // with no focusable elements. Neither is a neutral setup action for these scenes.
@@ -209,43 +209,57 @@ export async function focusDocumentStart(page: Page, nvda: NVDAPlaywright) {
   }
   if (!browserFocused)
     throw new Error(`Firefox n’a pas le premier plan natif : ${spokenTitle}`);
-  // capture:false sends the next command without waiting for native focus
-  // events. Capture each transition so Firefox can finish changing frames.
-  await nvda.press("Control+l", { capture: true });
-  // Ctrl+L expands Firefox's address autocomplete. Escape is neutral only
-  // while that browser field owns focus: it dismisses its popup, not a Vue dialog.
+  // Firefox's F6 remains in browser chrome on the pinned Windows build.
+  // A neutral content click prepares the reader, without activating a control
+  // (the SDK's unrestricted body-centre click can collapse a <summary>).
+  const point = await page.evaluate(() => {
+    const interactive =
+      'a,button,input,select,textarea,label,summary,[contenteditable="true"],[role="button"],[role="link"],[role="tab"],[role="switch"],[role="checkbox"],[role="radio"],[role="option"]';
+    const neutralTags = new Set([
+      "HTML",
+      "BODY",
+      "MAIN",
+      "SECTION",
+      "H1",
+      "H2",
+      "H3",
+      "P",
+    ]);
+    for (const y of [4, 16, 32, 64, 128, innerHeight - 4]) {
+      for (const x of [4, 16, innerWidth - 4, innerWidth / 2]) {
+        const target = document.elementFromPoint(x, y);
+        if (
+          target &&
+          neutralTags.has(target.tagName) &&
+          !target.closest(interactive) &&
+          getComputedStyle(target).cursor !== "pointer"
+        )
+          return { x, y };
+      }
+    }
+    throw new Error("Aucun point de préparation neutre dans le contenu.");
+  });
+  await nvda.capture(() => page.mouse.click(point.x, point.y), {
+    capture: true,
+  });
   await nvda.perform(nvda.keyboardCommands.reportCurrentFocus, {
     capture: true,
   });
-  if (
-    !normalizeSpeech(await nvda.lastSpokenPhrase()).includes(
-      "search or enter address",
-    )
-  ) {
-    throw new Error("La barre d’adresse Firefox n’est pas confirmée.");
-  }
-  await nvda.press("Escape", { capture: true });
-  // Escape can close an application dialog. Use NVDA's own mode toggle and
-  // require its spoken French mode confirmation instead.
+  await nvda.perform(nvda.keyboardCommands.refreshBrowseDocument, {
+    capture: true,
+  });
+  // This is setup, not a keyboard-accessibility assertion. All subsequent
+  // reader actions and assertions still use native NVDA speech and commands.
   let browseMode = false;
-  for (let frame = 0; frame < 3 && !browseMode; frame++) {
-    await nvda.press("F6", { capture: true });
-    await nvda.perform(nvda.keyboardCommands.reportCurrentFocus, {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    await nvda.perform(nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode, {
       capture: true,
     });
-    for (let attempt = 0; attempt < 2; attempt++) {
-      await nvda.perform(
-        nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode,
-        { capture: true },
-      );
-      if (
-        normalizeSpeech(await nvda.lastSpokenPhrase()).includes(
-          "mode navigation",
-        )
-      ) {
-        browseMode = true;
-        break;
-      }
+    if (
+      normalizeSpeech(await nvda.lastSpokenPhrase()).includes("mode navigation")
+    ) {
+      browseMode = true;
+      break;
     }
   }
   if (!browseMode)
