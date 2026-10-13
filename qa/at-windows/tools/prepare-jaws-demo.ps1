@@ -90,6 +90,21 @@ function Read-ReaderDialogs {
 function Press-NativeKey([System.UInt16]$Key) {
   try { [JawsBrowserFocus]::Key($Key, $false) } finally { [JawsBrowserFocus]::Key($Key, $true) }
 }
+function Get-InitialQuitCancelCommand([object]$Dialog) {
+  if ($Dialog.window.ProcessId -ne $reader.Id -or $Dialog.window.Title -cne 'Quit JAWS' -or
+      $Dialog.window.ClassName -cne '#32770' -or -not $Dialog.window.Visible -or -not $Dialog.window.Enabled) {
+    throw 'The initial quit confirmation is not the exact owned JAWS dialog.'
+  }
+  $message = @($Dialog.nativeControls | Where-Object {
+    $_.Id -eq 65535 -and $_.ClassName -ceq 'Static' -and $_.Visible -and $_.Enabled -and
+    $_.Caption -ceq "Are you sure you want to quit JAWS?  Press Enter to quit now, or Escape to cancel.`n"
+  })
+  $cancel = @($Dialog.nativeControls | Where-Object {
+    $_.Id -eq 2 -and $_.ClassName -ceq 'Button' -and $_.Visible -and $_.Enabled -and $_.Caption -ceq 'Cancel'
+  })
+  if ($message.Count -ne 1 -or $cancel.Count -ne 1) { throw 'The observed quit message and explicit Cancel command are not unique.' }
+  return $cancel[0]
+}
 function Invoke-ExactDialogCommand([object]$Dialog, [object]$Control) {
   Assert-SameReader
   $handle = [IntPtr]::new($Dialog.window.Handle)
@@ -157,6 +172,23 @@ try {
     Append-Diagnostic ([ordered]@{ at = [DateTime]::UtcNow.ToString('o'); phase = 'initial-restart-deferred-by-explicit-authorised-command'; command = $later[0]; restartRequirementResolved = $false; isNativeSpeech = $false; rgaaVerdict = $null })
     $dialogs = @(Read-ReaderDialogs)
     if (@($dialogs | Where-Object { $_.window.Title -eq 'System Restart Requested' }).Count -gt 0) { throw 'Initial restart dialog remains after the explicit later command.' }
+    # The publisher may ask to quit after No. Cancel only this observed
+    # confirmation once, then retain any subsequent prompt for diagnosis.
+    $quit = @($dialogs | Where-Object { $_.window.Title -ceq 'Quit JAWS' })
+    if ($quit.Count -gt 0) {
+      if ($quit.Count -ne 1 -or $dialogs.Count -ne 1) { throw 'Ambiguous initial quit confirmation; no Cancel attempted.' }
+      $cancel = Get-InitialQuitCancelCommand $quit[0]
+      Invoke-ExactDialogCommand $quit[0] $cancel
+      Start-Sleep -Milliseconds 750
+      Assert-SameReader
+      $dialogs = @(Read-ReaderDialogs)
+      Append-Diagnostic ([ordered]@{
+        at = [DateTime]::UtcNow.ToString('o'); phase = 'initial-quit-cancelled-once-by-explicit-authorised-command'
+        readerPid = $reader.Id; command = $cancel; dialogsAfterCancel = $dialogs
+        restartRequirementResolved = $false; isNativeSpeech = $false; rgaaVerdict = $null
+      })
+      if ($dialogs.Count -gt 0) { throw 'A new or remaining reader prompt follows initial quit cancellation; no restart, activation, expiry dismissal or second cancellation attempted.' }
+    }
   }
   $activation = @($dialogs | Where-Object { $_.window.Title -eq 'JAWS Activation' })
   if ($activation.Count -gt 1) { throw 'Ambiguous activation dialog.' }

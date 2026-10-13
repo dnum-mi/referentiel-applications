@@ -295,7 +295,7 @@ try {
     outputDirectory: path.join(output, "content-cases"),
     frozenCaptureScriptPath: path.join(tools, "capture-jaws-history.ps1"),
     focusBrowserScriptPath: path.join(tools, "focus-browser-window.ps1"),
-    maxContentMinutes: 14,
+    maxContentMinutes: 8,
   });
   if (content.status !== "ten-cases-exercised-native-review-required")
     throw new Error(

@@ -22,7 +22,7 @@ jobs:
     # This approved JAWS-only retry preserves the already running NVDA campaign.
     if: >-
       github.event.repository.private == false &&
-      !(github.event_name == 'push' && github.event.head_commit.message == 'test: validate approved JAWS demo 2026-10-13-e1f3')
+      !(github.event_name == 'push' && github.event.head_commit.message == 'test: validate approved JAWS demo 2026-10-13-f1f4')
     runs-on: windows-2022
     timeout-minutes: 30
     env:
@@ -111,7 +111,7 @@ jobs:
     # This approved JAWS-only retry preserves the already running NVDA campaign.
     if: >-
       github.event.repository.private == false &&
-      !(github.event_name == 'push' && github.event.head_commit.message == 'test: validate approved JAWS demo 2026-10-13-e1f3')
+      !(github.event_name == 'push' && github.event.head_commit.message == 'test: validate approved JAWS demo 2026-10-13-f1f4')
     runs-on: windows-2022
     timeout-minutes: ${{ matrix.timeout || 45 }}
     strategy:
@@ -281,11 +281,11 @@ jobs:
       github.ref == 'refs/heads/fix/rgaa-accessibility-20261008' &&
       github.run_attempt == '1' &&
       ((github.event_name == 'workflow_dispatch' && inputs.approve_jaws_install_use == true) ||
-       (github.event_name == 'push' && github.event.head_commit.message == 'test: validate approved JAWS demo 2026-10-13-e1f3'))
+       (github.event_name == 'push' && github.event.head_commit.message == 'test: validate approved JAWS demo 2026-10-13-f1f4'))
     runs-on: windows-2022
-    # Four whole jobs consumed 270 + 290 + 232 + 53 seconds, including setup.
-    # 845 + 1200 = 2045 seconds remains strictly below the approved 35 minutes.
-    timeout-minutes: 20
+    # Five whole jobs consumed 270 + 290 + 232 + 53 + 314 seconds, including setup.
+    # 1159 + 840 = 1999 seconds remains strictly below the approved 35 minutes.
+    timeout-minutes: 14
     env:
       JAWS_ALLOW_INITIAL_RESTART_DEFER: "1"
       RGAA_PRODUCT_HEAD: ${{ github.event_name == 'workflow_dispatch' && inputs.product_head || github.sha }}
@@ -309,7 +309,7 @@ jobs:
         working-directory: driver/qa/at-windows
         run: |
           $expectedBranch = 'refs/heads/fix/rgaa-accessibility-20261008'
-          $expectedMessage = 'test: validate approved JAWS demo 2026-10-13-e1f3'
+          $expectedMessage = 'test: validate approved JAWS demo 2026-10-13-f1f4'
           if (-not $env:GITHUB_REF.Equals($expectedBranch, [StringComparison]::Ordinal) -or $env:GITHUB_RUN_ATTEMPT -ne '1') { throw 'Branch/attempt guard failed.' }
           $event = Get-Content -LiteralPath $env:GITHUB_EVENT_PATH -Raw | ConvertFrom-Json
           $approved = if ($env:GITHUB_EVENT_NAME -eq 'push') {
@@ -319,7 +319,7 @@ jobs:
           }
           if (-not $approved) { throw 'Exact explicit JAWS approval signal missing.' }
           New-Item -ItemType Directory -Force ./evidence/jaws-approved | Out-Null
-          @{ approved = $true; source = $env:GITHUB_EVENT_NAME; package = '2025.2508.120.400'; eula = 'https://vispero.com/jaws-end-user-license-agreement/'; noPurchase = $true; noActivation = $true; rebootMayLimitResult = $true; installerStarted = $false; readerStarted = $false; priorRuns = @('38424775281', '38428223727', '38436652519', '38444218692'); priorWholeJobSeconds = 845; diagnosticJobMaximumSeconds = 1200; combinedMaximumSeconds = 2045; initialRestartMayBeDeferredOnlyByExposedCommand = $true; restartRequirementResolved = $false; retryPurpose = 'Validate real PowerShell 5.1 bindings before installation, then inspect owned dialogs and attempt native witness; no reboot, reset or demo-time extension' } | ConvertTo-Json | Set-Content ./evidence/jaws-approved/approved-operation.json
+          @{ approved = $true; source = $env:GITHUB_EVENT_NAME; package = '2025.2508.120.400'; eula = 'https://vispero.com/jaws-end-user-license-agreement/'; noPurchase = $true; noActivation = $true; rebootMayLimitResult = $true; installerStarted = $false; readerStarted = $false; priorRuns = @('38424775281', '38428223727', '38436652519', '38444218692', '38445440801'); priorWholeJobSeconds = 1159; diagnosticJobMaximumSeconds = 840; combinedMaximumSeconds = 1999; initialRestartMayBeDeferredOnlyByExposedCommand = $true; restartRequirementResolved = $false; retryPurpose = 'After the exposed initial No command, cancel once the exact owned Quit JAWS confirmation; stop on any repeated restart, activation or expiration; no reboot, reset or demo-time extension' } | ConvertTo-Json | Set-Content ./evidence/jaws-approved/approved-operation.json
       - uses: pnpm/action-setup@v4
         with:
           version: 10.34.6
