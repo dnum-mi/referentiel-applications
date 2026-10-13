@@ -34,6 +34,7 @@ const statusId = `${inputId}-status`;
 const highlightedIndex = ref(-1);
 const isOpen = ref(false);
 const searchSuggestion = ref("");
+const selectionAnnouncement = ref("");
 const {
   results: suggestions,
   isLoading,
@@ -59,6 +60,7 @@ const activeDescendant = computed(() =>
     : undefined,
 );
 const statusText = computed(() => {
+  if (selectionAnnouncement.value) return selectionAnnouncement.value;
   if (!isOpen.value) return "";
   if (isLoading.value) return "Recherche en cours…";
   if (!hasSearched.value || error.value) return "";
@@ -69,6 +71,7 @@ const statusText = computed(() => {
 });
 
 function selectSuggestion(suggestion: Pick<ApplicationDto, "id" | "label">) {
+  selectionAnnouncement.value = "";
   searchSuggestion.value = suggestion.label;
   emit("update:selectedValue", suggestion);
   reset();
@@ -81,6 +84,7 @@ function selectSuggestion(suggestion: Pick<ApplicationDto, "id" | "label">) {
 watch(
   input,
   () => {
+    selectionAnnouncement.value = "";
     reset();
     highlightedIndex.value = -1;
     isOpen.value = true;
@@ -97,12 +101,13 @@ stop = watchEffect(() => {
   stop?.();
 });
 
-const resetInput = () => {
+const resetInput = (selectionLabel = searchSuggestion.value) => {
   reset();
   input.value = "";
   searchSuggestion.value = "";
   highlightedIndex.value = -1;
   isOpen.value = false;
+  selectionAnnouncement.value = selectionLabel ? `Sélection retirée : ${selectionLabel}.` : "";
   emit("update:selectedValue", undefined);
   nextTick(() => inputElement.value?.focus());
 };
@@ -192,7 +197,7 @@ async function onKeydown(event: KeyboardEvent) {
         {{ suggestion.label }}
       </li>
     </ul>
-    <slot name="application-label">
+    <slot name="application-label" :clear-selection="resetInput">
       <DsfrTag
         v-if="searchSuggestion && !props.hideSelectedTag"
         :label="searchSuggestion"
@@ -200,7 +205,7 @@ async function onKeydown(event: KeyboardEvent) {
         :value="searchSuggestion"
         selectable
         style="margin-top: 15px"
-        @select="resetInput"
+        @select="resetInput()"
         class="fr-tag--dismiss"
       />
     </slot>

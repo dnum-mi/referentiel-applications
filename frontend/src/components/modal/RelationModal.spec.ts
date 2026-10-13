@@ -1,4 +1,5 @@
 import { mount } from "@vue/test-utils";
+import { DsfrTag } from "@gouvminint/vue-dsfr";
 import { nextTick } from "vue";
 import { RelationType, type RelationDto } from "@/client/types.gen";
 import SuggestionsInput from "../SuggestionsInput.vue";
@@ -41,9 +42,88 @@ function renderModal(mode: "add" | "edit", applicationId = "source") {
   });
 }
 
-afterEach(() => vi.clearAllMocks());
+afterEach(() => {
+  vi.clearAllMocks();
+  vi.useRealTimers();
+});
 
 describe("RelationModal", () => {
+  it("retire la cible en un seul clic sans réafficher le tag de repli, avec annonce et focus", async () => {
+    vi.useFakeTimers();
+    searchApplications.mockResolvedValue({ results: [relation.targetApplication] });
+    const wrapper = mount(RelationModal, {
+      attachTo: document.body,
+      props: { mode: "add", applicationId: "source", opened: true, title: "Ajouter une relation" },
+      global: {
+        components: { DsfrTag },
+        stubs: {
+          DsfrModal: { template: '<div><slot /><slot name="footer" /></div>' },
+          DsfrSelect: true,
+          DsfrTooltip: true,
+        },
+      },
+    });
+    try {
+      const input = wrapper.get('[data-testid="relation-suggestions-input"] input');
+      await input.setValue("app");
+      await vi.advanceTimersByTimeAsync(300);
+      const option = wrapper.get('[role="option"]').element;
+      if (!(option instanceof HTMLElement)) throw new Error("Suggestion HTML absente.");
+      option.scrollIntoView = vi.fn();
+      await input.trigger("keydown", { key: "ArrowDown" });
+      await input.trigger("keydown", { key: "Enter" });
+      await wrapper.get("button.fr-tag").trigger("click");
+      await nextTick();
+      expect(wrapper.find("button.fr-tag").exists()).toBe(false);
+      expect(document.activeElement).toBe(input.element);
+      expect(wrapper.get('[data-testid="relation-suggestions-input"] output').text()).toBe("Sélection retirée : Application cible.");
+      await wrapper.get('[data-testid="relation-save-btn"]').trigger("click");
+      expect(wrapper.emitted("addRelation")).toBeUndefined();
+      expect(wrapper.get('[role="alert"]').text()).toContain("L'application cible est requise.");
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it("retire le service de médiation prérempli et met à jour le modèle sans perdre le focus", async () => {
+    const wrapper = mount(RelationModal, {
+      attachTo: document.body,
+      props: { mode: "edit", applicationId: "source", opened: true, title: "Modifier une relation", relation },
+      global: {
+        components: { DsfrTag },
+        stubs: {
+          DsfrModal: { template: '<div><slot /><slot name="footer" /></div>' },
+          DsfrSelect: true,
+          DsfrTooltip: true,
+        },
+      },
+    });
+    try {
+      await wrapper.get("button.fr-tag").trigger("click");
+      await nextTick();
+      const input = wrapper.get('[data-testid="relation-suggestions-mediation-service-input"] input');
+      expect(document.activeElement).toBe(input.element);
+      expect(wrapper.find("button.fr-tag").exists()).toBe(false);
+      expect(wrapper.get('[data-testid="relation-suggestions-mediation-service-input"] output').text()).toBe(
+        "Sélection retirée : Service de médiation.",
+      );
+      await wrapper.get('[data-testid="edit-relation-save-btn"]').trigger("click");
+      expect(wrapper.emitted("updateRelation")).toEqual([
+        [
+          {
+            id: "relation-1",
+            applicationSourceId: "source",
+            applicationTargetId: "target",
+            type: RelationType.IS_PART_OF,
+            mediationServiceId: null,
+          },
+        ],
+      ]);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
   it("valide la cible et crée la relation avec son service de médiation", async () => {
     const wrapper = renderModal("add");
     await wrapper.get('[data-testid="relation-save-btn"]').trigger("click");

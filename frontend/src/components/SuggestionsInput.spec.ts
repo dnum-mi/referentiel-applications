@@ -1,4 +1,5 @@
 import { mount } from "@vue/test-utils";
+import { DsfrTag } from "@gouvminint/vue-dsfr";
 import { defineComponent, h, nextTick, ref } from "vue";
 import SuggestionsInput from "./SuggestionsInput.vue";
 
@@ -18,6 +19,35 @@ function renderInput(search: (query: string) => Promise<{ id: string; label: str
 afterEach(() => vi.useRealTimers());
 
 describe("SuggestionsInput", () => {
+  it("retire la sélection avec le vrai tag DSFR, annonce le retrait et rend le focus à la recherche", async () => {
+    vi.useFakeTimers();
+    const wrapper = mount(SuggestionsInput, {
+      attachTo: document.body,
+      props: { label: "Application", placeholder: "Rechercher", searchData: [{ id: "a", label: "Application Alpha" }] },
+      global: { components: { DsfrTag }, stubs: { DsfrTooltip: true } },
+    });
+    try {
+      const input = wrapper.get("input");
+      await input.setValue("app");
+      await vi.advanceTimersByTimeAsync(300);
+      const option = wrapper.get('[role="option"]').element;
+      if (!(option instanceof HTMLElement)) throw new Error("Suggestion HTML absente.");
+      option.scrollIntoView = vi.fn();
+      await input.trigger("keydown", { key: "ArrowDown" });
+      await input.trigger("keydown", { key: "Enter" });
+      await wrapper.get("button.fr-tag").trigger("click");
+      await nextTick();
+      expect(wrapper.find("button.fr-tag").exists()).toBe(false);
+      expect(wrapper.emitted("update:selectedValue")?.at(-1)).toEqual([undefined]);
+      expect(document.activeElement).toBe(input.element);
+      expect(wrapper.get("output").text()).toBe("Sélection retirée : Application Alpha.");
+      await input.setValue("nouvelle recherche");
+      expect(wrapper.get("output").text()).not.toContain("retirée");
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
   it("réactive les filtres du parent après une réinitialisation du champ pendant une requête", async () => {
     vi.useFakeTimers();
     const componentKey = ref(0);
