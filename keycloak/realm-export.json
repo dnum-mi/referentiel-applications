@@ -5,6 +5,20 @@
   "sslRequired": "external",
   "registrationAllowed": true,
   "rememberMe": true,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 86400,
+  "ssoSessionIdleTimeoutRememberMe": 86400,
+  "ssoSessionMaxLifespanRememberMe": 86400,
+  "clientSessionIdleTimeout": 0,
+  "clientSessionMaxLifespan": 0,
+  "localizationTexts": {
+    "en": {
+      "rememberMe": "Keep me signed in for up to 24 hours (personal device)"
+    },
+    "fr": {
+      "rememberMe": "Prolonger ma connexion jusqu’à 24 heures (appareil personnel)"
+    }
+  },
   "loginWithEmailAllowed": true,
   "resetPasswordAllowed": true,
   "accessTokenLifespan": 300,
