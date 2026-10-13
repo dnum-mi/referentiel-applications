@@ -62,12 +62,16 @@ test.describe("Profil utilisateur", () => {
       .toBe(false);
   });
 
-  test("PRF-05 - onglet Tokens API (présence)", async ({ page, data }) => {
+  test("PRF-05 - ouverture du formulaire de token et maintien des onglets", async ({
+    page,
+    data,
+  }) => {
     void data;
     const profile = new UserProfilePage(page);
     await profile.open();
     await profile.openTokensTab();
     await profile.expectTokensTabLoaded();
+    await profile.openTokenFormAndExpectTabsVisible();
   });
 
   test("PRF-06 - navigation aller-retour profil / fiche application", async ({

@@ -126,8 +126,18 @@ n’est nécessaire.
 - **Perte de permission** : retirer `GristSync` de la réponse de profil alors que l’onglet est actif.
   Un onglet disponible et son panneau sont sélectionnés ; si le focus était dans la partie retirée,
   il rejoint l’onglet conservé. Le focus ailleurs dans la page reste inchangé.
+- **Réattribution de permission** : réaccorder `GristSync` sans recharger la page, puis ouvrir
+  l’onglet avec Entrée et parcourir les onglets au clavier. L’onglet sélectionné et son panneau
+  restent associés. Répéter deux cycles de retrait/réattribution, depuis un profil initialement
+  autorisé puis non autorisé. Sans permission, aucun contrôle Grist n’est exposé.
+- **Brouillon d’un autre onglet** : saisir un nom de token sans envoyer le formulaire, puis
+  retirer et réaccorder `GristSync` dans les réponses simulées. La saisie, son focus et l’onglet
+  actif sont conservés ; aucun token n’est créé. La barre d’onglets reste entièrement visible
+  après l’ouverture du formulaire, y compris après la fin des animations de hauteur.
 - **Petit écran** : à 320 pixels, vérifier le profil avec un identifiant de document de 64 caractères.
   Les labels, messages, champs et commandes restent visibles sans défilement horizontal de la page.
+  Le défilement horizontal de la barre d’onglets permet toujours d’atteindre chaque onglet au clavier.
+  Les flèches, Début et Fin déplacent la sélection sans faire défiler la page ni masquer l’onglet focalisé.
 
 Les assertions DOM, les essais au clavier et l’analyse automatique de ces états ne remplacent
 pas leur restitution par les lecteurs d’écran de la base RGAA.

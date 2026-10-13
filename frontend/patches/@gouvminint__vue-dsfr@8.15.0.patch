@@ -1,5 +1,5 @@
 diff --git a/dist/vue-dsfr.js b/dist/vue-dsfr.js
-index a437ecea2645779b318954776838c39739b1610c..2397383fc1a8e65d9358df068d429968e33f64c6 100644
+index a437ecea2645779b318954776838c39739b1610c..c7732f253ac6c5bfbe8ef91e19ac54c1e64ef3b0 100644
 --- a/dist/vue-dsfr.js
 +++ b/dist/vue-dsfr.js
 @@ -2990,7 +2990,7 @@ var FocusTrapProps = defineFocusTrapProps({
@@ -20,3 +20,26 @@ index a437ecea2645779b318954776838c39739b1610c..2397383fc1a8e65d9358df068d429968
  			}, 100)) : m.value?.close(), h(e);
  		});
  		function h(e) {
+@@ -4762,9 +4762,20 @@ var FocusTrapProps = defineFocusTrapProps({
+ 		};
+ 		function s(e) {
+ 			let n = o[e?.key];
+-			n && i(n);
++			n && (e.preventDefault(), i(n));
+ 		}
+ 		let { isVisible: d } = inject(registerTabKey)(toRef(() => r.tabId)), p = useTemplateRef("button");
+ 		return watch(d, () => {
+-			d.value && p.value?.focus();
++			if (!d.value || !p.value) return;
++			const button = p.value;
++			button.focus();
++			const list = button.closest(".fr-tabs__list");
++			if (!list || document.activeElement !== button) return;
++			const tabRect = button.getBoundingClientRect(), listRect = list.getBoundingClientRect(), style = getComputedStyle(button);
++			const left = tabRect.left - (parseFloat(style.marginLeft) || 0) - listRect.left - list.clientLeft;
++			const right = tabRect.right + (parseFloat(style.marginRight) || 0) - listRect.left - list.clientLeft - list.clientWidth;
++			if (left < 0 && right > 0) return;
++			const narrower = tabRect.width + (parseFloat(style.marginLeft) || 0) + (parseFloat(style.marginRight) || 0) <= list.clientWidth;
++			if (left < 0) list.scrollLeft += narrower ? left : right;
++			else if (right > 0) list.scrollLeft += narrower ? right : left;
+ 		}), (n, r) => (openBlock(), createElementBlock("li", _hoisted_1$11, [createElementVNode("button", mergeProps(n.$attrs, {

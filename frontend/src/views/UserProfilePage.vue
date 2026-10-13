@@ -15,7 +15,7 @@ const profileRoot = useTemplateRef<HTMLElement>("profileRoot");
 // décaler l'index des autres onglets.
 const hasGristSync = computed(() => userStore.hasPermissions([Permission.GRIST_SYNC]));
 
-const tabs = computed(() => [
+const tabDefinitions = [
   {
     tabId: "informations",
     title: "Mes informations",
@@ -31,16 +31,13 @@ const tabs = computed(() => [
     title: "Mes abonnements",
     panelId: "tab-content-followapp",
   },
-  ...(hasGristSync.value
-    ? [
-        {
-          tabId: "grist",
-          title: "Synchronisation Grist",
-          panelId: "tab-content-grist",
-        },
-      ]
-    : []),
-]);
+  {
+    tabId: "grist",
+    title: "Synchronisation Grist",
+    panelId: "tab-content-grist",
+  },
+];
+const tabs = computed(() => tabDefinitions.filter((tab) => hasGristSync.value || tab.tabId !== "grist"));
 
 watch(hasGristSync, async () => {
   if (activeTab.value < tabs.value.length) return;
@@ -75,7 +72,31 @@ watch(hasGristSync, async () => {
       <div class="fr-col-12">
         <h1 class="fr-mb-4w" data-testid="user-profile-main-title">Profil utilisateur</h1>
 
-        <DsfrTabs v-model="activeTab" tab-list-name="Profil utilisateur" :tab-titles="tabs" data-testid="user-profile-tabs">
+        <DsfrTabs
+          v-model="activeTab"
+          class="profile-tabs"
+          tab-list-name="Profil utilisateur"
+          :tab-titles="tabs"
+          data-testid="user-profile-tabs"
+        >
+          <!-- Le registre DSFR garde les mêmes items ; seul Grist autorisé entre dans les déplacements clavier. -->
+          <template #tab-items>
+            <DsfrTabItem
+              v-for="(tab, index) in tabDefinitions"
+              :key="tab.tabId"
+              v-show="tab.tabId !== 'grist' || hasGristSync"
+              :hidden="tab.tabId === 'grist' && !hasGristSync"
+              :tab-id="tab.tabId"
+              :panel-id="tab.panelId"
+              @click="activeTab = index"
+              @next="activeTab = (activeTab + 1) % tabs.length"
+              @previous="activeTab = (activeTab + tabs.length - 1) % tabs.length"
+              @first="activeTab = 0"
+              @last="activeTab = tabs.length - 1"
+            >
+              {{ tab.title }}
+            </DsfrTabItem>
+          </template>
           <DsfrTabContent tab-id="informations" panel-id="tab-content-informations" data-testid="user-profile-tab-informations">
             <UserInfoTab />
           </DsfrTabContent>
@@ -94,3 +115,10 @@ watch(hasGristSync, async () => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.profile-tabs {
+  /* Le focus d'un formulaire ne doit pas faire défiler le conteneur pendant son redimensionnement. */
+  overflow: clip;
+}
+</style>
