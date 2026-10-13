@@ -264,8 +264,24 @@ for (const document of documents) {
         `Oracle ${document.id} invalide : l’exhaustivité des données n’est pas vérifiable.`,
       );
     }
-    for (const value of oracle.requiredNativeText)
-      expect(reading.text).toContain(normalizeSpeech(String(value)));
+    for (const value of oracle.requiredNativeText) {
+      // NVDA's real French synthesizer expands email punctuation in speak events
+      // (observed: "agent-rgaa arobase example point invalid"). Keep every value,
+      // accepting its literal text or that exact spoken punctuation equivalent.
+      const expected = [normalizeSpeech(String(value))];
+      if (String(value).includes("@"))
+        expected.push(
+          normalizeSpeech(
+            String(value)
+              .replaceAll("@", " arobase ")
+              .replaceAll(".", " point "),
+          ),
+        );
+      expect(
+        expected.some((candidate) => reading.text.includes(candidate)),
+        `Valeur réellement annoncée par NVDA : ${String(value)}`,
+      ).toBe(true);
+    }
     if (document.id !== "AT-D02") {
       await focusDocumentStart(page, nvda);
       const cells = await captureStep(

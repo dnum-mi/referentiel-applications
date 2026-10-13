@@ -148,7 +148,7 @@ jobs:
           pnpm lint
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Install the exact product client without lifecycle scripts
-        working-directory: product
+        working-directory: product/frontend
         run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Configure only the ephemeral Windows runner and install the pinned real reader
         working-directory: driver/qa/at-windows

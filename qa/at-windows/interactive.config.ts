@@ -9,7 +9,12 @@ if (!product)
 
 export default defineConfig({
   testDir: "./tests",
-  testMatch: ["nvda-graphs.spec.ts", "nvda-ui.spec.ts", "nvda-forms.spec.ts"],
+  testMatch: [
+    "nvda-graphs.spec.ts",
+    "nvda-ui.spec.ts",
+    "nvda-forms.spec.ts",
+    "nvda-suggestions.spec.ts",
+  ],
   outputDir: "./test-results/interactive",
   fullyParallel: false,
   workers: 1,

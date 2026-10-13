@@ -53,7 +53,7 @@ try {
   } elseif ($apiContent -is [string]) {
     $apiText = $apiContent
   } else {
-    throw 'Le corps API n’est ni du texte ni un tableau d’octets UTF-8.'
+    throw 'Le corps API doit etre du texte ou un tableau d octets UTF-8.'
   }
   $apiText = $apiText.TrimStart([char]0xFEFF)
   $report.apiResponse = [ordered]@{

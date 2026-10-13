@@ -3,6 +3,7 @@ import { expect } from "@playwright/test";
 import {
   attachIdentity,
   captureStep,
+  focusDocumentStart,
   installOfflinePage,
   normalizeSpeech,
   test,
@@ -46,7 +47,7 @@ test("Témoin réel : nom accessible, rôle français et activation annoncée pa
   const heading = await captureStep(
     nvda,
     "witness-heading",
-    () => nvda.navigateToWebContent({ capture: true }),
+    () => focusDocumentStart(page, nvda),
     info,
   );
   expect(heading.text).toContain(normalizeSpeech(label));

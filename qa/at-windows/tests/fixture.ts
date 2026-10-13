@@ -192,16 +192,23 @@ export async function focusDocumentStart(page: Page, nvda: NVDAPlaywright) {
   await page.bringToFront();
   const title = normalizeSpeech(await page.title());
   let browserFocused = false;
+  let spokenTitle = "";
   for (let attempt = 0; attempt < 10; attempt++) {
     await nvda.perform(nvda.keyboardCommands.reportTitle, { capture: true });
-    if (normalizeSpeech(await nvda.lastSpokenPhrase()).includes(title)) {
+    spokenTitle = normalizeSpeech(await nvda.lastSpokenPhrase());
+    // The pinned Playwright Firefox identifies its window as Nightly. The
+    // synthesizer may also split RefApp / AT-C01 differently from page.title().
+    if (
+      spokenTitle.replaceAll(" ", "").includes(title.replaceAll(" ", "")) ||
+      /\b(?:nightly|firefox)\b/.test(spokenTitle)
+    ) {
       browserFocused = true;
       break;
     }
     await nvda.press("Alt+Escape", { capture: false });
   }
   if (!browserFocused)
-    throw new Error("Firefox n’a pas le premier plan natif.");
+    throw new Error(`Firefox n’a pas le premier plan natif : ${spokenTitle}`);
   await nvda.press("Control+l", { capture: false });
   await nvda.press("F6", { capture: false });
   // Escape can close an application dialog. Use NVDA's own mode toggle and
