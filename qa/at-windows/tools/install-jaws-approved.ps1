@@ -67,8 +67,8 @@ try {
   $env:JAWS_ALLOW_APPROVED_USE = '1'
   $env:JAWS_EVIDENCE_DIR = $outputPath
   & node (Join-Path $PSScriptRoot 'jaws-smoke.mjs')
-  if ($LASTEXITCODE -ne 0) { throw 'Native French witness did not pass; capture retained, no RGAA conformity verdict.' }
-  $record.status = 'native-french-witness-passed-only'
+  if ($LASTEXITCODE -ne 0) { throw 'Native French witness or content capture incomplete; evidence retained, no global RGAA conformity verdict.' }
+  $record.status = 'native-french-witness-and-content-capture-completed-review-required'
 } catch {
   $record.status = 'limited-or-failed-no-reader-qualification'
   $record.error = $_.Exception.Message

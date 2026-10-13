@@ -5,6 +5,7 @@ import { promisify } from "node:util";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { runJawsContentCases } from "./jaws-content-cases.mjs";
 
 if (
   process.platform !== "win32" ||
@@ -179,6 +180,19 @@ try {
   if (!namePresent || !frenchRolePresent)
     throw new Error(
       "Fresh native name and French role were not both captured.",
+    );
+  const content = await runJawsContentCases({
+    page,
+    browserPid,
+    readerPid: after.readerPid,
+    fixturesDirectory: path.join(tools, "../fixtures"),
+    outputDirectory: path.join(output, "content-cases"),
+    frozenCaptureScriptPath: path.join(tools, "capture-jaws-history.ps1"),
+    focusBrowserScriptPath: path.join(tools, "focus-browser-window.ps1"),
+  });
+  if (content.status !== "ten-cases-exercised-native-review-required")
+    throw new Error(
+      "Native content capture is incomplete; actual JAWS evidence is retained for review.",
     );
 } finally {
   if (context) await context.close();
