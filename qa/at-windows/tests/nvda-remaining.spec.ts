@@ -26,9 +26,19 @@ async function reachControl(
   target: Locator,
   name: string | RegExp,
   info: TestInfo,
-  direction: "Tab" | "Shift+Tab" = "Tab",
+  requestedDirection?: "Tab" | "Shift+Tab",
 ) {
   await expect(target).toBeVisible();
+  const direction =
+    requestedDirection ??
+    (await target.evaluate((element) =>
+      document.activeElement &&
+      document.activeElement !== document.body &&
+      document.activeElement.compareDocumentPosition(element) &
+        Node.DOCUMENT_POSITION_PRECEDING
+        ? "Shift+Tab"
+        : "Tab",
+    ));
   let arrival: Awaited<ReturnType<typeof captureStep>> | undefined;
   for (let index = 0; index <= 60; index++) {
     if (

@@ -98,6 +98,53 @@ test("AT-INT-suggestions — vrai dialogue relation, option active, sélection/r
     page.getByTestId("relation-suggestions-input").getByRole("alert"),
   ).toContainText("Erreur lors de la recherche d'applications");
   expect(error.text).toContain("erreur lors de la recherche d applications");
+  network.state.searchMode = "results";
+  const mediation = page.getByTestId(
+    "relation-suggestions-mediation-service-input",
+  );
+  await tabTo(nvda, "Rechercher une application de mediation service", info);
+  const mediationResults = await captureStep(
+    nvda,
+    "mediation-live-results",
+    () => nvda.type("app", { capture: true }),
+    info,
+  );
+  await expect(mediation.getByRole("option")).toHaveCount(2);
+  expect(mediationResults.text).toContain("2 suggestion");
+  const mediationChoice = await captureStep(
+    nvda,
+    "mediation-native-option",
+    () => nvda.press("ArrowDown", { capture: true }),
+    info,
+  );
+  expect(mediationChoice.text).toContain("application fictive beta");
+  const activeOption = await mediation
+    .getByRole("combobox")
+    .getAttribute("aria-activedescendant");
+  expect(activeOption).toBeTruthy();
+  await expect(mediation.locator(`[id="${activeOption}"]`)).toHaveCount(1);
+  await activateCurrent(nvda, info, "mediation-select-enter");
+  await expect(
+    mediation.getByRole("button", {
+      name: "Application fictive Bêta",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await tabTo(nvda, "Application fictive Bêta", info);
+  const mediationRemoved = await activateCurrent(
+    nvda,
+    info,
+    "mediation-remove-selection",
+  );
+  expect(mediationRemoved.text).toContain("selection retiree");
+  expect(mediationRemoved.text).toContain("application fictive beta");
+  await expect(mediation.getByRole("combobox")).toBeFocused();
+  await expect(
+    mediation.getByRole("button", {
+      name: "Application fictive Bêta",
+      exact: true,
+    }),
+  ).toHaveCount(0);
   await tabTo(nvda, "Annuler", info);
   await activateCurrent(nvda, info, "relation-modal-cancel");
   await expect(

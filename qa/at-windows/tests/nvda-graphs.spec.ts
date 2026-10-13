@@ -103,15 +103,19 @@ for (const chart of charts) {
     expect(table.text).not.toContain("pas dans une cellule de tableau");
     for (const column of chart.columns)
       expect(table.text).toContain(normalizeSpeech(column));
-    // Browse-table commands leave DOM focus on the old toggle. Rejoin the
-    // tab sequence from the actual reading position before seeking it.
-    await captureStep(
+    // Table reading moves the virtual cursor; use its native previous-button
+    // command instead of Shift+Tab from a possibly unfocused document.
+    const returnControl = await captureStep(
       nvda,
-      "leave-table-for-native-controls",
-      () => nvda.press("Shift+Tab", { capture: true }),
+      "table-previous-button",
+      () =>
+        nvda.perform(nvda.keyboardCommands.moveToPreviousButton, {
+          capture: true,
+        }),
       info,
     );
-    await shiftTabTo(nvda, "Voir le graphique", info);
+    expect(returnControl.text).toContain("voir le graphique");
+    expect(returnControl.text).toContain("bouton");
     await activateCurrent(nvda, info, "return-graphic-activated");
     await expect(button).toHaveAttribute("aria-pressed", "false");
     await expect(page.getByTestId(`${chart.id}-canvas`)).toBeVisible();
@@ -206,9 +210,14 @@ test("AT-INT-relations — profondeur, filtre, zoom et vrai Réessayer après HT
     before = await group.getAttribute("transform");
   await activateCurrent(nvda, info, "zoom-command");
   await expect.poll(() => group.getAttribute("transform")).not.toBe(before);
-  await tabTo(nvda, "Saisir la profondeur du réseau", info);
+  await shiftTabTo(nvda, "Saisir la profondeur du réseau", info);
   await nvda.press("Control+a", { capture: true });
-  await nvda.type("2", { capture: true });
+  const depthInput = await captureStep(
+    nvda,
+    "depth-native-input",
+    () => nvda.type("2", { capture: true }),
+    info,
+  );
   const depth = await captureStep(
     nvda,
     "depth-updated",
@@ -218,8 +227,8 @@ test("AT-INT-relations — profondeur, filtre, zoom et vrai Réessayer après HT
   await expect(page.getByTestId("relations-graph-status")).toContainText(
     "4 applications et 3 relations",
   );
-  expect(depth.text).toContain("4 applications");
-  expect(depth.text).toContain("profondeur 2");
+  expect(`${depthInput.text} ${depth.text}`).toContain("4 applications");
+  expect(`${depthInput.text} ${depth.text}`).toContain("profondeur 2");
   await tabTo(nvda, /utilise.*donn/, info);
   const filtered = await captureStep(
     nvda,
@@ -232,9 +241,14 @@ test("AT-INT-relations — profondeur, filtre, zoom et vrai Réessayer après HT
   );
   expect(filtered.text).toContain("2 relations");
   network.state.graphError = true;
-  await tabTo(nvda, "Saisir la profondeur du réseau", info);
+  await shiftTabTo(nvda, "Saisir la profondeur du réseau", info);
   await nvda.press("Control+a", { capture: true });
-  await nvda.type("3", { capture: true });
+  const failedInput = await captureStep(
+    nvda,
+    "depth-native-refused-input",
+    () => nvda.type("3", { capture: true }),
+    info,
+  );
   const failed = await captureStep(
     nvda,
     "graph-get-500",
@@ -244,7 +258,7 @@ test("AT-INT-relations — profondeur, filtre, zoom et vrai Réessayer après HT
   await expect(page.getByRole("alert")).toContainText(
     "Impossible de charger le réseau des relations",
   );
-  expect(failed.text).toContain(
+  expect(`${failedInput.text} ${failed.text}`).toContain(
     "impossible de charger le reseau des relations",
   );
   network.state.graphError = false;

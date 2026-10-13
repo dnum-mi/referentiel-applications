@@ -10,7 +10,7 @@ import {
   mountProductionScene,
   simulatedNetwork,
 } from "./interactive-utils.js";
-import { activateCurrent, tabTo } from "./native-utils.js";
+import { activateCurrent, shiftTabTo, tabTo } from "./native-utils.js";
 
 test.use({ serviceWorkers: "block" });
 test.beforeEach(async ({}, info) => {
@@ -118,7 +118,7 @@ test("AT-INT-profil — vrais onglets, token non soumis, retrait puis réaccord 
   await tabTo(nvda, "Annuler", info);
   await activateCurrent(nvda, info, "token-form-cancel");
   await expect(page.getByTestId("token-create-btn")).toBeFocused();
-  await tabTo(nvda, "Mes tokens", info);
+  await shiftTabTo(nvda, "Mes tokens", info);
   const last = await captureStep(
     nvda,
     "profile-end-key",

@@ -43,9 +43,12 @@ async function focus(
       ? "Shift+Tab"
       : "Tab",
   );
-  const spoken = await tabTo(nvda, name, info, 65, direction);
+  // NVDA French pronounces the observed synthetic IDs as "doc 000".
+  // Keep the exact digits and all words; allow only that observed boundary.
+  const spokenName = normalizeSpeech(name).replace(/doc(?=\d{3}\b)/g, "doc ");
+  const spoken = await tabTo(nvda, spokenName, info, 65, direction);
   await expect(target).toBeFocused();
-  expect(spoken.text).toContain(normalizeSpeech(name));
+  expect(spoken.text).toContain(spokenName);
   return spoken;
 }
 async function current(nvda: NVDAPlaywright, info: TestInfo, step: string) {

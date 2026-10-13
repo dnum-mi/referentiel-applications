@@ -124,7 +124,12 @@ async function selectValue(
   for (let index = 0; index <= 20; index++) {
     if ((await target.inputValue()) === value) {
       const selected = await currentFocus(nvda, info, `${step}-selected-value`);
-      expect(selected.text).toContain(normalizeSpeech(label));
+      // Native French synthesis spells the observed priority codes R3/H0.
+      const spokenLabel = normalizeSpeech(label).replace(
+        /\b([rh])(?=\d)/g,
+        "$1 ",
+      );
+      expect(selected.text).toContain(spokenLabel);
       return selected;
     }
     await captureStep(
@@ -611,6 +616,27 @@ test("AT-U08-Dette — catalogue tardif, scores décimaux, refus500 et réessai 
   await expect(debt).toBeVisible();
   expect(opened.text).toContain("modifier la dette technique");
   await expect.poll(() => network.campaignPending()).toBe(true);
+  const campaignFailure = await captureStep(
+    nvda,
+    "general-debt-campaign-timeout",
+    async () => {
+      await nvda.capture(
+        async () => {
+          await expect(
+            debt.getByTestId("technical-debt-campaigns-error"),
+          ).toContainText("Impossible de charger les campagnes", {
+            timeout: 15000,
+          });
+        },
+        { capture: true },
+      );
+    },
+    info,
+  );
+  expect(`${opened.text} ${campaignFailure.text}`).toContain(
+    "impossible de charger les campagnes de dette it",
+  );
+
   const year = debt.getByTestId("millesime-select");
   await reach(nvda, year, "Millésime", info);
   expect(
@@ -620,14 +646,24 @@ test("AT-U08-Dette — catalogue tardif, scores décimaux, refus500 et réessai 
   await reach(nvda, technical, "Maturité technique", info);
   await typeDraft(nvda, "4.25", info, "general-debt-technical-score-draft");
   await expect(technical).toHaveValue("4.25");
-  // Release the network fixture, not the component's method. The real mounted
-  // promise completes while a user has deliberately focused this score field.
+  network.generalState.holdCampaigns = false;
   network.releaseCampaigns();
   await expect.poll(() => network.campaignPending()).toBe(false);
   await expect(technical).toBeFocused();
+  const retryCampaigns = debt.getByTestId("technical-debt-campaigns-retry");
+  await reach(
+    nvda,
+    retryCampaigns,
+    "Réessayer le chargement des campagnes",
+    info,
+  );
+  await activateCurrent(nvda, info, "general-debt-campaign-retry");
+  await expect(retryCampaigns).toHaveCount(0);
+  await expect(year).toBeFocused();
+  await expect(technical).toHaveValue("4.25");
   expect(
     (await currentFocus(nvda, info, "general-debt-focus-after-catalog")).text,
-  ).toContain("maturite technique");
+  ).toContain("millesime");
   await reach(
     nvda,
     debt.getByTestId("business-maturity-select"),

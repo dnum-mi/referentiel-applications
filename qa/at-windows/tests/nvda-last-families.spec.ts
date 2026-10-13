@@ -434,7 +434,7 @@ test("AT-LAST-U23 — technologies, filtres, pagination, lien et dialogue sans s
     info,
   );
   expect(orgSpeech.text).toMatch(/edition|texte/);
-  await captureStep(
+  const filteredInput = await captureStep(
     nvda,
     "eol-organization-native-input",
     () => nvda.type("Nord", { capture: true }),
@@ -455,10 +455,12 @@ test("AT-LAST-U23 — technologies, filtres, pagination, lien et dialogue sans s
       ),
     info,
   );
-  expect(filtered.text).toMatch(/resultat\s*1\s*a\s*9\s*sur\s*9/);
+  expect(`${filteredInput.text} ${filtered.text}`).toMatch(
+    /resultat\s*1\s*a\s*9\s*sur\s*9/,
+  );
   const search = page.getByRole("textbox", { name: "Recherche", exact: true });
   await reachControl(nvda, search, "Recherche", info);
-  await captureStep(
+  const emptyInput = await captureStep(
     nvda,
     "eol-empty-native-query",
     () => nvda.type("introuvable", { capture: true }),
@@ -477,10 +479,16 @@ test("AT-LAST-U23 — technologies, filtres, pagination, lien et dialogue sans s
       ),
     info,
   );
-  expect(empty.text).toContain("aucune application concernee");
+  expect(`${emptyInput.text} ${empty.text}`).toContain(
+    "aucune application concernee",
+  );
   const clear = page.getByTestId("end-of-life-clear-filters");
   await reachControl(nvda, clear, "Effacer les filtres", info);
-  await activateCurrent(nvda, info, "eol-clear-native-activate");
+  const clearInput = await activateCurrent(
+    nvda,
+    info,
+    "eol-clear-native-activate",
+  );
   const restored = await captureStep(
     nvda,
     "eol-clear-late-response",
@@ -497,13 +505,15 @@ test("AT-LAST-U23 — technologies, filtres, pagination, lien et dialogue sans s
       ),
     info,
   );
-  expect(restored.text).toMatch(/resultat\s*1\s*a\s*15\s*sur\s*18/);
+  expect(`${clearInput.text} ${restored.text}`).toMatch(
+    /resultat\s*1\s*a\s*15\s*sur\s*18/,
+  );
   expect(
     (await currentFocus(nvda, info, "eol-clear-focus-after-load")).text,
   ).toContain("effacer les filtres");
   const next = page.getByTestId("pagination-next");
   await reachControl(nvda, next, "Page suivante", info);
-  await activateCurrent(nvda, info, "eol-next-page-native");
+  const nextInput = await activateCurrent(nvda, info, "eol-next-page-native");
   const nextPage = await captureStep(
     nvda,
     "eol-next-page-late-response",
@@ -519,7 +529,9 @@ test("AT-LAST-U23 — technologies, filtres, pagination, lien et dialogue sans s
       ),
     info,
   );
-  expect(nextPage.text).toMatch(/resultat\s*16\s*a\s*18\s*sur\s*18/);
+  expect(`${nextInput.text} ${nextPage.text}`).toMatch(
+    /resultat\s*16\s*a\s*18\s*sur\s*18/,
+  );
   await reachControl(
     nvda,
     page.getByTestId("pagination-first"),

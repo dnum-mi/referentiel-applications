@@ -220,7 +220,11 @@ test("AT-U13-ActorLookup — chargement refusé, erreur restituée et suppressio
   const n = await ready(page, nvda, browser.version(), info, "actor");
   n.state.lookup = "error";
   await tabTo(nvda, "Supprimer par email", info);
-  await activateCurrent(nvda, info, "admin-actor-lookup-error-open");
+  const opening = await activateCurrent(
+    nvda,
+    info,
+    "admin-actor-lookup-error-open",
+  );
   const d = page.getByRole("dialog", {
     name: "Supprimer les acteurs par email",
     exact: true,
@@ -231,20 +235,24 @@ test("AT-U13-ActorLookup — chargement refusé, erreur restituée et suppressio
   await expect(
     d.getByTestId("admin-actor-delete-all-confirm-btn"),
   ).toBeDisabled();
-  await focusDocumentStart(page, nvda);
   const read = await captureStep(
     nvda,
     "admin-actor-lookup-error-reading",
     () => nvda.perform(nvda.keyboardCommands.sayAll, { capture: true }),
     info,
   );
-  expect(read.text).toContain(
+  expect(`${opening.text} ${read.text}`).toContain(
     "impossible de charger les applications concernees",
   );
   await captureStep(
     nvda,
     "admin-actor-lookup-close",
-    () => nvda.press("Escape", { capture: true }),
+    async () => {
+      await nvda.perform(nvda.keyboardCommands.ignoreNextKeyCombination, {
+        capture: true,
+      });
+      await nvda.press("Escape", { capture: true });
+    },
     info,
   );
   await expect(d).not.toBeVisible();

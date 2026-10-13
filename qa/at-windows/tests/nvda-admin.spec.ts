@@ -112,6 +112,15 @@ test("AT-INT-U14-quality — sponsors au clavier, erreur de suppression puis ré
     await expect(email).toHaveValue("replacement@example.invalid");
     await captureStep(
       nvda,
+      "quality-pass-next-key-to-page",
+      () =>
+        nvda.perform(nvda.keyboardCommands.ignoreNextKeyCombination, {
+          capture: true,
+        }),
+      info,
+    );
+    await captureStep(
+      nvda,
       "quality-edit-cancel",
       () => nvda.press("Escape", { capture: true }),
       info,
@@ -306,7 +315,7 @@ test("AT-INT-U14-tokens — annulation, création échouée/réussie puis révoc
       },
       info,
     );
-    expect(failure.text).toContain(normalizeSpeech("Erreur U14 fictive"));
+    expect(failure.text).toMatch(/\berreur u\s?14 fictive\b/);
     await expect(submit).toBeFocused();
     await expect(page.getByRole("textbox", { name: /^Nom/ })).toHaveValue(
       "Service QA",

@@ -64,6 +64,17 @@ try {
   $guiType = [JawsDemoNative].GetNestedType('GuiThreadInfo', [Reflection.BindingFlags]::NonPublic)
   $guiSize = $marshalSize.Invoke($null, [object[]]@($guiType))
   if ($guiSize -ne 72) { throw ('Unexpected 64-bit GUI structure size: ' + $guiSize) }
+  $record.keyboardScanMappings = @()
+  $controlledKeys = @(0x09,0x0D,0x10,0x11,0x12,0x1B,0x20,0x24,0x26,0x27,0x28,0x2D,0x47,0x48,0x54,0x70)
+  $criticalMappings = @{ 0x2D = 82; 0x20 = 57; 0x11 = 29; 0x48 = 35 }
+  foreach ($key in $controlledKeys) {
+    $scan = [JawsHistoryNative]::ScanCodeFor([System.UInt16]$key)
+    if ($criticalMappings.ContainsKey($key) -and $scan -ne $criticalMappings[$key]) { throw 'Critical scan mapping differs from the reviewed native SDK.' }
+    $packet = [JawsHistoryNative]::BuildInput([System.UInt16]$key, $scan, $false, $false)
+    if ($packet.type -ne 1 -or $packet.data.keyboard.key -ne $key -or $packet.data.keyboard.scan -ne $scan -or $packet.data.keyboard.flags -ne 0) { throw 'Controlled input packet does not preserve the virtual key and flags.' }
+    $record.keyboardScanMappings += [ordered]@{ virtualKey = $key; scanCode = $scan; mapping = 'MapVirtualKey MAPVK_VK_TO_VSC'; packetBuiltOnly = $true; inputSent = $false }
+  }
+  if (@([JawsHistoryNative]::InputRecords()).Count -ne 0) { throw 'Preflight must not send or record native key input.' }
   foreach ($name in @('focus-browser-window.ps1', 'prepare-jaws-demo.ps1', 'capture-jaws-history.ps1', 'jaws-content-action.ps1')) {
     $types = @($asts[$name].FindAll({ param($node)
       $node -is [Management.Automation.Language.TypeConstraintAst] -or $node -is [Management.Automation.Language.TypeExpressionAst]

@@ -123,7 +123,14 @@ test("AT-INT-U19-Authorize — noms/rôles, scopes, Close/Escape et retour", asy
   await captureStep(
     nvda,
     "swagger-authorize-escape",
-    () => nvda.press("Escape", { capture: true }),
+    async () => {
+      // NVDA consumes Escape to leave forms mode. Its documented pass-next-key
+      // command sends this deliberate Escape to the web dialog itself.
+      await nvda.perform(nvda.keyboardCommands.ignoreNextKeyCombination, {
+        capture: true,
+      });
+      await nvda.press("Escape", { capture: true });
+    },
     info,
   );
   await expect(dialog).not.toBeVisible();
@@ -145,7 +152,7 @@ test("AT-INT-U19-Operations — expansion GET/POST, paramètres/réponses et rep
   const network = await installSyntheticSwagger(page);
   await attachIdentity(nvda, browser.version(), info);
   await focusDocumentStart(page, nvda);
-  await tabTo(nvda, /get.*applications.*id/, info);
+  await tabTo(nvda, /get.*applications.*id.*bouton/, info);
   const expansion = await activateCurrent(nvda, info, "swagger-get-expand");
   const operation = page
     .locator(".opblock")
@@ -215,13 +222,13 @@ test("AT-INT-U19-Operations — expansion GET/POST, paramètres/réponses et rep
     () => nvda.press("Shift+Tab", { capture: true }),
     info,
   );
-  await shiftTabTo(nvda, /get.*applications.*id/, info);
+  await shiftTabTo(nvda, /get.*applications.*id.*bouton/, info);
   await activateCurrent(nvda, info, "swagger-get-collapse");
   await expect(operation.locator(".opblock-summary-control")).toHaveAttribute(
     "aria-expanded",
     "false",
   );
-  await tabTo(nvda, /post.*applications/, info);
+  await tabTo(nvda, /post.*applications.*bouton/, info);
   await activateCurrent(nvda, info, "swagger-post-expand-read-only");
   const post = page
     .locator(".opblock")
@@ -240,11 +247,101 @@ test("AT-INT-U19-Operations — expansion GET/POST, paramètres/réponses et rep
   expect(body.text).toContain("request body");
   expect(body.text).toContain("reponse fictive aucune execution autorisee");
   expect(body.text).toContain("201");
-  await shiftTabTo(nvda, /post.*applications/, info);
+  await shiftTabTo(nvda, /post.*applications.*bouton/, info);
   await activateCurrent(nvda, info, "swagger-post-collapse");
   await expect(post.locator(".opblock-summary-control")).toHaveAttribute(
     "aria-expanded",
     "false",
   );
   expect(network.forbidden).toEqual([]);
+});
+
+test("AT-INT-U19-Editable — vrais paramètres et corps de requête, choix et annulation sans Execute", async ({
+  page,
+  browser,
+  nvda,
+}, info) => {
+  const network = await installSyntheticSwagger(page);
+  await attachIdentity(nvda, browser.version(), info);
+  await focusDocumentStart(page, nvda);
+  for (const method of ["get", "post"]) {
+    const summaryName =
+      method === "get"
+        ? /get.*applications.*id.*bouton/
+        : /post.*applications.*bouton/;
+    await tabTo(nvda, summaryName, info);
+    await activateCurrent(nvda, info, `swagger-editable-${method}-expand`);
+    const operation = page.locator(`.opblock-${method}`);
+    await tabTo(nvda, "Try it out", info);
+    await activateCurrent(nvda, info, `swagger-editable-${method}-try`);
+    await expect(
+      operation.getByRole("button", { name: "Cancel", exact: true }),
+    ).toBeFocused();
+    if (method === "get") {
+      const id = operation.locator('[data-param-name="id"] input');
+      const idName = await tabTo(nvda, /^id\b.*(?:edition|texte)/, info);
+      expect(idName.text).toContain("id");
+      await expect(id).toBeFocused();
+      await nvda.type("application-fictive-001", { capture: true });
+      await expect(id).toHaveValue("application-fictive-001");
+      const detail = operation.locator('[data-param-name="detail"] select');
+      const detailName = await tabTo(nvda, "detail", info);
+      expect(detailName.text).toMatch(/liste deroulante|combobox/);
+      await expect(detail).toBeFocused();
+      await captureStep(
+        nvda,
+        "swagger-native-detail-choice",
+        async () => {
+          await nvda.press("Home", { capture: true });
+          await nvda.press("ArrowDown", { capture: true });
+        },
+        info,
+      );
+      await expect(detail).toHaveValue("true");
+      const value = await captureStep(
+        nvda,
+        "swagger-detail-name-value",
+        () =>
+          nvda.perform(nvda.keyboardCommands.reportCurrentFocus, {
+            capture: true,
+          }),
+        info,
+      );
+      expect(value.text).toContain("detail");
+      expect(value.text).toContain("true");
+    } else {
+      const type = await tabTo(nvda, "Request content type", info);
+      expect(type.text).toMatch(/liste deroulante|combobox/);
+      const body = operation.locator(".body-param__text");
+      const bodyName = await tabTo(
+        nvda,
+        /request body.*(?:edition|multiligne|texte)/,
+        info,
+      );
+      expect(bodyName.text).toContain("request body");
+      await expect(body).toBeFocused();
+      await nvda.press("Control+a", { capture: true });
+      await nvda.type('"fictitious-request-body"', { capture: true });
+      await expect(body).toHaveValue('"fictitious-request-body"');
+    }
+    await shiftTabTo(nvda, "Cancel", info);
+    await activateCurrent(nvda, info, `swagger-editable-${method}-cancel`);
+    await expect(
+      operation.getByRole("button", { name: "Try it out", exact: true }),
+    ).toBeFocused();
+    await expect(
+      operation.getByRole("button", { name: "Execute", exact: true }),
+    ).toHaveCount(0);
+    await shiftTabTo(nvda, summaryName, info);
+    await activateCurrent(nvda, info, `swagger-editable-${method}-collapse`);
+    await expect(operation.locator(".opblock-summary-control")).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+  }
+  expect(network.forbidden).toEqual([]);
+  await info.attach("swagger-editable-exact-provenance", {
+    body: JSON.stringify(network.provenance, null, 2),
+    contentType: "application/json",
+  });
 });

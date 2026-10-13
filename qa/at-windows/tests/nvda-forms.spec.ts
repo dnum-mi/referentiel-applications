@@ -238,7 +238,6 @@ test("AT-FORM-Notifications — panneau, deux rôles, vrai aperçu e-mail puis f
   );
   expect(opening.text).toContain("courriel synthetique pour nvda");
   expect(title.text).toMatch(/fermer.*bouton/);
-  await focusDocumentStart(page, nvda);
   const email = await captureStep(
     nvda,
     "notification-sandboxed-iframe-content",
@@ -252,7 +251,12 @@ test("AT-FORM-Notifications — panneau, deux rôles, vrai aperçu e-mail puis f
   await captureStep(
     nvda,
     "notification-email-close-escape",
-    () => nvda.press("Escape"),
+    async () => {
+      await nvda.perform(nvda.keyboardCommands.ignoreNextKeyCombination, {
+        capture: true,
+      });
+      await nvda.press("Escape", { capture: true });
+    },
     info,
   );
   await expect(dialog).not.toBeVisible();
@@ -275,7 +279,12 @@ test("AT-FORM-Notifications — panneau, deux rôles, vrai aperçu e-mail puis f
   await captureStep(
     nvda,
     "notification-panel-close-escape",
-    () => nvda.press("Escape"),
+    async () => {
+      await nvda.perform(nvda.keyboardCommands.ignoreNextKeyCombination, {
+        capture: true,
+      });
+      await nvda.press("Escape", { capture: true });
+    },
     info,
   );
   await expect(bell).toBeFocused();
@@ -325,7 +334,18 @@ for (const disabled of [false, true]) {
     );
     expect(expanded.text + read.text).toContain("alpha");
     expect(read.text).toContain("beta");
-    await focusDocumentStart(page, nvda);
+    // Say-all moved the virtual cursor into the source while DOM focus stayed
+    // on summary. Native Tab realigns both cursors before activating summary.
+    await captureStep(
+      nvda,
+      "mermaid-return-to-summary-tab-stop",
+      async () => {
+        await nvda.press("Shift+Tab", { capture: true });
+        await nvda.press("Tab", { capture: true });
+      },
+      info,
+    );
+    await expect(page.locator("details summary")).toBeFocused();
     await tabTo(nvda, "Description et source du diagramme", info);
     await activateCurrent(nvda, info, "mermaid-source-close");
     await expect(page.locator("details")).not.toHaveAttribute("open", "");

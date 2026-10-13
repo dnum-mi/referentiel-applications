@@ -153,6 +153,9 @@ try {
   $record.error = $_.Exception.Message
   throw
 } finally {
+  $record.nativeInputRecords = @([JawsHistoryNative]::InputRecords())
+  $record.nativeInputSource = 'Controlled SendInput arguments and native return values; not a keyboard hook or JAWS speech'
+  $record.freeTextCapturedByInputLog = $false
   $record.finishedUtc = [DateTime]::UtcNow.ToString('o')
   Save-Record $record
   if ($null -eq $previousClipboard) { [Windows.Forms.Clipboard]::Clear() }

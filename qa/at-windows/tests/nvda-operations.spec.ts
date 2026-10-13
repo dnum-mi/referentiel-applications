@@ -408,6 +408,18 @@ test("AT-OPS-U15 — import batch, attente, erreur, rapport et MAIA refusé, tou
   await expect(page.getByTestId("admin-import-ignored-sheets")).toContainText(
     "Ancien onglet",
   );
+  // The report is appended behind an existing virtual buffer. Refresh its
+  // content through NVDA before returning to the document start and its table.
+  await captureStep(
+    nvda,
+    "batch-refresh-native-buffer",
+    () =>
+      nvda.perform(nvda.keyboardCommands.refreshBrowseDocument, {
+        capture: true,
+      }),
+    info,
+  );
+  await focusDocumentStart(page, nvda);
   const report = await browseTable(nvda, info, "batch-native-report-table");
   expect(report.text).toMatch(/tableau|table/);
   expect(report.text).toMatch(/onglet|ligne|statut|identifiant/);

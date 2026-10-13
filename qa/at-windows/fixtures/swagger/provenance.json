@@ -7,7 +7,7 @@
   "sources": [
     {
       "file": "backend/src/swagger-ui-accessibility.ts",
-      "sha256": "2de7b6cbb75963d3973844ee1b392fdfdfa82dbcc951bd140dd2fe7157715b16"
+      "sha256": "8ee65d0dc1b1744e0ce7ffecc4a28a1ac8033de769c77d7b6946e4a5f21a1917"
     },
     {
       "file": "backend/src/swagger-documentation-language.ts",
@@ -45,7 +45,7 @@
     },
     {
       "file": "index.html",
-      "sha256": "c9b907d5021e3848d77566c5243acd3c20347093ef67b7d05df901f823446a79"
+      "sha256": "e838aab563ba9d15f1aace91df9a0ca60936ac4a35a4d48b4af931c332a18015"
     },
     {
       "file": "openapi-synthetic.json",

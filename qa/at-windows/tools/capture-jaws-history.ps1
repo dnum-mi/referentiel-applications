@@ -23,9 +23,18 @@ Add-Type -AssemblyName System.Windows.Forms
 if (-not ('JawsHistoryNative' -as [type])) {
   Add-Type -TypeDefinition @'
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 public static class JawsHistoryNative {
+  public sealed class KeyInputRecord {
+    public ushort VirtualKey, ScanCode;
+    public uint Flags, Accepted;
+    public int ErrorCode;
+    public string SubmittedUtc;
+  }
+  private static readonly List<KeyInputRecord> inputRecords = new List<KeyInputRecord>();
+  public static KeyInputRecord[] InputRecords() { return inputRecords.ToArray(); }
   [StructLayout(LayoutKind.Sequential)] public struct MouseInput {
     public int dx, dy;
     public uint mouseData, flags, time;
@@ -44,6 +53,7 @@ public static class JawsHistoryNative {
     public uint type;
     public InputUnion data;
   }
+  [DllImport("user32.dll", EntryPoint="MapVirtualKeyW", ExactSpelling=true)] private static extern uint MapVirtualKey(uint key, uint type);
   [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
   [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr window, out uint process);
   [DllImport("user32.dll")] public static extern uint GetClipboardSequenceNumber();
@@ -54,13 +64,31 @@ public static class JawsHistoryNative {
     GetWindowThreadProcessId(GetForegroundWindow(), out process);
     return process;
   }
-  public static void Key(ushort key, bool up, bool extended) {
+  public static ushort ScanCodeFor(ushort key) {
+    uint scan = MapVirtualKey(key, 0);
+    if (scan == 0 || scan > ushort.MaxValue) {
+      throw new InvalidOperationException("No reviewed hardware scan code for the controlled virtual key.");
+    }
+    return (ushort)scan;
+  }
+  public static Input BuildInput(ushort key, ushort scan, bool up, bool extended) {
+    if (scan == 0) { throw new ArgumentOutOfRangeException("scan"); }
     Input input = new Input();
     input.type = 1;
     input.data.keyboard.key = key;
+    input.data.keyboard.scan = scan;
     input.data.keyboard.flags = (up ? 2u : 0u) | (extended ? 1u : 0u);
-    if (SendInput(1, new Input[] { input }, Marshal.SizeOf(typeof(Input))) != 1) {
-      throw new Win32Exception(Marshal.GetLastWin32Error(), "SendInput non exécuté");
+    return input;
+  }
+  public static void Key(ushort key, bool up, bool extended) {
+    Input input = BuildInput(key, ScanCodeFor(key), up, extended);
+    string submittedUtc = DateTime.UtcNow.ToString("o");
+    uint accepted = SendInput(1, new Input[] { input }, Marshal.SizeOf(typeof(Input)));
+    int error = accepted == 1 ? 0 : Marshal.GetLastWin32Error();
+    inputRecords.Add(new KeyInputRecord { VirtualKey = input.data.keyboard.key, ScanCode = input.data.keyboard.scan,
+      Flags = input.data.keyboard.flags, Accepted = accepted, ErrorCode = error, SubmittedUtc = submittedUtc });
+    if (accepted != 1) {
+      throw new Win32Exception(error, "SendInput non exécuté");
     }
   }
 }
@@ -77,6 +105,18 @@ function Invoke-NativeChord([System.UInt16[]]$Modifiers, [System.UInt16]$Key, [b
       [JawsHistoryNative]::Key($Modifiers[$index], $true, $Modifiers[$index] -eq 0x2D)
     }
   }
+}
+function Save-NativeInputRecords {
+  $inputEvents = @([JawsHistoryNative]::InputRecords())
+  $inputProof = [ordered]@{
+    case = $CaseId; action = $NativeAction; driverPid = $PID; readerPid = $reader[0].Id; browserPid = $BrowserProcessId
+    recordedUtc = [DateTime]::UtcNow.ToString('o'); inputRecords = $inputEvents
+    source = 'Controlled SendInput arguments and native return values; not a keyboard hook or JAWS speech'
+    freeTextCaptured = $false; nativeSpeech = $false; rgaaVerdict = $null
+  }
+  $inputPath = [IO.Path]::GetFullPath($OutputFile + '.inputs.jsonl')
+  [IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($inputPath)) | Out-Null
+  [IO.File]::AppendAllText($inputPath, ($inputProof | ConvertTo-Json -Depth 6 -Compress) + [Environment]::NewLine, [Text.UTF8Encoding]::new($false))
 }
 function Assert-TargetWindow {
   if ([JawsHistoryNative]::ForegroundProcess() -ne $BrowserProcessId) {
@@ -105,6 +145,7 @@ foreach ($key in @(0x10, 0x11, 0x12, 0x5B, 0x5C)) {
 }
 Assert-TargetWindow
 $actionStarted = [DateTime]::UtcNow.ToString('o')
+try {
 switch ($NativeAction) {
   'NextLine' { Invoke-NativeChord -Modifiers @() -Key 0x28 -Extended $true }
   'NextGraphic' { Invoke-NativeChord -Modifiers @() -Key 0x47 }
@@ -167,4 +208,9 @@ try {
 } finally {
   if ($null -eq $previousClipboard) { [Windows.Forms.Clipboard]::Clear() }
   else { [Windows.Forms.Clipboard]::SetDataObject($previousClipboard, $true) }
+}
+
+} finally {
+  Save-NativeInputRecords
+
 }
