@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { isApiSuccess } from "@/api/api-result";
-import { nextTick, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import api from "@/api/index";
 import type { DataExposureDto } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps<{
   applicationId: string;
@@ -16,6 +17,10 @@ const emit = defineEmits(["close", "exposureCreated", "exposureUpdated"]);
 
 const toaster = useToasterStore();
 const isSubmitting = ref(false);
+useSubmissionFocus(isSubmitting);
+const submissionError = ref("");
+const isClosed = ref(false);
+const displayedError = computed(() => submissionError.value || (props.initialExposure ? props.errorMessage : ""));
 const typeError = ref<string | undefined>(undefined);
 const formElement = ref<HTMLFormElement | null>(null);
 
@@ -29,6 +34,7 @@ const form = ref({
 });
 
 function setInitialValues() {
+  submissionError.value = "";
   if (!props.initialExposure) {
     form.value = { type: "", format: "", endpoint: "", url: "", swaggerUrl: "", authenticationType: "" };
     return;
@@ -51,6 +57,8 @@ onMounted(async () => {
 });
 
 async function handleSubmit() {
+  if (isSubmitting.value) return;
+  submissionError.value = "";
   typeError.value = form.value.type.trim() ? undefined : "Veuillez renseigner un type d'exposition.";
   if (typeError.value) {
     await nextTick();
@@ -86,13 +94,20 @@ async function handleSubmit() {
       toaster.addSuccessMessage("Exposition créée avec succès");
       emit("exposureCreated");
     }
-    emit("close");
+    closeModal();
   } catch (error) {
     console.error("Error submitting exposure form:", error);
-    toaster.addErrorMessage("Une erreur est survenue lors de l'enregistrement de l'exposition.");
+    const message = "Une erreur est survenue lors de l'enregistrement de l'exposition.";
+    if (!isClosed.value && formElement.value?.isConnected) submissionError.value = message;
+    else toaster.addErrorMessage(message);
   } finally {
     isSubmitting.value = false;
   }
+}
+
+function closeModal() {
+  isClosed.value = true;
+  emit("close");
 }
 </script>
 
@@ -101,16 +116,16 @@ async function handleSubmit() {
     :opened="true"
     :title="props.initialExposure ? 'Modifier une exposition' : 'Ajouter une exposition'"
     data-testid="data-exposure-modal"
-    @close="$emit('close')"
+    @close="closeModal"
   >
-    <div role="alert" aria-live="assertive" aria-atomic="true">
+    <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="data-exposure-submit-error">
       <DsfrAlert
-        v-if="props.initialExposure && props.errorMessage.length > 0"
+        v-if="displayedError.length > 0"
         class="mb-4"
         tabindex="-1"
         type="error"
         title="Une erreur est survenue"
-        :description="props.errorMessage"
+        :description="displayedError"
       />
     </div>
     <form ref="formElement" data-testid="data-exposure-form" @submit.prevent="handleSubmit">
@@ -241,7 +256,7 @@ async function handleSubmit() {
       </DsfrInput>
 
       <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
-        <DsfrButton type="button" secondary label="Annuler" data-testid="data-exposure-cancel-btn" @click="$emit('close')" />
+        <DsfrButton type="button" secondary label="Annuler" data-testid="data-exposure-cancel-btn" @click="closeModal" />
         <DsfrButton
           type="submit"
           :disabled="isSubmitting"

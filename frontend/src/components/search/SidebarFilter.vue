@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, nextTick, useId, watch } from "vue";
+import { ref, computed, nextTick, useId, watch, provide } from "vue";
 import { useMediaQuery } from "@vueuse/core";
 import { useRoute } from "vue-router";
 import { useApplicationSearch } from "@/composables/use-application-search";
@@ -11,12 +11,11 @@ import QualityFilter from "@/components/search/QualityFilter.vue";
 import ApplicationFilter from "@/components/search/ApplicationFilter.vue";
 import PriorityRestartFilter from "@/components/search/PriorityRestartFilter.vue";
 import DataFilter from "@/components/search/DataFilter.vue";
-import { useAccordionManager } from "@/composables/use-accordion-manager";
 import { useStatisticsStore } from "@/stores/statisticsStore";
 import { useUserStore } from "@/stores/userStore";
 import SavedFiltersPanel from "./SavedFiltersPanel.vue";
 import StatusFilter from "./StatusFilter.vue";
-import { DsfrButton, DsfrToggleSwitch } from "@gouvminint/vue-dsfr";
+import { DsfrButton, DsfrToggleSwitch, registerAccordionKey } from "@gouvminint/vue-dsfr";
 
 defineOptions({ inheritAttrs: false });
 
@@ -63,7 +62,18 @@ function handleReset() {
 const statsStore = useStatisticsStore();
 const userStore = useUserStore();
 
-const { openAccordions, toggle } = useAccordionManager(10, true);
+// L’injection DSFR fournit un booléen dès le premier rendu. Sans groupe ni ce
+// registre, DsfrAccordion commence avec un état undefined et omet aria-expanded.
+// Chaque filtre garde son propre état pour permettre plusieurs panneaux ouverts.
+provide(registerAccordionKey, () => {
+  const isActive = ref(false);
+  return {
+    isActive,
+    expand: () => {
+      isActive.value = !isActive.value;
+    },
+  };
+});
 
 const isMyAppsFilterActive = computed(() => {
   return !!(userStore.user?.email && filters.value.myApplications);
@@ -117,13 +127,7 @@ const total = computed(() => {
 
         <h2 :id="`${sidebarId}-title`" class="fr-h6">Filtres</h2>
 
-        <DsfrAccordion
-          v-if="userStore.user?.email"
-          :selected="openAccordions.includes(9)"
-          title="Filtres sauvegardés"
-          data-testid="sidebar-accordion-saved-filters"
-          @click="toggle(9)"
-        >
+        <DsfrAccordion v-if="userStore.user?.email" title="Filtres sauvegardés" data-testid="sidebar-accordion-saved-filters">
           <SavedFiltersPanel />
         </DsfrAccordion>
 
@@ -151,13 +155,7 @@ const total = computed(() => {
           @update:model-value="toggleSubscribedAppsFilter"
         />
 
-        <DsfrAccordion
-          :selected="openAccordions.includes(0)"
-          title="Portefeuille"
-          data-testid="sidebar-accordion-portfolio"
-          class="portfolio-accordion"
-          @click="toggle(0)"
-        >
+        <DsfrAccordion title="Portefeuille" data-testid="sidebar-accordion-portfolio" class="portfolio-accordion">
           <BusinessDivisionSearch
             label="Direction métier"
             tooltip-content="Recherche les applications rattachées à au moins une des directions de métier sélectionnées."
@@ -167,61 +165,36 @@ const total = computed(() => {
           <CampaignFilter v-if="isTimeRoute" />
         </DsfrAccordion>
 
-        <DsfrAccordion
-          :selected="openAccordions.includes(1)"
-          title="Informations génerales"
-          data-testid="sidebar-accordion-general"
-          @click="toggle(1)"
-        >
+        <DsfrAccordion title="Informations génerales" data-testid="sidebar-accordion-general">
           <ApplicationFilter />
           <PriorityRestartFilter />
         </DsfrAccordion>
 
-        <DsfrAccordion :selected="openAccordions.includes(2)" title="Statut" data-testid="sidebar-accordion-status" @click="toggle(2)">
+        <DsfrAccordion title="Statut" data-testid="sidebar-accordion-status">
           <StatusFilter />
         </DsfrAccordion>
 
-        <DsfrAccordion
-          :selected="openAccordions.includes(3)"
-          title="Organisation & Acteurs"
-          data-testid="sidebar-accordion-organization"
-          @click="toggle(3)"
-        >
+        <DsfrAccordion title="Organisation & Acteurs" data-testid="sidebar-accordion-organization">
           <ActorFilter />
         </DsfrAccordion>
 
-        <DsfrAccordion
-          :selected="openAccordions.includes(4)"
-          title="Hébergement"
-          data-testid="sidebar-accordion-hosting"
-          @click="toggle(4)"
-        >
+        <DsfrAccordion title="Hébergement" data-testid="sidebar-accordion-hosting">
           <HostingFilter />
         </DsfrAccordion>
 
-        <DsfrAccordion
-          :selected="openAccordions.includes(5)"
-          title="Conformité"
-          data-testid="sidebar-accordion-compliance"
-          @click="toggle(5)"
-        >
+        <DsfrAccordion title="Conformité" data-testid="sidebar-accordion-compliance">
           <ComplianceFilter />
         </DsfrAccordion>
 
-        <DsfrAccordion
-          :selected="openAccordions.includes(6)"
-          title="Relations"
-          data-testid="sidebar-accordion-relations"
-          @click="toggle(6)"
-        >
+        <DsfrAccordion title="Relations" data-testid="sidebar-accordion-relations">
           <RelationFilter />
         </DsfrAccordion>
 
-        <DsfrAccordion :selected="openAccordions.includes(7)" title="Données" data-testid="sidebar-accordion-donnees" @click="toggle(7)">
+        <DsfrAccordion title="Données" data-testid="sidebar-accordion-donnees">
           <DataFilter />
         </DsfrAccordion>
 
-        <DsfrAccordion :selected="openAccordions.includes(8)" title="Qualité" data-testid="sidebar-accordion-quality" @click="toggle(8)">
+        <DsfrAccordion title="Qualité" data-testid="sidebar-accordion-quality">
           <QualityFilter />
         </DsfrAccordion>
       </div>

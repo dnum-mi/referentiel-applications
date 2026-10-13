@@ -3,6 +3,7 @@ import { computed, ref, nextTick, useId, watch } from "vue";
 import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 import Skeleton from "primevue/skeleton";
+import type { CheckboxPassThroughOptions } from "primevue/checkbox";
 import PaginationFooter from "./PaginationFooter.vue";
 import type { TableColumn, TableSortEvent } from "@/types/table";
 import type { DataTableSortEvent, DataTablePageEvent, DataTableColumnResizeEndEvent } from "primevue/datatable";
@@ -126,6 +127,14 @@ const emit = defineEmits<{
 }>();
 
 const selection = defineModel<T[]>("selection", { default: () => [] });
+// PrimeVue inverse actuellement les noms d'action de ses cases de sélection.
+// Le pass-through de l'input utilise l'état réel du Checkbox sans changer la locale des autres widgets.
+const rowCheckboxPt = {
+  input: ({ context }) => ({ "aria-label": context.checked ? "Désélectionner la ligne" : "Sélectionner la ligne" }),
+} satisfies CheckboxPassThroughOptions;
+const headerCheckboxPt = {
+  input: ({ context }) => ({ "aria-label": context.checked ? "Tout désélectionner" : "Tout sélectionner" }),
+} satisfies CheckboxPassThroughOptions;
 
 const internalSortField = ref(props.sortField);
 const internalSortOrder = ref(props.sortOrder);
@@ -301,7 +310,13 @@ watch(
         <output class="fr-py-2w fr-text--center" aria-live="polite" style="display: block">{{ emptyMessage }}</output>
       </template>
 
-      <Column v-if="selectable" selection-mode="multiple" header-style="width: 3rem" :exportable="false" />
+      <Column
+        v-if="selectable"
+        selection-mode="multiple"
+        header-style="width: 3rem"
+        :exportable="false"
+        :pt="{ pcHeaderCheckbox: headerCheckboxPt, pcRowCheckbox: rowCheckboxPt }"
+      />
 
       <Column
         v-for="column in columns"

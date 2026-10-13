@@ -17,6 +17,7 @@ import { useToasterStore } from "@/stores/toasterStore";
 import { OPEN_DATA_STATUS_LABELS, UPDATE_FREQUENCY_LABELS } from "@/constants/data-catalog.constants";
 import { useAsyncSearch } from "@/composables/use-async-search";
 import AccessibleAutocomplete from "@/components/AccessibleAutocomplete.vue";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps<{
   applicationId: string;
@@ -28,6 +29,10 @@ const emit = defineEmits(["close", "dataCreated", "dataUpdated"]);
 
 const toaster = useToasterStore();
 const isSubmitting = ref(false);
+useSubmissionFocus(isSubmitting);
+const submissionError = ref("");
+const isClosed = ref(false);
+const displayedError = computed(() => submissionError.value || (props.initialItem ? props.errorMessage : ""));
 const formElement = ref<HTMLFormElement | null>(null);
 const isLoadingOptions = ref(false);
 const {
@@ -261,6 +266,7 @@ async function fetchOptions() {
 }
 
 function setInitialValues() {
+  submissionError.value = "";
   if (!props.initialItem) {
     form.value = emptyForm();
     descriptionSearch.value = "";
@@ -367,6 +373,8 @@ function validateDescription() {
 }
 
 async function handleSubmit() {
+  if (isSubmitting.value || isLoadingOptions.value) return;
+  submissionError.value = "";
   if (!validateDescription()) {
     await focusFormField(
       props.initialItem || isCreatingNewDescription.value ? "new-description-name-input" : "data-description-search-input",
@@ -418,13 +426,20 @@ async function handleSubmit() {
       );
       emit("dataCreated");
     }
-    emit("close");
+    closeModal();
   } catch (error) {
     console.error("Error submitting data application form:", error);
-    toaster.addErrorMessage("Une erreur est survenue lors de l'enregistrement de la donnée.");
+    const message = "Une erreur est survenue lors de l'enregistrement de la donnée.";
+    if (!isClosed.value && formElement.value?.isConnected) submissionError.value = message;
+    else toaster.addErrorMessage(message);
   } finally {
     isSubmitting.value = false;
   }
+}
+
+function closeModal() {
+  isClosed.value = true;
+  emit("close");
 }
 </script>
 
@@ -433,16 +448,16 @@ async function handleSubmit() {
     :opened="true"
     :title="props.initialItem ? 'Modifier une donnée' : 'Rattacher une donnée'"
     data-testid="data-application-modal"
-    @close="$emit('close')"
+    @close="closeModal"
   >
-    <div role="alert" aria-live="assertive" aria-atomic="true">
+    <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="data-application-submit-error">
       <DsfrAlert
-        v-if="props.initialItem && props.errorMessage.length > 0"
+        v-if="displayedError.length > 0"
         class="mb-4"
         tabindex="-1"
         type="error"
         title="Une erreur est survenue"
-        :description="props.errorMessage"
+        :description="displayedError"
       />
     </div>
     <form ref="formElement" data-testid="data-application-form" @submit.prevent="handleSubmit">
@@ -970,7 +985,7 @@ async function handleSubmit() {
         </DsfrInput>
       </div>
       <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
-        <DsfrButton type="button" secondary label="Annuler" data-testid="data-application-cancel-btn" @click="$emit('close')" />
+        <DsfrButton type="button" secondary label="Annuler" data-testid="data-application-cancel-btn" @click="closeModal" />
         <DsfrButton
           type="submit"
           :disabled="isSubmitting || isLoadingOptions"

@@ -1,10 +1,11 @@
 import { enableAutoUnmount, mount } from "@vue/test-utils";
 import DataApplicationModal from "./DataApplicationModal.vue";
 
-const { findDescriptions, createApplicationData, createFamily } = vi.hoisted(() => ({
+const { findDescriptions, createApplicationData, createFamily, addErrorMessage } = vi.hoisted(() => ({
   findDescriptions: vi.fn(),
   createApplicationData: vi.fn(),
   createFamily: vi.fn(),
+  addErrorMessage: vi.fn(),
 }));
 
 vi.mock("@/api/index", () => ({
@@ -17,7 +18,7 @@ vi.mock("@/api/index", () => ({
   },
 }));
 vi.mock("@/stores/toasterStore", () => ({
-  useToasterStore: () => ({ addErrorMessage: vi.fn(), addSuccessMessage: vi.fn() }),
+  useToasterStore: () => ({ addErrorMessage, addSuccessMessage: vi.fn() }),
 }));
 
 const description = { id: "description-1", name: "Adresse", families: [{ id: "family-1", path: "Identité" }] };
@@ -29,7 +30,7 @@ async function renderModal() {
     props: { applicationId: "app-1", errorMessage: "" },
     global: {
       stubs: {
-        DsfrModal: { template: "<div><slot /></div>" },
+        DsfrModal: { template: '<div role="dialog"><button class="fr-btn--close">Fermer</button><slot /></div>' },
         AccessibleAutocomplete: true,
       },
     },
@@ -43,6 +44,7 @@ beforeEach(() => {
   findDescriptions.mockReset();
   createApplicationData.mockReset().mockResolvedValue({ response: { ok: true } });
   createFamily.mockReset();
+  addErrorMessage.mockClear();
 });
 afterEach(() => vi.useRealTimers());
 
@@ -145,5 +147,71 @@ describe("DataApplicationModal — recherche de descriptions", () => {
     expect(wrapper.findAll("#dataDescriptionsList option")).toHaveLength(0);
     expect(findDescriptions).toHaveBeenCalledTimes(1);
     wrapper.unmount();
+  });
+
+  it("garde le brouillon et le focus après un refus API, avec un seul appel et une alerte locale", async () => {
+    findDescriptions.mockResolvedValue({ data: [description] });
+    let resolve!: (value: { response: { ok: false } }) => void;
+    createApplicationData.mockReturnValue(new Promise((release) => (resolve = release)));
+    const wrapper = await renderModal();
+    const descriptionInput = wrapper.get('[data-testid="data-description-search-input"]');
+    await descriptionInput.setValue("Adresse (Identité)");
+    await vi.advanceTimersByTimeAsync(300);
+    const submit = wrapper.get<HTMLButtonElement>('[data-testid="data-application-submit-btn"]');
+    submit.element.focus();
+    const submission = wrapper.get("form").trigger("submit");
+    // jsdom garde le focus sur disabled ; reproduire le blur avant le rendu.
+    submit.element.blur();
+    await submission;
+    await wrapper.get("form").trigger("submit");
+    await vi.advanceTimersByTimeAsync(0);
+    expect(createApplicationData).toHaveBeenCalledTimes(1);
+    expect(wrapper.get(".fr-btn--close").element).toHaveFocus();
+    resolve({ response: { ok: false } });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(wrapper.get('[data-testid="data-application-submit-error"]').element).toHaveAttribute("role", "alert");
+    expect(wrapper.get('[data-testid="data-application-submit-error"]').text()).toContain("enregistrement de la donnée");
+    expect(descriptionInput.element).toHaveValue("Adresse (Identité)");
+    expect(submit.element).toHaveFocus();
+    expect(addErrorMessage).not.toHaveBeenCalled();
+    expect(wrapper.emitted("close")).toBeUndefined();
+  });
+
+  it("respecte le focus choisi dans un champ pendant l'attente", async () => {
+    findDescriptions.mockResolvedValue({ data: [description] });
+    let resolve!: (value: { response: { ok: false } }) => void;
+    createApplicationData.mockReturnValue(new Promise((release) => (resolve = release)));
+    const wrapper = await renderModal();
+    await wrapper.get('[data-testid="data-description-search-input"]').setValue("Adresse (Identité)");
+    await vi.advanceTimersByTimeAsync(300);
+    wrapper.get<HTMLButtonElement>('[data-testid="data-application-submit-btn"]').element.focus();
+    await wrapper.get("form").trigger("submit");
+    const example = wrapper.get<HTMLInputElement>('[data-testid="data-application-example-input"]');
+    example.element.focus();
+    resolve({ response: { ok: false } });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(example.element).toHaveFocus();
+  });
+
+  it("garde une annonce globale après fermeture, sans reprendre le focus", async () => {
+    findDescriptions.mockResolvedValue({ data: [description] });
+    let resolve!: (value: { response: { ok: false } }) => void;
+    createApplicationData.mockReturnValue(new Promise((release) => (resolve = release)));
+    const wrapper = await renderModal();
+    await wrapper.get('[data-testid="data-description-search-input"]').setValue("Adresse (Identité)");
+    await vi.advanceTimersByTimeAsync(300);
+    wrapper.get<HTMLButtonElement>('[data-testid="data-application-submit-btn"]').element.focus();
+    await wrapper.get("form").trigger("submit");
+    await wrapper.get('[data-testid="data-application-cancel-btn"]').trigger("click");
+    expect(wrapper.emitted("close")).toHaveLength(1);
+    wrapper.unmount();
+    const destination = document.createElement("button");
+    document.body.append(destination);
+    destination.focus();
+    resolve({ response: { ok: false } });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(addErrorMessage).toHaveBeenCalledWith("Une erreur est survenue lors de l'enregistrement de la donnée.");
+    expect(destination).toHaveFocus();
+    destination.remove();
   });
 });

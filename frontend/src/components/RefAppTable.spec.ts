@@ -3,8 +3,71 @@ import PrimeVue from "primevue/config";
 import RefAppTable from "./RefAppTable.vue";
 import DataTable from "primevue/datatable";
 import { primeVueFrenchLocale } from "@/constants/primevue-locale";
+import { defineComponent, h, ref } from "vue";
 
 describe("RefAppTable", () => {
+  it("nomme les cases selon leur état réel et synchronise la sélection individuelle et globale", async () => {
+    const items = [
+      { id: "1", label: "Alpha" },
+      { id: "2", label: "Bravo" },
+    ];
+    const selected = ref<unknown[]>([]);
+    const host = defineComponent({
+      setup: () => () =>
+        h(RefAppTable, {
+          items,
+          columns: [{ field: "label", header: "Application" }],
+          dataKey: "id",
+          selectable: true,
+          selection: selected.value,
+          "onUpdate:selection": (value) => {
+            selected.value = value;
+          },
+        }),
+    });
+    const wrapper = mount(host, {
+      attachTo: document.body,
+      global: { plugins: [[PrimeVue, { locale: primeVueFrenchLocale, unstyled: true }]] },
+    });
+    const header = wrapper.get<HTMLInputElement>('thead input[type="checkbox"]');
+    const rows = wrapper.findAll<HTMLInputElement>('tbody input[type="checkbox"]');
+    expect(header.element).toHaveAccessibleName("Tout sélectionner");
+    expect(header.element.checked).toBe(false);
+    for (const row of rows) {
+      expect(row.element).toHaveAccessibleName("Sélectionner la ligne");
+      expect(row.element.checked).toBe(false);
+    }
+    rows[0].element.focus();
+    await rows[0].setValue(true);
+    expect(selected.value).toEqual([items[0]]);
+    expect(rows[0].element).toHaveAccessibleName("Désélectionner la ligne");
+    expect(rows[1].element).toHaveAccessibleName("Sélectionner la ligne");
+    expect(header.element).toHaveAccessibleName("Tout sélectionner");
+    expect(document.activeElement).toBe(rows[0].element);
+    await rows[0].setValue(false);
+    expect(selected.value).toEqual([]);
+    expect(rows[0].element).toHaveAccessibleName("Sélectionner la ligne");
+    header.element.focus();
+    await header.setValue(true);
+    expect(selected.value).toEqual(items);
+    expect(header.element.checked).toBe(true);
+    expect(header.element).toHaveAccessibleName("Tout désélectionner");
+    for (const row of rows) {
+      expect(row.element.checked).toBe(true);
+      expect(row.element).toHaveAccessibleName("Désélectionner la ligne");
+    }
+    expect(document.activeElement).toBe(header.element);
+    await header.setValue(false);
+    expect(selected.value).toEqual([]);
+    expect(header.element.checked).toBe(false);
+    expect(header.element).toHaveAccessibleName("Tout sélectionner");
+    for (const row of rows) {
+      expect(row.element.checked).toBe(false);
+      expect(row.element).toHaveAccessibleName("Sélectionner la ligne");
+    }
+    wrapper.unmount();
+  });
+
   it("conserve le tri avec une commande d’aide distincte et laisse le navigateur activer son bouton au clavier", async () => {
     const wrapper = mount(RefAppTable, {
       props: {
