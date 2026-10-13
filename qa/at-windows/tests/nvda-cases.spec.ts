@@ -209,6 +209,10 @@ for (const document of documents) {
     await installOfflinePage(page, document.id);
     await attachIdentity(nvda, browser.version(), info);
     info.setTimeout(600_000);
+    const footer =
+      document.id === "AT-D03"
+        ? "ce rapport conserve les donnees et le journal de l import"
+        : "les informations reproduisent le perimetre du format correspondant";
     const reading = await captureStep(
       nvda,
       "document-linear-reading",
@@ -219,11 +223,7 @@ for (const document of documents) {
         let reachedFooter = false;
         for (let line = 0; line < 450; line++) {
           await nvda.press("ArrowDown", { capture: true });
-          if (
-            normalizeSpeech(await nvda.lastSpokenPhrase()).includes(
-              "les informations reproduisent le perimetre du format correspondant",
-            )
-          ) {
+          if (normalizeSpeech(await nvda.lastSpokenPhrase()).includes(footer)) {
             reachedFooter = true;
             break;
           }
