@@ -97,3 +97,36 @@ jobs:
             driver/qa/at-windows/fixtures/*provenance.json
             driver/qa/at-windows/fixtures/manifest.json
           retention-days: 14
+
+  jaws-installer-static-acquisition:
+    if: github.event.repository.private == false
+    runs-on: windows-2022
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          path: driver
+          persist-credentials: false
+      - name: Acquire and verify official JAWS 2025 multilingual installer without execution
+        working-directory: driver/qa/at-windows
+        run: |
+          $files = @('tools/acquire-jaws-installer.ps1')
+          foreach ($file in $files) {
+            $tokens = $null
+            $errors = $null
+            [Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file), [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors.Count -gt 0) { throw ($errors | Out-String) }
+          }
+          & ./tools/acquire-jaws-installer.ps1 -OutputDirectory ./evidence/jaws-acquisition
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rgaa-jaws-installer-static-${{ github.sha }}
+          path: driver/qa/at-windows/evidence/jaws-acquisition/installer-static-verification.json
+          if-no-files-found: warn
+          retention-days: 14

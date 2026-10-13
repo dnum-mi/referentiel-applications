@@ -221,12 +221,18 @@ for (const document of documents) {
         // NVDA Say All can pause longer than the SDK's one-second capture
         // window. Read each line natively until the generator's real footer.
         let reachedFooter = false;
+        let previousLine = "";
+        let repeatedLines = 0;
         for (let line = 0; line < 450; line++) {
           await nvda.press("ArrowDown", { capture: true });
-          if (normalizeSpeech(await nvda.lastSpokenPhrase()).includes(footer)) {
+          const currentLine = normalizeSpeech(await nvda.lastSpokenPhrase());
+          if (currentLine.includes(footer)) {
             reachedFooter = true;
             break;
           }
+          repeatedLines = currentLine === previousLine ? repeatedLines + 1 : 0;
+          previousLine = currentLine;
+          if (repeatedLines >= 6) break;
         }
         expect(reachedFooter, "Fin du document réellement lue par NVDA").toBe(
           true,

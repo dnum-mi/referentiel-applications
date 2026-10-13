@@ -6,6 +6,9 @@ import type { NVDAPlaywright } from "@guidepup/playwright";
 import type { Page, TestInfo } from "@playwright/test";
 
 const execFileAsync = promisify(execFile);
+const phase = ["smoke", "interactive"].includes(process.env.RGAA_PHASE ?? "")
+  ? process.env.RGAA_PHASE
+  : "cases";
 
 export async function windowsSnapshot() {
   const script = String.raw`
@@ -85,7 +88,7 @@ export const test = nvdaTest.extend<
       }
       await mkdir("evidence", { recursive: true });
       await writeFile(
-        `evidence/${process.env.RGAA_PHASE === "smoke" ? "smoke" : "cases"}-windows-before.json`,
+        `evidence/${phase}-windows-before.json`,
         JSON.stringify(before, null, 2),
       );
       try {
@@ -93,7 +96,7 @@ export const test = nvdaTest.extend<
       } finally {
         const after = await windowsSnapshot();
         await writeFile(
-          `evidence/${process.env.RGAA_PHASE === "smoke" ? "smoke" : "cases"}-windows-after.json`,
+          `evidence/${phase}-windows-after.json`,
           JSON.stringify(after, null, 2),
         );
         if (
@@ -180,7 +183,9 @@ export const normalizeSpeech = (text: string) =>
 
 /** Focus real document content without tabbing out of pages that have no links. */
 export async function focusDocumentStart(page: Page, nvda: NVDAPlaywright) {
-  await page.bringToFront();
+  // Keep the SDK's native foreground-window check and focus-mode workaround.
+  // Then repair its final Tab when the document has no focusable item.
+  await nvda.navigateToWebContent({ capture: false });
   await page.locator("body").click({ position: { x: 1, y: 1 } });
   await nvda.perform(nvda.keyboardCommands.exitFocusMode, { capture: false });
   await nvda.press("Control+Home", { capture: true });
@@ -194,26 +199,41 @@ export async function captureStep(
 ) {
   await nvda.clearSpokenPhraseLog();
   const startedAt = new Date().toISOString();
-  await action();
-  const phrases = [...(await nvda.spokenPhraseLog())];
-  await info.attach(`${step}-native-speech`, {
-    body: Buffer.from(
-      JSON.stringify(
-        {
-          step,
-          startedAt,
-          completedAt: new Date().toISOString(),
-          source: "NVDA Remote native speak events",
-          phrases,
-        },
-        null,
-        2,
+  try {
+    await action();
+  } finally {
+    await info.attach(`${step}-native-speech`, {
+      body: Buffer.from(
+        JSON.stringify(
+          {
+            step,
+            startedAt,
+            completedAt: new Date().toISOString(),
+            source: "NVDA Remote native speak events",
+            phrases: [...(await nvda.spokenPhraseLog())],
+          },
+          null,
+          2,
+        ),
       ),
-    ),
-    contentType: "application/json",
-  });
+      contentType: "application/json",
+    });
+  }
+  const phrases = [...(await nvda.spokenPhraseLog())];
   return { phrases, text: normalizeSpeech(phrases.join(" ")) };
 }
+
+test.afterEach(async ({}, info) => {
+  if (info.status !== info.expectedStatus) {
+    console.info(
+      JSON.stringify({
+        case: info.title,
+        status: info.status,
+        errors: info.errors.map((error) => error.message),
+      }),
+    );
+  }
+});
 
 export async function attachIdentity(
   nvda: NVDAPlaywright,
