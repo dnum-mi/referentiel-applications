@@ -134,4 +134,33 @@ describe("UserInfoTab — administrateur à contacter", () => {
     expect(screen.getByRole("status")).toBeEmptyDOMElement();
     consoleError.mockRestore();
   });
+
+  it.each(["succès", "refus"] as const)("préserve le lien rejoint pendant la mise à jour différée (%s)", async (outcome) => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    let finish = () => {};
+    updateEmailPreferences.mockImplementationOnce(
+      (enabled: boolean) =>
+        new Promise<void>((resolve, reject) => {
+          finish = () => {
+            if (outcome === "refus") reject(new Error("refus"));
+            else {
+              emailNotificationsEnabled.value = enabled;
+              resolve();
+            }
+          };
+        }),
+    );
+    render(UserInfoTab, { global: { stubs: { UserPermissions: true } } });
+    const link = await screen.findByTestId("user-profile-contact-admin-link");
+    const checkbox = screen.getByRole("checkbox", { name: "Recevoir les notifications par email" });
+    checkbox.focus();
+    await fireEvent.click(checkbox);
+    expect(checkbox).toBeDisabled();
+    link.focus();
+    finish();
+    await waitFor(() => expect(checkbox).not.toBeDisabled());
+    expect(link).toHaveFocus();
+    expect(checkbox).toHaveProperty("checked", outcome === "succès");
+    consoleError.mockRestore();
+  });
 });

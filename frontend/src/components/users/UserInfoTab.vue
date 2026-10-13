@@ -47,6 +47,8 @@ watch(
 );
 
 async function handleToggleEmailNotifications() {
+  if (isUpdating.value) return;
+  const focusOrigin = document.activeElement;
   isUpdating.value = true;
   successMessage.value = "";
   errorMessage.value = "";
@@ -68,9 +70,10 @@ async function handleToggleEmailNotifications() {
     if (typeof userStore.user?.emailNotificationsEnabled === "boolean") {
       emailNotificationsEnabled.value = userStore.user.emailNotificationsEnabled;
     }
-    // 12.8 : conserver le focus sur le champ après l'opération (le :disabled le retire pendant la requête).
     await nextTick();
-    toggleRef.value?.$el?.querySelector("input")?.focus();
+    if (userId === userStore.user?.id && (document.activeElement === document.body || document.activeElement === focusOrigin)) {
+      toggleRef.value?.$el?.querySelector("input")?.focus();
+    }
   }
 }
 
@@ -141,7 +144,7 @@ onMounted(async () => {
         @update:model-value="handleToggleEmailNotifications"
       />
       <output aria-live="polite" aria-atomic="true" class="fr-valid-text" data-testid="email-preferences-success">
-        {{ successMessage }}
+        {{ isUpdating ? "Mise à jour de vos préférences de notification…" : successMessage }}
       </output>
       <p v-if="errorMessage" role="alert" class="fr-error-text" data-testid="email-preferences-error">{{ errorMessage }}</p>
     </div>

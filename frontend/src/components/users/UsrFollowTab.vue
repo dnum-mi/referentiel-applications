@@ -15,6 +15,8 @@ onMounted(async () => {
 });
 
 const unsubscribe = async (appId: string) => {
+  if (isUpdating.value) return;
+  const focusOrigin = document.activeElement;
   const userId = userStore.user?.id;
   const applicationIndex = userStore.user?.followedApplications?.findIndex((app) => app.id === appId) ?? 0;
   const applicationLabel = userStore.user?.followedApplications?.find((app) => app.id === appId)?.label || appId;
@@ -35,7 +37,7 @@ const unsubscribe = async (appId: string) => {
   } finally {
     isUpdating.value = false;
     await nextTick();
-    if (userId === userStore.user?.id) {
+    if (userId === userStore.user?.id && (document.activeElement === document.body || document.activeElement === focusOrigin)) {
       const buttons = Array.from(
         followedSection.value?.querySelectorAll<HTMLButtonElement>('[data-testid="user-unsubscribe-button"]') || [],
       );
@@ -87,7 +89,7 @@ const unsubscribe = async (appId: string) => {
       :class="successMessage ? 'fr-alert fr-alert--success fr-mt-2w' : ''"
       class="follow-status"
     >
-      {{ successMessage }}
+      {{ isUpdating ? "Désabonnement en cours…" : successMessage }}
     </output>
 
     <div v-if="errorMessage" class="fr-mt-2w">

@@ -14,6 +14,8 @@ const isOpen = ref(false);
 const panelRef = ref<HTMLElement | null>(null);
 const buttonRef = ref<HTMLElement | null>(null);
 const panelId = `notifications-${useId()}`;
+const isMarkingAllAsRead = ref(false);
+const operationStatus = ref("");
 
 function closePanel(event?: KeyboardEvent) {
   if (event) {
@@ -60,7 +62,17 @@ async function onSelect(notification: NotificationDto) {
 }
 
 async function onMarkAllAsRead() {
-  await notificationStore.markAllAsRead();
+  if (isMarkingAllAsRead.value) return;
+  const focusOrigin = document.activeElement;
+  isMarkingAllAsRead.value = true;
+  operationStatus.value = "Marquage des notifications en cours…";
+  const succeeded = await notificationStore.markAllAsRead();
+  isMarkingAllAsRead.value = false;
+  operationStatus.value = succeeded ? "Toutes les notifications ont été marquées comme lues." : "";
+  await nextTick();
+  if (succeeded && (document.activeElement === document.body || document.activeElement === focusOrigin)) {
+    buttonRef.value?.focus();
+  }
 }
 
 async function goToHistory() {
@@ -90,6 +102,9 @@ async function goToHistory() {
         {{ badgeLabel }}
       </span>
     </button>
+    <output aria-live="polite" aria-atomic="true" class="fr-sr-only" data-testid="notification-bell-operation-status">{{
+      operationStatus
+    }}</output>
 
     <section
       v-if="isOpen"
@@ -106,6 +121,8 @@ async function goToHistory() {
           type="button"
           class="fr-btn fr-btn--tertiary-no-outline fr-btn--sm"
           data-testid="notification-mark-all-read"
+          :aria-disabled="isMarkingAllAsRead"
+          :aria-busy="isMarkingAllAsRead"
           @click="onMarkAllAsRead"
         >
           Tout marquer comme lu

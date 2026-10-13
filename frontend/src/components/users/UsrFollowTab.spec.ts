@@ -35,6 +35,35 @@ function renderFollowedApplications() {
 }
 
 describe("Applications suivies — noms et focus", () => {
+  it.each(["succès", "refus"] as const)("préserve le lien choisi pendant le désabonnement (%s) et bloque le doublon", async (outcome) => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    let finish = () => {};
+    unsubscribeFromApp.mockImplementationOnce(
+      (appId: string) =>
+        new Promise<void>((resolve, reject) => {
+          finish = () => {
+            if (outcome === "refus") reject(new Error("Refus HTTP"));
+            else {
+              followedApplications.value = followedApplications.value.filter((app) => app.id !== appId);
+              resolve();
+            }
+          };
+        }),
+    );
+    renderFollowedApplications();
+    const first = screen.getByRole("button", { name: "Désabonner de l’application Application Alpha" });
+    first.focus();
+    await fireEvent.click(first);
+    await fireEvent.click(first);
+    expect(unsubscribeFromApp).toHaveBeenCalledTimes(1);
+    const link = screen.getByRole("link", { name: "Application Beta" });
+    link.focus();
+    finish();
+    await waitFor(() => expect(screen.getByRole("button", { name: "Désabonner de l’application Application Beta" })).not.toBeDisabled());
+    expect(link).toHaveFocus();
+    expect(followedApplications.value).toHaveLength(outcome === "succès" ? 1 : 2);
+    consoleError.mockRestore();
+  });
   it("nomme chaque désabonnement et restitue le focus après la suppression de la ligne", async () => {
     renderFollowedApplications();
     await fireEvent.click(screen.getByRole("button", { name: "Désabonner de l’application Application Alpha" }));

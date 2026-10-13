@@ -71,11 +71,11 @@ function resetMessages() {
   successMessage.value = null;
 }
 
-// 12.8 : après création/révocation, porter le focus au début du message de statut (succès ou erreur).
 const messageRef = useTemplateRef<HTMLElement>("messageRef");
 
-async function focusMessage() {
+async function focusMessage(origin: Element | null) {
   await nextTick();
+  if (document.activeElement !== document.body && document.activeElement !== origin) return;
   const el = messageRef.value;
   if (el) {
     el.setAttribute("tabindex", "-1");
@@ -99,6 +99,7 @@ async function fetchTokens() {
 }
 
 async function createToken() {
+  if (isLoading.value) return;
   if (!validateForm()) {
     await nextTick();
     const firstError = (["name", "description", "expiresAt"] as const).find((field) => fieldErrors.value[field]);
@@ -106,6 +107,7 @@ async function createToken() {
     return;
   }
 
+  const focusOrigin = document.activeElement;
   isLoading.value = true;
   newlyCreatedToken.value = null;
   resetMessages();
@@ -114,14 +116,14 @@ async function createToken() {
   if (response.error) {
     error.value = "Erreur lors de la création du token";
     isLoading.value = false;
-    await focusMessage();
+    await focusMessage(focusOrigin);
     return;
   }
 
   if (!response.data) {
     error.value = "Erreur lors de la création du token";
     isLoading.value = false;
-    await focusMessage();
+    await focusMessage(focusOrigin);
     return;
   }
 
@@ -131,7 +133,7 @@ async function createToken() {
   showCreateForm.value = false;
   await fetchTokens();
   isLoading.value = false;
-  await focusMessage();
+  await focusMessage(focusOrigin);
 }
 
 function requestRevokeToken(tokenId: string) {
@@ -140,8 +142,9 @@ function requestRevokeToken(tokenId: string) {
 }
 
 async function confirmRevokeToken() {
-  if (!tokenToRevoke.value) return;
+  if (!tokenToRevoke.value || isLoading.value) return;
 
+  const focusOrigin = document.activeElement;
   isLoading.value = true;
   resetMessages();
 
@@ -151,7 +154,7 @@ async function confirmRevokeToken() {
     isLoading.value = false;
     showDeleteConfirmation.value = false;
     tokenToRevoke.value = null;
-    await focusMessage();
+    await focusMessage(focusOrigin);
     return;
   }
 
@@ -160,7 +163,7 @@ async function confirmRevokeToken() {
   isLoading.value = false;
   showDeleteConfirmation.value = false;
   tokenToRevoke.value = null;
-  await focusMessage();
+  await focusMessage(focusOrigin);
 }
 
 function cancelRevokeToken() {
@@ -221,7 +224,7 @@ onMounted(() => {
     </p>
 
     <div ref="messageRef">
-      <output aria-live="polite" aria-atomic="true" class="fr-sr-only">{{ successMessage }}</output>
+      <output aria-live="polite" aria-atomic="true" class="fr-sr-only">{{ isLoading ? "Opération en cours…" : successMessage }}</output>
       <DsfrAlert v-if="error" alert type="error" :title="error" class="fr-mb-2w" closeable @close="error = null" />
 
       <DsfrAlert
@@ -317,7 +320,7 @@ onMounted(() => {
         />
 
         <div class="fr-mt-2w">
-          <DsfrButton type="submit" :disabled="isLoading"> Créer le token </DsfrButton>
+          <DsfrButton type="submit" :aria-disabled="isLoading" :aria-busy="isLoading"> Créer le token </DsfrButton>
           <DsfrButton type="button" secondary class="fr-ml-2w" @click="toggleCreateForm"> Annuler </DsfrButton>
         </div>
       </form>
@@ -370,7 +373,7 @@ onMounted(() => {
       <template #footer>
         <DsfrButtonGroup :inline-layout-when="true" :reverse="true">
           <li><DsfrButton label="Annuler" secondary @click="cancelRevokeToken" /></li>
-          <li><DsfrButton label="Révoquer" @click="confirmRevokeToken" /></li>
+          <li><DsfrButton label="Révoquer" :aria-disabled="isLoading" :aria-busy="isLoading" @click="confirmRevokeToken" /></li>
         </DsfrButtonGroup>
       </template>
     </DsfrModal>

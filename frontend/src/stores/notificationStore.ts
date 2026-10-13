@@ -63,8 +63,10 @@ export const useNotificationStore = defineStore("notificationStore", () => {
       }
       notifications.value = notifications.value.map((n) => ({ ...n, isRead: true }));
       unreadCount.value = 0;
+      return true;
     } catch {
       toaster.addErrorMessage("Erreur lors du marquage des notifications comme lues.");
+      return false;
     }
   }
 
@@ -81,8 +83,10 @@ export const useNotificationStore = defineStore("notificationStore", () => {
       if (removed && !removed.isRead) {
         unreadCount.value = Math.max(0, unreadCount.value - 1);
       }
+      return true;
     } catch {
       toaster.addErrorMessage("Erreur lors de la suppression de la notification.");
+      return false;
     }
   }
 
@@ -98,8 +102,10 @@ export const useNotificationStore = defineStore("notificationStore", () => {
       notifications.value = notifications.value.filter((n) => !idSet.has(n.id));
       total.value = Math.max(0, total.value - ids.length);
       unreadCount.value = Math.max(0, unreadCount.value - removedUnreadCount);
+      return true;
     } catch {
       toaster.addErrorMessage("Erreur lors de la suppression des notifications.");
+      return false;
     }
   }
 
