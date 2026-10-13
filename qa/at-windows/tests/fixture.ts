@@ -209,20 +209,30 @@ export async function focusDocumentStart(page: Page, nvda: NVDAPlaywright) {
   }
   if (!browserFocused)
     throw new Error(`Firefox n’a pas le premier plan natif : ${spokenTitle}`);
-  await nvda.press("Control+l", { capture: false });
-  await nvda.press("F6", { capture: false });
+  // capture:false sends the next command without waiting for native focus
+  // events. Capture each transition so Firefox can finish changing frames.
+  await nvda.press("Control+l", { capture: true });
   // Escape can close an application dialog. Use NVDA's own mode toggle and
   // require its spoken French mode confirmation instead.
   let browseMode = false;
-  for (let attempt = 0; attempt < 2; attempt++) {
-    await nvda.perform(nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode, {
+  for (let frame = 0; frame < 3 && !browseMode; frame++) {
+    await nvda.press("F6", { capture: true });
+    await nvda.perform(nvda.keyboardCommands.reportCurrentFocus, {
       capture: true,
     });
-    if (
-      normalizeSpeech(await nvda.lastSpokenPhrase()).includes("mode navigation")
-    ) {
-      browseMode = true;
-      break;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      await nvda.perform(
+        nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode,
+        { capture: true },
+      );
+      if (
+        normalizeSpeech(await nvda.lastSpokenPhrase()).includes(
+          "mode navigation",
+        )
+      ) {
+        browseMode = true;
+        break;
+      }
     }
   }
   if (!browseMode)
@@ -293,8 +303,19 @@ export async function attachIdentity(
   const readerLanguage = setting("general", "language");
   const synthesizer = setting("speech", "synth");
   const voice = setting("speech", "espeak", "voice");
+  const passThroughAudioIndication = setting(
+    "virtualBuffers",
+    "passThroughAudioIndication",
+  );
   await info.attach("reader-profile", {
-    body: Buffer.from(JSON.stringify({ readerLanguage, synthesizer, voice })),
+    body: Buffer.from(
+      JSON.stringify({
+        readerLanguage,
+        synthesizer,
+        voice,
+        passThroughAudioIndication,
+      }),
+    ),
     contentType: "application/json",
   });
   const windows = await windowsSnapshot();
@@ -337,6 +358,9 @@ export async function attachIdentity(
     throw new Error(
       "Langue française du profil ou de la synthèse non confirmée.",
     );
+  }
+  if (String(passThroughAudioIndication).toLowerCase() !== "false") {
+    throw new Error("Le profil NVDA ne confirme pas l’annonce parlée du mode.");
   }
   await info.attach("identity", {
     body: Buffer.from(
