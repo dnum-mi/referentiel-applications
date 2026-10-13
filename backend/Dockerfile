@@ -13,7 +13,7 @@ ENV PORT=3500
 RUN apk upgrade --no-cache \
     && apk add --no-cache openssl procps-ng \
     && npm install --ignore-scripts --prefix /usr/local --location=global npm@12.2.0 \
-    && npm install --ignore-scripts --location=global pnpm@10.34.6
+    && npm install --ignore-scripts --location=global pnpm@10.34.7
 
 # pnpm-workspace.yaml porte les overrides de sécurité (pnpm 10 ne les lit plus
 # depuis package.json) : il doit être présent avant `pnpm install`.

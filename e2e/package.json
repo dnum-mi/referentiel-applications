@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@10.34.6",
+  "packageManager": "pnpm@10.34.7",
   "description": "Tests end-to-end de non-régression (Playwright, POM strict + datafeature). Voir qa/README.md.",
   "scripts": {
     "test:unit": "playwright test --config=playwright.unit.config.ts",
