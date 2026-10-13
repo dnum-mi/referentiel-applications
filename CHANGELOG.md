@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.98.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.97.0...v1.98.0) (2026-10-13)
+
+
+### Features
+
+* add grist sync ([#2876](https://github.com/dnum-mi/referentiel-applications/issues/2876)) ([3d77e57](https://github.com/dnum-mi/referentiel-applications/commit/3d77e575ab20d7ee77ac79cd38b86de34037b9a8))
+
+
+### Bug Fixes
+
+* can modify userappperm ([#2865](https://github.com/dnum-mi/referentiel-applications/issues/2865)) ([070ccab](https://github.com/dnum-mi/referentiel-applications/commit/070ccab8b4db4058a4b45fb8f87f6da157180c59))
+
 ## [1.97.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.96.0...v1.97.0) (2026-10-07)
 
 
