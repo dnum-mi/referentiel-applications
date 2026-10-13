@@ -9,6 +9,9 @@ const execFileAsync = promisify(execFile);
 const phase = ["smoke", "interactive"].includes(process.env.RGAA_PHASE ?? "")
   ? process.env.RGAA_PHASE
   : "cases";
+const evidencePhase = process.env.RGAA_CASE_ID
+  ? `${phase}-${process.env.RGAA_CASE_ID}`
+  : phase;
 
 export async function windowsSnapshot() {
   const script = String.raw`
@@ -115,7 +118,7 @@ foreach ($reader in $remaining) {
       }
       await mkdir("evidence", { recursive: true });
       await writeFile(
-        `evidence/${phase}-windows-before.json`,
+        `evidence/${evidencePhase}-windows-before.json`,
         JSON.stringify(before, null, 2),
       );
       try {
@@ -123,7 +126,7 @@ foreach ($reader in $remaining) {
       } finally {
         const after = await windowsSnapshot();
         await writeFile(
-          `evidence/${phase}-windows-after.json`,
+          `evidence/${evidencePhase}-windows-after.json`,
           JSON.stringify(after, null, 2),
         );
         if (
@@ -287,7 +290,7 @@ export async function focusDocumentStart(page: Page, nvda: NVDAPlaywright) {
     info,
   );
   await assertSameDocument("clic neutre");
-  await captureStep(
+  const focusedObject = await captureStep(
     nvda,
     "prepare-current-focus",
     () =>
@@ -295,6 +298,18 @@ export async function focusDocumentStart(page: Page, nvda: NVDAPlaywright) {
     info,
   );
   await assertSameDocument("annonce du focus");
+  // The pinned Guidepup Firefox adapter documents this native Tab workaround
+  // when NVDA sees the browser frame instead of its document after startup.
+  // It moves focus only; it never activates a product control.
+  if (phase === "interactive" && /\bcadre\b/.test(focusedObject.text)) {
+    await captureStep(
+      nvda,
+      "prepare-enter-document-from-frame",
+      () => nvda.press("Tab", { capture: true }),
+      info,
+    );
+    await assertSameDocument("entrée dans le document");
+  }
   // Interactive scenes are already mounted into this document. They must not
   // be reloaded during reader preparation; retain their actual component state.
   if (phase !== "interactive") {

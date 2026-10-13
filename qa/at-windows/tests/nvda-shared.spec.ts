@@ -8,7 +8,7 @@ import {
   focusDocumentStart,
   normalizeSpeech,
 } from "./fixture.js";
-import { activateCurrent, tabTo } from "./native-utils.js";
+import { activateCurrent, shiftTabTo, tabTo } from "./native-utils.js";
 import {
   finishShared,
   mountSharedScene,
@@ -94,7 +94,15 @@ test("AT-INT-U01 — App/navigation réelles, raccourci public, route, menu comp
   await mountSharedScene(page, "navigation");
   await attachIdentity(nvda, browser.version(), info);
   await focusDocumentStart(page, nvda);
-  const shortcut = await tabTo(nvda, "Aller à la navigation", info);
+  // Ctrl+Home places the browse cursor on the first link while DOM focus may
+  // still be on the route heading. Enter the tab sequence, then go back to it.
+  await captureStep(
+    nvda,
+    "public-shortcut-enter-tab-sequence",
+    () => nvda.press("Tab", { capture: true }),
+    info,
+  );
+  const shortcut = await shiftTabTo(nvda, "Aller à la navigation", info, 5);
   expect(shortcut.text).toContain("lien");
   await activateCurrent(nvda, info, "public-navigation-shortcut");
   await expect(page.locator("#header-nav a").first()).toBeFocused();

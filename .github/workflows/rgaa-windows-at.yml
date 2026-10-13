@@ -196,7 +196,7 @@ jobs:
         working-directory: driver/qa/at-windows
         env:
           RGAA_PHASE: interactive
-        run: pnpm exec playwright test --config interactive.config.ts ${{ matrix.test_files }}
+        run: node tools/run-interactive-isolated.mjs ${{ matrix.test_files }}
       - name: Record and enforce reader cleanup
         if: always()
         working-directory: driver/qa/at-windows

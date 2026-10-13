@@ -84,12 +84,16 @@ for (const chart of charts) {
       "native-table-first-row",
       async () => {
         await nvda.perform(nvda.keyboardCommands.moveToNextTable);
+        // Native table quick navigation stops on its caption. Enter a real
+        // cell before the commands that move within rows and columns.
+        await nvda.press("ArrowDown", { capture: true });
         await nvda.perform(nvda.keyboardCommands.moveToNextColumn);
         await nvda.perform(nvda.keyboardCommands.moveToNextRow);
       },
       info,
     );
     expect(table.text).toContain(normalizeSpeech(chart.caption));
+    expect(table.text).not.toContain("pas dans une cellule de tableau");
     for (const column of chart.columns)
       expect(table.text).toContain(normalizeSpeech(column));
     await tabTo(nvda, "Voir le graphique", info);

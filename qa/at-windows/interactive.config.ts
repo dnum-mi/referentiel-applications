@@ -7,6 +7,9 @@ if (!product)
   throw new Error(
     "RGAA_PRODUCT_ROOT requis : Vite doit servir le checkout produit exact.",
   );
+const caseId = process.env.RGAA_CASE_ID;
+if (caseId && !/^[a-z0-9-]+$/.test(caseId))
+  throw new Error("RGAA_CASE_ID invalide.");
 
 export default defineConfig({
   testDir: "./tests",
@@ -19,7 +22,9 @@ export default defineConfig({
     "nvda-shared.spec.ts",
     "nvda-application.spec.ts",
   ],
-  outputDir: "./test-results/interactive",
+  outputDir: caseId
+    ? `./test-results/interactive/${caseId}`
+    : "./test-results/interactive",
   fullyParallel: false,
   workers: 1,
   retries: 0,
@@ -27,12 +32,20 @@ export default defineConfig({
   forbidOnly: true,
   reporter: [
     ["list"],
-    ["json", { outputFile: "evidence/interactive-results.json" }],
+    [
+      "json",
+      {
+        outputFile: caseId
+          ? `evidence/interactive-${caseId}-results.json`
+          : "evidence/interactive-results.json",
+      },
+    ],
   ],
   use: {
     ...devices["Desktop Firefox"],
     browserName: "firefox",
     headless: false,
+    actionTimeout: 15_000,
     locale: "fr-FR",
     serviceWorkers: "block",
     trace: "on",

@@ -5,7 +5,7 @@ import {
   captureStep,
   focusDocumentStart,
 } from "./fixture.js";
-import { tabTo, activateCurrent } from "./native-utils.js";
+import { tabTo, shiftTabTo, activateCurrent } from "./native-utils.js";
 import {
   mountFormsScene,
   simulatedFormsNetwork,
@@ -49,10 +49,10 @@ test("AT-FORM-Markdown — neuf noms, trois fonctions, modes puis retour", async
     const role = await tabTo(nvda, action, info);
     expect(role.text).toContain("bouton");
   }
-  await tabTo(nvda, "Description", info);
-  await nvda.press("Control+a", { capture: false });
+  await shiftTabTo(nvda, "Description", info);
+  await nvda.press("Control+a", { capture: true });
   await nvda.type("Alpha", { capture: false });
-  await nvda.press("Control+a", { capture: false });
+  await nvda.press("Control+a", { capture: true });
   await tabTo(nvda, "Gras", info);
   await activateCurrent(nvda, info, "markdown-wrap-selection");
   const textarea = page.getByTestId("markdown-textarea");
@@ -66,7 +66,7 @@ test("AT-FORM-Markdown — neuf noms, trois fonctions, modes puis retour", async
   );
   expect(valueAfterWrap.text).toContain("description");
   expect(valueAfterWrap.text).toContain("alpha");
-  await nvda.press("Control+a", { capture: false });
+  await nvda.press("Control+a", { capture: true });
   await tabTo(nvda, "Liste à puces", info);
   await activateCurrent(nvda, info, "markdown-prefix-selection");
   await expect(textarea).toHaveValue("- **Alpha**");
@@ -75,7 +75,7 @@ test("AT-FORM-Markdown — neuf noms, trois fonctions, modes puis retour", async
   await activateCurrent(nvda, info, "markdown-insert-at-cursor");
   await expect(textarea).toHaveValue(/Colonne 1/);
   await expect(textarea).toBeFocused();
-  await tabTo(nvda, "Visualiser l'aperçu", info);
+  await shiftTabTo(nvda, "Visualiser l'aperçu", info);
   await activateCurrent(nvda, info, "markdown-preview-mode");
   await expect(page.getByTestId("markdown-tab-preview")).toHaveAttribute(
     "aria-pressed",
@@ -99,7 +99,7 @@ test("AT-FORM-Markdown — neuf noms, trois fonctions, modes puis retour", async
     info,
   );
   expect(preview.text).toContain("colonne");
-  await tabTo(nvda, "Éditer le texte en format markdown", info);
+  await shiftTabTo(nvda, "Éditer le texte en format markdown", info);
   await activateCurrent(nvda, info, "markdown-return-edit-mode");
   await expect(page.getByTestId("markdown-tab-edit")).toHaveAttribute(
     "aria-pressed",

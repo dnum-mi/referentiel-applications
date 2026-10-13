@@ -7,6 +7,7 @@ export async function tabTo(
   name: string | RegExp,
   info: TestInfo,
   maximum = 35,
+  direction: "Tab" | "Shift+Tab" = "Tab",
 ) {
   const visited = new Set<string>();
   for (let index = 0; index <= maximum; index++) {
@@ -27,14 +28,23 @@ export async function tabTo(
     if (matches) return result;
     await captureStep(
       nvda,
-      `native-tab-${index}`,
-      () => nvda.press("Tab", { capture: true }),
+      `native-${direction === "Tab" ? "tab" : "shift-tab"}-${index}`,
+      () => nvda.press(direction, { capture: true }),
       info,
     );
   }
   throw new Error(
     `Commande non atteinte au clavier natif : ${String(name)}. Annonces effectivement rencontrées : ${JSON.stringify([...visited])}`,
   );
+}
+
+export async function shiftTabTo(
+  nvda: NVDAPlaywright,
+  name: string | RegExp,
+  info: TestInfo,
+  maximum = 35,
+) {
+  return tabTo(nvda, name, info, maximum, "Shift+Tab");
 }
 
 export async function activateCurrent(

@@ -149,7 +149,7 @@ test("AT-REM-Conformites — six formulaires, homologation conditionnelle, alert
         "URL cible EcoIndex",
         info,
       );
-      await nvda.press("Control+a", { capture: false });
+      await nvda.press("Control+a", { capture: true });
       const warning = await captureStep(
         nvda,
         "ecoindex-target-change-native-warning",
@@ -164,8 +164,9 @@ test("AT-REM-Conformites — six formulaires, homologation conditionnelle, alert
     if (branch.id === "dima") {
       const impact = dialog.getByTestId("compliance-dima-business-impact");
       await reachControl(nvda, impact, "Impact métier", info);
-      await nvda.press("Control+a", { capture: false });
-      await nvda.type("Impact fictif modifié", { capture: false });
+      await nvda.press("Control+a", { capture: true });
+      await nvda.type("Impact fictif modifie", { capture: false });
+      await expect(impact).toHaveValue("Impact fictif modifie");
       await reachControl(
         nvda,
         dialog.getByTestId("compliance-submit-btn"),
@@ -183,7 +184,7 @@ test("AT-REM-Conformites — six formulaires, homologation conditionnelle, alert
       expect(error.text).toContain(
         "erreur lors de la modification de la conformite",
       );
-      await expect(impact).toHaveValue("Impact fictif modifié");
+      await expect(impact).toHaveValue("Impact fictif modifie");
       await expect(dialog.getByTestId("compliance-submit-btn")).toBeFocused();
     }
     await reachControl(
@@ -418,7 +419,7 @@ test("AT-REM-Wizard — étapes, validation, champs dynamiques et Annuler-Repren
     "Description",
     info,
   );
-  await nvda.type("Description fictive conservée", { capture: false });
+  await nvda.type("Description fictive conservee", { capture: false });
   await tabTo(nvda, "Suivant", info);
   const details = await activateCurrent(nvda, info, "wizard-real-second-step");
   await expect(page.getByTestId("application-step-title-2")).toBeFocused();
@@ -443,7 +444,7 @@ test("AT-REM-Wizard — étapes, validation, champs dynamiques et Annuler-Repren
   await tabTo(nvda, "Ajouter un objectif", info);
   const purpose = await activateCurrent(nvda, info, "wizard-real-add-purpose");
   expect(purpose.text).toContain("objectif 1");
-  await nvda.type("Objectif fictif conservé", { capture: false });
+  await nvda.type("Objectif fictif conserve", { capture: false });
   await tabTo(nvda, "Suivant", info);
   const moa = await activateCurrent(nvda, info, "wizard-real-moa-step");
   expect(moa.text).toContain("etape 3 sur 4");
@@ -544,7 +545,7 @@ test("AT-REM-Wizard — étapes, validation, champs dynamiques et Annuler-Repren
     "Application fictive Alpha",
   );
   await expect(page.getByTestId("markdown-textarea")).toHaveValue(
-    "Description fictive conservée",
+    "Description fictive conservee",
   );
   expect(
     network.remainingCalls.filter((call) => call.method !== "GET"),
