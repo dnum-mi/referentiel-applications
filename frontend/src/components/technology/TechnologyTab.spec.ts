@@ -385,6 +385,57 @@ describe("technologyTab — erreurs HTTP de sauvegarde et de suppression (#2512)
     expect(findAllMock).toHaveBeenCalledTimes(1);
   });
 
+  it("rend le focus au nouveau bouton de la technologie modifiée après le rechargement", async () => {
+    hasPermissions.mockReturnValue(true);
+    const technology = makeTechnology({ id: "t-edit" });
+    let complete = () => {};
+    updateMock.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          complete = () => resolve({ response: { ok: true }, data: technology });
+        }),
+    );
+    renderEditable([technology]);
+    const original = await screen.findByTestId("technology-edit-btn");
+    original.focus();
+    await fireEvent.click(original);
+    await fireEvent.update(screen.getByTestId("technology-version-input"), "17");
+    screen.getByTestId("technology-submit-btn").focus();
+    await fireEvent.submit(screen.getByTestId("technology-form-container"));
+    await waitFor(() => expect(original.isConnected).toBe(false));
+    findAllMock.mockResolvedValue({ response: { ok: true }, data: [{ ...technology, version: "17" }] });
+    complete();
+    await waitFor(() => expect(screen.getByTestId("technology-edit-btn")).toHaveFocus());
+    expect(screen.getByTestId("technology-table")).toHaveTextContent("17");
+  });
+
+  it("conserve un déplacement volontaire du focus pendant la modification", async () => {
+    hasPermissions.mockReturnValue(true);
+    const technology = makeTechnology({ id: "t-edit" });
+    let complete = () => {};
+    updateMock.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          complete = () => resolve({ response: { ok: true }, data: technology });
+        }),
+    );
+    renderEditable([technology]);
+    const original = await screen.findByTestId("technology-edit-btn");
+    original.focus();
+    await fireEvent.click(original);
+    screen.getByTestId("technology-submit-btn").focus();
+    await fireEvent.submit(screen.getByTestId("technology-form-container"));
+    await waitFor(() => expect(original.isConnected).toBe(false));
+    const outside = document.createElement("button");
+    document.body.append(outside);
+    outside.focus();
+    complete();
+    await waitFor(() => expect(addSuccessMessage).toHaveBeenCalled());
+    await screen.findByTestId("technology-edit-btn");
+    expect(outside).toHaveFocus();
+    outside.remove();
+  });
+
   it("annonce l'erreur du backend quand la suppression répond 403", async () => {
     hasPermissions.mockReturnValue(true);
     deleteMock.mockResolvedValue(httpError(403, "Accès refusé"));

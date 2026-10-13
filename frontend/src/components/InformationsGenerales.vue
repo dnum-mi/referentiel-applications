@@ -39,6 +39,9 @@ const isLabelModalOpen = ref(false);
 const hostingToEdit = ref<HostingDto | null>(null);
 const hostingEditTrigger = ref<HTMLElement | null>(null);
 const hostingsRegion = ref<HTMLElement | null>(null);
+const labelsRegion = ref<HTMLElement | null>(null);
+const hostingDeleteTrigger = ref<HTMLElement | null>(null);
+const labelDeleteTrigger = ref<HTMLElement | null>(null);
 const hostingToDelete = ref<HostingDto | null>(null);
 const labelToEdit = ref<LabelDto | null>(null);
 const labelToDelete = ref<LabelDto | null>(null);
@@ -218,12 +221,34 @@ async function closeEditHosting() {
   target?.focus();
 }
 function openDeleteModal(hosting: HostingDto) {
+  hostingDeleteTrigger.value = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   hostingToDelete.value = hosting;
   isDeleteModalOpen.value = true;
 }
 
+async function closeDeletionDialog(kind: "hosting" | "label", dialog: Element | null) {
+  const trigger = kind === "hosting" ? hostingDeleteTrigger.value : labelDeleteTrigger.value;
+  const shouldRestore = document.activeElement === document.body || !!dialog?.contains(document.activeElement);
+  if (kind === "hosting") {
+    hostingToDelete.value = null;
+    isDeleteModalOpen.value = false;
+  } else {
+    labelToDelete.value = null;
+    isDeleteLabelModalOpen.value = false;
+  }
+  await nextTick();
+  if (!shouldRestore || (document.activeElement !== document.body && document.activeElement !== trigger)) return;
+  const region = kind === "hosting" ? hostingsRegion.value : labelsRegion.value;
+  const target =
+    trigger?.isConnected && !trigger.matches(":disabled")
+      ? trigger
+      : region?.querySelector<HTMLElement>(`[data-testid="info-add-${kind}-btn"]`);
+  target?.focus();
+}
+
 async function confirmDeletionHosting() {
   if (!hostingToDelete.value) return;
+  const dialog = document.activeElement?.closest('dialog, [role="dialog"]') ?? null;
   try {
     await hostingStore.deleteHosting(application.value.id, hostingToDelete.value.id);
     toaster.addSuccessMessage("Hébergement supprimé avec succès");
@@ -231,14 +256,12 @@ async function confirmDeletionHosting() {
     console.error(error);
     errorMessage.value = "Erreur lors de la suppression de l'hébergement";
   } finally {
-    hostingToDelete.value = null;
-    isDeleteModalOpen.value = false;
+    await closeDeletionDialog("hosting", dialog);
   }
 }
 
 function cancelDeletionHosting() {
-  hostingToDelete.value = null;
-  isDeleteModalOpen.value = false;
+  void closeDeletionDialog("hosting", document.activeElement?.closest('dialog, [role="dialog"]') ?? null);
 }
 
 function businessDivisionSearchLink(businessDivisionId: string) {
@@ -253,12 +276,14 @@ const openEditLabel = (label: LabelDto) => {
   isLabelModalOpen.value = true;
 };
 function openDeleteLabelModal(label: LabelDto) {
+  labelDeleteTrigger.value = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   labelToDelete.value = label;
   isDeleteLabelModalOpen.value = true;
 }
 
 async function confirmDeletionLabel() {
   if (!labelToDelete.value) return;
+  const dialog = document.activeElement?.closest('dialog, [role="dialog"]') ?? null;
   try {
     const response = await api.labelsControllerDelete({
       path: { applicationId: application.value.id, id: labelToDelete.value.id },
@@ -272,14 +297,12 @@ async function confirmDeletionLabel() {
   } catch {
     errorMessage.value = "Erreur lors de la suppression du nom alternatif";
   } finally {
-    labelToDelete.value = null;
-    isDeleteLabelModalOpen.value = false;
+    await closeDeletionDialog("label", dialog);
   }
 }
 
 function cancelDeletionLabel() {
-  labelToDelete.value = null;
-  isDeleteLabelModalOpen.value = false;
+  void closeDeletionDialog("label", document.activeElement?.closest('dialog, [role="dialog"]') ?? null);
 }
 
 watch(
@@ -429,7 +452,7 @@ watch(
         </div>
       </div>
 
-      <div class="fr-card" data-testid="info-labels">
+      <div ref="labelsRegion" class="fr-card" data-testid="info-labels">
         <div class="fr-card__body">
           <div class="fr-card__content">
             <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">

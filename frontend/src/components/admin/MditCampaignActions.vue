@@ -21,6 +21,7 @@ const isDeleteModalOpen = ref(false);
 const isSaving = ref(false);
 useSubmissionFocus(isSaving);
 const isDeleting = ref(false);
+useSubmissionFocus(isDeleting);
 const editingYear = ref<number | undefined>(undefined);
 const editingLabel = ref<string>("");
 const editingActive = ref<boolean>(true);
@@ -48,6 +49,7 @@ function closeDeleteModal() {
 }
 
 async function saveCampaign() {
+  if (isSaving.value) return;
   const year = Number(editingYear.value);
   if (!Number.isInteger(year) || year < 2000 || year > 2100) {
     errorMessage.value = "Le millésime doit être une année entre 2000 et 2100.";
@@ -82,7 +84,7 @@ async function saveCampaign() {
 }
 
 async function deleteCampaign() {
-  if (!props.campaign?.id) return;
+  if (!props.campaign?.id || isDeleting.value) return;
 
   isDeleting.value = true;
 

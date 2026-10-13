@@ -4,6 +4,7 @@ import { ref } from "vue";
 import type { BusinessDivisionDto } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
 import api from "@/api";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps<{
   businessDivision?: BusinessDivisionDto;
@@ -18,7 +19,9 @@ const toaster = useToasterStore();
 const isEditModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
 const isSaving = ref(false);
+useSubmissionFocus(isSaving);
 const isDeleting = ref(false);
+useSubmissionFocus(isDeleting);
 const editingLabel = ref<string>("");
 const errorMessage = ref<string>("");
 
@@ -42,6 +45,7 @@ function closeDeleteModal() {
 }
 
 async function saveBusinessDivision() {
+  if (isSaving.value) return;
   const label = editingLabel.value.trim();
   if (!label) {
     errorMessage.value = "Le nom de la direction métier est obligatoire.";
@@ -74,7 +78,7 @@ async function saveBusinessDivision() {
 }
 
 async function deleteBusinessDivision() {
-  if (!props.businessDivision?.id) return;
+  if (!props.businessDivision?.id || isDeleting.value) return;
 
   isDeleting.value = true;
 

@@ -33,6 +33,7 @@ const isDeleteModalOpen = ref(false);
 const isSaving = ref(false);
 useSubmissionFocus(isSaving);
 const isDeleting = ref(false);
+useSubmissionFocus(isDeleting);
 const errorMessage = ref("");
 const form = reactive<HostingOptionForm>({ provider: "", platform: "", site: "", building: "", room: "" });
 
@@ -69,6 +70,7 @@ function closeEditModal() {
 }
 
 async function saveHostingOption() {
+  if (isSaving.value) return;
   isSaving.value = true;
   errorMessage.value = "";
 
@@ -95,7 +97,7 @@ async function saveHostingOption() {
 }
 
 async function deleteHostingOption() {
-  if (!props.hostingOption?.id) return;
+  if (!props.hostingOption?.id || isDeleting.value) return;
 
   isDeleting.value = true;
   const response = await api.hostingOptionControllerRemove({ path: { id: props.hostingOption.id } });

@@ -242,6 +242,7 @@ function closeModal() {
 }
 
 async function runEcoIndexScan() {
+  if (isLoading.value || isScanningEcoIndex.value || !hasComplianceEditPermission.value) return;
   try {
     isScanningEcoIndex.value = true;
     const response = await applicationCompliancesControllerScanEcoIndex({
@@ -343,7 +344,8 @@ const hasComplianceEditPermission = useAppPermission(() => props.application.myP
               icon="ri-leaf-line"
               size="sm"
               tertiary
-              :disabled="isLoading || isScanningEcoIndex || !hasComplianceEditPermission"
+              :disabled="!hasComplianceEditPermission"
+              :aria-disabled="isLoading || isScanningEcoIndex || !hasComplianceEditPermission"
               data-testid="compliance-scan-ecoindex-btn"
               @click="runEcoIndexScan"
             >
@@ -402,7 +404,8 @@ const hasComplianceEditPermission = useAppPermission(() => props.application.myP
                     icon="ri-leaf-line"
                     size="sm"
                     tertiary
-                    :disabled="isLoading || isScanningEcoIndex"
+                    :disabled="!hasComplianceEditPermission"
+                    :aria-disabled="isLoading || isScanningEcoIndex || !hasComplianceEditPermission"
                     data-testid="compliance-scan-ecoindex-btn"
                     @click="runEcoIndexScan"
                   >
