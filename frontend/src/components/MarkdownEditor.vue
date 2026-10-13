@@ -46,8 +46,8 @@ function wrapSelection(before: string, after: string) {
   localValue.value = localValue.value.slice(0, start) + newText + localValue.value.slice(end);
   emitChange();
   nextTick(() => {
-    textarea.setSelectionRange(start + before.length, end + before.length);
     textarea.focus();
+    textarea.setSelectionRange(start + before.length, end + before.length);
   });
 }
 
@@ -61,8 +61,8 @@ function insertAtStart(prefix: string) {
   localValue.value = localValue.value.slice(0, start) + newText + localValue.value.slice(end);
   emitChange();
   nextTick(() => {
-    textarea.setSelectionRange(start, start + newText.length);
     textarea.focus();
+    textarea.setSelectionRange(start, start + newText.length);
   });
 }
 
@@ -73,8 +73,8 @@ function insertAtCursor(text: string) {
   localValue.value = localValue.value.slice(0, start) + text + localValue.value.slice(start);
   emitChange();
   nextTick(() => {
-    textarea.setSelectionRange(start + text.length, start + text.length);
     textarea.focus();
+    textarea.setSelectionRange(start + text.length, start + text.length);
   });
 }
 

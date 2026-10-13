@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import api from "@/api";
+import { isApiSuccess } from "@/api/api-result";
 import type { ImportReportDto, UserControllerSyncOrganizationsFromMaiaData } from "@/client";
 import { useApplicationStore } from "@/stores/applicationStore";
 import { useToasterStore } from "@/stores/toasterStore";
@@ -8,6 +9,7 @@ import { createImportReportCsv, createImportReportHtml } from "@/utils/import-re
 const toaster = useToasterStore();
 const applicationStore = useApplicationStore();
 const isLoading = ref(false);
+const progressMessage = ref("");
 
 const selectedFile = ref<File | null>(null);
 const importReport = ref<ImportReportDto | null>(null);
@@ -19,7 +21,9 @@ function onImportFileChange(event: Event) {
 }
 
 async function recomputeQuality() {
+  if (isLoading.value) return;
   isLoading.value = true;
+  progressMessage.value = "Calcul des indices de qualité en cours…";
   try {
     await applicationStore.patchApplicationsQuality();
     toaster.addSuccessMessage("Indice de qualité recalculé pour toutes les applications.");
@@ -27,15 +31,17 @@ async function recomputeQuality() {
     console.error(error);
   } finally {
     isLoading.value = false;
+    progressMessage.value = "";
   }
 }
 
 async function runImport() {
-  if (!selectedFile.value) return;
+  if (isLoading.value || !selectedFile.value) return;
   isLoading.value = true;
+  progressMessage.value = "Import du fichier Excel en cours…";
   try {
     const response = await api.importControllerImportExcel({ body: { file: selectedFile.value } });
-    if (!response.data) {
+    if (!isApiSuccess(response) || !response.data) {
       throw new Error("Réponse d'import vide.");
     }
     importReport.value = response.data;
@@ -51,6 +57,7 @@ async function runImport() {
     console.error(error);
   } finally {
     isLoading.value = false;
+    progressMessage.value = "";
   }
 }
 
@@ -72,40 +79,49 @@ type MaiaBatchBody = NonNullable<UserControllerSyncOrganizationsFromMaiaData["bo
 const DEFAULT_MAIA_BATCH_BODY: MaiaBatchBody = { onlyMissing: true };
 
 async function runMaiaBatch(body: MaiaBatchBody = DEFAULT_MAIA_BATCH_BODY) {
+  if (isLoading.value) return;
   isLoading.value = true;
+  progressMessage.value = "Synchronisation MAIA des utilisateurs en cours…";
   try {
-    await api.userControllerSyncOrganizationsFromMaia({ body });
+    const response = await api.userControllerSyncOrganizationsFromMaia({ body });
+    if (!isApiSuccess(response)) throw new Error("Lancement du batch MAIA refusé.");
     toaster.addSuccessMessage("Batch MAIA lancé en tâche de fond.");
   } catch (error) {
     toaster.addErrorMessage("Erreur lors du lancement du batch MAIA.");
     console.error(error);
   } finally {
     isLoading.value = false;
+    progressMessage.value = "";
   }
 }
 
 async function runMaiaActorSync() {
+  if (isLoading.value) return;
   isLoading.value = true;
+  progressMessage.value = "Synchronisation MAIA des acteurs en cours…";
   try {
-    await api.actorControllerSyncFromMaia();
+    const response = await api.actorControllerSyncFromMaia();
+    if (!isApiSuccess(response)) throw new Error("Lancement du batch MAIA des acteurs refusé.");
     toaster.addSuccessMessage("Batch MAIA lancé en tâche de fond.");
   } catch (error) {
     toaster.addErrorMessage("Erreur lors du lancement du batch MAIA.");
     console.error(error);
   } finally {
     isLoading.value = false;
+    progressMessage.value = "";
   }
 }
 </script>
 
 <template>
   <div class="container">
+    <output class="fr-sr-only" aria-live="polite" aria-atomic="true" data-testid="admin-batch-progress">{{ progressMessage }}</output>
     <div class="section-card--mt">
       <h2 class="fr-h2">Gestion de l'indice de qualité</h2>
       <DsfrButton
         :label="isLoading ? 'Mise à jour en cours...' : 'Calculer l’indice de qualité de toutes les applications'"
         :icon="{ name: 'ri-refresh-line', animation: isLoading ? 'spin' : undefined }"
-        :disabled="isLoading"
+        :aria-disabled="isLoading"
         data-testid="admin-quality-recompute-btn"
         title="Lance le calcul de l'indice de qualité pour toutes les applications"
         @click="recomputeQuality()"
@@ -120,7 +136,7 @@ async function runMaiaActorSync() {
               ? 'Batch MAIA en cours...'
               : 'Synchroniser les utilisateurs et organisations avec MAIA (utilisateurs sans organisation)'
           "
-          :disabled="isLoading"
+          :aria-disabled="isLoading"
           :icon="{ name: 'ri-refresh-line', animation: isLoading ? 'spin' : undefined }"
           data-testid="admin-users-maia-batch-btn"
           @click="runMaiaBatch()"
@@ -131,7 +147,7 @@ async function runMaiaActorSync() {
               ? 'Batch MAIA en cours...'
               : 'Synchroniser les utilisateurs et organisations avec MAIA (utilisateurs avec organisation)'
           "
-          :disabled="isLoading"
+          :aria-disabled="isLoading"
           :icon="{ name: 'ri-refresh-line', animation: isLoading ? 'spin' : undefined }"
           data-testid="admin-users-maia-batch-btn"
           @click="runMaiaBatch({ onlyMissing: false })"
@@ -143,7 +159,7 @@ async function runMaiaActorSync() {
       <div class="maia-sync-actor-container">
         <DsfrButton
           :label="isLoading ? 'Batch MAIA en cours...' : 'Synchroniser les acteurs MAIA'"
-          :disabled="isLoading"
+          :aria-disabled="isLoading"
           :icon="{ name: 'ri-refresh-line', animation: isLoading ? 'spin' : undefined }"
           data-testid="admin-actor-maia-batch-btn"
           @click="runMaiaActorSync()"
@@ -171,7 +187,8 @@ async function runMaiaActorSync() {
         </div>
         <DsfrButton
           :label="isLoading ? 'Import en cours...' : 'Importer le fichier'"
-          :disabled="isLoading || !selectedFile"
+          :disabled="!selectedFile"
+          :aria-disabled="isLoading || !selectedFile"
           :icon="{ name: 'ri-upload-2-line', animation: isLoading ? 'spin' : undefined }"
           data-testid="admin-import-submit"
           @click="runImport()"

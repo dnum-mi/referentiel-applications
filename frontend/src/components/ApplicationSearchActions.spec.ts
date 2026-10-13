@@ -106,13 +106,21 @@ describe("ApplicationSearchActions — synchronisation Grist", () => {
     const htmlButton = screen.getByTestId("applications-export-html-btn");
     const excelButton = screen.getByTestId("application-export-btn");
     expect(screen.getByTestId("grist-sync-btn")).toBeEnabled();
+    htmlButton.focus();
     await fireEvent.click(htmlButton);
     expect(downloadHtml).toHaveBeenCalledExactlyOnceWith({ shortName: "app" });
     expect(screen.getAllByRole("status").some((status) => status.textContent?.includes("Préparation de l’export HTML…"))).toBe(true);
+    expect(htmlButton).toHaveFocus();
+    expect(htmlButton).toHaveAttribute("aria-disabled", "true");
+    expect(htmlButton).toHaveAttribute("aria-busy", "true");
+    expect(htmlButton).not.toHaveAttribute("disabled");
+    await fireEvent.click(htmlButton);
+    expect(downloadHtml).toHaveBeenCalledTimes(1);
     await fireEvent.click(excelButton);
     expect(downloadExcel).not.toHaveBeenCalled();
     finishExport?.();
-    await vi.waitFor(() => expect(htmlButton).toBeEnabled());
+    await vi.waitFor(() => expect(htmlButton).toHaveAttribute("aria-disabled", "false"));
+    expect(htmlButton).toBeEnabled();
     await fireEvent.click(excelButton);
     expect(downloadExcel).toHaveBeenCalledExactlyOnceWith({ shortName: "app" });
   });
@@ -122,11 +130,13 @@ describe("ApplicationSearchActions — synchronisation Grist", () => {
     downloadHtml.mockRejectedValueOnce(new Error("Échec simulé"));
     renderWith([Permission.DATA_EXPORT]);
     const button = screen.getByTestId("applications-export-html-btn");
+    button.focus();
     await fireEvent.click(button);
     await vi.waitFor(() =>
       expect(addErrorMessage).toHaveBeenCalledExactlyOnceWith("Une erreur est survenue lors de l'exportation HTML. Veuillez réessayer."),
     );
     expect(button).toBeEnabled();
+    expect(button).toHaveFocus();
     await fireEvent.click(button);
     expect(downloadHtml).toHaveBeenCalledTimes(2);
     vi.restoreAllMocks();

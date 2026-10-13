@@ -1,9 +1,34 @@
 import { enableAutoUnmount, mount } from "@vue/test-utils";
 import MarkdownEditor from "./MarkdownEditor.vue";
+import { defineComponent, h, ref } from "vue";
 
 enableAutoUnmount(afterEach);
 
 describe("MarkdownEditor — erreurs et focus", () => {
+  it("rend le focus et conserve la sélection du texte après sa mise en gras", async () => {
+    const value = ref("Alpha");
+    const host = defineComponent({
+      setup: () => () =>
+        h(MarkdownEditor, {
+          modelValue: value.value,
+          disabled: false,
+          "onUpdate:modelValue": (next: string) => {
+            value.value = next;
+          },
+        }),
+    });
+    const wrapper = mount(host, { attachTo: document.body, global: { directives: { "use-mermaid": () => {} } } });
+    const textarea = wrapper.get("textarea").element;
+    textarea.focus();
+    textarea.setSelectionRange(0, 5);
+    const bold = wrapper.get<HTMLButtonElement>('[data-testid="markdown-toolbar-0"]');
+    bold.element.focus();
+    await bold.trigger("click");
+    expect(value.value).toBe("**Alpha**");
+    expect(textarea).toHaveFocus();
+    expect(textarea.value.slice(textarea.selectionStart, textarea.selectionEnd)).toBe("Alpha");
+  });
+
   it.each([false, true])("conserve la navigation Tab avec plusieurs lignes sélectionnées (Maj : %s)", async (shiftKey) => {
     const value = "Première ligne\nDeuxième ligne";
     const wrapper = mount(MarkdownEditor, {

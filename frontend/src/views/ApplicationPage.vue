@@ -16,6 +16,7 @@ import { Permission, RelationType, Status } from "@/client";
 import type { MetadataDto } from "@/client/types.gen";
 import { useAppPermission } from "@/composables/use-app-permission";
 import { useRelationStore } from "@/stores/relationStore";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const userStore = useUserStore();
 const applicationStore = useApplicationStore();
@@ -59,6 +60,9 @@ async function toggleSubscription() {
 
 const deleteModalOpened = ref(false);
 const deleteConfirmationInput = ref("");
+const isDeleting = ref(false);
+const deletionError = ref("");
+useSubmissionFocus(isDeleting);
 const applicationLabel = computed(() => application.value?.label ?? "");
 
 // RGAA-007 : titre de page explicite reprenant le nom de l'application.
@@ -172,15 +176,28 @@ onMounted(async () => {
 function resetModal() {
   deleteModalOpened.value = false;
   deleteConfirmationInput.value = "";
+  deletionError.value = "";
 }
 
 const actions = computed(() => [
   {
     label: "Supprimer définitivement",
-    disabled: deleteConfirmationInput.value !== applicationLabel.value,
+    disabled: isDeleting.value || !applicationLabel.value || deleteConfirmationInput.value !== applicationLabel.value,
+    "aria-busy": isDeleting.value,
     async onClick() {
-      resetModal();
-      await applicationStore.deleteApplication(id);
+      if (isDeleting.value || !applicationLabel.value || deleteConfirmationInput.value !== applicationLabel.value) return;
+      deletionError.value = "";
+      isDeleting.value = true;
+      try {
+        await applicationStore.deleteApplication(id);
+        resetModal();
+      } catch (error) {
+        if (deleteModalOpened.value) {
+          deletionError.value = error instanceof Error ? error.message : "Erreur lors de la suppression définitive de l'application.";
+        }
+      } finally {
+        isDeleting.value = false;
+      }
     },
   },
   {
@@ -325,6 +342,9 @@ function formatMetadataAuthor(metadata: MetadataDto): string {
       data-testid="application-delete-modal"
       @close="resetModal"
     >
+      <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="application-delete-error">
+        <p v-if="deletionError" class="fr-error-text">{{ deletionError }}</p>
+      </div>
       <DsfrAlert
         id="application-delete-alert"
         title="Cette action est irréversible"

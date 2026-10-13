@@ -145,7 +145,7 @@ const hasQualityCampaignPermissions = computed(() => {
         secondary
         data-testid="application-export-btn"
         class="action-btn icon-left hide-on-mobile"
-        :disabled="!!exportFormat"
+        :aria-disabled="!!exportFormat"
         :aria-busy="!!exportFormat"
         @click="exportApplications('Excel')"
         aria-label="Exporter en Excel les applications correspondant aux filtres actuels"
@@ -159,7 +159,7 @@ const hasQualityCampaignPermissions = computed(() => {
         secondary
         data-testid="application-export-btn-mobile"
         class="action-btn icon-left show-on-mobile"
-        :disabled="!!exportFormat"
+        :aria-disabled="!!exportFormat"
         :aria-busy="!!exportFormat"
         @click="exportApplications('Excel')"
         aria-label="Exporter en Excel les applications correspondant aux filtres actuels"
@@ -173,7 +173,7 @@ const hasQualityCampaignPermissions = computed(() => {
         secondary
         data-testid="applications-export-html-btn"
         class="action-btn icon-left"
-        :disabled="!!exportFormat"
+        :aria-disabled="!!exportFormat"
         :aria-busy="!!exportFormat"
         @click="exportApplications('HTML')"
         aria-label="Exporter en HTML les applications correspondant aux filtres actuels"
@@ -286,6 +286,11 @@ const hasQualityCampaignPermissions = computed(() => {
 
 .hide-on-mobile {
   display: inline-flex;
+}
+
+.action-btn[aria-disabled="true"][aria-busy="true"] {
+  color: var(--text-disabled-grey);
+  cursor: progress;
 }
 .show-on-mobile {
   display: none;

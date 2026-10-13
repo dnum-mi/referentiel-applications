@@ -10,16 +10,24 @@ import { useMediaQuery } from "@vueuse/core";
 import { computed, onMounted } from "vue";
 
 const statsStore = useStatisticsStore();
-const { isLoading, searchApplications, averageIq } = useApplicationSearch();
+const { isLoading, searchApplications, averageIq, total, page, pageSize, error } = useApplicationSearch();
 
 const isMobile = useMediaQuery("(max-width: 768px)");
 
 onMounted(() => {
   statsStore.countApplications();
-  searchApplications();
+  searchApplications().catch(() => {});
 });
 
 const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
+
+const resultsStatus = computed(() => {
+  if (isLoading.value) return "Chargement des résultats…";
+  if (error.value) return "La recherche a échoué. Les résultats n’ont pas été actualisés.";
+  const pageCount = pageSize.value > 0 ? Math.max(1, Math.ceil(total.value / pageSize.value)) : 1;
+  const currentPage = Math.max(0, Math.min(page.value, pageCount - 1)) + 1;
+  return `${total.value} application${total.value === 1 ? "" : "s"} trouvée${total.value === 1 ? "" : "s"}. Page ${currentPage} sur ${pageCount}.`;
+});
 
 const averageIqDisplay = computed(() => {
   if (averageIq.value === null) return "-";
@@ -35,9 +43,12 @@ const averageIqDisplay = computed(() => {
     <section class="main-content" data-testid="main-content">
       <h1 class="fr-h1" data-testid="application-search-title">Recherche d'applications</h1>
 
-      <output v-if="isLoading" class="loader" data-testid="application-loader" aria-live="polite" aria-atomic="true">
+      <div v-if="isLoading" class="loader" data-testid="application-loader" aria-hidden="true">
         <AppLoader />
-        <span class="sr-only">Chargement des résultats…</span>
+      </div>
+
+      <output class="fr-sr-only" aria-live="polite" aria-atomic="true" data-testid="application-results-status">
+        {{ resultsStatus }}
       </output>
 
       <div class="search-actions-wrapper" data-testid="application-search-actions-wrapper">
@@ -49,7 +60,7 @@ const averageIqDisplay = computed(() => {
         <span class="average-iq__value">{{ averageIqDisplay }}</span>
       </p>
 
-      <section id="application-results" class="application-results" aria-live="polite" :aria-busy="isLoading" tabindex="-1">
+      <section id="application-results" class="application-results" :aria-busy="isLoading" tabindex="-1">
         <ApplicationTableView v-if="displayMode === 'table'" data-testid="application-table-view" />
         <ApplicationCardView v-else data-testid="application-card-view" />
       </section>

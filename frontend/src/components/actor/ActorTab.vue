@@ -32,6 +32,8 @@ const actors = ref<ActorDto[]>([]);
 const selectedActorIds = ref<string[]>([]);
 const currentPage = ref(0);
 const showDeleteConfirmation = ref(false);
+const deleteError = ref("");
+const isDeleting = ref(false);
 const loading = ref(false);
 const formError = ref("");
 watch([actorModal.isModalOpen, actorModal.isCreateModalOpen], () => (formError.value = ""));
@@ -100,9 +102,10 @@ async function updateActor({ id: _id, ...actor }: CreateActorDto & { id?: string
 }
 
 async function deleteActor(actorId: string, applicationId: string) {
-  return api.applicationActorsControllerDelete({
+  const response = await api.applicationActorsControllerDelete({
     path: { applicationId, id: actorId },
   });
+  if (!isApiSuccess(response)) throw new Error("Actor deletion failed");
 }
 
 onBeforeMount(async () => {
@@ -134,10 +137,11 @@ async function restoreActorFocus(actorId?: string) {
   const selectedRow = Array.from(actorTable.value?.querySelectorAll<HTMLInputElement>('input[type="checkbox"]') ?? [])
     .find((input) => input.value === actorId)
     ?.closest("tr");
-  const trigger = lastTrigger.value?.isConnected
-    ? lastTrigger.value
-    : selectedRow?.querySelector<HTMLElement>('[data-testid="actor-edit-btn"]') ||
-      actorActions.value?.querySelector<HTMLElement>('[data-testid="actor-add-btn"]');
+  const trigger =
+    lastTrigger.value?.isConnected && !lastTrigger.value.matches(":disabled")
+      ? lastTrigger.value
+      : selectedRow?.querySelector<HTMLElement>('[data-testid="actor-edit-btn"]') ||
+        actorActions.value?.querySelector<HTMLElement>('[data-testid="actor-add-btn"]');
   trigger?.focus();
 }
 
@@ -178,15 +182,18 @@ async function handleSaveActors(actor: CreateActorDto & { id?: string }) {
   }
 }
 
-function removeSelectedActors() {
+function removeSelectedActors(event: Event) {
   if (selectedActorIds.value.length === 0) {
     toaster.addErrorMessage("Aucune sélection.");
     return;
   }
+  rememberTrigger(event);
+  deleteError.value = "";
   showDeleteConfirmation.value = true;
 }
 
 async function confirmDelete() {
+  if (isDeleting.value) return;
   const actorsToDelete = actors.value.filter((actor) => selectedActorIds.value.includes(actor.id));
 
   if (actorsToDelete.length === 0) {
@@ -194,17 +201,26 @@ async function confirmDelete() {
     return;
   }
 
+  isDeleting.value = true;
+  deleteError.value = "";
   try {
-    const deletePromises = actorsToDelete.map((actor) => deleteActor(actor.id, props.application.id));
-
-    await Promise.all(deletePromises);
-
-    await fetchActorsByApplication(props.application.id);
+    const results = await Promise.allSettled(actorsToDelete.map((actor) => deleteActor(actor.id, props.application.id)));
+    const failedIds = actorsToDelete.filter((_, index) => results[index].status === "rejected").map((actor) => actor.id);
+    if (failedIds.length < actorsToDelete.length) await fetchActorsByApplication(props.application.id);
+    if (failedIds.length) {
+      selectedActorIds.value = failedIds;
+      throw new Error("Actor deletion failed");
+    }
     selectedActorIds.value = [];
     showDeleteConfirmation.value = false;
+    statusMessage.value = "Acteurs supprimés avec succès !";
     toaster.addSuccessMessage("Acteurs supprimés avec succès !");
+    await restoreActorFocus();
   } catch {
-    toaster.addErrorMessage("Erreur lors de la suppression d'un ou plusieurs acteurs.");
+    deleteError.value = "Erreur lors de la suppression d'un ou plusieurs acteurs. La sélection restante est conservée pour réessayer.";
+    if (!showDeleteConfirmation.value) toaster.addErrorMessage(deleteError.value);
+  } finally {
+    isDeleting.value = false;
   }
 }
 
@@ -227,6 +243,7 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
       disabled: !canEdit.value,
       onClick: (event?: Event) => {
         if (event && typeof event.stopPropagation === "function") event.stopPropagation();
+        if (event) rememberTrigger(event);
         actorModal.openModal(actor);
       },
     },
@@ -238,7 +255,9 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
       disabled: !canEdit.value,
       onClick: (event?: Event) => {
         if (event && typeof event.stopPropagation === "function") event.stopPropagation();
+        if (event) rememberTrigger(event);
         selectedActorIds.value = [actor.id];
+        deleteError.value = "";
         showDeleteConfirmation.value = true;
       },
     },
@@ -438,6 +457,8 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
 
   <DeleteConfirmationModal
     :opened="showDeleteConfirmation"
+    :error-message="deleteError"
+    :is-submitting="isDeleting"
     item-name="les acteurs sélectionnés"
     data-testid="actor-delete-modal"
     @confirm="confirmDelete"
