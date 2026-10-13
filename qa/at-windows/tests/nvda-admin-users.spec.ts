@@ -12,7 +12,12 @@ import {
   focusDocumentStart,
   normalizeSpeech,
 } from "./fixture.js";
-import { tabTo, shiftTabTo, activateCurrent } from "./native-utils.js";
+import {
+  tabTo,
+  shiftTabTo,
+  activateCurrent,
+  passKeyToApplication,
+} from "./native-utils.js";
 import { setupU13, finishU13 } from "./admin-users-interactive-utils.js";
 test.use({ serviceWorkers: "block" });
 test.beforeEach(async ({}, info) => {
@@ -248,10 +253,7 @@ test("AT-U13-ActorLookup — chargement refusé, erreur restituée et suppressio
     nvda,
     "admin-actor-lookup-close",
     async () => {
-      await nvda.perform(nvda.keyboardCommands.ignoreNextKeyCombination, {
-        capture: true,
-      });
-      await nvda.press("Escape", { capture: true });
+      await passKeyToApplication(nvda, "Escape");
     },
     info,
   );

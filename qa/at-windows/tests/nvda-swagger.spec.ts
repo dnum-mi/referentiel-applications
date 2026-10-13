@@ -4,8 +4,14 @@ import {
   attachIdentity,
   captureStep,
   focusDocumentStart,
+  normalizeSpeech,
 } from "./fixture.js";
-import { activateCurrent, shiftTabTo, tabTo } from "./native-utils.js";
+import {
+  activateCurrent,
+  shiftTabTo,
+  tabTo,
+  passKeyToApplication,
+} from "./native-utils.js";
 import { installSyntheticSwagger } from "./exports-swagger-utils.js";
 
 test.use({ serviceWorkers: "block" });
@@ -126,10 +132,7 @@ test("AT-INT-U19-Authorize — noms/rôles, scopes, Close/Escape et retour", asy
     async () => {
       // NVDA consumes Escape to leave forms mode. Its documented pass-next-key
       // command sends this deliberate Escape to the web dialog itself.
-      await nvda.perform(nvda.keyboardCommands.ignoreNextKeyCombination, {
-        capture: true,
-      });
-      await nvda.press("Escape", { capture: true });
+      await passKeyToApplication(nvda, "Escape");
     },
     info,
   );
@@ -238,15 +241,64 @@ test("AT-INT-U19-Operations — expansion GET/POST, paramètres/réponses et rep
     "true",
   );
   await expect(post.locator("table.responses-table")).toBeVisible();
+  await captureStep(
+    nvda,
+    "swagger-post-refresh-native-buffer",
+    () =>
+      nvda.perform(nvda.keyboardCommands.refreshBrowseDocument, {
+        capture: true,
+      }),
+    info,
+  );
+  await focusDocumentStart(page, nvda);
   const body = await captureStep(
     nvda,
-    "swagger-post-read-body-and-response",
-    () => nvda.perform(nvda.keyboardCommands.sayAll, { capture: true }),
+    "swagger-post-request-body-heading",
+    async () => {
+      for (let heading = 0; heading < 10; heading++) {
+        await nvda.perform(nvda.keyboardCommands.moveToNextHeading, {
+          capture: true,
+        });
+        if (
+          normalizeSpeech(await nvda.lastSpokenPhrase()).includes(
+            "request body",
+          )
+        )
+          break;
+      }
+    },
     info,
   );
   expect(body.text).toContain("request body");
-  expect(body.text).toContain("reponse fictive aucune execution autorisee");
-  expect(body.text).toContain("201");
+  const postResponse = await captureStep(
+    nvda,
+    "swagger-post-response-table",
+    async () => {
+      await nvda.perform(nvda.keyboardCommands.moveToNextTable, {
+        capture: true,
+      });
+      await nvda.perform(nvda.keyboardCommands.moveToNextRow, {
+        capture: true,
+      });
+      await nvda.perform(nvda.keyboardCommands.moveToNextColumn, {
+        capture: true,
+      });
+    },
+    info,
+  );
+  expect(postResponse.text).not.toMatch(
+    /pas dans une cellule|not in a table cell/,
+  );
+  expect(postResponse.text).toContain(
+    "reponse fictive aucune execution autorisee",
+  );
+  expect(postResponse.text).toContain("201");
+  await captureStep(
+    nvda,
+    "swagger-post-leave-table",
+    () => nvda.press("Shift+Tab", { capture: true }),
+    info,
+  );
   await shiftTabTo(nvda, /post.*applications.*bouton/, info);
   await activateCurrent(nvda, info, "swagger-post-collapse");
   await expect(post.locator(".opblock-summary-control")).toHaveAttribute(
@@ -321,8 +373,10 @@ test("AT-INT-U19-Editable — vrais paramètres et corps de requête, choix et a
       expect(bodyName.text).toContain("request body");
       await expect(body).toBeFocused();
       await nvda.press("Control+a", { capture: true });
-      await nvda.type('"fictitious-request-body"', { capture: true });
-      await expect(body).toHaveValue('"fictitious-request-body"');
+      // A JSON scalar exercises editing without VBScript string delimiters.
+      // No request is executed, so the draft is deliberately not submitted.
+      await nvda.type("123", { capture: true });
+      await expect(body).toHaveValue("123");
     }
     await shiftTabTo(nvda, "Cancel", info);
     await activateCurrent(nvda, info, `swagger-editable-${method}-cancel`);

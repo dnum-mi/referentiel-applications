@@ -158,6 +158,15 @@ jobs:
           - group: personal-permissions
             test_files: tests/nvda-personal.spec.ts
             timeout: 50
+          - group: profile-notifications
+            test_files: tests/nvda-profile-notifications.spec.ts
+            timeout: 50
+          - group: supplement-g7
+            test_files: tests/nvda-supplement-g7.spec.ts
+            timeout: 60
+          - group: supplement-g8
+            test_files: tests/nvda-supplement-g8.spec.ts
+            timeout: 40
     env:
       RGAA_ALLOW_WINDOWS_AT: "1"
       RGAA_PRODUCT_HEAD: ${{ github.event_name == 'workflow_dispatch' && inputs.product_head || github.sha }}

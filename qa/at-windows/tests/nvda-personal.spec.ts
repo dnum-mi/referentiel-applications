@@ -245,22 +245,29 @@ test("AT-PERSONAL-G1 — édition utilisateur, périmètre, confirmation et MAIA
       select.locator('option[value="org-personal-selected"]'),
     ).toHaveCount(1);
     await reach(nvda, select, "Choisir une organisation de votre choix", info);
+    const targetIndex = await select.evaluate((element) =>
+      Array.from(element.querySelectorAll("option"))
+        .filter((option) => !option.disabled)
+        .findIndex((option) => option.value === "org-personal-selected"),
+    );
+    expect(targetIndex).toBeGreaterThanOrEqual(0);
     const chosen = await captureStep(
       nvda,
       "personal-select-organization-native",
       async () => {
+        // Open the real native picker. Closed-select ArrowDown commits each
+        // intermediate value and restarts the consumer's organisation search.
+        await nvda.press("Alt+ArrowDown", { capture: true });
         await nvda.press("Home", { capture: true });
-        for (
-          let index = 0;
-          index < 3 && (await select.inputValue()) !== "org-personal-selected";
-          index++
-        )
+        for (let index = 0; index < targetIndex; index++) {
           await nvda.press("ArrowDown", { capture: true });
-        await nvda.press("Tab", { capture: true });
+        }
+        await nvda.press("Enter", { capture: true });
       },
       info,
     );
     await expect(select).toHaveValue("org-personal-selected");
+    await expect(select).toBeEnabled();
     await expect(dialog.getByTestId("user-org-not-validated-badge")).toHaveText(
       "VALIDÉE",
     );

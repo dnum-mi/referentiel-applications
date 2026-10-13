@@ -179,6 +179,76 @@ export async function mountSharedScene(
   page: Page,
   kind: "navigation" | "search" | "notifications",
 ) {
+  if (kind === "navigation") {
+    // Keep the App already mounted by main.ts: no second useScheme lifetime.
+    await expect(
+      page.getByRole("button", { name: /Paramètres d'affichage/ }),
+    ).toBeVisible();
+    await page.evaluate(async () => {
+      interface OriginalRouter {
+        currentRoute: { value: { path: string } };
+        isReady(): Promise<void>;
+        replace(path: string): Promise<unknown>;
+        push(path: string): Promise<unknown>;
+      }
+      interface OriginalUserStore {
+        authenticated: boolean;
+        sessionInitialized: boolean;
+        fetchUser(): Promise<void>;
+      }
+      const root = document.getElementById("app") as
+        | (HTMLElement & {
+            __vue_app__?: {
+              config: {
+                globalProperties: {
+                  $router?: OriginalRouter;
+                  $pinia?: unknown;
+                };
+              };
+            };
+          })
+        | null;
+      const application = root?.__vue_app__;
+      const router = application?.config.globalProperties.$router;
+      const storeRoot = application?.config.globalProperties.$pinia;
+      if (!application || !router || !storeRoot) {
+        throw new Error(
+          "App originale, routeur et Pinia réels requis pour U01.",
+        );
+      }
+      const storeModulePath = "/src/stores/userStore.ts";
+      const stores = (await import(storeModulePath)) as {
+        useUserStore(pinia: unknown): OriginalUserStore;
+      };
+      const user = stores.useUserStore(storeRoot);
+      const deadline = Date.now() + 10_000;
+      while (!user.sessionInitialized) {
+        if (Date.now() >= deadline) {
+          throw new Error("Initialisation du store utilisateur non terminée.");
+        }
+        await new Promise<void>((resolve) => setTimeout(resolve, 10));
+      }
+      // Same synthetic GET as the scene mounter, through the original handler.
+      await user.fetchUser();
+      user.authenticated = false;
+      const host = {
+        ready: false,
+        path: () => router.currentRoute.value.path,
+        setAuthenticated: (value: boolean) => {
+          user.authenticated = value;
+        },
+        navigate: (path: string) => router.push(path),
+      };
+      window.__rgaaShared = host;
+      await router.isReady();
+      await router.replace("/plan-du-site");
+      host.ready = true;
+    });
+    await expect
+      .poll(() => page.evaluate(() => window.__rgaaShared?.ready))
+      .toBe(true);
+    return;
+  }
   const source = await page.locator("body").evaluate(async () => {
     const main = await (await fetch("/src/main.ts")).text();
     const router = await (await fetch("/src/router/index.ts")).text();

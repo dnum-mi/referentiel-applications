@@ -6,7 +6,12 @@ import {
   focusDocumentStart,
 } from "./fixture.js";
 import { mountProductionScene } from "./interactive-utils.js";
-import { tabTo, shiftTabTo, activateCurrent } from "./native-utils.js";
+import {
+  tabTo,
+  shiftTabTo,
+  activateCurrent,
+  passKeyToApplication,
+} from "./native-utils.js";
 import {
   mountFormsScene,
   simulatedFormsNetwork,
@@ -252,10 +257,7 @@ test("AT-FORM-Notifications — panneau, deux rôles, vrai aperçu e-mail puis f
     nvda,
     "notification-email-close-escape",
     async () => {
-      await nvda.perform(nvda.keyboardCommands.ignoreNextKeyCombination, {
-        capture: true,
-      });
-      await nvda.press("Escape", { capture: true });
+      await passKeyToApplication(nvda, "Escape");
     },
     info,
   );
@@ -280,10 +282,7 @@ test("AT-FORM-Notifications — panneau, deux rôles, vrai aperçu e-mail puis f
     nvda,
     "notification-panel-close-escape",
     async () => {
-      await nvda.perform(nvda.keyboardCommands.ignoreNextKeyCombination, {
-        capture: true,
-      });
-      await nvda.press("Escape", { capture: true });
+      await passKeyToApplication(nvda, "Escape");
     },
     info,
   );

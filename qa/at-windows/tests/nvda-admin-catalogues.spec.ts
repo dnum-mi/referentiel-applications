@@ -1,4 +1,5 @@
-import { expect } from "@playwright/test";
+import { expect, type TestInfo } from "@playwright/test";
+import type { NVDAPlaywright } from "@guidepup/playwright";
 import {
   test,
   attachIdentity,
@@ -23,6 +24,61 @@ test.beforeEach(async ({}, info) => {
       "7.1.2 — complément U14 : édition et suppression refusées, valeurs fictives, variantes propres ; aucune conformité globale déduite",
   });
 });
+
+// This observed rendering of a slash retains the full organization path.
+// No word, count or part of the warning may be discarded by the comparison.
+function warningIncludes(text: string, phrase: string) {
+  const alternatives = [normalizeSpeech(phrase)];
+  if (phrase.includes("/"))
+    alternatives.push(
+      normalizeSpeech(phrase.replaceAll("/", " barre oblique ")),
+    );
+  return alternatives.some((expected) => text.includes(expected));
+}
+
+async function readWarningNative(
+  nvda: NVDAPlaywright,
+  expected: readonly string[],
+  info: TestInfo,
+  step: string,
+) {
+  // Each command collects real reader speech. A second capture after SayAll
+  // would stop that ongoing reading through Guidepup's implicit Control.
+  let browseMode = false;
+  for (let mode = 0; mode < 2; mode++) {
+    const switched = await captureStep(
+      nvda,
+      `${step}-browse-${mode}`,
+      () =>
+        nvda.perform(nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode, {
+          capture: true,
+        }),
+      info,
+    );
+    if (switched.text.includes("mode navigation")) {
+      browseMode = true;
+      break;
+    }
+  }
+  expect(browseMode).toBe(true);
+  const phrases: string[] = [];
+  for (let line = 0; line < 40; line++) {
+    const heard = await captureStep(
+      nvda,
+      `${step}-line-${line}`,
+      () =>
+        line === 0
+          ? nvda.perform(nvda.keyboardCommands.readLine, { capture: true })
+          : nvda.press("ArrowDown", { capture: true }),
+      info,
+    );
+    phrases.push(...heard.phrases);
+    const text = normalizeSpeech(phrases.join(" "));
+    if (expected.every((phrase) => warningIncludes(text, phrase)))
+      return { text, phrases };
+  }
+  return { text: normalizeSpeech(phrases.join(" ")), phrases };
+}
 
 for (const current of catalogueCases) {
   test(`AT-INT-U14-catalogue-${current.scene} — saisie, confirmation, échecs et retour`, async ({
@@ -282,19 +338,14 @@ for (const current of catalogueCases) {
           body: JSON.stringify(blocked.phrases),
           contentType: "application/json",
         });
-        const details = await captureStep(
+        const details = await readWarningNative(
           nvda,
-          "organization-delete-blocked-read",
-          async () => {
-            await nvda.perform(nvda.keyboardCommands.sayAll, { capture: true });
-            await nvda.capture(
-              async () => {
-                await page.waitForTimeout(30_000);
-              },
-              { capture: true },
-            );
-          },
+          [
+            "Des administrateurs ont cette organisation pour périmètre",
+            "Réaffectez leur périmètre à une autre organisation",
+          ],
           info,
+          "organization-delete-blocked-read",
         );
         expect(details.text).toContain(
           normalizeSpeech(
@@ -320,22 +371,14 @@ for (const current of catalogueCases) {
         dialog.getByRole("heading", { name: current.deleteTitle, exact: true }),
       ).toBeVisible();
       expect(confirmation.text).toContain(normalizeSpeech(current.deleteTitle));
-      const readConfirmation = await captureStep(
+      const readConfirmation = await readWarningNative(
         nvda,
-        `${current.scene}-delete-warning-read`,
-        async () => {
-          await nvda.perform(nvda.keyboardCommands.sayAll, { capture: true });
-          await nvda.capture(
-            async () => {
-              await page.waitForTimeout(30_000);
-            },
-            { capture: true },
-          );
-        },
+        current.confirmation,
         info,
+        `${current.scene}-delete-warning-read`,
       );
       for (const phrase of current.confirmation)
-        expect(readConfirmation.text).toContain(normalizeSpeech(phrase));
+        expect(warningIncludes(readConfirmation.text, phrase)).toBe(true);
       await tabTo(nvda, current.confirmName, info);
       await expect(dialog.getByTestId(current.confirmId)).toBeFocused();
       await activateCurrent(nvda, info, `${current.scene}-delete-start`);

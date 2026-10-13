@@ -52,7 +52,7 @@ try {
   if (-not [Environment]::UserInteractive -or (Get-Process -Id $PID).SessionId -eq 0) { throw 'Interactive runner desktop required.' }
   $readersAfterSetup = @(Get-Process -Name jfw -ErrorAction SilentlyContinue)
   if ($readersAfterSetup.Count -eq 0) {
-    $launch = Start-Process -FilePath $readerPath -PassThru
+    $launch = Start-Process -FilePath $readerPath -ArgumentList '/lfra' -PassThru
     $ownedReaders = @($launch)
     Start-Sleep -Seconds 5
   }

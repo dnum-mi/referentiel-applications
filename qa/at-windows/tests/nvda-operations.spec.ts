@@ -14,7 +14,7 @@ import {
   focusDocumentStart,
   normalizeSpeech,
 } from "./fixture.js";
-import { activateCurrent } from "./native-utils.js";
+import { activateCurrent, passKeyToApplication } from "./native-utils.js";
 import { alpha } from "./interactive-utils.js";
 import {
   finishOperations,
@@ -363,7 +363,13 @@ test("AT-OPS-U15 — import batch, attente, erreur, rapport et MAIA refusé, tou
     nvda,
     "batch-import-concurrent-enter-and500",
     async () => {
-      await nvda.press("Enter", { capture: true });
+      // The pending button changes its name and becomes aria-disabled. Its
+      // DOM focus remains on the submit control, but NVDA's browse cursor can
+      // move to following content. Pass this duplicate Enter to that actual
+      // focused control so the test exercises the application's request guard.
+      await expect(submit).toBeFocused();
+      await passKeyToApplication(nvda, "Enter");
+      await expect(submit).toBeFocused();
       await nvda.capture(
         async () => {
           await expect(

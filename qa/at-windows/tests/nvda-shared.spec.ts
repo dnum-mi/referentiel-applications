@@ -257,7 +257,37 @@ test("AT-INT-U02 — vraie recherche/RefAppTable, tri, pagination, colonnes/larg
     exact: true,
   });
   await expect(dialog).toBeVisible();
-  expect(columns.text).toContain("personnaliser les colonnes");
+  // Keep the spontaneous opening announcement distinct from an explicit
+  // focus report. The native activation can return before the modal focuses.
+  const settledColumns = await captureStep(
+    nvda,
+    "column-dialog-focus-and-delayed-announcement",
+    async () => {
+      await nvda.capture(
+        async () => {
+          await expect
+            .poll(() =>
+              dialog.evaluate((element) =>
+                element.contains(document.activeElement),
+              ),
+            )
+            .toBe(true);
+          await page.waitForTimeout(1500);
+        },
+        { capture: true },
+      );
+    },
+    info,
+  );
+  const columnFocus = await currentFocus(
+    nvda,
+    info,
+    "column-dialog-current-focus",
+  );
+  expect(columnFocus.text).toMatch(/fermer.*bouton|bouton.*fermer/);
+  expect(columns.text + settledColumns.text).toContain(
+    "personnaliser les colonnes",
+  );
   await tabTo(nvda, "Tags", info);
   await expect(
     dialog.getByRole("checkbox", { name: "Tags", exact: true }),

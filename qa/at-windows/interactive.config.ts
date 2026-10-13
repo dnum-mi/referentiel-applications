@@ -32,6 +32,9 @@ export default defineConfig({
     "nvda-admin-catalogues.spec.ts",
     "nvda-selection.spec.ts",
     "nvda-personal.spec.ts",
+    "nvda-profile-notifications.spec.ts",
+    "nvda-supplement-g7.spec.ts",
+    "nvda-supplement-g8.spec.ts",
   ],
   outputDir: caseId
     ? `./test-results/interactive/${caseId}`

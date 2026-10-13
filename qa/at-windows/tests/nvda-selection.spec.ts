@@ -5,7 +5,11 @@ import {
   captureStep,
   focusDocumentStart,
 } from "./fixture.js";
-import { activateCurrent, tabTo } from "./native-utils.js";
+import {
+  activateCurrent,
+  tabTo,
+  passKeyToApplication,
+} from "./native-utils.js";
 import {
   selectionNetwork,
   mountSelectionScene,
@@ -145,10 +149,7 @@ for (const kind of ["tags", "divisions"] as const) {
           nvda,
           "selection-close-popup-native",
           async () => {
-            await nvda.perform(nvda.keyboardCommands.ignoreNextKeyCombination, {
-              capture: true,
-            });
-            await nvda.press("Escape", { capture: true });
+            await passKeyToApplication(nvda, "Escape");
           },
           info,
         );
@@ -189,7 +190,18 @@ for (const compact of [false, true]) {
       await expect(input).toBeFocused();
       expect(opened.text).toContain("recherche d une application");
       expect(opened.text).toMatch(/dialogue|dialog/);
-    } else await tabTo(nvda, "Recherche d’une application", info);
+    } else {
+      await tabTo(nvda, "Recherche d’une application", info);
+      await expect(input).toBeFocused();
+      // The preparation deliberately left NVDA in browse mode while this
+      // already-focused combobox matched tabTo without a new Tab event.
+      const entered = await activateCurrent(
+        nvda,
+        info,
+        "header-enter-forms-mode",
+      );
+      expect(entered.text).toContain("mode formulaire");
+    }
     for (let attempt = 0; attempt < (compact ? 2 : 1); attempt++) {
       const typed = await captureStep(
         nvda,
@@ -217,11 +229,7 @@ for (const compact of [false, true]) {
             nvda,
             `header-escape-${step}`,
             async () => {
-              await nvda.perform(
-                nvda.keyboardCommands.ignoreNextKeyCombination,
-                { capture: true },
-              );
-              await nvda.press("Escape", { capture: true });
+              await passKeyToApplication(nvda, "Escape");
             },
             info,
           );

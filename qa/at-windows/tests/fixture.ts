@@ -56,6 +56,62 @@ export const test = nvdaTest.extend<
   Record<never, never>,
   { windowsGuard: void }
 >({
+  page: async ({ page }, use, info) => {
+    // Read-only diagnostics for native focus failures. Only control metadata
+    // from the synthetic web page is recorded; no entered values or text keys.
+    await page.addInitScript(() => {
+      const records: {
+        at: number;
+        event: string;
+        tag: string;
+        id: string;
+        testId: string | null;
+        role: string | null;
+        label: string | null;
+      }[] = [];
+      const snapshot = (event: string, target: EventTarget | null) => {
+        if (!(target instanceof Element)) return;
+        records.push({
+          at: performance.now(),
+          event,
+          tag: target.tagName,
+          id: target.id,
+          testId: target.getAttribute("data-testid"),
+          role: target.getAttribute("role"),
+          label: target.getAttribute("aria-label"),
+        });
+        if (records.length > 100) records.shift();
+      };
+      for (const event of ["focusin", "focusout", "click"])
+        document.addEventListener(
+          event,
+          (current) => snapshot(event, current.target),
+          true,
+        );
+      Object.defineProperty(window, "__rgaaNativeFocusDiagnostics", {
+        value: () => {
+          snapshot("final-active-element", document.activeElement);
+          return records;
+        },
+      });
+    });
+    try {
+      await use(page);
+    } finally {
+      if (!page.isClosed()) {
+        const records = await page.evaluate(() => {
+          const host = window as unknown as {
+            __rgaaNativeFocusDiagnostics?: () => unknown;
+          };
+          return host.__rgaaNativeFocusDiagnostics?.() ?? [];
+        });
+        await info.attach("native-page-focus-events", {
+          body: JSON.stringify(records, null, 2),
+          contentType: "application/json",
+        });
+      }
+    }
+  },
   nvda: async ({ nvda }, use, info) => {
     try {
       await use(nvda);

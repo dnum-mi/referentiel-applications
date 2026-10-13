@@ -59,3 +59,17 @@ export async function activateCurrent(
     info,
   );
 }
+
+export async function passKeyToApplication(nvda: NVDAPlaywright, key: string) {
+  await nvda.perform(nvda.keyboardCommands.ignoreNextKeyCombination, {
+    capture: true,
+  });
+  // Guidepup 0.35 sends Control before every captured command to stop speech.
+  // That extra key would consume NVDA's pass-next-key before the requested key.
+  // Send this key without that prelude, then read the resulting native focus.
+  // The focus report is an explicit read, not a claimed spontaneous announcement.
+  await nvda.press(key, { capture: false });
+  await nvda.perform(nvda.keyboardCommands.reportCurrentFocus, {
+    capture: true,
+  });
+}

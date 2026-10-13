@@ -176,6 +176,24 @@ test("AT-U08-InfosLabels — édition application et datalist de source, refus50
     exact: true,
   });
   await expect(edit).toBeVisible();
+  // Diagnostic only: keep the original opening assertions unchanged. A
+  // current-focus report is native reader output, never synthesized from DOM.
+  // This next run can distinguish late speech from an unnamed dialog context.
+  await captureStep(
+    nvda,
+    "general-edit-open-settled-diagnostic",
+    async () => {
+      await nvda.capture(
+        async () => {
+          await expect(edit).toBeVisible();
+          await page.waitForTimeout(1500);
+        },
+        { capture: true },
+      );
+    },
+    info,
+  );
+  await currentFocus(nvda, info, "general-edit-open-current-focus-diagnostic");
   expect(opened.text).toContain(normalizeSpeech("Modifier l'application"));
   expect(opened.text).toMatch(/dialogue|dialog/);
   await reach(

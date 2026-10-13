@@ -6,7 +6,11 @@ import {
   focusDocumentStart,
   normalizeSpeech,
 } from "./fixture.js";
-import { activateCurrent, tabTo } from "./native-utils.js";
+import {
+  activateCurrent,
+  tabTo,
+  passKeyToApplication,
+} from "./native-utils.js";
 import {
   adminNetwork,
   finishAdmin,
@@ -112,17 +116,8 @@ test("AT-INT-U14-quality — sponsors au clavier, erreur de suppression puis ré
     await expect(email).toHaveValue("replacement@example.invalid");
     await captureStep(
       nvda,
-      "quality-pass-next-key-to-page",
-      () =>
-        nvda.perform(nvda.keyboardCommands.ignoreNextKeyCombination, {
-          capture: true,
-        }),
-      info,
-    );
-    await captureStep(
-      nvda,
       "quality-edit-cancel",
-      () => nvda.press("Escape", { capture: true }),
+      () => passKeyToApplication(nvda, "Escape"),
       info,
     );
     await expect(

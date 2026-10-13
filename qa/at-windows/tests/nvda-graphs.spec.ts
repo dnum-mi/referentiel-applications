@@ -103,19 +103,27 @@ for (const chart of charts) {
     expect(table.text).not.toContain("pas dans une cellule de tableau");
     for (const column of chart.columns)
       expect(table.text).toContain(normalizeSpeech(column));
-    // Table reading moves the virtual cursor; use its native previous-button
-    // command instead of Shift+Tab from a possibly unfocused document.
-    const returnControl = await captureStep(
-      nvda,
-      "table-previous-button",
-      () =>
-        nvda.perform(nvda.keyboardCommands.moveToPreviousButton, {
-          capture: true,
-        }),
-      info,
-    );
-    expect(returnControl.text).toContain("voir le graphique");
-    expect(returnControl.text).toContain("bouton");
+    // IQChart also has real sort buttons in its table headers. Walk the
+    // native virtual cursor backwards until the actual view toggle is heard.
+    // DOM presence alone never identifies a control as spoken or activated.
+    let returnControl: Awaited<ReturnType<typeof captureStep>> | undefined;
+    for (let previous = 0; previous < 10; previous++) {
+      const candidate = await captureStep(
+        nvda,
+        `table-previous-button-${previous}`,
+        () =>
+          nvda.perform(nvda.keyboardCommands.moveToPreviousButton, {
+            capture: true,
+          }),
+        info,
+      );
+      if (candidate.text.includes("voir le graphique")) {
+        returnControl = candidate;
+        break;
+      }
+    }
+    expect(returnControl?.text).toContain("voir le graphique");
+    expect(returnControl?.text).toContain("bouton");
     await activateCurrent(nvda, info, "return-graphic-activated");
     await expect(button).toHaveAttribute("aria-pressed", "false");
     await expect(page.getByTestId(`${chart.id}-canvas`)).toBeVisible();

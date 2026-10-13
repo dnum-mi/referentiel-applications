@@ -10,7 +10,12 @@ import {
   mountProductionScene,
   simulatedNetwork,
 } from "./interactive-utils.js";
-import { activateCurrent, shiftTabTo, tabTo } from "./native-utils.js";
+import {
+  activateCurrent,
+  shiftTabTo,
+  tabTo,
+  passKeyToApplication,
+} from "./native-utils.js";
 
 test.use({ serviceWorkers: "block" });
 test.beforeEach(async ({}, info) => {
@@ -118,11 +123,14 @@ test("AT-INT-profil — vrais onglets, token non soumis, retrait puis réaccord 
   await tabTo(nvda, "Annuler", info);
   await activateCurrent(nvda, info, "token-form-cancel");
   await expect(page.getByTestId("token-create-btn")).toBeFocused();
-  await shiftTabTo(nvda, "Mes tokens", info);
+  await shiftTabTo(nvda, /mes tokens.*onglet|onglet.*mes tokens/, info);
+  await expect(
+    page.getByRole("tab", { name: "Mes tokens", exact: true }),
+  ).toBeFocused();
   const last = await captureStep(
     nvda,
     "profile-end-key",
-    () => nvda.press("End"),
+    () => passKeyToApplication(nvda, "End"),
     info,
   );
   await expect(
@@ -157,7 +165,7 @@ test("AT-INT-profil — vrais onglets, token non soumis, retrait puis réaccord 
   const granted = await captureStep(
     nvda,
     "permission-regranted-end-key",
-    () => nvda.press("End"),
+    () => passKeyToApplication(nvda, "End"),
     info,
   );
   await expect(
