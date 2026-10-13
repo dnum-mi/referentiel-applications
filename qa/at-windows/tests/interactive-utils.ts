@@ -294,8 +294,16 @@ export async function mountProductionScene(
 ) {
   await page.evaluate(
     async ({ componentPath, props, sampleApplication }) => {
-      const main = await (await fetch("/src/main.ts")).text();
-      const routerSource = await (await fetch("/src/router/index.ts")).text();
+      const readModule = async (path: string) => {
+        const response = await fetch(path);
+        if (!response.ok)
+          throw new Error(
+            `Module produit indisponible : ${path} (HTTP ${response.status})`,
+          );
+        return response.text();
+      };
+      const main = await readModule("/src/main.ts");
+      const routerSource = await readModule("/src/router/index.ts");
       const specifiers = [
         ...`${main}\n${routerSource}`.matchAll(/from\s+["']([^"']+)["']/g),
       ].map((match) => match[1]);
@@ -327,6 +335,10 @@ export async function mountProductionScene(
       };
       const aura = (await import(dependency("@primevue_themes_aura.js"))) as {
         default: unknown;
+      };
+      const localePath = "/src/constants/primevue-locale.ts";
+      const locale = (await import(localePath)) as {
+        primeVueFrenchLocale: unknown;
       };
       const component = (await import(componentPath)) as { default: unknown };
       const userStorePath = "/src/stores/userStore.ts";
@@ -368,6 +380,7 @@ export async function mountProductionScene(
         }),
       );
       app.use(prime.default, {
+        locale: locale.primeVueFrenchLocale,
         theme: {
           preset: aura.default,
           options: { darkModeSelector: '[data-fr-theme="dark"]' },

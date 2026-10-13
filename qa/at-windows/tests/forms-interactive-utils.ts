@@ -191,8 +191,16 @@ export async function mountFormsScene(
     return;
   }
   await page.evaluate(async (scene) => {
-    const main = await (await fetch("/src/main.ts")).text();
-    const routerSource = await (await fetch("/src/router/index.ts")).text();
+    const readModule = async (path: string) => {
+      const response = await fetch(path);
+      if (!response.ok)
+        throw new Error(
+          `Module produit indisponible : ${path} (HTTP ${response.status})`,
+        );
+      return response.text();
+    };
+    const main = await readModule("/src/main.ts");
+    const routerSource = await readModule("/src/router/index.ts");
     const specifiers = [
       ...`${main}\n${routerSource}`.matchAll(/from\s+["']([^"']+)["']/g),
     ].map((match) => match[1]);

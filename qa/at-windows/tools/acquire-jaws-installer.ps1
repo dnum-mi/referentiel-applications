@@ -43,7 +43,7 @@ $report = [ordered]@{
 try {
   # This is the actual endpoint and parameter mapping used by the official site.
   # Version selector value 26 denotes JAWS 2025; enu denotes its multilingual setup.
-  $apiResponse = Invoke-WebRequest -Uri $sourceApi -UserAgent 'RefApp-accessibility-source-review' -TimeoutSec 30
+  $apiResponse = Invoke-WebRequest -UseBasicParsing -Uri $sourceApi -UserAgent 'RefApp-accessibility-source-review' -TimeoutSec 30
   # The actual endpoint uses Content-Type "PreviousVersions; charset=utf-8".
   # PowerShell can consequently expose Content as byte[]. A pipeline would
   # enumerate those bytes and parse individual numbers instead of the JSON body.
@@ -83,7 +83,7 @@ try {
     productMajor = $selected[0].ProductMajor; releaseType = $selected[0].ReleaseType
   }
 
-  Invoke-WebRequest -Uri $downloadUrl -UserAgent 'RefApp-accessibility-source-review' -OutFile $installerPath -TimeoutSec 120
+  Invoke-WebRequest -UseBasicParsing -Uri $downloadUrl -UserAgent 'RefApp-accessibility-source-review' -OutFile $installerPath -TimeoutSec 120
   $file = Get-Item -LiteralPath $installerPath
   $sha256 = (Get-FileHash -LiteralPath $installerPath -Algorithm SHA256).Hash.ToLowerInvariant()
   $version = [Diagnostics.FileVersionInfo]::GetVersionInfo($installerPath)
