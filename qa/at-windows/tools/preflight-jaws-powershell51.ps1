@@ -17,7 +17,7 @@ $record = [ordered]@{
   version = $PSVersionTable.PSVersion.ToString(); edition = $PSVersionTable.PSEdition
   apartment = [Threading.Thread]::CurrentThread.ApartmentState.ToString()
   processSession = $null; parsedScripts = @(); compiledClasses = @(); resolvedTypeNames = @()
-  functionParameterTypes = @(); nativeParameterBindings = @(); commands = @(); readonlyWin32 = $null
+  functionParameterTypes = @(); nativeParameterBindings = @(); syntaxMarkers = @(); commands = @(); readonlyWin32 = $null
   readerLaunched = $false; installerLaunched = $false; keyboardInputSent = $false
   clipboardReadOrWritten = $false; policyOrLicenceChanged = $false; nativeSpeech = $false; rgaaVerdict = $null
 }
@@ -69,6 +69,14 @@ try {
       $node -is [Management.Automation.Language.TypeConstraintAst] -or $node -is [Management.Automation.Language.TypeExpressionAst]
     }, $true))
     foreach ($constraint in $types) {
+      # [ordered] is valid only on a hash literal; it is not a CLR type lookup.
+      # Keep all actual type expressions and parameter declarations strict.
+      if ($constraint.TypeName.FullName -eq 'ordered' -and
+          $constraint.Parent -is [Management.Automation.Language.ConvertExpressionAst] -and
+          $constraint.Parent.Child -is [Management.Automation.Language.HashtableAst]) {
+        $record.syntaxMarkers += [ordered]@{ source = $name; marker = 'ordered'; context = 'hash literal'; resolvedAsType = $false }
+        continue
+      }
       $resolved = [type]$constraint.TypeName.FullName
       if ($null -eq $resolved) { throw ('Unresolved real PowerShell 5.1 type: ' + $constraint.TypeName.FullName) }
       $record.resolvedTypeNames += [ordered]@{ source = $name; declared = $constraint.TypeName.FullName; resolved = $resolved.FullName }
