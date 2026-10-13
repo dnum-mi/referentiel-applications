@@ -5209,6 +5209,555 @@ paths:
       summary: Récupérer le nombre total d'hébergements (toutes applications)
       tags:
         - Hostings
+  /api/v2/grist/setup:
+    post:
+      description: >-
+        Écrit les applications correspondant aux filtres de recherche (mêmes
+        filtres et même périmètre que l'export Excel ; `page` et `pageSize` sont
+        ignorés) dans les documents Grist du profil de l'utilisateur
+        (gristDocIds). Sans document dans le profil, l'appel répond 400 ; une
+        cible hors profil répond 403.
+
+
+        Le corps `targets` choisit, par document, une table existante
+        (`tableId`, voir GET /grist/tables) ou une nouvelle table (`newTable`,
+        premier nom libre parmi RefApp, RefApp2, RefApp3…). Sans `targets`,
+        chaque document du profil est synchronisé dans sa première table RefApp,
+        créée au premier appel. Une table RefApp sans colonne refapp_id n'a pas
+        été créée par RefApp et n'est jamais modifiée.
+
+
+        Chaque application est retrouvée par son identifiant (refapp_id) : les
+        colonnes nom et statut sont mises à jour, les colonnes metadata_1 à
+        metadata_3 saisies dans Grist sont conservées. Chaque table garde sa
+        propre sélection : seule la table visée est modifiée.
+
+
+        Les lignes dont l'application n'est plus dans la sélection sont grisées
+        (dans_selection = false, motif_sortie = « hors filtre » ou « supprimée
+        de RefApp ») si elles portent des métadonnées, supprimées sinon. Une
+        application qui revient dans la sélection retrouve sa ligne, dégrisée.
+
+
+        Les Access Rules rendent les colonnes écrites par RefApp non modifiables
+        et interdisent l'ajout et la suppression de lignes pour tous,
+        propriétaires du document compris. La synchronisation retire ces règles
+        le temps d'écrire, puis les remet, même en cas d'échec ; les autres
+        règles de la table sont supprimées.
+
+
+        Les cibles sont traitées indépendamment : une cible en échec (droits,
+        document ou table introuvable…) n'empêche pas les suivantes, et le
+        compte rendu donne le résultat de chacune.
+      operationId: GristController_setup
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            maximum: 100
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            type: string
+            enum:
+              - asc
+              - desc
+        - name: search
+          required: false
+          in: query
+          description: Recherche sur les labels et shortName
+          schema:
+            example: Mon Application
+            type: string
+        - name: q
+          required: false
+          in: query
+          description: Recherche full-text sur l'ensemble des informations descriptives de
+            la fiche (libellé, nom court, description, finalités, populations
+            cibles, tags, labels, acteurs). Insensible à la casse et aux
+            accents, avec lemmatisation française et tri par pertinence. Tous
+            les mots saisis doivent être présents (ET) ; la ponctuation est
+            ignorée.
+          schema:
+            maxLength: 200
+            example: gestion des factures
+            type: string
+        - name: qPrefix
+          required: false
+          in: query
+          description: Recherche full-text en mode préfixe, pour l'autocomplétion au fil
+            de la frappe (chaque mot saisi est traité comme un préfixe). Même
+            périmètre que `q`. Prioritaire sur `q` s'il est fourni. Limité aux
+            200 résultats les plus pertinents.
+          schema:
+            maxLength: 200
+            example: tow muel
+            type: string
+        - name: label
+          required: false
+          in: query
+          description: Recherche par label
+          schema:
+            example: Mon Application
+            type: string
+        - name: shortName
+          required: false
+          in: query
+          description: Recherche par shortName
+          schema:
+            type: string
+        - name: tag
+          required: false
+          in: query
+          description: Filtrer par tags (un ou plusieurs)
+          schema:
+            type: array
+            items:
+              type: string
+        - name: priorityRestart
+          required: false
+          in: query
+          description: Filtrer par une ou plusieurs priorités de redémarrage (R0 à R3)
+          schema:
+            example:
+              - R1
+              - R2
+            type: array
+            items:
+              type: string
+              enum:
+                - R0
+                - R1
+                - R1_STAR
+                - R2
+                - R3
+        - name: actorType
+          required: false
+          in: query
+          description: Type d'acteur. Utiliser les valeurs de /actorTypes
+          schema:
+            example: MOA
+            type: string
+        - name: actorEmail
+          required: false
+          in: query
+          description: Email d'un acteur pour filtrer les applications
+          schema:
+            example: user@example.com
+            type: string
+        - name: missingMoa
+          required: false
+          in: query
+          description: Filtrer les applications sans MOA
+          schema:
+            example: true
+            type: boolean
+        - name: missingMoe
+          required: false
+          in: query
+          description: Filtrer les applications sans MOE
+          schema:
+            example: true
+            type: boolean
+        - name: missingHosting
+          required: false
+          in: query
+          description: Filtrer les applications sans hébergement
+          schema:
+            example: true
+            type: boolean
+        - name: currentStatus__in
+          required: false
+          in: query
+          description: Filtrer par un ou plusieurs status du statut courant
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - under_construction
+                - to_validate
+                - poc
+                - in_production_mvp
+                - in_production
+                - in_production_decommissioning
+                - decommissioned
+                - deleted
+        - name: currentStatus__isNull
+          required: false
+          in: query
+          description: Filtrer les applications sans statut
+          schema:
+            example: true
+            type: boolean
+        - name: subscribersEmail
+          required: false
+          in: query
+          description: Filtrer les applications abonné
+          schema:
+            example: true
+            type: boolean
+        - name: myApplications
+          required: false
+          in: query
+          description: Filtrer les applications par acteur et groupe acteurs
+          schema:
+            example: true
+            type: boolean
+        - name: organization
+          required: false
+          in: query
+          description: Nom de l'organisation liée à l'application
+          schema:
+            example: Direction des systèmes d'information
+            type: string
+        - name: hostingSearch
+          required: false
+          in: query
+          description: Recherche unifiée sur tous les champs d'hébergement (site,
+            plateforme, fournisseur, bâtiment, salle)
+          schema:
+            example: Paris
+            type: string
+        - name: hostingSite
+          required: false
+          in: query
+          description: Filtrer par site d'hébergement
+          schema:
+            example: Paris
+            type: string
+        - name: hostingPlatform
+          required: false
+          in: query
+          description: Filtrer par plateforme d'hébergement
+          schema:
+            example: AWS
+            type: string
+        - name: hostingProvider
+          required: false
+          in: query
+          description: Filtrer par fournisseur d'hébergement
+          schema:
+            example: Amazon
+            type: string
+        - name: hostingBuilding
+          required: false
+          in: query
+          description: Filtrer par bâtiment d'hébergement
+          schema:
+            example: Bâtiment A
+            type: string
+        - name: hostingRoom
+          required: false
+          in: query
+          description: Filtrer par pièce d'hébergement
+          schema:
+            example: Salle 101
+            type: string
+        - name: compliance__in
+          required: false
+          in: query
+          description: "[Déprécié] Filtrer par conformité présente. Utiliser plutôt
+            compliancePresent__in."
+          deprecated: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - dima
+                - pdma
+                - homologation
+                - rgaa
+                - dsfr
+                - rgpd
+                - pra
+        - name: compliancePresent__in
+          required: false
+          in: query
+          description: Critères de conformité devant être présents (renseignés) sur
+            l'application
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - dima
+                - pdma
+                - homologation
+                - rgaa
+                - dsfr
+                - rgpd
+                - pra
+        - name: complianceAbsent__in
+          required: false
+          in: query
+          description: "Critères de conformité absents : pour un critère booléen (pra,
+            dsfr) = explicitement Non (false) ; pour les autres = non renseigné"
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - dima
+                - pdma
+                - homologation
+                - rgaa
+                - dsfr
+                - rgpd
+                - pra
+        - name: complianceUnset__in
+          required: false
+          in: query
+          description: Critères de conformité non renseignés (valeur nulle). Pertinent
+            pour les critères booléens (pra, dsfr)
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - dima
+                - pdma
+                - homologation
+                - rgaa
+                - dsfr
+                - rgpd
+                - pra
+        - name: link
+          required: false
+          in: query
+          description: Recherche par lien (ressource externe)
+          schema:
+            type: string
+        - name: iqGte
+          required: false
+          in: query
+          description: Recherche par indice de qualité minimum
+          schema:
+            minimum: 0
+            default: 0
+            type: number
+        - name: iqLte
+          required: false
+          in: query
+          description: Recherche par indice de qualité maximum
+          schema:
+            maximum: 100
+            default: 100
+            type: number
+        - name: iq__isNull
+          required: false
+          in: query
+          description: Inclure les applications sans IQ (décommissionnées ou supprimées)
+            en plus de celles dans la plage iqGte/iqLte
+          schema:
+            example: true
+            type: boolean
+        - name: columns
+          required: false
+          in: query
+          description: Colonnes à inclure dans l'export
+          schema:
+            example: id,label,shortName,description
+            type: string
+        - name: isActor
+          required: false
+          in: query
+          description: "Ne retourne que les applications dont l'utilisateur est acteur,
+            defaut: false"
+          schema:
+            default: false
+            type: string
+        - name: is_part_of
+          required: false
+          in: query
+          description: Filtrée sur la relation de type Fait partie de
+          schema:
+            type: string
+            enum:
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
+        - name: in_replacement_of
+          required: false
+          in: query
+          description: Filtrée sur la relation de type Remplace
+          schema:
+            type: string
+            enum:
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
+        - name: is_service_user_of
+          required: false
+          in: query
+          description: Filtrée sur la relation de type Utilise le service de
+          schema:
+            type: string
+            enum:
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
+        - name: is_data_user_of
+          required: false
+          in: query
+          description: Filtrée sur la relation de type Utilise la donnée de
+          schema:
+            type: string
+            enum:
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
+        - name: use_sso_of
+          required: false
+          in: query
+          description: Filtrée sur la relation de type Utilise le SSO de
+          schema:
+            type: string
+            enum:
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
+        - name: is_correlated_with
+          required: false
+          in: query
+          description: "Filtrée sur la relation de type Est corrélée à (symétrique : les
+            deux directions sont considérées)"
+          schema:
+            type: string
+            enum:
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
+        - name: relationAppId
+          required: false
+          in: query
+          description: Filtrage des relations sur cette app
+          schema:
+            type: string
+        - name: businessDivisionId
+          required: false
+          in: query
+          description: Filtrage des directions de metier MOA (une ou plusieurs)
+          schema:
+            type: array
+            items:
+              type: string
+        - name: is_mediation_service
+          required: false
+          in: query
+          description: Filtrée sur la mediation de service
+          schema:
+            type: string
+            enum:
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
+        - name: dataSourceName
+          required: false
+          in: query
+          description: Recherche par nom de source de données
+          schema:
+            type: string
+        - name: millesime
+          required: false
+          in: query
+          description: Millésime (année) de la campagne dette IT à présenter. Par défaut,
+            le millésime le plus récent disponible.
+          schema:
+            minimum: 2000
+            maximum: 2100
+            example: 2026
+            type: number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GristSyncDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GristSyncReportDto"
+      summary: Synchroniser avec Grist les applications correspondant aux filtres
+      tags: &a26
+        - Grist
+  /api/v2/grist/tables:
+    get:
+      description: Pour chaque document du profil, les tables écrites par RefApp
+        (RefApp, RefApp2…), pour choisir où synchroniser. Un document illisible
+        est renvoyé avec son erreur, sans bloquer les autres.
+      operationId: GristController_tables
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GristDocumentTablesDto"
+      summary: Lister les tables RefApp des documents Grist du profil
+      tags: *a26
+  /api/v2/grist/records:
+    get:
+      description: Retourne les lignes d'une table RefApp du document (par défaut la
+        première), métadonnées saisies dans Grist comprises. Le document doit
+        figurer dans le profil de l'utilisateur (403 sinon) ; sans table RefApp,
+        la liste est vide.
+      operationId: GristController_records
+      parameters:
+        - name: docId
+          required: true
+          in: query
+          description: Identifiant du document Grist
+          schema:
+            type: string
+        - name: tableId
+          required: false
+          in: query
+          description: Table RefApp à lire (RefApp, RefApp2…)
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GristRecordDto"
+      summary: Lire la table RefApp d'un document Grist
+      tags: *a26
   /api/v2/hosting-options:
     post:
       operationId: HostingOptionController_create
@@ -5229,7 +5778,7 @@ paths:
         "409":
           description: Hosting option already exists
       summary: Create a new hosting option
-      tags: &a26
+      tags: &a27
         - HostingOptions
     get:
       operationId: HostingOptionController_findAll
@@ -5309,7 +5858,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/PaginatedHostingOptionWithUsageDto"
       summary: Get all hosting options with optional filtering
-      tags: *a26
+      tags: *a27
   /api/v2/hosting-options/{id}:
     patch:
       operationId: HostingOptionController_update
@@ -5337,7 +5886,7 @@ paths:
         "409":
           description: Hosting option already exists
       summary: Update hosting option by ID
-      tags: *a26
+      tags: *a27
     delete:
       operationId: HostingOptionController_remove
       parameters:
@@ -5352,7 +5901,7 @@ paths:
         "404":
           description: Hosting option not found
       summary: Delete hosting option by ID
-      tags: *a26
+      tags: *a27
   /api/v2/applications/{applicationId}/labels:
     post:
       description: "
@@ -5388,7 +5937,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/LabelDto"
       summary: Créer un nouveau nom
-      tags: &a27
+      tags: &a28
         - Labels
     get:
       description: "
@@ -5417,7 +5966,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/LabelDto"
       summary: Récupérer les noms alternatifs par ID d'application
-      tags: *a27
+      tags: *a28
   /api/v2/applications/{applicationId}/labels/{id}:
     patch:
       operationId: LabelsController_update
@@ -5448,7 +5997,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/LabelDto"
       summary: Mettre à jour un nom existant
-      tags: *a27
+      tags: *a28
     delete:
       description: " Ce endpoint permet de supprimer un nom alternatif existant.\ 
 
@@ -5471,7 +6020,7 @@ paths:
         "204":
           description: Nom alternatif supprimé avec succès
       summary: Supprimer un nom alternatif
-      tags: *a27
+      tags: *a28
   /api/v2/label-sources:
     post:
       description: "
@@ -5502,7 +6051,7 @@ paths:
         "403":
           description: Accès refusé - Privilège admin requis
       summary: Créer une nouvelle source de libellés.
-      tags: &a28
+      tags: &a29
         - LabelSources
     get:
       operationId: LabelSourceController_findAll
@@ -5555,7 +6104,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/PaginatedLabelSourceDto"
       summary: Rechercher des sources de libellés alternatifs avec filtre en option.
-      tags: *a28
+      tags: *a29
   /api/v2/label-sources/{id}:
     patch:
       operationId: LabelSourceController_update
@@ -5583,7 +6132,7 @@ paths:
         "404":
           description: Source non trouvée
       summary: Modifier une source de libellés alternatifs
-      tags: *a28
+      tags: *a29
     delete:
       operationId: LabelSourceController_remove
       parameters:
@@ -5600,7 +6149,7 @@ paths:
         "404":
           description: Source non trouvée
       summary: Supprimer une source de libellés alternatifs
-      tags: *a28
+      tags: *a29
   /api/v2/mdit-campaigns:
     post:
       operationId: MditCampaignController_create
@@ -5623,7 +6172,7 @@ paths:
         "409":
           description: Une campagne existe déjà pour ce millésime
       summary: Créer une campagne dette IT (millésime)
-      tags: &a29
+      tags: &a30
         - MDIT Campaigns
     get:
       operationId: MditCampaignController_findAll
@@ -5679,7 +6228,7 @@ paths:
                 $ref: "#/components/schemas/PaginatedMditCampaignDto"
       summary: Lister les campagnes dette IT, triées du millésime le plus récent au
         plus ancien
-      tags: *a29
+      tags: *a30
   /api/v2/mdit-campaigns/{id}:
     patch:
       operationId: MditCampaignController_update
@@ -5709,7 +6258,7 @@ paths:
         "409":
           description: Une campagne existe déjà pour ce millésime
       summary: Modifier une campagne dette IT
-      tags: *a29
+      tags: *a30
     delete:
       operationId: MditCampaignController_remove
       parameters:
@@ -5726,7 +6275,7 @@ paths:
         "404":
           description: Campagne non trouvée
       summary: Supprimer une campagne dette IT
-      tags: *a29
+      tags: *a30
   /api/v2/applications/{applicationId}/links:
     post:
       operationId: ApplicationLinksController_create
@@ -5751,7 +6300,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/LinkDto"
       summary: Create a new link for an application
-      tags: &a30
+      tags: &a31
         - Links
     get:
       description: Get list of links for an application
@@ -5806,7 +6355,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/PaginatedLinkDto"
       summary: Retrieve links for an application
-      tags: *a30
+      tags: *a31
   /api/v2/applications/{applicationId}/links/{id}:
     patch:
       operationId: ApplicationLinksController_update
@@ -5837,7 +6386,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/LinkDto"
       summary: Update a link for an application
-      tags: *a30
+      tags: *a31
     delete:
       operationId: ApplicationLinksController_delete
       parameters:
@@ -5857,7 +6406,7 @@ paths:
         "204":
           description: Link deleted successfully
       summary: Delete a link for an application
-      tags: *a30
+      tags: *a31
   /api/v2/applications/{applicationId}/technical-debt-info:
     post:
       operationId: ApplicationTechnicalDebtInfoController_create
@@ -5884,7 +6433,7 @@ paths:
         "409":
           description: Technical debt info already exists for this application
       summary: Create technical debt info for an application
-      tags: &a31
+      tags: &a32
         - Technical Debt Info
     get:
       operationId: ApplicationTechnicalDebtInfoController_find
@@ -5938,7 +6487,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/PaginatedTechnicalDebtInfoDto"
       summary: Retrieve the technical debt info for an application
-      tags: *a31
+      tags: *a32
   /api/v2/technical-debts:
     get:
       description: Retourne toutes les données de dette technique sans pagination, en
@@ -6397,7 +6946,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/TechnicalDebtPointDto"
       summary: Lister les points de dette technique
-      tags: &a32
+      tags: &a33
         - technical-debts
   /api/v2/technical-debts/millesimes:
     get:
@@ -6415,7 +6964,7 @@ paths:
                 items:
                   type: number
       summary: Lister les millésimes de campagne dette IT disponibles
-      tags: *a32
+      tags: *a33
   /api/v2/applications/{applicationId}/rgaa-compliances:
     get:
       operationId: RgaaController_findAll
@@ -6436,7 +6985,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/RgaaComplianceDto"
       summary: Lister les conformités RGAA d'une application
-      tags: &a33
+      tags: &a34
         - RGAA Compliances
     post:
       operationId: RgaaController_create
@@ -6467,7 +7016,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/RgaaComplianceErrorResponseDto"
       summary: Créer une conformité RGAA pour une application
-      tags: *a33
+      tags: *a34
   /api/v2/applications/{applicationId}/rgaa-compliances/{id}:
     patch:
       operationId: RgaaController_update
@@ -6498,7 +7047,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/RgaaComplianceDto"
       summary: Mettre à jour une conformité RGAA
-      tags: *a33
+      tags: *a34
     delete:
       operationId: RgaaController_delete
       parameters:
@@ -6518,7 +7067,7 @@ paths:
         "204":
           description: Conformité RGAA supprimée
       summary: Supprimer une conformité RGAA
-      tags: *a33
+      tags: *a34
   /api/v2/applications/{applicationId}/technologies:
     get:
       operationId: TechnologyController_findAll
@@ -6539,7 +7088,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/TechnologyDto"
       summary: Lister la stack technique d'une application
-      tags: &a34
+      tags: &a35
         - Technologies
     post:
       operationId: TechnologyController_create
@@ -6566,7 +7115,7 @@ paths:
       summary: Ajouter une technologie à la stack d'une application (met à jour la
         ligne existante si le couple technologie/produit est déjà renseigné,
         sans tenir compte de la casse)
-      tags: *a34
+      tags: *a35
   /api/v2/applications/{applicationId}/technologies/eol-products:
     get:
       operationId: TechnologyController_listEolProducts
@@ -6588,7 +7137,7 @@ paths:
                   $ref: "#/components/schemas/EolProductDto"
       summary: Lister les produits suivis par endoflife.date (autocomplétion de la
         saisie produit)
-      tags: *a34
+      tags: *a35
   /api/v2/applications/{applicationId}/technologies/{id}:
     patch:
       operationId: TechnologyController_update
@@ -6625,7 +7174,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/TechnologyErrorResponseDto"
       summary: Mettre à jour une technologie
-      tags: *a34
+      tags: *a35
     delete:
       operationId: TechnologyController_delete
       parameters:
@@ -6645,7 +7194,7 @@ paths:
         "204":
           description: Technologie supprimée
       summary: Supprimer une technologie
-      tags: *a34
+      tags: *a35
   /api/v2/technologies/end-of-life:
     get:
       description: Vue transverse accessible avec la capacité TechnologyList aux
@@ -6869,7 +7418,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/PaginatedReportDto"
       summary: Récupérer tous les signalements
-      tags: &a35
+      tags: &a36
         - Reports
     post:
       operationId: ReportsController_create
@@ -6888,7 +7437,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReportDto"
       summary: Créer un signalement
-      tags: *a35
+      tags: *a36
   /api/v2/reports/{id}:
     patch:
       operationId: ReportsController_update
@@ -6919,7 +7468,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReportDto"
       summary: Mettre à jour un signalement
-      tags: *a35
+      tags: *a36
   /api/v2/applications/{applicationId}/reports:
     post:
       operationId: ApplicationReportsController_create
@@ -6944,7 +7493,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReportDto"
       summary: Demande de modification pour une fiche application
-      tags: &a36
+      tags: &a37
         - ApplicationReports
     get:
       description: Renvoie la liste paginée des signalements pour une application donnée.
@@ -7008,7 +7557,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/PaginatedReportDto"
       summary: Récupérer tous les signalements pour une application
-      tags: *a36
+      tags: *a37
   /api/v2/applications/{applicationId}/reports/{id}:
     get:
       operationId: ApplicationReportsController_findOne
@@ -7032,7 +7581,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReportDto"
       summary: Récupérer un signalement spécifique par ID
-      tags: *a36
+      tags: *a37
     patch:
       operationId: ApplicationReportsController_update
       parameters:
@@ -7068,7 +7617,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReportDto"
       summary: Mettre à jour un signalement
-      tags: *a36
+      tags: *a37
     delete:
       operationId: ApplicationReportsController_remove
       parameters:
@@ -7087,7 +7636,7 @@ paths:
         "204":
           description: Signalement supprimé avec succès
       summary: Supprimer un signalement
-      tags: *a36
+      tags: *a37
   /api/v2/saved-filters:
     get:
       description: Renvoie les filtres de recherche d'applications sauvegardés par
@@ -7104,7 +7653,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/SavedFilterDto"
       summary: Lister ses filtres sauvegardés
-      tags: &a37
+      tags: &a38
         - SavedFilters
     post:
       description: Sauvegarde les filtres courants sous un nom. Si un filtre du même
@@ -7125,7 +7674,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/SavedFilterDto"
       summary: Sauvegarder un filtre
-      tags: *a37
+      tags: *a38
   /api/v2/saved-filters/{id}:
     delete:
       operationId: SavedFilterController_remove
@@ -7142,7 +7691,7 @@ paths:
         "404":
           description: Filtre sauvegardé non trouvé
       summary: Supprimer un filtre sauvegardé
-      tags: *a37
+      tags: *a38
   /api/v2/quality-campaigns:
     post:
       operationId: QualityCampaignController_create
@@ -7161,7 +7710,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/QualityCampaignDto"
       summary: Créer une campagne de mise en qualité
-      tags: &a38
+      tags: &a39
         - Quality Campaigns
     get:
       operationId: QualityCampaignController_findAll
@@ -7209,7 +7758,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/PaginatedQualityCampaignDto"
       summary: Lister les campagnes de mise en qualité
-      tags: *a38
+      tags: *a39
   /api/v2/quality-campaigns/{id}:
     get:
       operationId: QualityCampaignController_findOne
@@ -7229,7 +7778,7 @@ paths:
         "404":
           description: Campagne non trouvée
       summary: Détail d'une campagne de mise en qualité, avec son impact
-      tags: *a38
+      tags: *a39
     patch:
       operationId: QualityCampaignController_update
       parameters:
@@ -7254,7 +7803,7 @@ paths:
         "404":
           description: Campagne non trouvée
       summary: Modifier une campagne de mise en qualité
-      tags: *a38
+      tags: *a39
     delete:
       operationId: QualityCampaignController_remove
       parameters:
@@ -7269,7 +7818,7 @@ paths:
         "404":
           description: Campagne non trouvée
       summary: Supprimer une campagne de mise en qualité
-      tags: *a38
+      tags: *a39
   /api/v2/quality-campaigns/{id}/preview:
     get:
       operationId: QualityCampaignController_preview
@@ -7290,7 +7839,7 @@ paths:
           description: Campagne non trouvée
       summary: Aperçu à la volée des applications actuellement matchées par le filtre
         de la campagne
-      tags: *a38
+      tags: *a39
   /api/v2/quality-campaigns/{id}/status:
     patch:
       operationId: QualityCampaignController_updateStatus
@@ -7317,7 +7866,7 @@ paths:
           description: Campagne non trouvée
       summary: Changer librement le statut de la campagne (planifiée / en cours /
         terminée), dans n'importe quel sens
-      tags: *a38
+      tags: *a39
   /api/v2/quality-campaigns/{id}/send:
     post:
       operationId: QualityCampaignController_send
@@ -7338,7 +7887,7 @@ paths:
           description: Campagne non trouvée
       summary: Déclencher immédiatement l'envoi de la campagne aux acteurs des
         applications ciblées
-      tags: *a38
+      tags: *a39
   /api/v2/quality-campaigns/{id}/send-sponsor-report:
     post:
       operationId: QualityCampaignController_sendSponsorReport
@@ -7359,7 +7908,7 @@ paths:
           description: Campagne non trouvée
       summary: Envoyer au sponsor de la campagne un email récapitulatif de l'impact
         courant
-      tags: *a38
+      tags: *a39
   /api/v2/health-check:
     get:
       description: Exécute une requête basique vers la base de données pour vérifier
@@ -7736,7 +8285,7 @@ components:
           description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
             le futur
         status:
-          enum: &a39
+          enum: &a40
             - active
             - expired
             - revoked
@@ -7856,7 +8405,7 @@ components:
           description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
             le futur
         status:
-          enum: *a39
+          enum: *a40
           type: string
           example: active
           description: Statut du token
@@ -7967,6 +8516,7 @@ components:
         - QualityCampaignManage
         - MditCampaignManage
         - TechnologyList
+        - GristSync
         - AppRead
         - AppWrite
         - ActorRead
@@ -8052,6 +8602,19 @@ components:
           type: boolean
           description: Préférence de notification par email
           default: true
+        gristDocIds:
+          description: Identifiants des documents Grist synchronisés depuis la recherche
+          type: array
+          items:
+            type: string
+        gristUrl:
+          type: string
+          nullable: true
+          description: Instance Grist des documents synchronisés
+        hasGristApiKey:
+          type: boolean
+          description: Une clé d'API Grist est enregistrée (la clé elle-même n'est jamais
+            renvoyée)
         followedApplications:
           description: Applications suivies par l'utilisateur
           type: array
@@ -8143,6 +8706,26 @@ components:
           type: boolean
           description: Indique si les notifications par email sont activées pour
             l'utilisateur
+        gristDocIds:
+          description: Identifiants des documents Grist synchronisés depuis la recherche
+            (remplace la liste)
+          type: array
+          items:
+            type: string
+        gristUrl:
+          type: string
+          nullable: true
+          format: uri
+          description: Instance Grist des documents synchronisés, en HTTPS (seule
+            l'origine est conservée). null l'efface.
+        gristApiKey:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 256
+          pattern: ^\S+$
+          description: "Clé d'API Grist de l'utilisateur. Écriture seule : elle n'est
+            jamais renvoyée. null l'efface."
     MaiaOrganizationSuggestionDto:
       type: object
       properties:
@@ -8521,6 +9104,19 @@ components:
           type: boolean
           description: Préférence de notification par email
           default: true
+        gristDocIds:
+          description: Identifiants des documents Grist synchronisés depuis la recherche
+          type: array
+          items:
+            type: string
+        gristUrl:
+          type: string
+          nullable: true
+          description: Instance Grist des documents synchronisés
+        hasGristApiKey:
+          type: boolean
+          description: Une clé d'API Grist est enregistrée (la clé elle-même n'est jamais
+            renvoyée)
         followedApplications:
           description: Applications suivies par l'utilisateur
           type: array
@@ -8769,7 +9365,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: &a40
+          example: &a41
             - population 1
             - population 2
           description: population associated with the application
@@ -8780,7 +9376,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: &a41
+          example: &a42
             - finance
             - HR
           description: Purposes of the application
@@ -8793,7 +9389,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: &a42
+          example: &a43
             - tag1
             - tag2
           type: array
@@ -9130,7 +9726,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: &a43
+          enum: &a44
             - 96
             - 72
             - 48
@@ -9161,7 +9757,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: &a44
+          enum: &a45
             - OK
             - KO
           type: string
@@ -9172,7 +9768,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: &a45
+          enum: &a46
             - 48
             - 24
             - 2
@@ -9192,7 +9788,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: &a46
+          enum: &a47
             - S3
             - LOCAL
             - EXTERNE
@@ -9203,7 +9799,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: &a47
+          enum: &a48
             - OK
             - KO
           type: string
@@ -9213,7 +9809,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: &a48
+          enum: &a49
             - homologuee
             - en_cours
             - dispensee
@@ -9508,7 +10104,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: *a40
+          example: *a41
           description: population associated with the application
           type: array
           items:
@@ -9517,7 +10113,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: *a41
+          example: *a42
           description: Purposes of the application
           type: array
           items:
@@ -9528,7 +10124,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: *a42
+          example: *a43
           type: array
           items:
             type: string
@@ -10702,7 +11298,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: *a43
+          enum: *a44
           example: 4
           description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
         dima_is_hno:
@@ -10726,7 +11322,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a44
+          enum: *a45
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -10735,7 +11331,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: *a45
+          enum: *a46
           example: 24
           description: PDMA duration in hours (one of 48, 24, 2, 0)
         pdma_data_types:
@@ -10751,7 +11347,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a46
+          enum: *a47
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -10759,7 +11355,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a47
+          enum: *a48
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -10767,7 +11363,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a48
+          enum: *a49
           type: string
           description: Homologation status
         homologation_date_end:
@@ -10803,7 +11399,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: *a43
+          enum: *a44
           example: 4
           description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
         dima_is_hno:
@@ -10827,7 +11423,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a44
+          enum: *a45
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -10836,7 +11432,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: *a45
+          enum: *a46
           example: 24
           description: PDMA duration in hours (one of 48, 24, 2, 0)
         pdma_data_types:
@@ -10852,7 +11448,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a46
+          enum: *a47
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -10860,7 +11456,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a47
+          enum: *a48
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -10868,7 +11464,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a48
+          enum: *a49
           type: string
           description: Homologation status
         homologation_date_end:
@@ -11076,6 +11672,146 @@ components:
           nullable: true
           description: Indicates whether the hosting is active, passif or not specified
             (null).
+    GristSyncTargetDto:
+      type: object
+      properties:
+        docId:
+          type: string
+          description: Identifiant d'un document Grist du profil
+        tableId:
+          type: string
+          description: "Table RefApp existante à mettre à jour (RefApp, RefApp2…). Sans
+            tableId ni newTable : la première table RefApp du document, créée si
+            besoin."
+          example: RefApp2
+        newTable:
+          type: boolean
+          description: "Créer une nouvelle table : RefApp, ou le premier nom libre parmi
+            RefApp2, RefApp3…"
+      required:
+        - docId
+    GristSyncDto:
+      type: object
+      properties:
+        targets:
+          minItems: 1
+          description: "Documents et tables à synchroniser. Sans cette liste : chaque
+            document du profil, dans sa première table RefApp."
+          type: array
+          items:
+            $ref: "#/components/schemas/GristSyncTargetDto"
+    GristDocumentSyncStatus:
+      type: string
+      enum:
+        - ok
+        - error
+      description: Résultat de la synchronisation de ce document
+    GristDocumentReportDto:
+      type: object
+      properties:
+        docId:
+          type: string
+          description: Identifiant du document Grist
+        status:
+          description: Résultat de la synchronisation de ce document
+          allOf:
+            - $ref: "#/components/schemas/GristDocumentSyncStatus"
+        error:
+          type: string
+          description: Message d'erreur si la synchronisation a échoué
+        tableId:
+          type: string
+          description: "Table synchronisée : RefApp, RefApp2, RefApp3…"
+        tableCreated:
+          type: boolean
+          description: La table a été créée par cet appel
+        rowsWritten:
+          type: number
+          description: Nombre d'applications écrites (créées ou mises à jour)
+        rowsGreyed:
+          type: number
+          description: Lignes hors sélection conservées et grisées car elles portent des
+            métadonnées
+        rowsDeleted:
+          type: number
+          description: Lignes hors sélection supprimées car sans métadonnées
+      required:
+        - docId
+        - status
+    GristSyncReportDto:
+      type: object
+      properties:
+        documents:
+          description: Compte rendu de chaque document du profil, dans son ordre
+          type: array
+          items:
+            $ref: "#/components/schemas/GristDocumentReportDto"
+      required:
+        - documents
+    GristDocumentTablesDto:
+      type: object
+      properties:
+        docId:
+          type: string
+          description: Identifiant du document Grist
+        tables:
+          description: Tables écrites par RefApp dans ce document (RefApp, RefApp2…), dans
+            l'ordre
+          type: array
+          items:
+            type: string
+        error:
+          type: string
+          description: Message d'erreur si le document n'a pas pu être lu
+      required:
+        - docId
+        - tables
+    GristRecordDto:
+      type: object
+      properties:
+        rowId:
+          type: number
+          description: Identifiant de la ligne dans Grist
+        refapp_id:
+          type: string
+          description: Identifiant de l'application dans RefApp
+        nom:
+          type: string
+          description: Nom de l'application
+        statut:
+          type: string
+          description: Statut courant de l'application
+        dans_selection:
+          type: boolean
+          nullable: true
+          description: "false : l'application n'est plus dans la sélection synchronisée
+            (ligne grisée)"
+        motif_sortie:
+          type: string
+          description: "Motif de sortie de la sélection : « hors filtre », « supprimée de
+            RefApp », vide sinon"
+        metadata_1:
+          type: string
+          nullable: true
+          description: Saisie libre dans Grist
+        metadata_2:
+          type: string
+          nullable: true
+          description: Saisie libre dans Grist
+        metadata_3:
+          type: string
+          nullable: true
+          description: Saisie libre dans Grist
+      required:
+        - rowId
+        - refapp_id
+        - nom
+        - statut
+        - dans_selection
+        - motif_sortie
+        - metadata_1
+        - metadata_2
+        - metadata_3
     CreateHostingOptionDto:
       type: object
       properties:
@@ -11678,7 +12414,7 @@ components:
             - $ref: "#/components/schemas/TechnologyEolSource"
         eolStatus:
           nullable: true
-          enum: &a49
+          enum: &a50
             - eol
             - eol-soon
             - eoas-passed
@@ -11834,7 +12570,7 @@ components:
             - $ref: "#/components/schemas/TechnologyEolSource"
         status:
           nullable: true
-          enum: *a49
+          enum: *a50
           type: string
           description: Statut calculé côté serveur, pour que la fiche et la vue transverse
             classent une technologie de la même façon. null si la technologie ne
@@ -11878,7 +12614,7 @@ components:
             $ref: "#/components/schemas/EndOfLifeTechnologyDto"
         worstStatus:
           nullable: true
-          enum: *a49
+          enum: *a50
           type: string
           description: Statut le plus grave parmi les technologies retenues — sert au tri
             et à la pastille de synthèse. null si aucune des technologies
@@ -12283,7 +13019,7 @@ components:
           description: Version du backend
           example: v1.86.0
         etat:
-          enum: &a50
+          enum: &a51
             - OK
             - KO
           type: string
@@ -12305,7 +13041,7 @@ components:
           description: Version du backend
           example: v1.86.0
         etat:
-          enum: *a50
+          enum: *a51
           type: string
           description: État de la connexion à la base de données
           example: OK

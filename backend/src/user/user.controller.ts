@@ -121,6 +121,9 @@ export class UserController {
     return {
       ...user,
       emailNotificationsEnabled: updated.emailNotificationsEnabled,
+      gristDocIds: updated.gristDocIds,
+      gristUrl: updated.gristUrl,
+      hasGristApiKey: await this.userService.hasGristApiKey(user.id),
     };
   }
 

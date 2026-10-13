@@ -43,6 +43,8 @@ services:
       - OIDC_JWKS_URL=http://keycloak:8080/realms/referentiel-applications/protocol/openid-connect/certs
       - OIDC_CLIENT_ID=referentiel-applications
       - LOG_LEVEL=debug
+      # Chiffrement des clés d'API Grist en base : valeur de développement uniquement.
+      - GRIST_ENCRYPTION_KEY=${GRIST_ENCRYPTION_KEY:-dev-only-grist-encryption-key}
       # - NON_ACTOR_PERMISSIONS=readBase
       - SMTP_HOST=mailpit
       - SMTP_PORT=1025
@@ -134,7 +136,7 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    command: sh -c "pnpm install --frozen-lockfile && pnpm dev"
+    command: sh -c "pnpm install --frozen-lockfile --config.confirmModulesPurge=false && pnpm dev"
     environment:
       - VITE_RDA_MATOMO_URL=http://localhost:8083
       - VITE_RDA_MATOMO_SITE_ID=1

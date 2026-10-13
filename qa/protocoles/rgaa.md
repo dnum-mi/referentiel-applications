@@ -100,3 +100,34 @@ modifient pas la durée maximale de session du fournisseur d'identité.
 - **Datafeature** : application existante `QA-GROUP-PARENT` ; réponses d’export interceptées, sans appel métier au serveur.
 - **Action** : lancer l’export HTML avec Entrée, tenter une seconde activation pendant l’attente, recevoir une erreur simulée, puis réessayer avec un téléchargement simulé réussi.
 - **Résultat attendu** : la commande expose son indisponibilité et garde le focus pendant l’attente et après la réponse ; aucun export concurrent ne part. L’erreur est visible, puis la nouvelle tentative télécharge le fichier HTML attendu en conservant le focus.
+
+### Parcours complémentaires — Configuration et synchronisation Grist
+
+Ces parcours complètent les 19 scénarios automatisés ci-dessus. Les régressions des composants
+sont couvertes dans `UserGristSettings.spec.ts`, `GristSyncModal.spec.ts`,
+`ApplicationSearchActions.spec.ts` et `UserProfilePage.spec.ts`. Exercer les étapes suivantes
+avec les réponses du profil et de Grist interceptées ; aucune clé réelle ni écriture externe
+n’est nécessaire.
+
+- **Configuration invalide** : ouvrir l’onglet Grist du profil, envoyer une URL HTTP et une clé vide.
+  Les obligations sont indiquées avant saisie ; chaque erreur décrit le champ concerné,
+  expose son invalidité et le premier champ invalide reçoit le focus. Une URL corrigée permet
+  d’atteindre la clé manquante. L’identifiant de document annonce le format de 6 à 64 caractères.
+- **Enregistrement différé** : soumettre une configuration valide avec une réponse retardée.
+  L’attente est annoncée, le bouton conserve le focus et une seconde activation ne déclenche
+  aucune autre requête. La reprise après réponse garde le clavier disponible.
+- **Retrait de document ou de clé** : activer la suppression au clavier avec une réponse réussie
+  simulée. La disparition du bouton replace le focus sur la saisie correspondante ; un déplacement
+  volontaire vers un autre contrôle pendant l’attente est respecté.
+- **Synchronisation** : ouvrir le dialogue depuis la recherche, parcourir les choix et commandes
+  avec Tab et Maj+Tab, puis lancer une réponse différée en échec. Le focus reste dans le dialogue,
+  les envois concurrents sont bloqués et l’erreur est annoncée. Échap rend le focus au déclencheur.
+  Vérifier aussi l’échec de lecture des documents. Les boutons sont des éléments de liste valides.
+- **Perte de permission** : retirer `GristSync` de la réponse de profil alors que l’onglet est actif.
+  Un onglet disponible et son panneau sont sélectionnés ; si le focus était dans la partie retirée,
+  il rejoint l’onglet conservé. Le focus ailleurs dans la page reste inchangé.
+- **Petit écran** : à 320 pixels, vérifier le profil avec un identifiant de document de 64 caractères.
+  Les labels, messages, champs et commandes restent visibles sans défilement horizontal de la page.
+
+Les assertions DOM, les essais au clavier et l’analyse automatique de ces états ne remplacent
+pas leur restitution par les lecteurs d’écran de la base RGAA.

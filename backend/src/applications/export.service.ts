@@ -39,6 +39,21 @@ export class ApplicationExportService {
     searchParams: ApplicationSearchDto,
     requestor: Requestor,
   ): Promise<ApplicationWithAllRelations[]> {
+    const where = await this.buildScopedWhere(searchParams, requestor);
+    if (where === null) return [];
+
+    const { sortBy = "shortName", order = "asc" } = searchParams;
+    const orderBy = this.prismaQueryBuilder.buildOrderBy(sortBy, order);
+    return this.repository.findAllWithFullRelations(where, orderBy);
+  }
+
+  /// Filtre de recherche restreint au périmètre du demandeur, sans pagination : toutes les
+  /// applications correspondant aux filtres, quel que soit `page`/`pageSize`.
+  /// `null` si le demandeur ne peut lire aucune application.
+  async buildScopedWhere(
+    searchParams: ApplicationSearchDto,
+    requestor: Requestor,
+  ) {
     const hasAppList = await this.checkPermissions.can(
       [Permission.AppList],
       requestor,
@@ -47,13 +62,9 @@ export class ApplicationExportService {
       [Permission.AppRead],
       requestor,
     );
-    if (!hasAppList && !hasAppRead) {
-      return [];
-    }
+    if (!hasAppList && !hasAppRead) return null;
 
-    // Filtrage et tri en base, sans pagination : l'export porte sur toutes les
-    // applications correspondant aux filtres, quel que soit `page`/`pageSize`.
-    const where = await this.prismaQueryBuilder.buildSearchWhere(
+    return this.prismaQueryBuilder.buildSearchWhere(
       searchParams,
       requestor,
       hasAppList
@@ -63,8 +74,5 @@ export class ApplicationExportService {
             businessDivisionId: requestor?.organization?.businessDivisionId,
           },
     );
-    const { sortBy = "shortName", order = "asc" } = searchParams;
-    const orderBy = this.prismaQueryBuilder.buildOrderBy(sortBy, order);
-    return this.repository.findAllWithFullRelations(where, orderBy);
   }
 }

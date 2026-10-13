@@ -1,17 +1,27 @@
 import { createPinia, setActivePinia } from "pinia";
 import { useApplicationStore } from "./applicationStore";
 
-const { removeMock, exportPowerpointMock, exportHtmlMock, exportProductHtmlMock, addErrorMessage, addSuccessMessage, push } = vi.hoisted(
-  () => ({
-    removeMock: vi.fn(),
-    exportPowerpointMock: vi.fn(),
-    exportHtmlMock: vi.fn(),
-    exportProductHtmlMock: vi.fn(),
-    addErrorMessage: vi.fn(),
-    addSuccessMessage: vi.fn(),
-    push: vi.fn(),
-  }),
-);
+const {
+  removeMock,
+  exportPowerpointMock,
+  exportHtmlMock,
+  exportProductHtmlMock,
+  gristSetupMock,
+  gristTablesMock,
+  addErrorMessage,
+  addSuccessMessage,
+  push,
+} = vi.hoisted(() => ({
+  removeMock: vi.fn(),
+  exportPowerpointMock: vi.fn(),
+  exportHtmlMock: vi.fn(),
+  exportProductHtmlMock: vi.fn(),
+  gristSetupMock: vi.fn(),
+  gristTablesMock: vi.fn(),
+  addErrorMessage: vi.fn(),
+  addSuccessMessage: vi.fn(),
+  push: vi.fn(),
+}));
 
 vi.mock("@/api/index", () => ({
   default: {
@@ -19,6 +29,8 @@ vi.mock("@/api/index", () => ({
     applicationControllerExportProductPowerpoint: exportPowerpointMock,
     applicationControllerExportHtml: exportHtmlMock,
     applicationControllerExportProductHtml: exportProductHtmlMock,
+    gristControllerSetup: gristSetupMock,
+    gristControllerTables: gristTablesMock,
   },
 }));
 
@@ -139,5 +151,48 @@ describe("applicationStore.downloadProductPowerpoint — erreurs du client API",
 
     await expect(useApplicationStore().downloadProductPowerpoint("app-1")).rejects.toThrow("Erreur lors de l'export PowerPoint.");
     expect(exportPowerpointMock).toHaveBeenCalledExactlyOnceWith({ path: { applicationId: "app-1" }, parseAs: "blob" });
+  });
+});
+
+describe("applicationStore — synchronisation Grist", () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    gristSetupMock.mockReset();
+    gristTablesMock.mockReset();
+  });
+
+  it("conserve les filtres et les cibles Grist sans modifier le contrat des exports", async () => {
+    const report = { documents: [{ docId: "doc1", tableId: "RefApp", status: "ok", rowsWritten: 2 }] };
+    gristSetupMock.mockResolvedValueOnce({ response: { ok: true, status: 200 }, data: report });
+    const targets = [
+      { docId: "doc1", tableId: "RefApp" },
+      { docId: "doc2", newTable: true },
+    ];
+    const result = await useApplicationStore().syncWithGrist({ shortName: "Portail", page: 2, tag: [], hostingSite: undefined }, targets);
+    expect(gristSetupMock).toHaveBeenCalledExactlyOnceWith({ query: { shortName: "Portail", page: 2 }, body: { targets } });
+    expect(result).toEqual(report);
+  });
+
+  it("laisse le backend choisir les tables par défaut quand aucune cible n'est fournie", async () => {
+    gristSetupMock.mockResolvedValueOnce({ response: { ok: true, status: 200 }, data: { documents: [] } });
+    await useApplicationStore().syncWithGrist();
+    expect(gristSetupMock).toHaveBeenCalledExactlyOnceWith({ query: {}, body: { targets: undefined } });
+  });
+
+  it("rend les documents et tables disponibles dans le profil", async () => {
+    const documents = [{ docId: "doc1", tables: ["RefApp", "RefApp2"] }];
+    gristTablesMock.mockResolvedValueOnce({ response: { ok: true, status: 200 }, data: documents });
+    await expect(useApplicationStore().listGristTables()).resolves.toEqual(documents);
+    expect(gristTablesMock).toHaveBeenCalledExactlyOnceWith();
+  });
+
+  it.each([
+    { response: undefined, error: new TypeError("Failed to fetch") },
+    { response: { ok: false, status: 403 }, error: { message: "Forbidden" } },
+  ])("relaie les échecs Grist au composant sans confirmer une synchronisation", async ({ response, error }) => {
+    gristSetupMock.mockResolvedValueOnce({ response, error });
+    gristTablesMock.mockResolvedValueOnce({ response, error });
+    await expect(useApplicationStore().syncWithGrist()).rejects.toThrow("Erreur lors de la synchronisation avec Grist.");
+    await expect(useApplicationStore().listGristTables()).rejects.toThrow("Erreur lors de la lecture des documents Grist.");
   });
 });

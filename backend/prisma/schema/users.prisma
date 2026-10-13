@@ -41,6 +41,13 @@ model User {
   applicationViews          ApplicationView[]
   /// Si les notifications par email sont activées
   emailNotificationsEnabled Boolean             @default(true)
+  /// Identifiants des documents Grist que l'utilisateur synchronise depuis la recherche
+  gristDocIds               String[]            @default([])
+  /// Instance Grist des documents synchronisés (ex : https://grist.numerique.gouv.fr)
+  gristUrl                  String?
+  /// Clé d'API Grist de l'utilisateur. Secret : omise de toutes les requêtes Prisma par défaut
+  /// (cf. PrismaService) et jamais renvoyée par l'API.
+  gristApiKey               String?
   /// Permissions supplémentaire (ancien capabilities)
   additionalPermissions     Permission[]
   /// Date de la dernière modification des droits (rôle/permissions) de cet utilisateur.

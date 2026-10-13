@@ -1,5 +1,11 @@
 import { isApiSuccess } from "@/api/api-result";
-import type { ContactAdminDto, PatchApplicationDto } from "@/client/types.gen";
+import type {
+  ContactAdminDto,
+  GristDocumentTablesDto,
+  GristSyncReportDto,
+  GristSyncTargetDto,
+  PatchApplicationDto,
+} from "@/client/types.gen";
 import type { Filters } from "@/composables/use-application-search";
 import type { APP_PERMISSIONS, ApplicationWithPerms } from "@/models/Application";
 import { computed, ref } from "vue";
@@ -131,6 +137,24 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     downloadBlob(new Blob([response.data], { type: "text/html;charset=utf-8" }), `applications_export_${date}.html`);
   };
 
+  // Écrit dans le document Grist configuré côté backend les applications correspondant aux filtres.
+  /// Sans `targets`, chaque document du profil est synchronisé dans sa première table RefApp.
+  const syncWithGrist = async (filters: Filters = {}, targets?: GristSyncTargetDto[]): Promise<GristSyncReportDto> => {
+    const response = await api.gristControllerSetup({ query: cleanFilters(filters), body: { targets } });
+    if (!isApiSuccess(response) || !response.data) {
+      throw new Error("Erreur lors de la synchronisation avec Grist.");
+    }
+    return response.data;
+  };
+
+  const listGristTables = async (): Promise<GristDocumentTablesDto[]> => {
+    const response = await api.gristControllerTables();
+    if (!isApiSuccess(response) || !response.data) {
+      throw new Error("Erreur lors de la lecture des documents Grist.");
+    }
+    return response.data;
+  };
+
   const downloadProductPowerpoint = async (applicationId: string): Promise<void> => {
     const response = await api.applicationControllerExportProductPowerpoint({
       path: { applicationId },
@@ -162,6 +186,8 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     deleteApplication,
     downloadExcel,
     downloadHtml,
+    syncWithGrist,
+    listGristTables,
     downloadProductPowerpoint,
     downloadProductHtml,
   };
