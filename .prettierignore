@@ -10,3 +10,6 @@ frontend/playwright-report/trace
 **/test-results/
 **/playwright-report/
 **/blob-report/
+
+# Exact rendered accessibility fixtures, verified by SHA256
+qa/at-windows/fixtures/

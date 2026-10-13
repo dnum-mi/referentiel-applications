@@ -1,0 +1,99 @@
+name: RGAA real NVDA Firefox French
+on:
+  push:
+    paths:
+      - "qa/at-windows/**"
+      - ".github/workflows/rgaa-windows-at.yml"
+  workflow_dispatch:
+    inputs:
+      product_head:
+        description: Exact full product commit SHA to verify
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  nvda-firefox:
+    if: github.event.repository.private == false
+    runs-on: windows-2022
+    timeout-minutes: 30
+    env:
+      RGAA_ALLOW_WINDOWS_AT: "1"
+      RGAA_PRODUCT_HEAD: ${{ github.event_name == 'workflow_dispatch' && inputs.product_head || github.sha }}
+      RGAA_PRODUCT_ROOT: ${{ github.workspace }}/product
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Preserve exact source and fixture line endings
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@v6
+        with:
+          path: driver
+          persist-credentials: false
+      - name: Validate immutable product identity and ephemeral runner
+        run: |
+          if ($env:RGAA_PRODUCT_HEAD -notmatch '^[0-9a-f]{40}$') { throw 'Full SHA required' }
+          if ($env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_OS -ne 'Windows') { throw 'Ephemeral Windows runner required' }
+          if (Get-Process -Name nvda -ErrorAction SilentlyContinue) { throw 'Existing NVDA process found' }
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ env.RGAA_PRODUCT_HEAD }}
+          path: product
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.34.6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24.21.0
+      - name: Install isolated locked driver dependencies
+        working-directory: driver/qa/at-windows
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Verify rendered fixture and generator fingerprints
+        working-directory: driver/qa/at-windows
+        run: |
+          New-Item -ItemType Directory -Force evidence | Out-Null
+          git -C ../.. rev-parse HEAD | Set-Content evidence/driver-head.txt
+          git -C $env:RGAA_PRODUCT_ROOT rev-parse HEAD | Set-Content evidence/product-head.txt
+          node tools/verify-inputs.mjs | Tee-Object evidence/input-verification.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm type-check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm lint
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Configure only the ephemeral Windows runner and install the pinned real reader
+        working-directory: driver/qa/at-windows
+        run: |
+          pnpm exec guidepup setup --ci
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm exec guidepup install nvda
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm exec playwright install firefox
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Prove real French NVDA announcements before content assertions
+        working-directory: driver/qa/at-windows
+        env:
+          RGAA_PHASE: smoke
+        run: pnpm test:smoke
+      - name: Read seven real rendered figures and three generated HTML alternatives
+        working-directory: driver/qa/at-windows
+        run: pnpm test:cases
+      - name: Record and enforce reader cleanup
+        if: always()
+        working-directory: driver/qa/at-windows
+        run: |
+          New-Item -ItemType Directory -Force evidence | Out-Null
+          $remaining = @(Get-Process -Name nvda -ErrorAction SilentlyContinue | Select-Object Id, ProcessName, SessionId)
+          @{ at = (Get-Date).ToUniversalTime().ToString('o'); remainingNvda = $remaining } | ConvertTo-Json -Depth 4 | Set-Content evidence/cleanup-final.json
+          if ($remaining.Count -gt 0) { throw 'NVDA remains active after finally cleanup' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rgaa-nvda-firefox-${{ env.RGAA_PRODUCT_HEAD }}
+          path: |
+            driver/qa/at-windows/evidence/
+            driver/qa/at-windows/test-results/
+            driver/qa/at-windows/fixtures/*provenance.json
+            driver/qa/at-windows/fixtures/manifest.json
+          retention-days: 14

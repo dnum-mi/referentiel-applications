@@ -30,6 +30,13 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   ...pluginVue.configs["flat/recommended"],
 
+  // Racine explicite lorsque des outils QA disposent de leur propre configuration.
+  {
+    languageOptions: {
+      parserOptions: { tsconfigRootDir: import.meta.dirname },
+    },
+  },
+
   // Les blocs <script> des composants Vue sont analysés par le parseur TypeScript.
   {
     files: ["**/*.vue"],

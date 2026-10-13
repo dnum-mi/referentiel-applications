@@ -1,0 +1,153 @@
+{
+  "syntheticOnly": true,
+  "fixedClock": "2026-10-13T12:00:00.000Z",
+  "applications": [
+    {
+      "id": "app-synthetic-001",
+      "label": "Portail synthétique RGAA",
+      "shortName": "PORTAIL-TEST",
+      "logo": "",
+      "description": "Application de démonstration ; aucune donnée réelle.\nDeuxième ligne avec & et <texte>.",
+      "purposes": ["Consulter un catalogue synthétique", "Vérifier une alternative documentaire"],
+      "targetPopulations": ["Agents fictifs", "Auditeurs de démonstration"],
+      "type": "business",
+      "quality": 0,
+      "priorityRestart": "R1",
+      "currentStatusId": "status-synthetic-001",
+      "currentStatus": { "status": "in_production" },
+      "businessDivisions": [{ "label": "Direction de démonstration" }],
+      "tags": [{ "name": "Synthétique" }],
+      "hostings": [
+        {
+          "id": "hosting-synthetic-001",
+          "label": "Environnement de démonstration",
+          "hostingOption": {
+            "provider": "Fournisseur fictif",
+            "site": "Site synthétique",
+            "platform": "Plateforme test",
+            "building": "Bâtiment A",
+            "room": "Salle de démonstration"
+          }
+        }
+      ],
+      "actors": [
+        {
+          "id": "actor-synthetic-001",
+          "firstname": "Agent",
+          "lastname": "Synthétique",
+          "email": "agent-rgaa@example.invalid",
+          "actorType": { "code": "MOA", "label": "Maîtrise d’ouvrage de démonstration" }
+        }
+      ],
+      "compliance": {
+        "id": "compliance-synthetic-001",
+        "dima_duration_hours": 4,
+        "dima_is_hno": false,
+        "dima_business_impact": "Impact fictif limité",
+        "dima_recovery_plan": true,
+        "dima_recovery_solutions": "Solution de démonstration",
+        "dima_last_test_date": "2026-09-01T00:00:00.000Z",
+        "dima_test_result": "Essai synthétique réussi",
+        "dima_recovery_manager": "Responsable fictif",
+        "pdma_duration_hours": 2,
+        "pdma_data_types": "Données synthétiques",
+        "pdma_backup_frequency": "Quotidienne",
+        "pdma_backup_method": "Copie de démonstration",
+        "pdma_backup_storage": "Support fictif",
+        "pdma_last_test_date": "2026-09-02T00:00:00.000Z",
+        "pdma_test_result": "Restauration synthétique réussie",
+        "pdma_restoration_manager": "Gestionnaire fictif",
+        "homologation_date_end": "2027-01-01T00:00:00.000Z",
+        "homologation_rssi_id": "rssi-synthetic-001",
+        "dsfr_implemented": true,
+        "dsfr_version": "1.14.4",
+        "rgpd_has_aipd": false,
+        "rgpd_dpo_name": "Délégué fictif"
+      },
+      "labels": [],
+      "externalRessource": [
+        {
+          "link": "https://example.invalid/documentation?fixture=synthetic&version=1",
+          "description": "Documentation de démonstration ; lien fictif.",
+          "type": "documentation"
+        }
+      ],
+      "reports": [
+        { "description": "Signalement fictif avec \"guillemets\" et &.", "status": "in_progress" }
+      ],
+      "relationsAsSource": [
+        {
+          "type": "is_part_of",
+          "targetApplication": { "id": "app-synthetic-002", "label": "Référentiel synthétique RGAA" }
+        }
+      ],
+      "relationsAsTarget": [],
+      "statuses": [{ "status": "in_production", "statusDate": "2026-09-03T00:00:00.000Z" }]
+    },
+    {
+      "id": "app-synthetic-002",
+      "label": "Référentiel synthétique RGAA",
+      "shortName": "REFERENTIEL-TEST",
+      "logo": "",
+      "description": "Seconde application entièrement synthétique.",
+      "purposes": ["Fournir des valeurs fictives"],
+      "targetPopulations": ["Agents fictifs"],
+      "priorityRestart": "R3",
+      "currentStatusId": "",
+      "tags": [],
+      "hostings": [],
+      "actors": [],
+      "compliance": null,
+      "labels": [],
+      "externalRessource": [],
+      "reports": [],
+      "relationsAsSource": [],
+      "relationsAsTarget": [],
+      "statuses": []
+    }
+  ],
+  "product": {
+    "id": "app-synthetic-001",
+    "label": "Portail synthétique RGAA",
+    "shortName": "PORTAIL-TEST",
+    "description": "Application de démonstration ; aucune donnée réelle.\nDeuxième ligne avec & et <texte>.",
+    "purposes": ["Consulter un catalogue synthétique", "Vérifier une alternative documentaire"],
+    "targetPopulations": ["Agents fictifs", "Auditeurs de démonstration"],
+    "type": "business",
+    "quality": 0,
+    "currentStatus": { "status": "in_production" },
+    "businessDivisions": [{ "label": "Direction de démonstration" }],
+    "labels": [{ "value": "Nom alternatif fictif" }],
+    "tags": [{ "name": "Synthétique" }]
+  },
+  "importReport": {
+    "summary": {
+      "created": 1,
+      "updated": 1,
+      "errors": 1,
+      "processedSheets": ["Acteurs synthétiques", "Applications synthétiques"],
+      "ignoredSheets": ["Onglet de démonstration"]
+    },
+    "entries": [
+      {
+        "sheet": "Acteurs synthétiques",
+        "row": 2,
+        "status": "created",
+        "identifier": "Acteur fictif A",
+        "message": "Détail; \"exact\"\r\nDeuxième ligne 😀"
+      },
+      { "sheet": "Applications synthétiques", "row": 3, "status": "updated" },
+      {
+        "sheet": "Conformités synthétiques",
+        "row": 4,
+        "status": "error",
+        "identifier": "app-synthetic-001",
+        "message": "<script>texte fictif</script> & démonstration"
+      }
+    ],
+    "logs": [
+      "Journal synthétique; \"avec guillemets\"\nSuite de démonstration",
+      "Onglet ignoré : <img alt='texte fictif'>"
+    ]
+  }
+}

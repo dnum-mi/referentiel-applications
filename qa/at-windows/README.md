@@ -1,0 +1,36 @@
+# Restitution native NVDA / Firefox
+
+Ce pilote exécute NVDA 2026.2 en français avec Firefox visible sur un runner GitHub Windows Server 2022 x64. Il contrôle les annonces de sept figures et trois alternatives HTML produites par les vrais composants et générateurs de RefApp. Les données sont entièrement fictives ; aucune base, API métier, session RefApp ou donnée locale n'est transmise au runner.
+
+## Exécution
+
+Le workflow `RGAA real NVDA Firefox French` se déclenche au push des fichiers du pilote sur le commit exact poussé. Après présence du workflow sur la branche par défaut, `workflow_dispatch` permet également de fournir un SHA produit complet. Deux checkouts distinguent le pilote du produit évalué. Le runner est standard, éphémère et réservé aux dépôts publics, avec une permission de lecture du dépôt seulement.
+
+Le workflow installe les dépendances verrouillées, contrôle leurs types et leur lint, configure le runner avec Guidepup, puis installe NVDA et Firefox. Un témoin avec nom accessible aléatoire, rôle français et activation annoncée doit passer avant les dix lectures de contenu. Les tests n'ont aucun retry. Les versions, processus, sessions Windows, phrases natives, captures et traces sont archivés avec le SHA évalué. Le contrôle final vérifie l'arrêt de NVDA.
+
+Les annonces sont les messages `speak` du protocole Remote natif de NVDA capturés par Guidepup, soit les chaînes envoyées à la synthèse. Elles ne sont pas reconstruites depuis le DOM. Ce dispositif ne constitue pas un enregistrement acoustique.
+
+## Sources et fixtures
+
+`tools/verify-inputs.mjs` compare les empreintes SHA256 des sources et générateurs au checkout produit, puis celles des dix HTML et du CSS. Tout changement exige de régénérer les fixtures et de vérifier leur provenance avant qualification. Le répertoire `fixtures/` est exclu du formatage pour préserver exactement ses octets.
+
+Les figures sont des copies du DOM des vrais composants, rendus avec des réponses GET fictives. Les documents sont les sorties exactes des générateurs alimentés par des objets fictifs. Les manifestes, entrées et oracles documentent ce périmètre. Aucun gestionnaire d'événement Vue n'est conservé dans ces copies statiques : elles vérifient la restitution des images et documents, pas les interactions de RGAA 7.1.2. Les bitmaps des canvas ne sont pas redessinés dans ce pilote.
+
+Les contrôles locaux du pilote, sans démarrer NVDA, sont :
+
+```sh
+pnpm --dir qa/at-windows install --frozen-lockfile --ignore-scripts
+pnpm --dir qa/at-windows type-check
+pnpm --dir qa/at-windows lint
+pnpm --dir qa/at-windows format:check
+```
+
+L'exécution des essais exige Windows, GitHub Actions et `RGAA_ALLOW_WINDOWS_AT=1`. Elle refuse un processus NVDA préexistant. Ne pas lancer la configuration du lecteur sur un poste personnel.
+
+## Portée des résultats
+
+Les premiers cas contribuent aux tests RGAA 1.3.8, 1.6.6, 1.6.8 et 13.3.1. Ils ne produisent pas automatiquement un taux de conformité. La [base RGAA](https://accessibilite.numerique.gouv.fr/methode/environnement-de-test/) inclut également JAWS et VoiceOver/Safari ; les variantes et interactions non exercées restent à qualifier séparément.
+
+Windows Server 2022 est pris en charge par le [guide NVDA](https://download.nvaccess.org/documentation/userGuide.html). Firefox installé par [Playwright](https://playwright.dev/docs/browsers#firefox) est un build patché ; sa version effective est enregistrée et cette différence avec une installation Mozilla standard doit rester déclarée dans l'audit.
+
+Le montage s'appuie sur le [workflow du mainteneur Guidepup](https://github.com/guidepup/guidepup/blob/3ac497d502a468d092aff3e67cbe126d27989fcf/.github/workflows/playwright-nvda.yml). Le bundle NVDA `0.2.1-2026.2` est épinglé par Guidepup 0.35.0 ; son SHA256 attendu est `7df0ca3c1c9e8c6521bc7553486ca360ed6f0b4f9bdbd6603131e38b5c1497a1`. La version du processus réel, son empreinte et la langue du profil sont contrôlées pendant les essais.
