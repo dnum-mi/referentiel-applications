@@ -212,6 +212,19 @@ export async function focusDocumentStart(page: Page, nvda: NVDAPlaywright) {
   // capture:false sends the next command without waiting for native focus
   // events. Capture each transition so Firefox can finish changing frames.
   await nvda.press("Control+l", { capture: true });
+  // Ctrl+L expands Firefox's address autocomplete. Escape is neutral only
+  // while that browser field owns focus: it dismisses its popup, not a Vue dialog.
+  await nvda.perform(nvda.keyboardCommands.reportCurrentFocus, {
+    capture: true,
+  });
+  if (
+    !normalizeSpeech(await nvda.lastSpokenPhrase()).includes(
+      "search or enter address",
+    )
+  ) {
+    throw new Error("La barre d’adresse Firefox n’est pas confirmée.");
+  }
+  await nvda.press("Escape", { capture: true });
   // Escape can close an application dialog. Use NVDA's own mode toggle and
   // require its spoken French mode confirmation instead.
   let browseMode = false;
