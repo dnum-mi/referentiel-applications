@@ -4,9 +4,9 @@
     "sha256": "f60118d44d94d004c2b5ad0e00c67a7d840271f9ba5eacbee5efacdc3202478d",
     "note": "Règles CSS réelles du client monté ; assets de police externes non embarqués dans ce premier pilote de restitution."
   },
-  "capturedAt": "2026-10-13T13:49:49.916Z",
-  "productHead": "19cbbc7f7f8abba9f6887b4ed06556853d78c5d9",
-  "captureBrowser": "Chromium 153.0.8010.12",
+  "capturedAt": "2026-10-13T17:07:36.501Z",
+  "productHead": "e8c028b2e721f8b87a1d4e2d48b5e9e5c9724983",
+  "captureBrowser": "Chromium 155.0.8059.40",
   "locale": "fr-FR",
   "mode": "Vrais composants montés avec fixtures entièrement synthétiques ; DOM copié pour restitution seule, handlers absents (7.1.2 exclu).",
   "sourcePaths": [
@@ -44,7 +44,7 @@
     },
     {
       "file": "frontend/src/components/MarkdownEditor.vue",
-      "sha256": "463717004d759a58e140bb8360502d259ed942f6d19e87fdc8ed845495b11db7"
+      "sha256": "fc625ce74fe7755d33202fd887ca96a6f52bc397098054ac154c4e572fb550eb"
     },
     {
       "file": "frontend/src/composables/use-mermaid.ts",
@@ -293,6 +293,7 @@
       "role": "img",
       "internalFallback": null,
       "source": "flowchart LR\naccTitle: Dépendance de deux applications fictives\naccDescr: Portail fictif consulte le référentiel fictif.\nA[Portail fictif] -->|consulte| B[Référentiel fictif]",
+      "controlledIdentifierClock": 1791899389650,
       "productionRenderer": "useMermaid().renderDiagram, vrai Mermaid + sanitation du dépôt"
     },
     {
@@ -325,6 +326,7 @@
       "role": "img",
       "internalFallback": null,
       "source": "flowchart LR\nA[Portail fictif] -->|consulte| B[Référentiel fictif]",
+      "controlledIdentifierClock": 1791899389726,
       "productionRenderer": "useMermaid().renderDiagram, vrai Mermaid + sanitation du dépôt"
     }
   ],
@@ -334,6 +336,7 @@
     "/api/v2/stats/iq-avg/period",
     "/api/v2/applications/11111111-1111-4111-8111-111111111111/relations/graph"
   ],
+  "externalBlocked": [],
   "blockedWrites": [],
   "pageErrors": []
 }

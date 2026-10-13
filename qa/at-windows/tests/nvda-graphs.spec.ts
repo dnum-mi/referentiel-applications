@@ -13,7 +13,7 @@ import {
   simulatedNetwork,
   timeData,
 } from "./interactive-utils.js";
-import { activateCurrent, tabTo } from "./native-utils.js";
+import { activateCurrent, shiftTabTo, tabTo } from "./native-utils.js";
 
 test.use({ serviceWorkers: "block" });
 test.beforeEach(async ({}, info) => {
@@ -96,7 +96,15 @@ for (const chart of charts) {
     expect(table.text).not.toContain("pas dans une cellule de tableau");
     for (const column of chart.columns)
       expect(table.text).toContain(normalizeSpeech(column));
-    await tabTo(nvda, "Voir le graphique", info);
+    // Browse-table commands leave DOM focus on the old toggle. Rejoin the
+    // tab sequence from the actual reading position before seeking it.
+    await captureStep(
+      nvda,
+      "leave-table-for-native-controls",
+      () => nvda.press("Shift+Tab", { capture: true }),
+      info,
+    );
+    await shiftTabTo(nvda, "Voir le graphique", info);
     await activateCurrent(nvda, info, "return-graphic-activated");
     await expect(button).toHaveAttribute("aria-pressed", "false");
     await expect(page.getByTestId(`${chart.id}-canvas`)).toBeVisible();
@@ -157,7 +165,13 @@ test("AT-INT-TIME — vrai résumé, ouverture du tableau complet puis fermeture
     info,
   );
   expect(table.text).toMatch(/maturite|tableau|application/);
-  await tabTo(nvda, "Tableau de synthèse TIME", info);
+  await captureStep(
+    nvda,
+    "leave-time-table-for-summary",
+    () => nvda.press("Shift+Tab", { capture: true }),
+    info,
+  );
+  await shiftTabTo(nvda, "Tableau de synthèse TIME", info);
   const collapsed = await activateCurrent(nvda, info, "time-summary-close");
   await expect(
     page.getByTestId("technical-debt-transcription"),
@@ -179,14 +193,14 @@ test("AT-INT-relations — profondeur, filtre, zoom et vrai Réessayer après HT
   await page.locator(".graph-container svg a").first().waitFor();
   await attachIdentity(nvda, browser.version(), info);
   await focusDocumentStart(page, nvda);
-  await tabTo(nvda, "Zoomer", info);
+  const zoomButton = await tabTo(nvda, "Zoomer", info);
+  expect(zoomButton.text).toContain("bouton");
   const group = page.locator(".graph-container svg > g"),
     before = await group.getAttribute("transform");
-  const zoom = await activateCurrent(nvda, info, "zoom-command");
-  expect(zoom.text).toMatch(/zoomer|bouton/);
-  expect(await group.getAttribute("transform")).not.toBe(before);
+  await activateCurrent(nvda, info, "zoom-command");
+  await expect.poll(() => group.getAttribute("transform")).not.toBe(before);
   await tabTo(nvda, "Saisir la profondeur du réseau", info);
-  await nvda.press("Control+a", { capture: false });
+  await nvda.press("Control+a", { capture: true });
   await nvda.type("2", { capture: true });
   const depth = await captureStep(
     nvda,
@@ -212,7 +226,7 @@ test("AT-INT-relations — profondeur, filtre, zoom et vrai Réessayer après HT
   expect(filtered.text).toContain("2 relations");
   network.state.graphError = true;
   await tabTo(nvda, "Saisir la profondeur du réseau", info);
-  await nvda.press("Control+a", { capture: false });
+  await nvda.press("Control+a", { capture: true });
   await nvda.type("3", { capture: true });
   const failed = await captureStep(
     nvda,

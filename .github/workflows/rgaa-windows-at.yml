@@ -107,7 +107,7 @@ jobs:
     name: nvda-interactive (${{ matrix.group }})
     if: github.event.repository.private == false
     runs-on: windows-2022
-    timeout-minutes: 45
+    timeout-minutes: ${{ matrix.timeout || 45 }}
     strategy:
       fail-fast: false
       matrix:
@@ -124,6 +124,13 @@ jobs:
             test_files: tests/nvda-shared.spec.ts
           - group: application-forms
             test_files: tests/nvda-application.spec.ts
+          - group: operations
+            test_files: tests/nvda-operations.spec.ts
+          - group: exports
+            test_files: tests/nvda-exports.spec.ts
+            timeout: 60
+          - group: swagger
+            test_files: tests/nvda-swagger.spec.ts
     env:
       RGAA_ALLOW_WINDOWS_AT: "1"
       RGAA_PRODUCT_HEAD: ${{ github.event_name == 'workflow_dispatch' && inputs.product_head || github.sha }}
@@ -255,12 +262,13 @@ jobs:
       github.ref == 'refs/heads/fix/rgaa-accessibility-20261008' &&
       github.run_attempt == '1' &&
       ((github.event_name == 'workflow_dispatch' && inputs.approve_jaws_install_use == true) ||
-       (github.event_name == 'push' && github.event.head_commit.message == 'test: retry approved JAWS focus 2026-10-13-b8d0'))
+       (github.event_name == 'push' && github.event.head_commit.message == 'test: inspect approved JAWS demo 2026-10-13-c9e1'))
     runs-on: windows-2022
-    # The initial failed preparation consumed 4m30, including installation.
-    # This corrected attempt keeps the combined trial below 35 minutes.
-    timeout-minutes: 30
+    # The two whole jobs consumed 270 + 290 seconds, including installation.
+    # 560 + 1500 = 2060 seconds remains strictly below the approved 35 minutes.
+    timeout-minutes: 25
     env:
+      JAWS_ALLOW_INITIAL_RESTART_DEFER: "1"
       RGAA_PRODUCT_HEAD: ${{ github.event_name == 'workflow_dispatch' && inputs.product_head || github.sha }}
       RGAA_PRODUCT_ROOT: ${{ github.workspace }}/product
     defaults:
@@ -282,7 +290,7 @@ jobs:
         working-directory: driver/qa/at-windows
         run: |
           $expectedBranch = 'refs/heads/fix/rgaa-accessibility-20261008'
-          $expectedMessage = 'test: retry approved JAWS focus 2026-10-13-b8d0'
+          $expectedMessage = 'test: inspect approved JAWS demo 2026-10-13-c9e1'
           if (-not $env:GITHUB_REF.Equals($expectedBranch, [StringComparison]::Ordinal) -or $env:GITHUB_RUN_ATTEMPT -ne '1') { throw 'Branch/attempt guard failed.' }
           $event = Get-Content -LiteralPath $env:GITHUB_EVENT_PATH -Raw | ConvertFrom-Json
           $approved = if ($env:GITHUB_EVENT_NAME -eq 'push') {
@@ -292,7 +300,7 @@ jobs:
           }
           if (-not $approved) { throw 'Exact explicit JAWS approval signal missing.' }
           New-Item -ItemType Directory -Force ./evidence/jaws-approved | Out-Null
-          @{ approved = $true; source = $env:GITHUB_EVENT_NAME; package = '2025.2508.120.400'; eula = 'https://vispero.com/jaws-end-user-license-agreement/'; noPurchase = $true; noActivation = $true; rebootMayLimitResult = $true; installerStarted = $false; readerStarted = $false; initialFailedRun = '38424775281'; initialWholeJobSeconds = 270; correctedJobMaximumSeconds = 1800; retryPurpose = 'Correct Firefox foreground preparation before any native witness; no demo-time extension' } | ConvertTo-Json | Set-Content ./evidence/jaws-approved/approved-operation.json
+          @{ approved = $true; source = $env:GITHUB_EVENT_NAME; package = '2025.2508.120.400'; eula = 'https://vispero.com/jaws-end-user-license-agreement/'; noPurchase = $true; noActivation = $true; rebootMayLimitResult = $true; installerStarted = $false; readerStarted = $false; priorRuns = @('38424775281', '38428223727'); priorWholeJobSeconds = 560; diagnosticJobMaximumSeconds = 1500; combinedMaximumSeconds = 2060; initialRestartMayBeDeferredOnlyByExposedCommand = $true; restartRequirementResolved = $false; retryPurpose = 'Inspect exact owned JAWS dialogs and correct actual Firefox PID before native witness; no reboot, reset or demo-time extension' } | ConvertTo-Json | Set-Content ./evidence/jaws-approved/approved-operation.json
       - uses: pnpm/action-setup@v4
         with:
           version: 10.34.6
@@ -317,7 +325,7 @@ jobs:
       - name: Parse the exact scripts before any executable invocation
         working-directory: driver/qa/at-windows
         run: |
-          $files = @('acquire-jaws-installer.ps1','capture-jaws-history.ps1','focus-browser-window.ps1','inspect-jaws-setup.ps1','install-jaws-approved.ps1','jaws-content-action.ps1')
+          $files = @('acquire-jaws-installer.ps1','capture-jaws-history.ps1','focus-browser-window.ps1','prepare-jaws-demo.ps1','inspect-jaws-setup.ps1','install-jaws-approved.ps1','jaws-content-action.ps1')
           foreach ($name in $files) {
             $tokens = $null
             $errors = $null

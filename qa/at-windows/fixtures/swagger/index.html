@@ -1,0 +1,621 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Documentation API — Référentiel Applications</title><link rel="stylesheet" href="./swagger-ui.css"><style>
+  #swagger-ui {
+    --refapp-swagger-link: #000091;
+    --refapp-swagger-success: #0b6b43;
+    --refapp-swagger-danger: #b42318;
+    --refapp-swagger-focus: #000091;
+  }
+  html.dark-mode #swagger-ui {
+    --refapp-swagger-link: #cacafb;
+    --refapp-swagger-success: #9ce5c1;
+    --refapp-swagger-danger: #ffb4ab;
+    --refapp-swagger-focus: #cacafb;
+  }
+  #swagger-ui .swagger-ui a { color: var(--refapp-swagger-link); }
+  #swagger-ui .btn.authorize {
+    color: var(--refapp-swagger-success);
+    border-color: var(--refapp-swagger-success);
+    transition: box-shadow .2s;
+  }
+  #swagger-ui .btn.authorize svg { color: currentColor; }
+  #swagger-ui .btn.execute {
+    background-color: #005a9c;
+    border-color: #005a9c;
+    color: #fff;
+  }
+  #swagger-ui .btn.cancel {
+    color: var(--refapp-swagger-danger);
+    border-color: var(--refapp-swagger-danger);
+    transition: box-shadow .2s;
+  }
+  #swagger-ui .info .title small { background: #4b5563; color: #fff; }
+  #swagger-ui .info .title small.version-stamp { background: #166534; }
+  #swagger-ui .opblock .opblock-summary-method { background: #4b5563; color: #fff; }
+  #swagger-ui .opblock-get .opblock-summary-method { background: #005a9c; }
+  #swagger-ui .opblock-post .opblock-summary-method { background: #166534; }
+  #swagger-ui .opblock-put .opblock-summary-method { background: #8a4b00; }
+  #swagger-ui .opblock-delete .opblock-summary-method { background: #b42318; }
+  #swagger-ui .opblock-patch .opblock-summary-method { background: #6b21a8; }
+  #swagger-ui .opblock-head .opblock-summary-method { background: #006b66; }
+  #swagger-ui .opblock-options .opblock-summary-method { background: #3730a3; }
+  #swagger-ui .refapp-swagger-summary-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 4px;
+  }
+  #swagger-ui .refapp-swagger-permalink {
+    font-size: 12px;
+    text-align: center;
+    text-decoration: underline;
+  }
+  #swagger-ui .responses-table th.response-col_status {
+    min-width: 6em;
+  }
+  #swagger-ui .responses-table > tbody > tr > th[scope="row"] {
+    padding: 10px 0;
+    vertical-align: top;
+    text-align: left;
+    font-weight: normal;
+  }
+  #swagger-ui .topbar .download-url-wrapper { flex-wrap: wrap; }
+  #swagger-ui .topbar .download-url-button { background: #166534; color: #fff; }
+  #swagger-ui .topbar .refapp-swagger-url-label {
+    color: #fff;
+    flex-basis: 100%;
+    font-family: sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  #swagger-ui .topbar .download-url-wrapper input[type="text"] {
+    flex: 1 1 12rem;
+    min-width: 0;
+    width: auto;
+  }
+  #swagger-ui .refapp-swagger-auth-dialog {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+  }
+  #swagger-ui .dialog-ux .modal-ux {
+    max-height: calc(100dvh - 2rem);
+    min-width: 0;
+    width: min(650px, calc(100% - 2rem));
+  }
+  #swagger-ui .dialog-ux .modal-ux-content {
+    max-height: calc(100dvh - 7rem);
+  }
+  #swagger-ui .refapp-swagger-auth-dialog .checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  #swagger-ui .refapp-swagger-auth-dialog .checkbox input[type="checkbox"] {
+    display: block;
+    appearance: auto;
+    flex: none;
+    width: 16px;
+    height: 16px;
+    margin: 3px 0 0;
+  }
+  #swagger-ui .refapp-swagger-auth-dialog .checkbox input[type="checkbox"] + label > .item {
+    display: none;
+  }
+  #swagger-ui .swagger-ui :is(button, a, input, select, textarea):focus-visible {
+    outline: 3px solid var(--refapp-swagger-focus);
+    outline-offset: 2px;
+  }
+  #swagger-ui .topbar :focus-visible { outline-color: #fff; }
+</style></head><body><div id="swagger-ui"></div><script src="./swagger-ui-bundle.js"></script><script src="./swagger-ui-standalone-preset.js"></script><script>window.ui=SwaggerUIBundle({spec:{"openapi":"3.0.0","info":{"title":"API Référentiel Applications — données synthétiques","description":"Documentation entièrement fictive pour les commandes de lecture.","version":"2.0"},"x-refapp-documentation-language":{"default":"fr","englishTexts":["Application ID","Array of results","Backend version","Building (optional)","Business division","Business divisions MOA for the application","Business maturity score (1-5). Omit / null = not rated.","Compliance created or updated successfully","Compliance found successfully","Compliance updated successfully","Cost containment score (1-5). Omit / null = not rated.","Create a new compliance for an application","Create a new hosting option","Create a new link for an application","Create technical debt info for an application","Current status of the application","Current status of the application with full details","DIMA business impact of interruption","DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)","DIMA last test date","DIMA recovery manager","DIMA recovery plan exists","DIMA recovery solutions","DIMA test result","DSFR implemented","DSFR version used","Data application deleted successfully","Data description deleted successfully","Delete a link for an application","Delete hosting option by ID","Description of the application","Description of the link","EcoIndex greenhouse gas emissions (gCO2e)","EcoIndex last calculation datetime","EcoIndex score (0-100)","EcoIndex target URL used for scan","EcoIndex water consumption (cl)","Environment label displayed in the header badge","Exposure deleted successfully","Footer links to display in the application footer","Get all hosting options with optional filtering","Get application greeting","Get list of links for an application","Homologation RSSI actor ID","Homologation date end","Homologation status","Hosting option already exists","Hosting option created successfully","Hosting option deleted successfully","Hosting option not found","Hosting option updated successfully","ID of the application","ID of the application to which the label belongs","ID of the hosting option","ID of the label","ID of the link to delete","ID of the link to update","Indicates whether the hosting is active, passif or not specified (null).","Label of the application","Link URL","Link created successfully","Link deleted successfully","Link label","Link title (tooltip)","Link updated successfully","List of links for the application","Logo URL of the application","Month in YYYY-MM format","OAuth2 authentication using OIDC","OIDC client ID","OIDC configuration URL","OIDC scopes requested by the frontend","Optional description of the link","PDMA backup frequency","PDMA backup method used","PDMA backup storage","PDMA data types concerned","PDMA duration in hours (one of 48, 24, 2, 0)","PDMA last test date","PDMA restoration manager","PDMA test result","Paginated list of hosting options","Platform name","Provider name","Purposes of the application","RGPD DPO name","RGPD has AIPD","Retrieve links for an application","Retrieve the compliance for an application","Retrieve the technical debt info for an application","Returns a greeting message.","Returns a simple greeting message from the application.","Room (optional)","Send Notification Email","Short name of the application","Source name","Technical debt info already exists for this application","Technical debt info created successfully","Technical debt info found successfully","Technical debt information for the application","Technical maturity score (1-5). Omit / null = not rated.","The URL of the link","The user who reported the issue","Token authentication","Total number of applications for the month","Total number of items","Type of the application","Type of the external resource","URL of the application logo","Unique identifier","Unique identifier of the compliance record","Unique identifier of the hosting option","Unique identifier of the label source","Unique identifier of the link","Update a link for an application","Update hosting option by ID","Update the compliance for an application","Value of the label","population associated with the application"]},"tags":[{"name":"Applications","description":"Applications entièrement fictives"}],"components":{"securitySchemes":{"oauth2":{"type":"oauth2","description":"OAuth2 authentication using OIDC","flows":{"authorizationCode":{"authorizationUrl":"https://oidc.example.invalid/auth","tokenUrl":"https://oidc.example.invalid/token","refreshUrl":"https://oidc.example.invalid/token","scopes":{"openid":"OpenID scope","profile":"Profile scope"}}}},"api_key":{"type":"apiKey","name":"x-refapp-token","in":"header","description":"Token authentication"}},"schemas":{"ApplicationFictive":{"type":"object","properties":{"id":{"type":"string","description":"Identifiant synthétique"},"label":{"type":"string","description":"Libellé fictif"}}}}},"security":[{"oauth2":[]},{"api_key":[]}],"paths":{"/applications/{id}":{"get":{"tags":["Applications"],"summary":"Lire une application fictive","operationId":"findSyntheticApplication","parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string"},"description":"Identifiant de l’application fictive"},{"name":"detail","in":"query","required":false,"schema":{"type":"boolean"},"description":"Lecture détaillée fictive"}],"responses":{"200":{"description":"Application fictive","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ApplicationFictive"},"example":{"id":"application-fictive-001","label":"Application fictive de démonstration"}}}},"404":{"description":"Application fictive absente"}}}},"/applications":{"post":{"tags":["Applications"],"summary":"Description d’une création fictive — ne pas exécuter","operationId":"describeSyntheticCreation","requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/ApplicationFictive"}}}},"responses":{"201":{"description":"Réponse fictive, aucune exécution autorisée"}}}}}},dom_id:'#swagger-ui',deepLinking:true,layout:'StandaloneLayout',presets:[SwaggerUIBundle.presets.apis,SwaggerUIStandalonePreset],plugins:[function swaggerDownloadUrlPlugin(system) {
+    return SwaggerUIBundle.plugins.DownloadUrl(system);
+},function swaggerAccessibilityPlugin(system) {
+    const React = system.React;
+    let headingIndex = 0;
+    let authorizationTrigger = null;
+    let languageSpecification;
+    let defaultDocumentationLanguage;
+    let authoredTexts = new Set();
+    let englishTexts = new Set();
+    const normalizedText = (text) => text.replaceAll(/\s+/g, " ").trim();
+    function authoredTextLanguage(text) {
+        const specification = system.specSelectors?.specJson();
+        if (!specification)
+            return undefined;
+        if (specification !== languageSpecification) {
+            languageSpecification = specification;
+            authoredTexts = new Set();
+            englishTexts = new Set();
+            defaultDocumentationLanguage = undefined;
+            const value = specification.toJS();
+            if (!value || typeof value !== "object")
+                return undefined;
+            const document = value;
+            const metadata = document["x-refapp-documentation-language"];
+            if (!metadata || typeof metadata !== "object")
+                return undefined;
+            const languages = metadata;
+            if (languages.default !== "fr" && languages.default !== "en")
+                return undefined;
+            defaultDocumentationLanguage = languages.default;
+            if (Array.isArray(languages.englishTexts)) {
+                englishTexts = new Set(languages.englishTexts
+                    .filter((entry) => typeof entry === "string")
+                    .map(normalizedText));
+            }
+            const collect = (value) => {
+                if (!value || typeof value !== "object")
+                    return;
+                for (const [key, child] of Object.entries(value)) {
+                    if (["title", "summary", "description"].includes(key) &&
+                        typeof child === "string") {
+                        authoredTexts.add(normalizedText(child));
+                    }
+                    collect(child);
+                }
+            };
+            collect(document);
+        }
+        const value = normalizedText(text);
+        return authoredTexts.has(value)
+            ? englishTexts.has(value)
+                ? "en"
+                : defaultDocumentationLanguage
+            : undefined;
+    }
+    function wrapDocumentationLayout(Original) {
+        return class AccessibleDocumentationLayout extends React.Component {
+            container = React.createRef();
+            observer = null;
+            updateLanguage = () => {
+                for (const heading of Array.from(this.container.current?.querySelectorAll("h3.opblock-tag, section.models > h4") ?? [])) {
+                    heading.setAttribute("role", "heading");
+                    heading.setAttribute("aria-level", "2");
+                }
+                for (const element of Array.from(this.container.current?.querySelectorAll(".info .title, .opblock-summary-description") ?? [])) {
+                    const text = element.matches(".info .title")
+                        ? Array.from(element.childNodes)
+                            .filter((node) => node.nodeType === Node.TEXT_NODE)
+                            .map((node) => node.textContent ?? "")
+                            .join("")
+                        : (element.textContent ?? "");
+                    const language = authoredTextLanguage(text);
+                    if (language)
+                        element.lang = language;
+                    else
+                        element.removeAttribute("lang");
+                }
+            };
+            componentDidMount() {
+                this.updateLanguage();
+                if (!this.container.current)
+                    return;
+                this.observer = new MutationObserver(this.updateLanguage);
+                this.observer.observe(this.container.current, {
+                    childList: true,
+                    characterData: true,
+                    subtree: true,
+                });
+            }
+            componentDidUpdate() {
+                this.updateLanguage();
+            }
+            componentWillUnmount() {
+                this.observer?.disconnect();
+            }
+            render() {
+                return React.createElement("div", { ref: this.container, style: { display: "contents" } }, React.createElement(Original, this.props));
+            }
+        };
+    }
+    function wrapDocumentationMarkdown(Original) {
+        return (props) => {
+            const language = typeof props.source === "string"
+                ? authoredTextLanguage(props.source)
+                : undefined;
+            const content = React.createElement(Original, props);
+            return language
+                ? React.createElement("div", { lang: language, style: { display: "contents" } }, content)
+                : content;
+        };
+    }
+    function wrapAuthorizeButton(Original) {
+        return (props) => React.createElement("span", {
+            onClickCapture: (event) => {
+                if (event.target instanceof Element) {
+                    authorizationTrigger =
+                        event.target.closest("button");
+                }
+            },
+        }, React.createElement(Original, props));
+    }
+    function wrapTopbar(Original) {
+        return class AccessibleTopbar extends React.Component {
+            container = React.createRef();
+            observer = null;
+            updateLabel = () => {
+                const container = this.container.current;
+                const input = container?.querySelector("#download-url-input");
+                const currentLabel = container?.querySelector(".refapp-swagger-url-label");
+                if (!input) {
+                    currentLabel?.remove();
+                    return;
+                }
+                if (!currentLabel) {
+                    const label = input.ownerDocument.createElement("label");
+                    label.className = "refapp-swagger-url-label";
+                    label.htmlFor = input.id;
+                    label.textContent = "URL de la spécification OpenAPI";
+                    label.lang = "fr";
+                    input.before(label);
+                }
+            };
+            componentDidMount() {
+                this.updateLabel();
+                const container = this.container.current;
+                if (!container)
+                    return;
+                this.observer = new MutationObserver(this.updateLabel);
+                this.observer.observe(container, {
+                    childList: true,
+                    subtree: true,
+                });
+            }
+            componentWillUnmount() {
+                this.observer?.disconnect();
+            }
+            render() {
+                return React.createElement("div", { ref: this.container }, React.createElement(Original, this.props));
+            }
+        };
+    }
+    function wrapAuthorizationPopup(Original) {
+        return class AccessibleAuthorizationPopup extends React.Component {
+            container = React.createRef();
+            returnFocus = authorizationTrigger ?? document.activeElement;
+            background = new Map();
+            focusableElements() {
+                const container = this.container.current;
+                if (!container)
+                    return [];
+                return Array.from(container.querySelectorAll('a[href], button, input:not([type="hidden"]), select, textarea, [tabindex], [contenteditable="true"]')).filter((element) => element.tabIndex >= 0 &&
+                    !element.matches(":disabled") &&
+                    !element.closest("[inert]") &&
+                    element.getClientRects().length > 0 &&
+                    getComputedStyle(element).visibility !== "hidden");
+            }
+            focusInside = () => {
+                const elements = this.focusableElements();
+                const input = elements.find((element) => element.matches("input, select, textarea"));
+                (input ?? elements[0] ?? this.container.current)?.focus();
+            };
+            onKeyDown = (event) => {
+                if (event.key !== "Tab" ||
+                    event.altKey ||
+                    event.ctrlKey ||
+                    event.metaKey)
+                    return;
+                const elements = this.focusableElements();
+                const index = elements.indexOf(document.activeElement);
+                event.preventDefault();
+                if (elements.length === 0) {
+                    this.container.current?.focus();
+                }
+                else {
+                    // Safari may skip buttons in native Tab order. Include every command.
+                    const nextIndex = event.shiftKey
+                        ? index > 0
+                            ? index - 1
+                            : elements.length - 1
+                        : index >= 0 && index < elements.length - 1
+                            ? index + 1
+                            : 0;
+                    elements[nextIndex].focus();
+                }
+            };
+            onFocusIn = (event) => {
+                if (!this.container.current?.contains(event.target)) {
+                    this.focusInside();
+                }
+            };
+            componentDidMount() {
+                const container = this.container.current;
+                if (!container)
+                    return;
+                authorizationTrigger = null;
+                const close = container.querySelector(".close-modal");
+                close?.setAttribute("aria-label", "Close");
+                // Move focus before hiding the formerly focused trigger from the API.
+                this.focusInside();
+                let branch = container;
+                while (branch.parentElement) {
+                    const parent = branch.parentElement;
+                    for (const sibling of Array.from(parent.children)) {
+                        if (sibling === branch || sibling.matches("script, style, link"))
+                            continue;
+                        this.background.set(sibling, {
+                            inert: sibling.getAttribute("inert"),
+                            hidden: sibling.getAttribute("aria-hidden"),
+                        });
+                        sibling.setAttribute("inert", "");
+                        sibling.setAttribute("aria-hidden", "true");
+                    }
+                    if (parent === document.body)
+                        break;
+                    branch = parent;
+                }
+                container.addEventListener("keydown", this.onKeyDown);
+                document.addEventListener("focusin", this.onFocusIn);
+            }
+            componentWillUnmount() {
+                this.container.current?.removeEventListener("keydown", this.onKeyDown);
+                document.removeEventListener("focusin", this.onFocusIn);
+                for (const [element, attributes] of this.background) {
+                    for (const [attribute, value] of [
+                        ["inert", attributes.inert],
+                        ["aria-hidden", attributes.hidden],
+                    ]) {
+                        if (value === null)
+                            element.removeAttribute(attribute);
+                        else
+                            element.setAttribute(attribute, value);
+                    }
+                }
+                this.background.clear();
+                const trigger = this.returnFocus;
+                queueMicrotask(() => {
+                    if (trigger instanceof HTMLElement &&
+                        trigger.isConnected &&
+                        !trigger.closest("[inert]") &&
+                        !document.querySelector(".refapp-swagger-auth-dialog")) {
+                        trigger.focus();
+                    }
+                });
+            }
+            render() {
+                return React.createElement("div", {
+                    ref: this.container,
+                    className: "refapp-swagger-auth-dialog",
+                    role: "dialog",
+                    "aria-modal": "true",
+                    "aria-label": "Available authorizations",
+                    tabIndex: -1,
+                }, React.createElement(Original, this.props));
+            }
+        };
+    }
+    function wrapResponses(Original) {
+        return class AccessibleResponses extends React.Component {
+            container = React.createRef();
+            headers = new Map();
+            restoreHeaders() {
+                // Restore React-owned nodes before its next commit or unmount.
+                for (const [header, original] of this.headers) {
+                    while (header.firstChild)
+                        original.appendChild(header.firstChild);
+                    header.replaceWith(original);
+                }
+                this.headers.clear();
+            }
+            updateHeaders() {
+                const container = this.container.current;
+                if (!container)
+                    return;
+                for (const table of Array.from(container.querySelectorAll(".responses-table"))) {
+                    table.removeAttribute("role");
+                    const heading = table
+                        .closest(".responses-wrapper")
+                        ?.querySelector(".opblock-section-header h4");
+                    if (heading) {
+                        heading.id ||= table.id
+                            ? `${table.id}-heading`
+                            : `refapp-swagger-responses-heading-${++headingIndex}`;
+                        table.setAttribute("aria-labelledby", heading.id);
+                    }
+                }
+                for (const original of Array.from(container.querySelectorAll(".responses-table > thead > tr > td, .responses-table > tbody > tr > td.response-col_status"))) {
+                    const header = original.ownerDocument.createElement("th");
+                    for (const attribute of Array.from(original.attributes)) {
+                        header.setAttribute(attribute.name, attribute.value);
+                    }
+                    header.scope = original.closest("thead") ? "col" : "row";
+                    while (original.firstChild)
+                        header.appendChild(original.firstChild);
+                    original.replaceWith(header);
+                    this.headers.set(header, original);
+                }
+            }
+            componentDidMount() {
+                this.updateHeaders();
+            }
+            getSnapshotBeforeUpdate() {
+                this.restoreHeaders();
+                return null;
+            }
+            componentDidUpdate() {
+                this.updateHeaders();
+            }
+            componentWillUnmount() {
+                this.restoreHeaders();
+            }
+            render() {
+                return React.createElement("div", { ref: this.container }, React.createElement(Original, this.props));
+            }
+        };
+    }
+    function wrapParameters(Original) {
+        return class AccessibleParameters extends React.Component {
+            container = React.createRef();
+            updateHeaders() {
+                const container = this.container.current;
+                if (!container)
+                    return;
+                for (const table of Array.from(container.querySelectorAll("table"))) {
+                    const heading = table
+                        .closest(".opblock-section")
+                        ?.querySelector(".opblock-section-header h4");
+                    if (heading) {
+                        heading.id ||= `refapp-swagger-parameters-heading-${++headingIndex}`;
+                        table.setAttribute("aria-labelledby", heading.id);
+                    }
+                    for (const header of Array.from(table.querySelectorAll("thead th"))) {
+                        header.scope = "col";
+                    }
+                }
+            }
+            componentDidMount() {
+                this.updateHeaders();
+            }
+            componentDidUpdate() {
+                this.updateHeaders();
+            }
+            render() {
+                return React.createElement("div", { ref: this.container }, React.createElement(Original, this.props));
+            }
+        };
+    }
+    function wrapSvgAssets(Original) {
+        return (props) => {
+            // Nest already provides Swagger UI's sprite outside the React root.
+            // Keep one definition of each symbol; the existing use hrefs still resolve.
+            const symbolIds = [
+                "unlocked",
+                "locked",
+                "close",
+                "large-arrow",
+                "large-arrow-down",
+                "jump-to",
+                "expand",
+            ];
+            const provided = symbolIds.every((id) => {
+                const symbol = document.getElementById(id);
+                return (symbol?.tagName.toLowerCase() === "symbol" &&
+                    !symbol.closest("#swagger-ui"));
+            });
+            return provided ? null : React.createElement(Original, props);
+        };
+    }
+    function wrapOperationSummaryPath(Original) {
+        return (props) => {
+            const getComponent = props.getComponent;
+            const StaticPath = (linkProps) => React.createElement("span", { className: "nostyle" }, linkProps.text);
+            return React.createElement(Original, {
+                ...props,
+                getComponent: (name, ...args) => name === "DeepLink" ? StaticPath : getComponent(name, ...args),
+            });
+        };
+    }
+    function wrapOperationSummary(Original) {
+        class AccessibleSummaryMarkup extends React.Component {
+            container = React.createRef();
+            replacements = new Map();
+            restoreMarkup() {
+                for (const [replacement, original] of this.replacements) {
+                    while (replacement.firstChild)
+                        original.appendChild(replacement.firstChild);
+                    replacement.replaceWith(original);
+                }
+                this.replacements.clear();
+            }
+            updateMarkup() {
+                for (const original of Array.from(this.container.current?.querySelectorAll("button.opblock-summary-control div") ?? [])) {
+                    const replacement = original.ownerDocument.createElement("span");
+                    for (const attribute of Array.from(original.attributes)) {
+                        replacement.setAttribute(attribute.name, attribute.value);
+                    }
+                    // Keep the visual layout while using phrasing content inside a button.
+                    replacement.style.display = getComputedStyle(original).display;
+                    while (original.firstChild)
+                        replacement.appendChild(original.firstChild);
+                    original.replaceWith(replacement);
+                    this.replacements.set(replacement, original);
+                }
+            }
+            componentDidMount() {
+                this.updateMarkup();
+            }
+            getSnapshotBeforeUpdate() {
+                this.restoreMarkup();
+                return null;
+            }
+            componentDidUpdate() {
+                this.updateMarkup();
+            }
+            componentWillUnmount() {
+                this.restoreMarkup();
+            }
+            render() {
+                return React.createElement("div", {
+                    ref: this.container,
+                    role: "heading",
+                    "aria-level": "3",
+                    style: { display: "contents" },
+                }, this.props.content);
+            }
+        }
+        return (props) => {
+            const getComponent = props.getComponent;
+            const operation = props.operationProps.toObject();
+            if (!operation.isDeepLinkingEnabled) {
+                return React.createElement(AccessibleSummaryMarkup, {
+                    content: React.createElement(Original, props),
+                });
+            }
+            const Copy = getComponent("CopyToClipboardBtn", true);
+            // Match Swagger's createDeepLinkPath, including spaces in operation tags.
+            const path = `${operation.tag}/${operation.operationId}`
+                .trim()
+                .replace(/\s/g, "%20");
+            const CopyAndPermalink = (copyProps) => React.createElement("span", { className: "refapp-swagger-summary-actions" }, React.createElement("a", {
+                className: "refapp-swagger-permalink",
+                href: `#/${path}`,
+                "aria-label": `Lien direct vers ${operation.method.toUpperCase()} ${operation.path}`,
+                lang: "fr",
+                onClick: (event) => {
+                    if (event.button > 0 ||
+                        event.altKey ||
+                        event.ctrlKey ||
+                        event.metaKey ||
+                        event.shiftKey)
+                        return;
+                    if (props.isShown !== true)
+                        props.toggleShown();
+                },
+            }, "Lien direct"), React.createElement(Copy, copyProps));
+            return React.createElement(AccessibleSummaryMarkup, {
+                content: React.createElement(Original, {
+                    ...props,
+                    getComponent: (name, ...args) => name === "CopyToClipboardBtn"
+                        ? CopyAndPermalink
+                        : getComponent(name, ...args),
+                }),
+            });
+        };
+    }
+    return {
+        wrapComponents: {
+            Topbar: wrapTopbar,
+            authorizeBtn: wrapAuthorizeButton,
+            authorizeOperationBtn: wrapAuthorizeButton,
+            authorizationPopup: wrapAuthorizationPopup,
+            responses: wrapResponses,
+            parameters: wrapParameters,
+            SvgAssets: wrapSvgAssets,
+            BaseLayout: wrapDocumentationLayout,
+            Markdown: wrapDocumentationMarkdown,
+            OperationSummaryPath: wrapOperationSummaryPath,
+            OperationSummary: wrapOperationSummary,
+            Button: (Original) => (props) => {
+                const label = props["aria-label"];
+                const text = typeof props.children === "string" ? props.children.trim() : "";
+                const ariaLabel = text && typeof label === "string" && !label.includes(text)
+                    ? `${text}: ${label}`
+                    : label;
+                return React.createElement(Original, {
+                    ...props,
+                    "aria-label": ariaLabel,
+                });
+            },
+        },
+    };
+}],oauth2RedirectUrl:'https://oidc.example.invalid/redirect',usePkceWithAuthorizationCodeGrant:true});window.ui.initOAuth({scopes:['openid','profile'],clientId:'client-fictif-nvda'});</script></body></html>

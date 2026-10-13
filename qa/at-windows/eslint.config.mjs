@@ -6,6 +6,7 @@ export default tseslint.config(
       "test-results/**",
       "playwright-report/**",
       "evidence/**",
+      "fixtures/**",
     ],
   },
   ...tseslint.configs.recommended,

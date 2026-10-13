@@ -113,7 +113,7 @@ test("AT-INT-profil — vrais onglets, token non soumis, retrait puis réaccord 
     () => nvda.type("NVDA"),
     info,
   );
-  expect(name.text).toMatch(/nom|nvda/i);
+  expect(name.text).toMatch(/n\s*v\s*d\s*a/i);
   await expect(page.locator("#token-name")).toHaveValue("NVDA");
   await tabTo(nvda, "Annuler", info);
   await activateCurrent(nvda, info, "token-form-cancel");

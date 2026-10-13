@@ -29,7 +29,7 @@ async function currentFocus(
   );
 }
 
-// Only native Tab moves focus. Repeated controls are identified in the DOM, but
+// Only native Tab/Shift+Tab moves focus. Repeated controls are identified in the DOM, but
 // their names must be spoken. Date labels can be announced on arrival instead
 // of by reportCurrentFocus, which only describes the active date segment.
 async function reachControl(
@@ -37,6 +37,7 @@ async function reachControl(
   target: Locator,
   name: string,
   info: TestInfo,
+  direction: "Tab" | "Shift+Tab" = "Tab",
 ) {
   await expect(target).toBeVisible();
   let arrival: Awaited<ReturnType<typeof captureStep>> | undefined;
@@ -61,8 +62,8 @@ async function reachControl(
     }
     arrival = await captureStep(
       nvda,
-      `application-native-tab-${index}`,
-      () => nvda.press("Tab", { capture: true }),
+      `application-native-${direction === "Tab" ? "tab" : "shift-tab"}-${index}`,
+      () => nvda.press(direction, { capture: true }),
       info,
     );
     visited.push(arrival.text);
@@ -635,7 +636,7 @@ test("AT-APP-Signalements — note500 locale, refus du statut sans deuxième app
     network.applicationCalls.filter((call) => call.method === "PATCH"),
   ).toHaveLength(2);
   network.applicationState.reportMode = "success";
-  await reachControl(nvda, opener, "Modifier la note", info);
+  await reachControl(nvda, opener, "Modifier la note", info, "Shift+Tab");
   await activateCurrent(nvda, info, "report-note-retry-open");
   await reachControl(nvda, textbox, "Note du signalement", info);
   await nvda.press("Control+a", { capture: true });
@@ -656,5 +657,68 @@ test("AT-APP-Signalements — note500 locale, refus du statut sans deuxième app
   expect(
     network.applicationCalls.filter((call) => call.method === "PATCH"),
   ).toHaveLength(3);
+  await finishApplicationScene(page, network, info);
+});
+
+test("AT-APP-SuppressionActeur — refus500 annoncé dans le dialogue, sélection et focus conservés", async ({
+  page,
+  browser,
+  nvda,
+}, info) => {
+  const network = await simulatedApplicationNetwork(page);
+  await page.goto(network.base);
+  await mountApplicationScene(page, "actors-technologies");
+  await attachIdentity(nvda, browser.version(), info);
+  await focusDocumentStart(page, nvda);
+  const selection = page.getByTestId(`actor-row-select-${appFixtureIds.actor}`);
+  await reachControl(nvda, selection, "Sélectionner", info);
+  await captureStep(
+    nvda,
+    "actor-delete-select-native",
+    () => nvda.press("Space", { capture: true }),
+    info,
+  );
+  await expect(selection).toBeChecked();
+  const opener = page.getByTestId("actor-bulk-delete-btn");
+  await reachControl(nvda, opener, "Supprimer la sélection", info, "Shift+Tab");
+  const opened = await activateCurrent(nvda, info, "actor-delete-open-native");
+  const dialog = page.getByRole("dialog", {
+    name: "Confirmation de suppression",
+  });
+  await expect(dialog).toBeVisible();
+  expect(opened.text).toContain("confirmation de suppression");
+  const confirm = dialog.getByTestId("delete-confirm-btn");
+  await reachControl(nvda, confirm, "Confirmer", info);
+  const refused = await activateCurrent(
+    nvda,
+    info,
+    "actor-delete-http500-native",
+  );
+  await expect(dialog.getByTestId("delete-confirmation-error")).toContainText(
+    "Erreur lors de la suppression",
+  );
+  expect(refused.text).toContain("erreur lors de la suppression");
+  expect(refused.text).toContain("selection restante est conservee");
+  await expect(dialog).toBeVisible();
+  await expect(confirm).toBeFocused();
+  await expect(selection).toBeChecked();
+  await expect(page.getByTestId("actor-status")).not.toContainText(
+    "supprimés avec succès",
+  );
+  expect(
+    network.applicationCalls.filter((call) => call.method === "DELETE"),
+  ).toHaveLength(1);
+  await reachControl(
+    nvda,
+    dialog.getByTestId("delete-cancel-btn"),
+    "Annuler",
+    info,
+  );
+  await activateCurrent(nvda, info, "actor-delete-cancel-native");
+  await expect(dialog).not.toBeVisible();
+  await expect(opener).toBeFocused();
+  expect(
+    (await currentFocus(nvda, info, "actor-delete-return-focus")).text,
+  ).toContain("supprimer la selection");
   await finishApplicationScene(page, network, info);
 });

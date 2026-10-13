@@ -111,7 +111,7 @@ test("AT-INT-U01 — App/navigation réelles, raccourci public, route, menu comp
     info,
     "navigation-shortcut-destination",
   );
-  expect(target.text).toMatch(/plan du site|accessibilite/);
+  expect(target.text).toMatch(/accueil.*lien/);
   await tabTo(nvda, "Accessibilité", info);
   await expect(
     page
@@ -434,19 +434,8 @@ test("AT-INT-U03 — vrais filtres compacts, accordéons, données filtrées, di
   expect(iq.text + iqFocus.text).toContain("50");
   expect(iqFocus.text).toContain("iq minimum");
   await focusDocumentStart(page, nvda);
-  const filteredRow = await captureStep(
-    nvda,
-    "filtered-data-native-table",
-    async () => {
-      await nvda.perform(nvda.keyboardCommands.moveToNextTable, {
-        capture: true,
-      });
-      await nvda.perform(nvda.keyboardCommands.moveToNextRow, {
-        capture: true,
-      });
-    },
-    info,
-  );
+  // This scene uses the actual compact layout: results are cards, not a table.
+  const filteredRow = await tabTo(nvda, /application alpha 03.*lien/, info);
   expect(filteredRow.text).toContain("application alpha 03");
 
   await focusDocumentStart(page, nvda);

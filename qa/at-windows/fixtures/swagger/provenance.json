@@ -1,0 +1,61 @@
+{
+  "version": "5.32.13",
+  "acquisition": {
+    "source": "Existing exact backend dependency; no installation",
+    "version": "5.32.13"
+  },
+  "sources": [
+    {
+      "file": "backend/src/swagger-ui-accessibility.ts",
+      "sha256": "2de7b6cbb75963d3973844ee1b392fdfdfa82dbcc951bd140dd2fe7157715b16"
+    },
+    {
+      "file": "backend/src/swagger-documentation-language.ts",
+      "sha256": "015c1cdc1cb394d356a7d8f4ca15ee6c312680f38e04b6f8e01108c278269143"
+    },
+    {
+      "file": "backend/src/swagger-config.ts",
+      "sha256": "e5ad00fb31d69255a6960b610da087701ec33bfc37ef5c87c01bf28dcd1dc7d4"
+    },
+    {
+      "file": "backend/pnpm-lock.yaml",
+      "sha256": "2d117cefb5b5a4c74bc505c9222f8877fcce6988c2e13723e63a8dbc90338710"
+    }
+  ],
+  "files": [
+    {
+      "file": "swagger-ui-bundle.js",
+      "sha256": "5f3be5d9cf40cdd60dca0dafeaf8743fd858d1b3bb717bbdaebf7201303f63d7"
+    },
+    {
+      "file": "swagger-ui-standalone-preset.js",
+      "sha256": "e47158d71c0f499f51febd52f74a6c4970b2a7e6703fd3d79618bf588574647d"
+    },
+    {
+      "file": "swagger-ui.css",
+      "sha256": "9e617d9ac0afb0e430c11a17366de8624db7ce34c99ebd297443f0048ce30899"
+    },
+    {
+      "file": "LICENSE",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "file": "package.json",
+      "sha256": "ee06728c0a366c848e80dc630106f25bac8fa2ee76928a09179ba389c542293e"
+    },
+    {
+      "file": "index.html",
+      "sha256": "c9b907d5021e3848d77566c5243acd3c20347093ef67b7d05df901f823446a79"
+    },
+    {
+      "file": "openapi-synthetic.json",
+      "sha256": "d182defad034d1c8992e16fa0aa142b66333e2fc0ac2376fdb0e196999478f6c"
+    }
+  ],
+  "syntheticOnly": true,
+  "generatorSourcesUsed": true,
+  "backendApplicationCreated": false,
+  "databaseRead": false,
+  "oauthSubmitted": false,
+  "apiExecuteAllowed": false
+}

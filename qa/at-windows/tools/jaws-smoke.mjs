@@ -72,6 +72,9 @@ let browser;
 let context;
 let page;
 let browserPid;
+let launcherPid;
+let browserLaunchedAtUtc;
+let originalReaderPid;
 let stage = "initialisation";
 let nativeWitnessPassed = false;
 const timeline = [];
@@ -84,10 +87,42 @@ const markStage = (name) => {
 const focusScript = path.join(tools, "focus-browser-window.ps1");
 const focusDiagnostics = path.join(output, "firefox-focus-attempts.jsonl");
 try {
+  markStage("inspect-existing-jaws-and-approved-demo");
+  const { stdout: demoOutput } = await execFileAsync(
+    "powershell.exe",
+    [
+      "-NoProfile",
+      "-STA",
+      "-File",
+      path.join(tools, "prepare-jaws-demo.ps1"),
+      "-ContinueDemo",
+      ...(process.env.JAWS_ALLOW_INITIAL_RESTART_DEFER === "1"
+        ? ["-AllowDeferInitialRestart"]
+        : []),
+    ],
+    { timeout: 35_000, maxBuffer: 2 * 1024 * 1024 },
+  );
+  const demo = JSON.parse(demoOutput);
+  if (
+    demo.readyForNativeWitness !== true ||
+    !Number.isInteger(demo.readerPid) ||
+    demo.readerPid <= 0
+  ) {
+    throw new Error(
+      "The original authorised JAWS instance is not ready for its native witness.",
+    );
+  }
+  originalReaderPid = demo.readerPid;
+  await writeFile(
+    path.join(output, "jaws-native-instance.json"),
+    JSON.stringify(demo, null, 2),
+  );
   markStage("firefox-launch");
+  browserLaunchedAtUtc = new Date().toISOString();
   server = await firefox.launchServer({ headless: false, timeout: 60_000 });
-  browserPid = server.process().pid;
-  if (!browserPid) throw new Error("Firefox PID is unavailable.");
+  launcherPid = server.process().pid;
+  if (!launcherPid) throw new Error("Firefox launcher PID is unavailable.");
+  browserPid = launcherPid;
   browser = await firefox.connect(server.wsEndpoint());
   context = await browser.newContext({
     locale: "fr-FR",
@@ -109,7 +144,7 @@ try {
   // contributes to name/role assertions; this is not a keyboard conformance test.
   await page.getByRole("button", { name: label }).focus();
   markStage("native-firefox-foreground");
-  await execFileAsync(
+  const { stdout: focusOutput } = await execFileAsync(
     "powershell.exe",
     [
       "-NoProfile",
@@ -120,10 +155,44 @@ try {
       String(browserPid),
       "-ExpectedTitle",
       await page.title(),
+      "-BrowserExecutable",
+      firefox.executablePath(),
+      "-LaunchedAfterUtc",
+      browserLaunchedAtUtc,
       "-DiagnosticFile",
       focusDiagnostics,
     ],
     { timeout: 25_000 },
+  );
+  const focused = JSON.parse(focusOutput);
+  if (
+    focused.foregroundVerified !== true ||
+    focused.launcherPid !== launcherPid ||
+    !Number.isInteger(focused.browserPid) ||
+    focused.browserPid <= 0 ||
+    !Array.isArray(focused.identity?.chain) ||
+    !focused.identity.chain.some((entry) => entry.processId === launcherPid)
+  ) {
+    throw new Error(
+      "Native Firefox window identity/ancestry was not confirmed.",
+    );
+  }
+  // Windows Firefox starts a launcher process and a separate UI process. Only
+  // the verified UI PID owns the HWND used by all subsequent native captures.
+  browserPid = focused.browserPid;
+  await writeFile(
+    path.join(output, "firefox-native-identity.json"),
+    JSON.stringify(
+      {
+        at: new Date().toISOString(),
+        browserLaunchedAtUtc,
+        ...focused,
+        isNativeSpeech: false,
+        rgaaVerdict: null,
+      },
+      null,
+      2,
+    ),
   );
   const capture = async (caseId, action) => {
     await execFileAsync(
@@ -159,6 +228,14 @@ try {
     "JAWS-WITNESS-NATIVE-CURRENT-CONTROL",
     "CurrentControl",
   );
+  if (
+    before.readerPid !== originalReaderPid ||
+    after.readerPid !== originalReaderPid
+  ) {
+    throw new Error(
+      "JAWS changed instance between preparation and native witness.",
+    );
+  }
   const previous = before.rawSpeechHistory.replace(/\r\n/g, "\n");
   const current = after.rawSpeechHistory.replace(/\r\n/g, "\n");
   if (!current.startsWith(previous)) {
@@ -187,6 +264,8 @@ try {
     browser: "Firefox",
     browserVersion: browser.version(),
     browserPid,
+    launcherPid,
+    originalReaderPid,
     fixtureNonceWords: nonceWords,
     speechInjected: false,
     domAsSpeech: false,
@@ -211,11 +290,12 @@ try {
   const content = await runJawsContentCases({
     page,
     browserPid,
-    readerPid: after.readerPid,
+    readerPid: originalReaderPid,
     fixturesDirectory: path.join(tools, "../fixtures"),
     outputDirectory: path.join(output, "content-cases"),
     frozenCaptureScriptPath: path.join(tools, "capture-jaws-history.ps1"),
     focusBrowserScriptPath: path.join(tools, "focus-browser-window.ps1"),
+    maxContentMinutes: 18,
   });
   if (content.status !== "ten-cases-exercised-native-review-required")
     throw new Error(
@@ -231,6 +311,9 @@ try {
         stage,
         timeline,
         browserPid,
+        launcherPid,
+        browserLaunchedAtUtc,
+        originalReaderPid,
         nativeWitnessPassed,
         rgaaVerdict: null,
         error: {

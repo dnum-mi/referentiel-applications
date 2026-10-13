@@ -99,6 +99,12 @@ test("AT-FORM-Markdown — neuf noms, trois fonctions, modes puis retour", async
     info,
   );
   expect(preview.text).toContain("colonne");
+  await captureStep(
+    nvda,
+    "leave-preview-table-for-mode-controls",
+    () => nvda.press("Shift+Tab", { capture: true }),
+    info,
+  );
   await shiftTabTo(nvda, "Éditer le texte en format markdown", info);
   await activateCurrent(nvda, info, "markdown-return-edit-mode");
   await expect(page.getByTestId("markdown-tab-edit")).toHaveAttribute(
@@ -122,7 +128,7 @@ test("AT-FORM-Report — vrai dialogue, erreur locale, POST500 puis succès simu
   await attachIdentity(nvda, browser.version(), info);
   await focusDocumentStart(page, nvda);
   await tabTo(nvda, "Signaler une application manquante", info);
-  await activateCurrent(nvda, info, "report-real-dialog-open");
+  const opening = await activateCurrent(nvda, info, "report-real-dialog-open");
   const dialog = page.getByRole("dialog", {
     name: "Signaler une application manquante",
     exact: true,
@@ -134,8 +140,9 @@ test("AT-FORM-Report — vrai dialogue, erreur locale, POST500 puis succès simu
     () => nvda.perform(nvda.keyboardCommands.reportCurrentFocus),
     info,
   );
-  expect(opened.text).toMatch(/dialogue|dialog/);
-  expect(opened.text).toContain("signaler une application manquante");
+  expect(opening.text).toMatch(/dialogue|dialog/);
+  expect(opening.text).toContain("signaler une application manquante");
+  expect(opened.text).toMatch(/fermer.*bouton/);
   await tabTo(nvda, "Envoyer", info);
   const empty = await activateCurrent(nvda, info, "report-empty-validation");
   await expect(dialog.getByRole("alert")).toContainText(
@@ -175,7 +182,7 @@ test("AT-FORM-Notifications — panneau, deux rôles, vrai aperçu e-mail puis f
   await mountFormsScene(page, "notifications");
   await attachIdentity(nvda, browser.version(), info);
   await focusDocumentStart(page, nvda);
-  const trigger = await tabTo(nvda, "Notifications", info);
+  const trigger = await tabTo(nvda, /notifications.*bouton/, info);
   expect(trigger.text).toContain("bouton");
   expect(trigger.text).toContain("non lue");
   await activateCurrent(nvda, info, "notification-panel-open");
@@ -187,7 +194,11 @@ test("AT-FORM-Notifications — panneau, deux rôles, vrai aperçu e-mail puis f
   const emailButton = await tabTo(nvda, "Courriel fictif de test", info);
   expect(emailButton.text).toContain("bouton");
   expect(emailButton.text).toContain("voir l");
-  await activateCurrent(nvda, info, "notification-real-email-preview");
+  const opening = await activateCurrent(
+    nvda,
+    info,
+    "notification-real-email-preview",
+  );
   const dialog = page.getByRole("dialog", {
     name: "Courriel synthétique pour NVDA",
     exact: true,
@@ -199,7 +210,8 @@ test("AT-FORM-Notifications — panneau, deux rôles, vrai aperçu e-mail puis f
     () => nvda.perform(nvda.keyboardCommands.reportCurrentFocus),
     info,
   );
-  expect(title.text).toContain("courriel synthetique pour nvda");
+  expect(opening.text).toContain("courriel synthetique pour nvda");
+  expect(title.text).toMatch(/fermer.*bouton/);
   await focusDocumentStart(page, nvda);
   const email = await captureStep(
     nvda,
@@ -222,7 +234,7 @@ test("AT-FORM-Notifications — panneau, deux rôles, vrai aperçu e-mail puis f
   await expect(bell).toHaveAccessibleName("Notifications, 1 non lue");
   network.formsState.notificationMode = "empty";
   await page.evaluate(() => window.__rgaaFormsHost?.refreshNotifications());
-  await tabTo(nvda, "Notifications", info);
+  await tabTo(nvda, /notifications.*bouton/, info);
   await activateCurrent(nvda, info, "notification-empty-panel-open");
   await expect(
     page.getByTestId("notification-bell-panel").getByRole("status"),

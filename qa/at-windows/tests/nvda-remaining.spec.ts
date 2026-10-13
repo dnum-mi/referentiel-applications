@@ -15,13 +15,18 @@ import {
   simulatedRemainingNetwork,
 } from "./remaining-interactive-utils.js";
 
+// NVDA's French synthesizer separates the two words of the brand name. Preserve
+// the full field name while accepting either spoken segmentation of EcoIndex.
+const ecoIndexFieldName = /\burl cible eco\s*index\b/;
+
 // The native Tab key is the only action that changes focus. The DOM selects a
 // particular repeated control; its native name must still be spoken and recorded.
 async function reachControl(
   nvda: NVDAPlaywright,
   target: Locator,
-  name: string,
+  name: string | RegExp,
   info: TestInfo,
+  direction: "Tab" | "Shift+Tab" = "Tab",
 ) {
   await expect(target).toBeVisible();
   let arrival: Awaited<ReturnType<typeof captureStep>> | undefined;
@@ -33,6 +38,34 @@ async function reachControl(
           element.contains(document.activeElement),
       )
     ) {
+      if (index === 0) {
+        // A DOM focus retained during browse navigation is not proof that NVDA
+        // will activate it. Rejoin it with a native focus round trip first.
+        await captureStep(
+          nvda,
+          "remaining-focus-round-trip-away",
+          () =>
+            nvda.press(direction === "Tab" ? "Shift+Tab" : "Tab", {
+              capture: true,
+            }),
+          info,
+        );
+        arrival = await captureStep(
+          nvda,
+          "remaining-focus-round-trip-return",
+          () => nvda.press(direction, { capture: true }),
+          info,
+        );
+        await expect
+          .poll(() =>
+            target.evaluate(
+              (element) =>
+                element === document.activeElement ||
+                element.contains(document.activeElement),
+            ),
+          )
+          .toBe(true);
+      }
       const observed = await captureStep(
         nvda,
         `remaining-focus-${index}`,
@@ -47,17 +80,21 @@ async function reachControl(
       // and the current focus, never speech from previously visited controls.
       const phrases = [...(arrival?.phrases ?? []), ...observed.phrases];
       const result = { phrases, text: normalizeSpeech(phrases.join(" ")) };
-      expect(result.text).toContain(normalizeSpeech(name));
+      if (typeof name === "string")
+        expect(result.text).toContain(normalizeSpeech(name));
+      else expect(result.text).toMatch(name);
       return result;
     }
     arrival = await captureStep(
       nvda,
-      `remaining-native-tab-${index}`,
-      () => nvda.press("Tab", { capture: true }),
+      `remaining-native-${direction === "Tab" ? "tab" : "shift-tab"}-${index}`,
+      () => nvda.press(direction, { capture: true }),
       info,
     );
   }
-  throw new Error(`Commande réelle non atteinte par Tab natif : ${name}`);
+  throw new Error(
+    `Commande réelle non atteinte par ${direction} natif : ${String(name)}`,
+  );
 }
 
 test.use({ serviceWorkers: "block" });
@@ -105,7 +142,12 @@ test("AT-REM-Conformites — six formulaires, homologation conditionnelle, alert
       const target = checkboxes.includes(id)
         ? dialog.getByRole("checkbox", { name, exact: true })
         : dialog.getByTestId(id);
-      const field = await reachControl(nvda, target, name, info);
+      const field = await reachControl(
+        nvda,
+        target,
+        id === "ecoindex-target-url-input" ? ecoIndexFieldName : name,
+        info,
+      );
       if (checkboxes.includes(id)) {
         expect(field.text).toMatch(/case.*cocher|interrupteur/);
         if (id === "compliance-dima-hno")
@@ -146,7 +188,7 @@ test("AT-REM-Conformites — six formulaires, homologation conditionnelle, alert
       await reachControl(
         nvda,
         dialog.getByTestId("ecoindex-target-url-input"),
-        "URL cible EcoIndex",
+        ecoIndexFieldName,
         info,
       );
       await nvda.press("Control+a", { capture: true });
@@ -302,7 +344,15 @@ test("AT-REM-Permissions — trois cycles, priorité pressée, signalements et a
     }
   }
   const priority = page.getByTestId(prefix + "PriorityRestart");
-  await reachControl(nvda, priority, "Écriture de la priorisation", info);
+  // Metadata is after this earlier column. Reverse through the real table
+  // controls instead of leaving the document to Firefox's chrome with Tab.
+  await reachControl(
+    nvda,
+    priority,
+    "Écriture de la priorisation",
+    info,
+    "Shift+Tab",
+  );
   await activateCurrent(nvda, info, "priority-right-enable");
   await expect(priority).toHaveAttribute("aria-pressed", "true");
   const pressed = await captureStep(
@@ -461,15 +511,21 @@ test("AT-REM-Wizard — étapes, validation, champs dynamiques et Annuler-Repren
   const org = page.getByTestId("application-moa-organization");
   await reachControl(nvda, org.getByRole("textbox"), "Organisation MOA", info);
   await nvda.type("org", { capture: false });
-  await expect(org.getByRole("combobox")).toBeEnabled();
+  const organisationChoices = org.getByRole("combobox");
+  // The select is initially enabled before the debounced search begins. Wait
+  // for the controlled result as well, so Tab cannot skip it during loading.
+  await expect(
+    organisationChoices.locator('option[value="org-synthetic-001"]'),
+  ).toHaveCount(1);
+  await expect(organisationChoices).toBeEnabled();
   await reachControl(
     nvda,
-    org.getByRole("combobox"),
+    organisationChoices,
     "Choisir une organisation",
     info,
   );
   await nvda.press("End", { capture: false });
-  await expect(org.getByRole("combobox")).toHaveValue("org-synthetic-001");
+  await expect(organisationChoices).toHaveValue("org-synthetic-001");
   await reachControl(
     nvda,
     page.getByTestId("application-moa-firstname"),

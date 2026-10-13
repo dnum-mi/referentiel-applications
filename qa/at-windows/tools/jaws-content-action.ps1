@@ -16,6 +16,9 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 if ([Environment]::OSVersion.Platform -ne [PlatformID]::Win32NT) { throw 'Windows required.' }
+# pwsh can pass its module path to the Windows PowerShell 5.1 child. Resolve
+# the installed Utility module from this process instead of inheriting it.
+Import-Module (Join-Path $PSHOME 'Modules/Microsoft.PowerShell.Utility/Microsoft.PowerShell.Utility.psd1') -ErrorAction Stop
 if ([Threading.Thread]::CurrentThread.ApartmentState -ne 'STA') { throw 'Run with powershell.exe -STA.' }
 Add-Type -AssemblyName System.Windows.Forms
 $parseTokens = $null

@@ -22,6 +22,7 @@ export default tseslint.config(
       "keycloak/**",
       "**/swagger.yaml",
       "**/realm-export.json",
+      "qa/at-windows/fixtures/**", // exact third-party bundles and generated audit fixtures
     ],
   },
 

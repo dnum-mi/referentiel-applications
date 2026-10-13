@@ -349,6 +349,21 @@ export async function focusDocumentStart(page: Page, nvda: NVDAPlaywright) {
     throw new Error("Mode navigation NVDA non confirmé dans le document.");
   await nvda.press("Control+Home", { capture: true });
   await assertSameDocument("début du document");
+  if (phase === "interactive") {
+    // Ctrl+Home moves the browse cursor but does not necessarily move DOM
+    // focus. This native round trip joins the tab sequence at the document's
+    // first control instead of skipping it on the first test action.
+    await captureStep(
+      nvda,
+      "prepare-initial-tab-position",
+      async () => {
+        await nvda.press("Tab", { capture: true });
+        await nvda.press("Shift+Tab", { capture: true });
+      },
+      info,
+    );
+    await assertSameDocument("position initiale de tabulation");
+  }
 }
 
 export async function captureStep(

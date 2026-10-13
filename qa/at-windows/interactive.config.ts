@@ -21,6 +21,9 @@ export default defineConfig({
     "nvda-remaining.spec.ts",
     "nvda-shared.spec.ts",
     "nvda-application.spec.ts",
+    "nvda-operations.spec.ts",
+    "nvda-exports.spec.ts",
+    "nvda-swagger.spec.ts",
   ],
   outputDir: caseId
     ? `./test-results/interactive/${caseId}`

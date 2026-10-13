@@ -132,6 +132,15 @@ export async function simulatedApplicationNetwork(page: Page) {
     )
       data = organization;
     else if (
+      method === "DELETE" &&
+      url.pathname === `/api/v2/applications/${alpha}/actors/${actor.id}`
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 650));
+      status = 500;
+      data = {
+        message: "Suppression d'acteur refusée pour le test synthétique",
+      };
+    } else if (
       ["POST", "PATCH"].includes(method) &&
       (url.pathname === `/api/v2/applications/${alpha}/actors` ||
         url.pathname === `/api/v2/applications/${alpha}/actors/${actor.id}`)
