@@ -4,6 +4,7 @@ import { expect } from "@playwright/test";
 import {
   attachIdentity,
   captureStep,
+  focusDocumentStart,
   installOfflinePage,
   normalizeSpeech,
   test,
@@ -104,22 +105,42 @@ for (const graphic of graphics) {
     );
     await installOfflinePage(page, graphic.id);
     await attachIdentity(nvda, browser.version(), info);
-    await nvda.navigateToWebContent({ capture: false });
+    const entry = await captureStep(
+      nvda,
+      "document-start",
+      () => focusDocumentStart(page, nvda),
+      info,
+    );
+    // The first SVG may itself be the document's first accessible item.
+    // In that case, "next graphic" would skip the item under examination.
+    const startsOnGraphic =
+      entry.text.includes(normalizeSpeech(graphic.name)) &&
+      entry.phrases.some((phrase) =>
+        /,\s*(?:graphique|image)(?:[,.]|$)/u.test(phrase),
+      );
     const image = await captureStep(
       nvda,
       "graphic-reading",
       () =>
-        nvda.perform(nvda.keyboardCommands.moveToNextGraphic, {
-          capture: true,
-        }),
+        nvda.perform(
+          startsOnGraphic
+            ? nvda.keyboardCommands.readLine
+            : nvda.keyboardCommands.moveToNextGraphic,
+          {
+            capture: true,
+          },
+        ),
       info,
     );
-    expect(image.text).toContain(normalizeSpeech(graphic.name));
-    expect(image.text).toMatch(/graphique|image/);
+    const spokenImage = startsOnGraphic
+      ? `${entry.text} ${image.text}`
+      : image.text;
+    expect(spokenImage).toContain(normalizeSpeech(graphic.name));
+    expect(spokenImage).toMatch(/graphique|image/);
     for (const meaning of graphic.description)
-      expect(image.text).toContain(normalizeSpeech(meaning));
+      expect(spokenImage).toContain(normalizeSpeech(meaning));
     if (graphic.fallback)
-      expect(image.text).toContain(normalizeSpeech(graphic.fallback));
+      expect(spokenImage).toContain(normalizeSpeech(graphic.fallback));
     await info.attach("fixture-manifest", {
       path: fileURLToPath(
         new URL("../fixtures/manifest.json", import.meta.url),
@@ -187,15 +208,29 @@ for (const document of documents) {
     );
     await installOfflinePage(page, document.id);
     await attachIdentity(nvda, browser.version(), info);
-    info.setTimeout(240_000);
+    info.setTimeout(600_000);
     const reading = await captureStep(
       nvda,
       "document-linear-reading",
       async () => {
-        await nvda.navigateToWebContent({ capture: true });
-        await nvda.perform(nvda.keyboardCommands.sayAll, {
-          capture: true,
-        });
+        await focusDocumentStart(page, nvda);
+        // NVDA Say All can pause longer than the SDK's one-second capture
+        // window. Read each line natively until the generator's real footer.
+        let reachedFooter = false;
+        for (let line = 0; line < 450; line++) {
+          await nvda.press("ArrowDown", { capture: true });
+          if (
+            normalizeSpeech(await nvda.lastSpokenPhrase()).includes(
+              "les informations reproduisent le perimetre du format correspondant",
+            )
+          ) {
+            reachedFooter = true;
+            break;
+          }
+        }
+        expect(reachedFooter, "Fin du document réellement lue par NVDA").toBe(
+          true,
+        );
       },
       info,
     );
@@ -222,7 +257,7 @@ for (const document of documents) {
     for (const value of oracle.requiredNativeText)
       expect(reading.text).toContain(normalizeSpeech(String(value)));
     if (document.id !== "AT-D02") {
-      await nvda.navigateToWebContent({ capture: false });
+      await focusDocumentStart(page, nvda);
       const cells = await captureStep(
         nvda,
         "first-table-header-association",

@@ -178,6 +178,14 @@ export const normalizeSpeech = (text: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
+/** Focus real document content without tabbing out of pages that have no links. */
+export async function focusDocumentStart(page: Page, nvda: NVDAPlaywright) {
+  await page.bringToFront();
+  await page.locator("body").click({ position: { x: 1, y: 1 } });
+  await nvda.perform(nvda.keyboardCommands.exitFocusMode, { capture: false });
+  await nvda.press("Control+Home", { capture: true });
+}
+
 export async function captureStep(
   nvda: NVDAPlaywright,
   step: string,
