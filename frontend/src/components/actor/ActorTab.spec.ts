@@ -50,11 +50,16 @@ async function renderTab() {
     global: {
       stubs: {
         RefAppTable: {
+          inheritAttrs: false,
           props: ["items", "columns"],
           template:
             '<table><thead><tr><th v-for="column in columns" :key="column.field" :data-field="column.field">{{ column.header }}<slot v-if="column.field === \'Groupe\'" name="header-Groupe" /></th></tr></thead><tbody><tr v-for="item in items" :key="item.id"><td><slot name="body-Sélection" :data="item" /></td><td><slot name="body-Actions" :data="item" /></td></tr></tbody></table>',
         },
-        ActorForm: { props: ["errorMessage"], emits: ["submit"], template: '<div>Formulaire<p role="alert">{{ errorMessage }}</p></div>' },
+        ActorForm: {
+          props: ["errorMessage"],
+          emits: ["submit", "cancel"],
+          template: '<div>Formulaire<p role="alert">{{ errorMessage }}</p></div>',
+        },
         DsfrModal: { props: ["opened"], template: '<div v-if="opened"><slot /></div>' },
         DeleteConfirmationModal: true,
       },
@@ -123,5 +128,21 @@ describe("ActorTab — sélection et focus", () => {
       "Erreur lors de la sauvegarde de l’acteur. Votre saisie est conservée.",
     );
     expect(wrapper.get('[role="alert"]').text()).toBe("Erreur lors de la sauvegarde de l’acteur. Votre saisie est conservée.");
+  });
+
+  it("retrouve le bouton de l'acteur après une sauvegarde refusée puis l'annulation", async () => {
+    updateActor.mockResolvedValue({ response: { ok: false } });
+    const wrapper = await renderTab();
+    const original = wrapper.findAll('[data-testid="actor-edit-btn"]')[1];
+    (original.element as HTMLButtonElement).focus();
+    await original.trigger("click");
+    wrapper.findComponent(ActorForm).vm.$emit("submit", actors[1]);
+    await flushPromises();
+    expect(original.element.isConnected).toBe(false);
+    expect(wrapper.findComponent(ActorForm).props("errorMessage")).toContain("Votre saisie est conservée");
+    wrapper.findComponent(ActorForm).vm.$emit("cancel");
+    await flushPromises();
+    expect(wrapper.findComponent(ActorForm).exists()).toBe(false);
+    expect(wrapper.findAll('[data-testid="actor-edit-btn"]')[1].element).toHaveFocus();
   });
 });

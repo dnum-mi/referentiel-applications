@@ -129,6 +129,25 @@ function rememberTrigger(event: Event) {
   lastTrigger.value = (event.currentTarget as HTMLElement) ?? null;
 }
 
+async function restoreActorFocus(actorId?: string) {
+  await nextTick();
+  const selectedRow = Array.from(actorTable.value?.querySelectorAll<HTMLInputElement>('input[type="checkbox"]') ?? [])
+    .find((input) => input.value === actorId)
+    ?.closest("tr");
+  const trigger = lastTrigger.value?.isConnected
+    ? lastTrigger.value
+    : selectedRow?.querySelector<HTMLElement>('[data-testid="actor-edit-btn"]') ||
+      actorActions.value?.querySelector<HTMLElement>('[data-testid="actor-add-btn"]');
+  trigger?.focus();
+}
+
+async function closeActorModal() {
+  const actorId = actorModal.selectedItem.value?.id;
+  actorModal.closeModal();
+  // Une tentative de sauvegarde remonte la liste et peut remplacer le déclencheur.
+  await restoreActorFocus(actorId);
+}
+
 async function handleSaveActors(actor: CreateActorDto & { id?: string }) {
   formError.value = "";
   loading.value = true;
@@ -155,15 +174,7 @@ async function handleSaveActors(actor: CreateActorDto & { id?: string }) {
     loading.value = false;
   }
   if (saved) {
-    await nextTick();
-    const selectedRow = Array.from(actorTable.value?.querySelectorAll<HTMLInputElement>('input[type="checkbox"]') ?? [])
-      .find((input) => input.value === actor.id)
-      ?.closest("tr");
-    const trigger = lastTrigger.value?.isConnected
-      ? lastTrigger.value
-      : selectedRow?.querySelector<HTMLElement>('[data-testid="actor-edit-btn"]') ||
-        actorActions.value?.querySelector<HTMLElement>('[data-testid="actor-add-btn"]');
-    trigger?.focus();
+    await restoreActorFocus(actor.id);
   }
 }
 
@@ -412,7 +423,7 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
     :opened="actorModal.isModalOpen.value || actorModal.isCreateModalOpen.value"
     :title="actorModal.isCreateModalOpen.value ? 'Ajouter un acteur' : 'Modifier l\'acteur'"
     data-testid="actor-modal"
-    @close="actorModal.closeModal"
+    @close="closeActorModal"
   >
     <ActorForm
       v-bind="{ application, initialData: actorModal.selectedItem.value ?? undefined }"
@@ -421,7 +432,7 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
       :actor-types="actorTypesList"
       data-testid="actor-form-container"
       @submit="handleSaveActors"
-      @cancel="actorModal.closeModal"
+      @cancel="closeActorModal"
     ></ActorForm>
   </DsfrModal>
 
