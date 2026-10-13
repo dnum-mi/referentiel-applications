@@ -27,7 +27,7 @@ $processes = @(Get-Process -Name nvda,firefox -ErrorAction SilentlyContinue | Fo
   processes = $processes
 } | ConvertTo-Json -Depth 5 -Compress
 `;
-  const { stdout } = await execFileAsync("powershell.exe", [
+  const { stdout } = await execFileAsync("pwsh.exe", [
     "-NoProfile",
     "-NonInteractive",
     "-Command",
