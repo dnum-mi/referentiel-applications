@@ -44,10 +44,36 @@ try {
   # This is the actual endpoint and parameter mapping used by the official site.
   # Version selector value 26 denotes JAWS 2025; enu denotes its multilingual setup.
   $apiResponse = Invoke-WebRequest -Uri $sourceApi -UserAgent 'RefApp-accessibility-source-review' -TimeoutSec 30
-  $releaseData = $apiResponse.Content | ConvertFrom-Json
-  if ($releaseData -is [string]) { $releaseData = $releaseData | ConvertFrom-Json }
+  # The actual endpoint uses Content-Type "PreviousVersions; charset=utf-8".
+  # PowerShell can consequently expose Content as byte[]. A pipeline would
+  # enumerate those bytes and parse individual numbers instead of the JSON body.
+  $apiContent = $apiResponse.Content
+  if ($apiContent -is [byte[]]) {
+    $apiText = [Text.Encoding]::UTF8.GetString($apiContent)
+  } elseif ($apiContent -is [string]) {
+    $apiText = $apiContent
+  } else {
+    throw 'Le corps API n’est ni du texte ni un tableau d’octets UTF-8.'
+  }
+  $apiText = $apiText.TrimStart([char]0xFEFF)
+  $report.apiResponse = [ordered]@{
+    contentType = $apiResponse.Headers['Content-Type']; contentRuntimeType = $apiContent.GetType().FullName
+    decodedTextLength = $apiText.Length
+  }
+  $releaseData = ConvertFrom-Json -InputObject $apiText
+  if ($releaseData -is [string]) { $releaseData = ConvertFrom-Json -InputObject $releaseData }
+  $report.apiResponse.decodedEntryCount = @($releaseData).Count
+  $report.apiResponse.entryRuntimeTypes = @($releaseData | ForEach-Object {
+    if ($null -eq $_) { 'null' } else { $_.GetType().FullName }
+  })
   $selected = @($releaseData | Where-Object {
-    $_.InstallerLocationHTTP -eq $downloadUrl -and $_.ProductMajor -eq 2025 -and $_.ReleaseType -eq 1
+    if ($null -eq $_) { return $false }
+    $properties = $_.PSObject.Properties
+    $urlProperty = $properties['InstallerLocationHTTP']
+    $majorProperty = $properties['ProductMajor']
+    $typeProperty = $properties['ReleaseType']
+    $null -ne $urlProperty -and $null -ne $majorProperty -and $null -ne $typeProperty -and
+      $urlProperty.Value -eq $downloadUrl -and $majorProperty.Value -eq 2025 -and $typeProperty.Value -eq 1
   })
   $officialMatch = $selected.Count -eq 1
   $report.checks += [ordered]@{ name = 'exact package linked by official JAWS 2025 release API'; passed = $officialMatch }

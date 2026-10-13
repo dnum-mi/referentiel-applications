@@ -1,0 +1,9 @@
+{
+  "package": "@iconify-json/ri",
+  "version": "1.2.10",
+  "source": "https://registry.npmjs.org/@iconify-json/ri/-/ri-1.2.10.tgz",
+  "integrity": "sha512-WWMhoncVVM+Xmu9T5fgu2lhYRrKTEWhKk3Com0KiM111EeEsRLiASjpsFKnC/SrB6covhUp95r2mH8tGxhgd5Q==",
+  "license": "Apache-2.0",
+  "iconsSha256": "4a0e1c82c0faf914881f4776dc1bdfb4efcde4c28f249ceec17bd11c1d749994",
+  "purpose": "Vraies icônes Remix fournies localement aux composants Iconify ; aucune requête externe effectuée par les tests"
+}

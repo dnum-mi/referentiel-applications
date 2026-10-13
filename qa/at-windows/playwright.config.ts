@@ -2,6 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 const phase = process.env.RGAA_PHASE === "smoke" ? "smoke" : "cases";
 export default defineConfig({
   testDir: "./tests",
+  testMatch: ["nvda-smoke.spec.ts", "nvda-cases.spec.ts"],
   outputDir: `./test-results/${phase}`,
   fullyParallel: false,
   workers: 1,

@@ -115,21 +115,25 @@ for (const graphic of graphics) {
     // In that case, "next graphic" would skip the item under examination.
     const startsOnGraphic =
       entry.text.includes(normalizeSpeech(graphic.name)) &&
-      entry.phrases.some((phrase) =>
-        /,\s*(?:graphique|image)(?:[,.]|$)/u.test(phrase),
-      );
+      /\b(?:graphique|image)\b/u.test(entry.text);
     const image = await captureStep(
       nvda,
       "graphic-reading",
-      () =>
-        nvda.perform(
+      async () => {
+        await nvda.perform(
           startsOnGraphic
             ? nvda.keyboardCommands.readLine
             : nvda.keyboardCommands.moveToNextGraphic,
           {
             capture: true,
           },
-        ),
+        );
+        // Browse-mode quick navigation can omit an object's description.
+        // NVDA's native report-current-object command reads that description.
+        await nvda.perform(nvda.keyboardCommands.reportCurrentObject, {
+          capture: true,
+        });
+      },
       info,
     );
     const spokenImage = startsOnGraphic

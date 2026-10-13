@@ -128,7 +128,11 @@ test.use({
         espeak: { voice: "fr", rate: 70, volume: 100 },
       },
       presentation: { reportObjectDescriptions: true },
-      virtualBuffers: { autoSayAllOnPageLoad: false, useScreenLayout: false },
+      virtualBuffers: {
+        autoSayAllOnPageLoad: false,
+        useScreenLayout: false,
+        passThroughAudioIndication: false,
+      },
     },
   },
 });
@@ -181,13 +185,41 @@ export const normalizeSpeech = (text: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
-/** Focus real document content without tabbing out of pages that have no links. */
+/** Enter the document using Firefox's native frame navigation, without clicking a control. */
 export async function focusDocumentStart(page: Page, nvda: NVDAPlaywright) {
-  // Keep the SDK's native foreground-window check and focus-mode workaround.
-  // Then repair its final Tab when the document has no focusable item.
-  await nvda.navigateToWebContent({ capture: false });
-  await page.locator("body").click({ position: { x: 1, y: 1 } });
-  await nvda.perform(nvda.keyboardCommands.exitFocusMode, { capture: false });
+  // A body click can toggle the first <summary>, and Tab can leave a document
+  // with no focusable elements. Neither is a neutral setup action for these scenes.
+  await page.bringToFront();
+  const title = normalizeSpeech(await page.title());
+  let browserFocused = false;
+  for (let attempt = 0; attempt < 10; attempt++) {
+    await nvda.perform(nvda.keyboardCommands.reportTitle, { capture: true });
+    if (normalizeSpeech(await nvda.lastSpokenPhrase()).includes(title)) {
+      browserFocused = true;
+      break;
+    }
+    await nvda.press("Alt+Escape", { capture: false });
+  }
+  if (!browserFocused)
+    throw new Error("Firefox n’a pas le premier plan natif.");
+  await nvda.press("Control+l", { capture: false });
+  await nvda.press("F6", { capture: false });
+  // Escape can close an application dialog. Use NVDA's own mode toggle and
+  // require its spoken French mode confirmation instead.
+  let browseMode = false;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    await nvda.perform(nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode, {
+      capture: true,
+    });
+    if (
+      normalizeSpeech(await nvda.lastSpokenPhrase()).includes("mode navigation")
+    ) {
+      browseMode = true;
+      break;
+    }
+  }
+  if (!browseMode)
+    throw new Error("Mode navigation NVDA non confirmé dans le document.");
   await nvda.press("Control+Home", { capture: true });
 }
 

@@ -55,6 +55,14 @@ if (
   manifest.capturedStyles.sha256
 )
   throw new Error("CSS de rendu altérée.");
+const icons = JSON.parse(
+  await readFile(path.join(fixtures, "ri-provenance.json"), "utf8"),
+);
+if (
+  digest(await readFile(path.join(fixtures, "ri-icons.json"))) !==
+  icons.iconsSha256
+)
+  throw new Error("Copie des icônes de test altérée.");
 console.log(
   JSON.stringify({
     status: "verified",

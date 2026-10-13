@@ -1,6 +1,6 @@
 # Restitution native NVDA / Firefox
 
-Ce pilote exécute NVDA 2026.2 en français avec Firefox visible sur un runner GitHub Windows Server 2022 x64. Il contrôle les annonces de sept figures et trois alternatives HTML produites par les vrais composants et générateurs de RefApp. Les données sont entièrement fictives ; aucune base, API métier, session RefApp ou donnée locale n'est transmise au runner.
+Ce pilote exécute NVDA 2026.2 en français avec Firefox visible sur un runner GitHub Windows Server 2022 x64. Il contrôle les annonces de sept figures, trois alternatives HTML et des interactions des composants de RefApp. Les données sont entièrement fictives ; aucune base, API métier, session RefApp ou donnée locale n'est transmise au runner.
 
 ## Exécution
 
@@ -16,6 +16,10 @@ Les annonces sont les messages `speak` du protocole Remote natif de NVDA captur�
 
 Les figures sont des copies du DOM des vrais composants, rendus avec des réponses GET fictives. Les documents sont les sorties exactes des générateurs alimentés par des objets fictifs. Les manifestes, entrées et oracles documentent ce périmètre. Aucun gestionnaire d'événement Vue n'est conservé dans ces copies statiques : elles vérifient la restitution des images et documents, pas les interactions de RGAA 7.1.2. Les bitmaps des canvas ne sont pas redessinés dans ce pilote.
 
+Le job indépendant `nvda-interactive` sert le client du checkout produit avec Vite et monte ses composants Vue réels. Les boutons, formulaires, graphiques et gestionnaires d'événements sont exécutés. Les réponses de l'API sont interceptées, y compris les erreurs et écritures simulées ; les autres requêtes métier sont bloquées. Les icônes proviennent d'une copie du paquet public dont la licence et la provenance sont conservées dans `fixtures/ri-*`. Les annonces restent celles de NVDA ; les assertions DOM complémentaires vérifient l'effet concret de l'action. Le code de montage ne constitue pas une preuve de fonctionnement d'une API réelle.
+
+Le placement initial du curseur passe par le titre natif de Firefox, `Ctrl+L`, `F6` et la confirmation parlée du mode navigation NVDA. Il évite un clic qui pourrait activer un bouton ou refermer un accordéon. Pour les SVG, la lecture rapide est complétée par la commande NVDA de lecture de l'objet courant, afin d'entendre sa description. Ces commandes sont décrites dans le [guide NVDA](https://download.nvaccess.org/documentation/userGuide.html#ObjectNavigation) et les [raccourcis Firefox](https://support.mozilla.org/en-US/kb/keyboard-shortcuts-perform-firefox-tasks-quickly).
+
 Les contrôles locaux du pilote, sans démarrer NVDA, sont :
 
 ```sh
@@ -29,7 +33,7 @@ L'exécution des essais exige Windows, GitHub Actions et `RGAA_ALLOW_WINDOWS_AT=
 
 ## Portée des résultats
 
-Les premiers cas contribuent aux tests RGAA 1.3.8, 1.6.6, 1.6.8 et 13.3.1. Ils ne produisent pas automatiquement un taux de conformité. La [base RGAA](https://accessibilite.numerique.gouv.fr/methode/environnement-de-test/) inclut également JAWS et VoiceOver/Safari ; les variantes et interactions non exercées restent à qualifier séparément.
+Les lectures de contenu contribuent aux tests RGAA 1.3.8, 1.6.6, 1.6.8 et 13.3.1. Les cas interactifs contribuent à 7.1.2 et aux alternatives des graphiques. Ils ne produisent pas automatiquement un taux de conformité. La [base RGAA](https://accessibilite.numerique.gouv.fr/methode/environnement-de-test/) inclut également JAWS et VoiceOver/Safari ; les variantes et interactions non exercées restent à qualifier séparément.
 
 Windows Server 2022 est pris en charge par le [guide NVDA](https://download.nvaccess.org/documentation/userGuide.html). Firefox installé par [Playwright](https://playwright.dev/docs/browsers#firefox) est un build patché ; sa version effective est enregistrée et cette différence avec une installation Mozilla standard doit rester déclarée dans l'audit.
 

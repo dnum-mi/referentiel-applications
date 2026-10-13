@@ -6,10 +6,11 @@
   "scripts": {
     "type-check": "tsc --noEmit",
     "lint": "eslint .",
-    "format:check": "prettier package.json pnpm-workspace.yaml tsconfig.json eslint.config.mjs playwright.config.ts tests tools --check",
+    "format:check": "prettier package.json pnpm-workspace.yaml tsconfig.json eslint.config.mjs playwright.config.ts interactive.config.ts tests tools --check",
     "test:smoke": "playwright test tests/nvda-smoke.spec.ts",
     "test:cases": "playwright test tests/nvda-cases.spec.ts",
-    "test:all": "playwright test"
+    "test:all": "playwright test",
+    "test:interactive": "playwright test --config interactive.config.ts"
   },
   "devDependencies": {
     "@guidepup/guidepup": "0.35.0",
