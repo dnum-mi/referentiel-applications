@@ -13,7 +13,29 @@ test("Témoin réel : nom accessible, rôle français et activation annoncée pa
   browser,
   nvda,
 }, info) => {
-  const nonce = randomBytes(6).toString("hex");
+  // Real speech splits mixed hexadecimal letters and digits into extra words.
+  // An unpredictable sequence of ordinary words keeps the witness comparable.
+  const words = [
+    "abricot",
+    "banane",
+    "cerise",
+    "datte",
+    "figue",
+    "goyave",
+    "kiwi",
+    "litchi",
+    "mangue",
+    "melon",
+    "mure",
+    "olive",
+    "orange",
+    "pomme",
+    "prune",
+    "raisin",
+  ];
+  const nonce = [...randomBytes(8)]
+    .map((byte) => words[byte % words.length])
+    .join(" ");
   const label = `Témoin parlé ${nonce}`;
   await installOfflinePage(
     page,
