@@ -1,0 +1,2 @@
+# Keep exact bytes of generated HTML, including embedded CSV line endings.
+fixtures/** -text
