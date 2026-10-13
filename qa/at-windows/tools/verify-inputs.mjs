@@ -46,6 +46,16 @@ if (manifest.scenes.length !== 7 || documents.documents.length !== 3)
   throw new Error(
     "Les 7 figures et 3 documents attendus ne sont pas présents.",
   );
+if (documents.oracles.length !== 3)
+  throw new Error("Les trois oracles documentaires sont requis.");
+for (const item of documents.oracles) {
+  if (
+    item.file !== `${item.id}.oracle.json` ||
+    !["AT-D01", "AT-D02", "AT-D03"].includes(item.id) ||
+    digest(await readFile(path.join(fixtures, item.file))) !== item.sha256
+  )
+    throw new Error(`Oracle documentaire altéré : ${item.id}.`);
+}
 if (manifest.pageErrors.length || manifest.blockedWrites.length)
   throw new Error(
     "Le rendu source comporte des erreurs ou écritures bloquées.",

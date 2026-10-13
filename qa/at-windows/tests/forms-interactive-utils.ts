@@ -180,14 +180,6 @@ export async function mountFormsScene(
         canEditBase: true,
       },
     );
-    await page.evaluate(async () => {
-      const path = "/src/composables/use-mermaid.ts";
-      const source = (await import(path)) as { vUseMermaid: unknown };
-      const app = window.__rgaaAtHost?.app as unknown as
-        | Pick<BrowserApp, "directive">
-        | undefined;
-      app?.directive("use-mermaid", source.vUseMermaid);
-    });
     return;
   }
   await page.evaluate(async (scene) => {

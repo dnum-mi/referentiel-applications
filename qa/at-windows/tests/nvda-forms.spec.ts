@@ -37,7 +37,7 @@ test("AT-FORM-Markdown — neuf noms, trois fonctions, modes puis retour", async
   const actions = [
     "Gras",
     "Italique",
-    "Titre H1",
+    /titre h\s*1/u,
     "Liste à puces",
     "Liste numérotée",
     "Code",

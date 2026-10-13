@@ -272,6 +272,7 @@ interface BrowserApplication {
   config: { idPrefix: string };
   use(plugin: unknown, options?: unknown): BrowserApplication;
   component(name: string, component: unknown): BrowserApplication;
+  directive(name: string, directive: unknown): BrowserApplication;
   mount(element: HTMLElement): unknown;
   unmount(): void;
 }
@@ -340,6 +341,8 @@ export async function mountProductionScene(
       const locale = (await import(localePath)) as {
         primeVueFrenchLocale: unknown;
       };
+      const mermaidPath = "/src/composables/use-mermaid.ts";
+      const mermaid = (await import(mermaidPath)) as { vUseMermaid: unknown };
       const component = (await import(componentPath)) as { default: unknown };
       const userStorePath = "/src/stores/userStore.ts";
       const stores = (await import(userStorePath)) as {
@@ -387,6 +390,7 @@ export async function mountProductionScene(
         },
       });
       if (dsfr.VIcon) app.component("VIcon", dsfr.VIcon);
+      app.directive("use-mermaid", mermaid.vUseMermaid);
       const user = stores.useUserStore(storeRoot);
       await new Promise<void>((resolve) => {
         const check = () => {

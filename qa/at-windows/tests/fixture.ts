@@ -53,6 +53,33 @@ export const test = nvdaTest.extend<
   Record<never, never>,
   { windowsGuard: void }
 >({
+  nvda: async ({ nvda }, use, info) => {
+    try {
+      await use(nvda);
+    } finally {
+      // Guidepup's --quit command returns before the reader process necessarily
+      // exits. Wait for that exit before another test creates its French profile.
+      // The inherited fixture tolerates our explicit stop in its own finally.
+      await nvda.stop();
+      const { stdout } = await execFileAsync("pwsh.exe", [
+        "-NoProfile",
+        "-NonInteractive",
+        "-Command",
+        String.raw`
+$ErrorActionPreference = 'Stop'
+$remaining = @(Get-Process -Name nvda -ErrorAction SilentlyContinue)
+foreach ($reader in $remaining) {
+  if (-not $reader.WaitForExit(15000)) { throw 'NVDA has not exited before the next test.' }
+}
+@{ at = [DateTime]::UtcNow.ToString('o'); remainingNvda = @(Get-Process -Name nvda -ErrorAction SilentlyContinue | Select-Object Id,SessionId) } | ConvertTo-Json -Depth 4 -Compress
+`,
+      ]);
+      await info.attach("reader-exit-before-next-test", {
+        body: stdout,
+        contentType: "application/json",
+      });
+    }
+  },
   windowsGuard: [
     async ({}, use) => {
       if (
@@ -187,6 +214,16 @@ export const normalizeSpeech = (text: string) =>
 
 /** Prepare the reader on neutral content, without activating a product control. */
 export async function focusDocumentStart(page: Page, nvda: NVDAPlaywright) {
+  const info = test.info();
+  const initialTimeOrigin = await page.evaluate(() => performance.timeOrigin);
+  const assertSameDocument = async (step: string) => {
+    if (
+      (await page.evaluate(() => performance.timeOrigin)) !== initialTimeOrigin
+    )
+      throw new Error(
+        `Le document a été rechargé pendant la préparation : ${step}`,
+      );
+  };
   // A body click can toggle the first <summary>, and Tab can leave a document
   // with no focusable elements. Neither is a neutral setup action for these scenes.
   await page.bringToFront();
@@ -239,22 +276,53 @@ export async function focusDocumentStart(page: Page, nvda: NVDAPlaywright) {
     }
     throw new Error("Aucun point de préparation neutre dans le contenu.");
   });
-  await nvda.capture(() => page.mouse.click(point.x, point.y), {
-    capture: true,
-  });
-  await nvda.perform(nvda.keyboardCommands.reportCurrentFocus, {
-    capture: true,
-  });
-  await nvda.perform(nvda.keyboardCommands.refreshBrowseDocument, {
-    capture: true,
-  });
+  await captureStep(
+    nvda,
+    "prepare-neutral-content",
+    async () => {
+      await nvda.capture(() => page.mouse.click(point.x, point.y), {
+        capture: true,
+      });
+    },
+    info,
+  );
+  await assertSameDocument("clic neutre");
+  await captureStep(
+    nvda,
+    "prepare-current-focus",
+    () =>
+      nvda.perform(nvda.keyboardCommands.reportCurrentFocus, { capture: true }),
+    info,
+  );
+  await assertSameDocument("annonce du focus");
+  // Interactive scenes are already mounted into this document. They must not
+  // be reloaded during reader preparation; retain their actual component state.
+  if (phase !== "interactive") {
+    await captureStep(
+      nvda,
+      "prepare-static-buffer-refresh",
+      () =>
+        nvda.perform(nvda.keyboardCommands.refreshBrowseDocument, {
+          capture: true,
+        }),
+      info,
+    );
+    await assertSameDocument("rafraîchissement du tampon statique");
+  }
   // This is setup, not a keyboard-accessibility assertion. All subsequent
   // reader actions and assertions still use native NVDA speech and commands.
   let browseMode = false;
   for (let attempt = 0; attempt < 2; attempt++) {
-    await nvda.perform(nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode, {
-      capture: true,
-    });
+    await captureStep(
+      nvda,
+      `prepare-browse-mode-${attempt}`,
+      () =>
+        nvda.perform(nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode, {
+          capture: true,
+        }),
+      info,
+    );
+    await assertSameDocument("mode navigation");
     if (
       normalizeSpeech(await nvda.lastSpokenPhrase()).includes("mode navigation")
     ) {
@@ -265,6 +333,7 @@ export async function focusDocumentStart(page: Page, nvda: NVDAPlaywright) {
   if (!browseMode)
     throw new Error("Mode navigation NVDA non confirmé dans le document.");
   await nvda.press("Control+Home", { capture: true });
+  await assertSameDocument("début du document");
 }
 
 export async function captureStep(

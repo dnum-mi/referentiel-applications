@@ -1,5 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const product = process.env.RGAA_PRODUCT_ROOT;
 if (!product)
@@ -15,6 +16,8 @@ export default defineConfig({
     "nvda-forms.spec.ts",
     "nvda-suggestions.spec.ts",
     "nvda-remaining.spec.ts",
+    "nvda-shared.spec.ts",
+    "nvda-application.spec.ts",
   ],
   outputDir: "./test-results/interactive",
   fullyParallel: false,
@@ -36,7 +39,7 @@ export default defineConfig({
     video: "on",
   },
   webServer: {
-    command: `node "${path.join(product, "frontend/node_modules/vite/bin/vite.js")}" --host 127.0.0.1 --port 5173`,
+    command: `node "${fileURLToPath(new URL("./tools/serve-interactive.mjs", import.meta.url))}"`,
     cwd: path.join(product, "frontend"),
     url: "http://127.0.0.1:5173",
     reuseExistingServer: false,

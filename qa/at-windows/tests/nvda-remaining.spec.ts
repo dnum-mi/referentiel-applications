@@ -24,6 +24,7 @@ async function reachControl(
   info: TestInfo,
 ) {
   await expect(target).toBeVisible();
+  let arrival: Awaited<ReturnType<typeof captureStep>> | undefined;
   for (let index = 0; index <= 60; index++) {
     if (
       await target.evaluate(
@@ -41,10 +42,15 @@ async function reachControl(
           }),
         info,
       );
-      expect(observed.text).toContain(normalizeSpeech(name));
-      return observed;
+      // A native date field announces its label when entered by Tab, while
+      // reportCurrentFocus only names the active date segment. Use that arrival
+      // and the current focus, never speech from previously visited controls.
+      const phrases = [...(arrival?.phrases ?? []), ...observed.phrases];
+      const result = { phrases, text: normalizeSpeech(phrases.join(" ")) };
+      expect(result.text).toContain(normalizeSpeech(name));
+      return result;
     }
-    await captureStep(
+    arrival = await captureStep(
       nvda,
       `remaining-native-tab-${index}`,
       () => nvda.press("Tab", { capture: true }),

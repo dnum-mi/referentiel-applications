@@ -196,6 +196,227 @@ const documents = [
   },
 ];
 
+function oracleRecord(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value))
+    throw new Error("Objet attendu dans l’oracle documentaire.");
+  return value as Record<string, unknown>;
+}
+
+function oracleArray(value: unknown) {
+  if (!Array.isArray(value))
+    throw new Error("Liste attendue dans l’oracle documentaire.");
+  return value as unknown[];
+}
+
+function oracleString(value: unknown) {
+  if (typeof value !== "string")
+    throw new Error("Texte attendu dans l’oracle documentaire.");
+  return value;
+}
+
+function oracleStrings(value: unknown) {
+  return oracleArray(value).map(oracleString);
+}
+
+function oracleField(value: unknown) {
+  const field = oracleRecord(value);
+  const label = oracleString(field.label);
+  const candidates = oracleStrings(field.nativeTextCandidates);
+  if (!candidates.length)
+    throw new Error(`Aucun candidat vocal complet pour ${label}.`);
+  return {
+    label,
+    value: oracleString(field.value),
+    candidates,
+    labelCandidates:
+      field.labelNativeCandidates === undefined
+        ? [label]
+        : oracleStrings(field.labelNativeCandidates),
+  };
+}
+
+function parseDocumentOracle(value: unknown) {
+  const oracle = oracleRecord(value);
+  return {
+    requiredNativeText: oracleStrings(oracle.requiredNativeText),
+    blocks: oracleArray(oracle.blocks).map(oracleField),
+    emptySections: oracleArray(oracle.emptySections).map((value) => {
+      const section = oracleRecord(value);
+      return {
+        title: oracleString(section.title),
+        headers: oracleStrings(section.headers),
+      };
+    }),
+    tables: oracleArray(oracle.tables).map((value) => {
+      const table = oracleRecord(value);
+      const headers = oracleStrings(table.columnHeaders);
+      const headerCandidates = oracleArray(
+        table.columnHeaderNativeCandidates,
+      ).map(oracleStrings);
+      const rows = oracleArray(table.rows).map(oracleField);
+      if (headers.length !== 2 || headerCandidates.length !== 2 || !rows.length)
+        throw new Error(
+          "Le modèle synthétique doit décrire deux colonnes et ses lignes.",
+        );
+      return {
+        caption: oracleString(table.caption),
+        headers,
+        headerCandidates,
+        rows,
+      };
+    }),
+  };
+}
+
+function nativeValuePresent(nativeText: string, expected: string) {
+  const escaped = normalizeSpeech(expected).replace(
+    /[.*+?^${}()|[\]\\]/g,
+    "\\$&",
+  );
+  if (!escaped) return false;
+  return new RegExp(`(?:^|\\s)${escaped}(?=$|\\s)`, "u").test(nativeText);
+}
+
+/** Relie chaque attente à une vraie ligne/cellule annoncée, sans texte DOM. */
+function contextualNativeData(
+  phrases: string[],
+  oracle: ReturnType<typeof parseDocumentOracle>,
+) {
+  const native = phrases.map(normalizeSpeech);
+  const tables = oracle.tables.map((table, tableIndex) => {
+    const caption = normalizeSpeech(table.caption);
+    const start = native.findIndex((text) =>
+      text.includes(`legende ${caption}`),
+    );
+    if (start < 0) throw new Error(`Légende non annoncée : ${table.caption}`);
+    const nextCaption = oracle.tables[tableIndex + 1]?.caption;
+    const end = nextCaption
+      ? native.findIndex(
+          (text, index) =>
+            index > start &&
+            text.includes(`legende ${normalizeSpeech(nextCaption)}`),
+        )
+      : native.length;
+    if (end < 0)
+      throw new Error(`Légende suivante non annoncée : ${nextCaption}`);
+    const section = native.slice(start + 1, end);
+    const fields = table.rows.map((field, index) => {
+      const rowNumber = index + 2;
+      const leftMarkers = table.headerCandidates[0].map((header) =>
+        normalizeSpeech(`${header} colonne 1 ${field.label}`),
+      );
+      const left = section.findIndex(
+        (text) =>
+          text.includes(`ligne ${rowNumber} `) &&
+          leftMarkers.some((marker) => text.includes(marker)),
+      );
+      if (left < 0)
+        throw new Error(
+          `En-tête de ligne non annoncé : ${table.caption}/${field.label}`,
+        );
+      const nextRow = section.findIndex(
+        (text, position) =>
+          position > left && text.startsWith(`ligne ${rowNumber + 1} `),
+      );
+      const row = section.slice(left + 1, nextRow < 0 ? undefined : nextRow);
+      const rightMarkers = table.headerCandidates[1].map((header) =>
+        normalizeSpeech(`${header} colonne 2`),
+      );
+      const right = row.findIndex((text) =>
+        rightMarkers.some((marker) => text.includes(marker)),
+      );
+      if (right < 0)
+        throw new Error(
+          `Colonne de valeur non annoncée : ${table.caption}/${field.label}`,
+        );
+      const marker = rightMarkers.find((candidate) =>
+        row[right].includes(candidate),
+      );
+      if (marker === undefined) throw new Error("Marqueur de cellule absent.");
+      const continuation = [];
+      for (const text of row.slice(right + 1)) {
+        if (
+          /^(?:hors de|titre |region |information sur|ligne \d+ |tableau )/u.test(
+            text,
+          )
+        )
+          break;
+        continuation.push(text);
+      }
+      const cellText = [
+        row[right].slice(row[right].indexOf(marker) + marker.length),
+        ...continuation,
+      ]
+        .join(" ")
+        .trim();
+      const present =
+        field.value === ""
+          ? cellText === ""
+          : field.candidates.some((candidate) =>
+              nativeValuePresent(cellText, candidate),
+            );
+      return {
+        row: rowNumber,
+        label: field.label,
+        expectedValue: field.value,
+        cellText,
+        present,
+      };
+    });
+    return { caption: table.caption, fields };
+  });
+  const blocks = oracle.blocks.map((block, index) => {
+    const start = native.findIndex((text) =>
+      block.labelCandidates.some((candidate) =>
+        text.includes(normalizeSpeech(candidate)),
+      ),
+    );
+    if (start < 0) throw new Error(`Champ non annoncé : ${block.label}`);
+    const next = oracle.blocks[index + 1];
+    const end = next
+      ? native.findIndex(
+          (text, position) =>
+            position > start &&
+            next.labelCandidates.some((candidate) =>
+              text.includes(normalizeSpeech(candidate)),
+            ),
+        )
+      : native.length;
+    if (end < 0) throw new Error(`Champ suivant non annoncé : ${next?.label}`);
+    const text = native.slice(start, end).join(" ");
+    return {
+      label: block.label,
+      expectedValue: block.value,
+      nativeText: text,
+      present: block.candidates.some((candidate) =>
+        nativeValuePresent(text, candidate),
+      ),
+    };
+  });
+  const emptySections = oracle.emptySections.map((section) => {
+    const title = normalizeSpeech(section.title);
+    const start = native.findIndex((text) =>
+      text.includes(`titre niveau 2 ${title} (0 lignes)`),
+    );
+    if (start < 0)
+      throw new Error(`Section vide non annoncée : ${section.title}`);
+    const next = native.findIndex(
+      (text, position) => position > start && text.includes("titre niveau 2"),
+    );
+    const text = native.slice(start, next < 0 ? undefined : next).join(" ");
+    return {
+      title: section.title,
+      headers: section.headers.map((header) => ({
+        header,
+        present: nativeValuePresent(text, header),
+      })),
+      emptyMessagePresent: text.includes("aucune ligne"),
+      nativeText: text,
+    };
+  });
+  return { tables, blocks, emptySections };
+}
+
 for (const document of documents) {
   test(`${document.id} — lecture native de l’alternative HTML téléchargeable`, async ({
     page,
@@ -250,20 +471,9 @@ for (const document of documents) {
       `../fixtures/${document.id}.oracle.json`,
       import.meta.url,
     );
-    const oracle: unknown = JSON.parse(await readFile(oraclePath, "utf8"));
-    if (
-      !oracle ||
-      typeof oracle !== "object" ||
-      !("requiredNativeText" in oracle) ||
-      !Array.isArray(oracle.requiredNativeText) ||
-      !oracle.requiredNativeText.every(
-        (value: unknown) => typeof value === "string",
-      )
-    ) {
-      throw new Error(
-        `Oracle ${document.id} invalide : l’exhaustivité des données n’est pas vérifiable.`,
-      );
-    }
+    const oracle = parseDocumentOracle(
+      JSON.parse(await readFile(oraclePath, "utf8")),
+    );
     for (const value of oracle.requiredNativeText) {
       // NVDA's real French synthesizer expands email punctuation in speak events
       // (observed: "agent-rgaa arobase example point invalid"). Keep every value,
@@ -288,32 +498,76 @@ for (const document of documents) {
         `Valeur réellement annoncée par NVDA : ${String(value)}`,
       ).toBe(true);
     }
-    if (document.id !== "AT-D02") {
+    const contextual = contextualNativeData(reading.phrases, oracle);
+    await info.attach("complete-contextual-native-data", {
+      body: Buffer.from(JSON.stringify(contextual, null, 2)),
+      contentType: "application/json",
+    });
+    for (const table of contextual.tables)
+      for (const field of table.fields)
+        expect(
+          field.present,
+          `Valeur complète ${table.caption}/${field.label}`,
+        ).toBe(true);
+    for (const block of contextual.blocks)
+      expect(block.present, `Valeur complète ${block.label}`).toBe(true);
+    for (const section of contextual.emptySections) {
+      expect(section.emptyMessagePresent).toBe(true);
+      for (const header of section.headers)
+        expect(
+          header.present,
+          `Champ de la section vide ${section.title}/${header.header}`,
+        ).toBe(true);
+    }
+    if (oracle.tables.length) {
       await focusDocumentStart(page, nvda);
-      const cells = await captureStep(
-        nvda,
-        "first-table-header-association",
-        async () => {
-          await nvda.perform(nvda.keyboardCommands.moveToNextTable, {
-            capture: true,
-          });
-          // Native table quick navigation stops on <caption>. Enter the first
-          // header cell before issuing commands that require a table cell.
-          await nvda.press("ArrowDown", { capture: true });
-          await nvda.perform(nvda.keyboardCommands.moveToNextRow, {
-            capture: true,
-          });
-          await nvda.perform(nvda.keyboardCommands.moveToNextColumn, {
-            capture: true,
-          });
-        },
-        info,
-      );
-      const rowLabel = document.id === "AT-D01" ? "Identifiant" : "Onglet";
-      const value =
-        document.id === "AT-D01" ? "app-synthetic-001" : "Acteurs synthétiques";
-      for (const phrase of ["Champ", "Valeur", rowLabel, value])
-        expect(cells.text).toContain(normalizeSpeech(phrase));
+      for (const [index, table] of oracle.tables.entries()) {
+        const entry = await captureStep(
+          nvda,
+          `table-${index + 1}-entry`,
+          async () => {
+            await nvda.perform(nvda.keyboardCommands.moveToNextTable, {
+              capture: true,
+            });
+            // Native table quick navigation stops on <caption>. Enter the first
+            // header cell before issuing commands that require a table cell.
+            await nvda.press("ArrowDown", { capture: true });
+          },
+          info,
+        );
+        expect(entry.text).toContain(normalizeSpeech(table.caption));
+        const row = await captureStep(
+          nvda,
+          `table-${index + 1}-first-data-row`,
+          () =>
+            nvda.perform(nvda.keyboardCommands.moveToNextRow, {
+              capture: true,
+            }),
+          info,
+        );
+        expect(nativeValuePresent(row.text, table.rows[0].label)).toBe(true);
+        const cell = await captureStep(
+          nvda,
+          `table-${index + 1}-value-header-association`,
+          () =>
+            nvda.perform(nvda.keyboardCommands.moveToNextColumn, {
+              capture: true,
+            }),
+          info,
+        );
+        expect(cell.text).not.toContain("pas dans une cellule de tableau");
+        expect(
+          table.headerCandidates[1].some((header) =>
+            cell.text.includes(normalizeSpeech(header)),
+          ),
+        ).toBe(true);
+        expect(
+          table.rows[0].candidates.some((value) =>
+            nativeValuePresent(cell.text, value),
+          ),
+          `Valeur du premier champ : ${table.caption}`,
+        ).toBe(true);
+      }
     }
     await info.attach("expected-document-values", {
       body: Buffer.from(JSON.stringify(oracle, null, 2)),

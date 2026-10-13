@@ -22,6 +22,9 @@ const output = path.resolve(
   process.env.JAWS_EVIDENCE_DIR ?? "evidence/jaws-approved",
 );
 await mkdir(output, { recursive: true });
+// The content helper also invokes the frozen focus script; keep every attempt
+// under the same approved evidence directory without changing reader settings.
+process.env.JAWS_EVIDENCE_DIR = output;
 const words = [
   "cobalt",
   "basilic",
@@ -67,9 +70,23 @@ const speechFile = path.join(output, "jaws-native-history.jsonl");
 let server;
 let browser;
 let context;
+let page;
+let browserPid;
+let stage = "initialisation";
+let nativeWitnessPassed = false;
+const timeline = [];
+const markStage = (name) => {
+  stage = name;
+  const entry = { stage, at: new Date().toISOString() };
+  timeline.push(entry);
+  console.info(JSON.stringify(entry));
+};
+const focusScript = path.join(tools, "focus-browser-window.ps1");
+const focusDiagnostics = path.join(output, "firefox-focus-attempts.jsonl");
 try {
+  markStage("firefox-launch");
   server = await firefox.launchServer({ headless: false, timeout: 60_000 });
-  const browserPid = server.process().pid;
+  browserPid = server.process().pid;
   if (!browserPid) throw new Error("Firefox PID is unavailable.");
   browser = await firefox.connect(server.wsEndpoint());
   context = await browser.newContext({
@@ -84,21 +101,27 @@ try {
       });
     } else await route.abort("blockedbyclient");
   });
-  const page = await context.newPage();
+  page = await context.newPage();
+  markStage("witness-page-load");
   await page.goto("http://127.0.0.1:4199/jaws-witness.html");
   await page.bringToFront();
   // This focus prepares a single controlled element. Only native JAWS output
   // contributes to name/role assertions; this is not a keyboard conformance test.
   await page.getByRole("button", { name: label }).focus();
+  markStage("native-firefox-foreground");
   await execFileAsync(
     "powershell.exe",
     [
       "-NoProfile",
       "-STA",
       "-File",
-      path.join(tools, "focus-browser-window.ps1"),
+      focusScript,
       "-BrowserProcessId",
       String(browserPid),
+      "-ExpectedTitle",
+      await page.title(),
+      "-DiagnosticFile",
+      focusDiagnostics,
     ],
     { timeout: 25_000 },
   );
@@ -129,7 +152,9 @@ try {
       .map((line) => JSON.parse(line));
     return records.at(-1);
   };
+  markStage("native-history-baseline");
   const before = await capture("JAWS-WITNESS-BASELINE", "CaptureOnly");
+  markStage("native-current-control");
   const after = await capture(
     "JAWS-WITNESS-NATIVE-CURRENT-CONTROL",
     "CurrentControl",
@@ -181,6 +206,8 @@ try {
     throw new Error(
       "Fresh native name and French role were not both captured.",
     );
+  nativeWitnessPassed = true;
+  markStage("native-content-cases");
   const content = await runJawsContentCases({
     page,
     browserPid,
@@ -194,6 +221,86 @@ try {
     throw new Error(
       "Native content capture is incomplete; actual JAWS evidence is retained for review.",
     );
+  markStage("native-content-cases-complete");
+} catch (error) {
+  await writeFile(
+    path.join(output, "jaws-smoke-error.json"),
+    JSON.stringify(
+      {
+        at: new Date().toISOString(),
+        stage,
+        timeline,
+        browserPid,
+        nativeWitnessPassed,
+        rgaaVerdict: null,
+        error: {
+          name: error instanceof Error ? error.name : typeof error,
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+          code: error?.code,
+          stdout: error?.stdout,
+          stderr: error?.stderr,
+        },
+        focusDiagnostics,
+        snapshotSource:
+          "diagnostic desktop/browser pixels and UIA, never substituted for JAWS speech",
+      },
+      null,
+      2,
+    ),
+  );
+  if (page && !page.isClosed()) {
+    try {
+      await page.screenshot({
+        path: path.join(output, "firefox-page-error.png"),
+        fullPage: true,
+        timeout: 5_000,
+      });
+      await writeFile(
+        path.join(output, "firefox-page-error.json"),
+        JSON.stringify(
+          {
+            at: new Date().toISOString(),
+            url: page.url(),
+            title: await page.title(),
+            activeElement: await page.evaluate(() => ({
+              tag: document.activeElement?.tagName,
+              id: document.activeElement?.id,
+              ariaLabel: document.activeElement?.getAttribute("aria-label"),
+            })),
+            isNativeSpeech: false,
+            confirmsOsForeground: false,
+          },
+          null,
+          2,
+        ),
+      );
+    } catch (snapshotError) {
+      console.error("Browser error snapshot:", String(snapshotError));
+    }
+  }
+  if (browserPid) {
+    try {
+      await execFileAsync(
+        "powershell.exe",
+        [
+          "-NoProfile",
+          "-STA",
+          "-File",
+          focusScript,
+          "-BrowserProcessId",
+          String(browserPid),
+          "-DiagnosticFile",
+          focusDiagnostics,
+          "-SnapshotOnly",
+        ],
+        { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 },
+      );
+    } catch (snapshotError) {
+      console.error("Desktop error snapshot:", String(snapshotError));
+    }
+  }
+  throw error;
 } finally {
   if (context) await context.close();
   if (browser) await browser.close();

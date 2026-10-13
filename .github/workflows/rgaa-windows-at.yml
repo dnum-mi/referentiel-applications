@@ -120,6 +120,10 @@ jobs:
             test_files: tests/nvda-ui.spec.ts tests/nvda-suggestions.spec.ts
           - group: complex-forms
             test_files: tests/nvda-remaining.spec.ts
+          - group: shared-controls
+            test_files: tests/nvda-shared.spec.ts
+          - group: application-forms
+            test_files: tests/nvda-application.spec.ts
     env:
       RGAA_ALLOW_WINDOWS_AT: "1"
       RGAA_PRODUCT_HEAD: ${{ github.event_name == 'workflow_dispatch' && inputs.product_head || github.sha }}
@@ -251,9 +255,11 @@ jobs:
       github.ref == 'refs/heads/fix/rgaa-accessibility-20261008' &&
       github.run_attempt == '1' &&
       ((github.event_name == 'workflow_dispatch' && inputs.approve_jaws_install_use == true) ||
-       (github.event_name == 'push' && github.event.head_commit.message == 'test: run approved JAWS French witness 2026-10-13-a7c9'))
+       (github.event_name == 'push' && github.event.head_commit.message == 'test: retry approved JAWS focus 2026-10-13-b8d0'))
     runs-on: windows-2022
-    timeout-minutes: 35
+    # The initial failed preparation consumed 4m30, including installation.
+    # This corrected attempt keeps the combined trial below 35 minutes.
+    timeout-minutes: 30
     env:
       RGAA_PRODUCT_HEAD: ${{ github.event_name == 'workflow_dispatch' && inputs.product_head || github.sha }}
       RGAA_PRODUCT_ROOT: ${{ github.workspace }}/product
@@ -276,7 +282,7 @@ jobs:
         working-directory: driver/qa/at-windows
         run: |
           $expectedBranch = 'refs/heads/fix/rgaa-accessibility-20261008'
-          $expectedMessage = 'test: run approved JAWS French witness 2026-10-13-a7c9'
+          $expectedMessage = 'test: retry approved JAWS focus 2026-10-13-b8d0'
           if (-not $env:GITHUB_REF.Equals($expectedBranch, [StringComparison]::Ordinal) -or $env:GITHUB_RUN_ATTEMPT -ne '1') { throw 'Branch/attempt guard failed.' }
           $event = Get-Content -LiteralPath $env:GITHUB_EVENT_PATH -Raw | ConvertFrom-Json
           $approved = if ($env:GITHUB_EVENT_NAME -eq 'push') {
@@ -286,7 +292,7 @@ jobs:
           }
           if (-not $approved) { throw 'Exact explicit JAWS approval signal missing.' }
           New-Item -ItemType Directory -Force ./evidence/jaws-approved | Out-Null
-          @{ approved = $true; source = $env:GITHUB_EVENT_NAME; package = '2025.2508.120.400'; eula = 'https://vispero.com/jaws-end-user-license-agreement/'; noPurchase = $true; noActivation = $true; rebootMayLimitResult = $true; installerStarted = $false; readerStarted = $false } | ConvertTo-Json | Set-Content ./evidence/jaws-approved/approved-operation.json
+          @{ approved = $true; source = $env:GITHUB_EVENT_NAME; package = '2025.2508.120.400'; eula = 'https://vispero.com/jaws-end-user-license-agreement/'; noPurchase = $true; noActivation = $true; rebootMayLimitResult = $true; installerStarted = $false; readerStarted = $false; initialFailedRun = '38424775281'; initialWholeJobSeconds = 270; correctedJobMaximumSeconds = 1800; retryPurpose = 'Correct Firefox foreground preparation before any native witness; no demo-time extension' } | ConvertTo-Json | Set-Content ./evidence/jaws-approved/approved-operation.json
       - uses: pnpm/action-setup@v4
         with:
           version: 10.34.6
@@ -361,7 +367,9 @@ jobs:
             driver/qa/at-windows/evidence/jaws-approved/*.json
             driver/qa/at-windows/evidence/jaws-approved/*.jsonl
             driver/qa/at-windows/evidence/jaws-approved/*.log
+            driver/qa/at-windows/evidence/jaws-approved/*.png
             driver/qa/at-windows/evidence/jaws-approved/*-head.txt
+            driver/qa/at-windows/evidence/jaws-approved/diagnostics/
             driver/qa/at-windows/evidence/jaws-approved/content-cases/
           if-no-files-found: warn
           retention-days: 14

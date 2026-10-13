@@ -83,17 +83,17 @@
     {
       "id": "AT-D01",
       "file": "AT-D01.oracle.json",
-      "sha256": "3a34574ebd9680f064cdfabd56c45ca0d8215647f8da0fa29eea4c0dd112adc0"
+      "sha256": "94d9be9af2c94f7d7f188d79c6f48f619608d640342b4c150d48dc4fcf4e690e"
     },
     {
       "id": "AT-D02",
       "file": "AT-D02.oracle.json",
-      "sha256": "285ce0f468ca8a832b4cb612d7717003e37caae4dbb02bddecf667ca033d62cd"
+      "sha256": "acdf68ee9e85d26e47b105337b764a0c74915d9fd35f36d3bc8f486b4216eaf6"
     },
     {
       "id": "AT-D03",
       "file": "AT-D03.oracle.json",
-      "sha256": "d076c04a929dfa8f296ebc862e9f3786dccf2955c857515cf7301a9a00b67f6b"
+      "sha256": "fff662f09224701855120baf160446854dd178f17999d55e8299e6d7d79e3d7a"
     }
   ],
   "generationDetail": "provenance-generators.json",
