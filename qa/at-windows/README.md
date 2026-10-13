@@ -39,6 +39,8 @@ Windows Server 2022 est pris en charge par le [guide NVDA](https://download.nvac
 
 Le montage s'appuie sur le [workflow du mainteneur Guidepup](https://github.com/guidepup/guidepup/blob/3ac497d502a468d092aff3e67cbe126d27989fcf/.github/workflows/playwright-nvda.yml). Le bundle NVDA `0.2.1-2026.2` est épinglé par Guidepup 0.35.0 ; son SHA256 attendu est `7df0ca3c1c9e8c6521bc7553486ca360ed6f0b4f9bdbd6603131e38b5c1497a1`. La version du processus réel, son empreinte et la langue du profil sont contrôlées pendant les essais.
 
+Les scènes interactives installent le paquet frontend verrouillé puis génèrent explicitement son client API depuis `frontend/openapi/swagger.yaml`, avant le démarrage de Vite. Cette préparation ne contacte aucun backend. Les hôtes de test reprennent la configuration française PrimeVue du produit et refusent un module indisponible avant toute interaction native.
+
 ## Préparation de JAWS
 
 Un job indépendant acquiert l'installateur multilingue officiel JAWS 2025.2508.120.400. Il vérifie le lien du catalogue de l'éditeur, la taille, le SHA256, les versions PE et la signature Authenticode Windows. Il conserve seulement les métadonnées dans les artefacts ; le binaire reste dans le dossier temporaire du runner. Cette étape n'exécute pas l'installateur et ne produit aucun résultat de restitution JAWS. L'installation et l'utilisation nécessitent une décision distincte sur la [licence applicable](https://vispero.com/jaws-end-user-license-agreement/).

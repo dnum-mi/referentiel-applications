@@ -277,6 +277,12 @@ for (const document of documents) {
               .replaceAll(".", " point "),
           ),
         );
+      // The native output on 38420957659 reads the product name "Ref App".
+      // Preserve the complete value, accepting only that observed word split.
+      if (String(value).includes("RefApp"))
+        expected.push(
+          normalizeSpeech(String(value).replaceAll("RefApp", "Ref App")),
+        );
       expect(
         expected.some((candidate) => reading.text.includes(candidate)),
         `Valeur réellement annoncée par NVDA : ${String(value)}`,
@@ -291,6 +297,9 @@ for (const document of documents) {
           await nvda.perform(nvda.keyboardCommands.moveToNextTable, {
             capture: true,
           });
+          // Native table quick navigation stops on <caption>. Enter the first
+          // header cell before issuing commands that require a table cell.
+          await nvda.press("ArrowDown", { capture: true });
           await nvda.perform(nvda.keyboardCommands.moveToNextRow, {
             capture: true,
           });

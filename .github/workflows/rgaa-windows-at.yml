@@ -104,9 +104,22 @@ jobs:
           retention-days: 14
 
   nvda-interactive:
+    name: nvda-interactive (${{ matrix.group }})
     if: github.event.repository.private == false
     runs-on: windows-2022
     timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - group: forms
+            test_files: tests/nvda-forms.spec.ts
+          - group: graphs
+            test_files: tests/nvda-graphs.spec.ts
+          - group: controls
+            test_files: tests/nvda-ui.spec.ts tests/nvda-suggestions.spec.ts
+          - group: complex-forms
+            test_files: tests/nvda-remaining.spec.ts
     env:
       RGAA_ALLOW_WINDOWS_AT: "1"
       RGAA_PRODUCT_HEAD: ${{ github.event_name == 'workflow_dispatch' && inputs.product_head || github.sha }}
@@ -179,7 +192,7 @@ jobs:
         working-directory: driver/qa/at-windows
         env:
           RGAA_PHASE: interactive
-        run: pnpm test:interactive
+        run: pnpm exec playwright test --config interactive.config.ts ${{ matrix.test_files }}
       - name: Record and enforce reader cleanup
         if: always()
         working-directory: driver/qa/at-windows
@@ -191,7 +204,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: rgaa-nvda-interactive-${{ env.RGAA_PRODUCT_HEAD }}
+          name: rgaa-nvda-interactive-${{ matrix.group }}-${{ env.RGAA_PRODUCT_HEAD }}
           path: |
             driver/qa/at-windows/evidence/
             driver/qa/at-windows/test-results/
@@ -241,13 +254,23 @@ jobs:
        (github.event_name == 'push' && github.event.head_commit.message == 'test: run approved JAWS French witness 2026-10-13-a7c9'))
     runs-on: windows-2022
     timeout-minutes: 35
+    env:
+      RGAA_PRODUCT_HEAD: ${{ github.event_name == 'workflow_dispatch' && inputs.product_head || github.sha }}
+      RGAA_PRODUCT_ROOT: ${{ github.workspace }}/product
     defaults:
       run:
         shell: pwsh
     steps:
+      - name: Preserve exact source and fixture line endings
+        run: git config --global core.autocrlf false
       - uses: actions/checkout@v6
         with:
           path: driver
+          persist-credentials: false
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ env.RGAA_PRODUCT_HEAD }}
+          path: product
           persist-credentials: false
       - name: Enforce exact reviewed approval signal before preparing software
         working-directory: driver/qa/at-windows
@@ -276,6 +299,14 @@ jobs:
           pnpm install --frozen-lockfile --ignore-scripts
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           pnpm exec playwright install firefox
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify exact product sources and static content before JAWS use
+        working-directory: driver/qa/at-windows
+        run: |
+          if ($env:RGAA_PRODUCT_HEAD -notmatch '^[0-9a-f]{40}$') { throw 'Full SHA required' }
+          git -C ../.. rev-parse HEAD | Set-Content evidence/jaws-approved/driver-head.txt
+          git -C $env:RGAA_PRODUCT_ROOT rev-parse HEAD | Set-Content evidence/jaws-approved/product-head.txt
+          node tools/verify-inputs.mjs | Tee-Object evidence/jaws-approved/input-verification.json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Parse the exact scripts before any executable invocation
         working-directory: driver/qa/at-windows
@@ -328,5 +359,6 @@ jobs:
             driver/qa/at-windows/evidence/jaws-approved/*.json
             driver/qa/at-windows/evidence/jaws-approved/*.jsonl
             driver/qa/at-windows/evidence/jaws-approved/*.log
+            driver/qa/at-windows/evidence/jaws-approved/*-head.txt
           if-no-files-found: warn
           retention-days: 14

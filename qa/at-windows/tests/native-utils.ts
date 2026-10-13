@@ -8,6 +8,7 @@ export async function tabTo(
   info: TestInfo,
   maximum = 35,
 ) {
+  const visited = new Set<string>();
   for (let index = 0; index <= maximum; index++) {
     const result = await captureStep(
       nvda,
@@ -18,14 +19,22 @@ export async function tabTo(
         }),
       info,
     );
+    visited.add(result.text);
     const matches =
       typeof name === "string"
         ? result.text.includes(normalizeSpeech(name))
         : name.test(result.text);
     if (matches) return result;
-    await nvda.press("Tab", { capture: false });
+    await captureStep(
+      nvda,
+      `native-tab-${index}`,
+      () => nvda.press("Tab", { capture: true }),
+      info,
+    );
   }
-  throw new Error(`Commande non atteinte au clavier natif : ${String(name)}`);
+  throw new Error(
+    `Commande non atteinte au clavier natif : ${String(name)}. Annonces effectivement rencontrées : ${JSON.stringify([...visited])}`,
+  );
 }
 
 export async function activateCurrent(
