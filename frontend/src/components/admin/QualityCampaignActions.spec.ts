@@ -3,13 +3,16 @@ import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils";
 import type { QualityCampaignDto } from "@/client/types.gen";
 import QualityCampaignActions from "./QualityCampaignActions.vue";
 
-const { updateCampaign, successToast, errorToast } = vi.hoisted(() => ({
+const { updateCampaign, removeCampaign, successToast, errorToast } = vi.hoisted(() => ({
   updateCampaign: vi.fn(),
+  removeCampaign: vi.fn(),
   successToast: vi.fn(),
   errorToast: vi.fn(),
 }));
 
-vi.mock("@/api/index", () => ({ default: { qualityCampaignControllerUpdate: updateCampaign } }));
+vi.mock("@/api/index", () => ({
+  default: { qualityCampaignControllerUpdate: updateCampaign, qualityCampaignControllerRemove: removeCampaign },
+}));
 vi.mock("@/stores/toasterStore", () => ({
   useToasterStore: () => ({ addSuccessMessage: successToast, addErrorMessage: errorToast }),
 }));
@@ -47,12 +50,61 @@ function renderActions() {
 
 beforeEach(() => {
   updateCampaign.mockReset().mockResolvedValue(success());
+  removeCampaign.mockReset();
   successToast.mockReset();
   errorToast.mockReset();
 });
 afterEach(() => vi.restoreAllMocks());
 
 describe("QualityCampaignActions — confirmation des données personnelles", () => {
+  it("garde la confirmation et son contrôle après une suppression refusée, puis permet le réessai", async () => {
+    removeCampaign
+      .mockResolvedValueOnce({ error: { message: "Indisponible" }, response: { ok: false } })
+      .mockResolvedValueOnce({ response: { ok: true } });
+    const wrapper = renderActions();
+    await wrapper.get('[data-testid="admin-quality-campaign-delete-btn"]').trigger("click");
+    const confirm = wrapper.get<HTMLButtonElement>('[data-testid="admin-quality-campaign-delete-confirm-btn"]');
+    confirm.element.focus();
+    await confirm.trigger("click");
+    await flushPromises();
+    expect(wrapper.get('[data-testid="admin-delete-quality-campaign-modal"]').text()).toContain("La campagne n’a pas été supprimée");
+    expect(confirm.element).toHaveFocus();
+    expect(wrapper.emitted("fetchCampaigns")).toBeUndefined();
+    await confirm.trigger("click");
+    await flushPromises();
+    expect(removeCampaign).toHaveBeenCalledTimes(2);
+    expect(wrapper.find('[data-testid="admin-delete-quality-campaign-modal"]').exists()).toBe(false);
+    expect(wrapper.emitted("fetchCampaigns")).toHaveLength(1);
+  });
+  it("ne reprend pas le focus choisi hors de la confirmation pendant une suppression lente", async () => {
+    let finish = () => {};
+    removeCampaign.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = () => resolve({ response: { ok: true } });
+        }),
+    );
+    const title = document.createElement("h2");
+    title.dataset.testid = "admin-quality-campaigns-title";
+    const otherCommand = document.createElement("button");
+    document.body.append(title, otherCommand);
+    try {
+      const wrapper = renderActions();
+      await wrapper.get('[data-testid="admin-quality-campaign-delete-btn"]').trigger("click");
+      const confirm = wrapper.get<HTMLButtonElement>('[data-testid="admin-quality-campaign-delete-confirm-btn"]');
+      confirm.element.focus();
+      await confirm.trigger("click");
+      otherCommand.focus();
+      finish();
+      await flushPromises();
+      expect(wrapper.emitted("fetchCampaigns")).toHaveLength(1);
+      expect(wrapper.find('[data-testid="admin-delete-quality-campaign-modal"]').exists()).toBe(false);
+      expect(otherCommand).toHaveFocus();
+    } finally {
+      title.remove();
+      otherCommand.remove();
+    }
+  });
   it("annule une modification des sponsors sans requête et conserve la saisie et le focus", async () => {
     const confirm = vi.spyOn(globalThis, "confirm").mockReturnValue(false);
     const wrapper = renderActions();

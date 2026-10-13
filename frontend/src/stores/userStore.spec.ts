@@ -6,11 +6,12 @@ import { reauthLoopState, setReauthLoop } from "@/composables/use-auth-level";
 import { useToasterStore } from "./toasterStore";
 import { useUserStore } from "./userStore";
 
-const { findMeMock, updateMeMock, subscribeMock, unsubscribeMock, getUserMock, oidcEvents } = vi.hoisted(() => ({
+const { findMeMock, updateMeMock, subscribeMock, unsubscribeMock, impersonateMock, getUserMock, oidcEvents } = vi.hoisted(() => ({
   findMeMock: vi.fn(),
   updateMeMock: vi.fn(),
   subscribeMock: vi.fn(),
   unsubscribeMock: vi.fn(),
+  impersonateMock: vi.fn(),
   getUserMock: vi.fn().mockResolvedValue(null),
   oidcEvents: { loaded: (_user: User) => {}, unloaded: () => {} },
 }));
@@ -20,6 +21,7 @@ vi.mock("@/api/index", () => ({
     userControllerUpdateMe: (...args: unknown[]) => updateMeMock(...args),
     userControllerSubscribe: (...args: unknown[]) => subscribeMock(...args),
     userControllerUnsubscribe: (...args: unknown[]) => unsubscribeMock(...args),
+    userControllerImpersonate: (...args: unknown[]) => impersonateMock(...args),
   },
 }));
 vi.mock("@/services/authentication", () => ({
@@ -53,6 +55,26 @@ function oidcSession(profile: Partial<User["profile"]> = {}, expiresAt = Math.fl
     profile: { iss: "https://sso.example.test", sub: "subject-1", sid: "session-1", aud: "refapp", iat: 1, exp: expiresAt, ...profile },
   });
 }
+
+describe("userStore.startImpersonation", () => {
+  it.each([
+    { response: { ok: false }, error: { message: "Refus" } },
+    { response: { ok: true }, data: undefined },
+  ])("signale une réponse refusée ou vide et conserve l’identité actuelle", async (response) => {
+    setActivePinia(createPinia());
+    getUserMock.mockResolvedValueOnce(null);
+    const store = useUserStore();
+    await flushPromises();
+    store.authenticated = true;
+    store.user = { ...userWithScope(null), email: "admin@example.test" };
+    const target = { ...store.user, id: "target", email: "target@example.test" };
+    impersonateMock.mockResolvedValueOnce(response);
+    await expect(store.startImpersonation(target)).rejects.toThrow("La connexion sous cette identité a échoué");
+    expect(store.user.id).toBe("admin-1");
+    expect(store.authenticated).toBe(true);
+    expect(store.impersonation).toBeNull();
+  });
+});
 
 describe("userStore.canListTechnologies", () => {
   beforeEach(() => setActivePinia(createPinia()));

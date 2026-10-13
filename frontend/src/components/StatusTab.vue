@@ -11,7 +11,7 @@ import { useApplicationStore } from "@/stores/applicationStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import type { TableColumn } from "@/types/table";
 import { useMediaQuery } from "@vueuse/core";
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import AppLoader from "./AppLoader.vue";
 import StatusForm from "./form/StatusForm.vue";
 import RefAppTable from "./RefAppTable.vue";
@@ -43,6 +43,9 @@ const isLoading = ref(false);
 const isSubmitting = ref(false);
 const errorMessage = ref("");
 const formError = ref("");
+const editTrigger = ref<HTMLElement | null>(null);
+const statusContent = ref<HTMLElement | null>(null);
+const statusActions = ref<HTMLElement | null>(null);
 watch([formModal.isModalOpen, formModal.isCreateModalOpen], () => (formError.value = ""));
 
 const canEdit = useAppPermission(() => props.application.myPerms, [Permission.APP_WRITE]);
@@ -129,6 +132,7 @@ function getStatusCardButtons(status: ApplicationStatusDto) {
       size: "sm" as const,
       disabled: !canEdit.value,
       "data-testid": "status-card-edit-btn",
+      "data-status-id": status.id,
       onClick: (event: MouseEvent) => {
         event.stopPropagation();
         if (!canEdit.value) {
@@ -194,13 +198,28 @@ async function createStatus(formData: StatusFormData) {
 }
 
 function openEditModal(status: ApplicationStatusDto) {
+  editTrigger.value = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   formError.value = "";
   formModal.openModal(status);
+}
+
+async function restoreStatusFocus(statusId: string) {
+  await nextTick();
+  if (document.activeElement !== document.body && document.activeElement !== editTrigger.value) return;
+  const target =
+    editTrigger.value?.isConnected && !editTrigger.value.matches(":disabled")
+      ? editTrigger.value
+      : statusContent.value?.querySelector<HTMLElement>(`[data-status-id="${statusId}"]`) ||
+        statusActions.value?.querySelector<HTMLElement>('[data-testid="add-status-btn"]');
+  target?.focus();
 }
 
 async function updateStatus(formData: StatusFormData) {
   const currentStatus = selectedStatus.value;
   if (!currentStatus) return;
+  const dialog = document.querySelector('[data-testid="status-form-modal"]');
+  const shouldRestore = document.activeElement === document.body || !!dialog?.contains(document.activeElement);
+  let saved = false;
 
   try {
     isSubmitting.value = true;
@@ -219,6 +238,7 @@ async function updateStatus(formData: StatusFormData) {
       formModal.closeModal();
       await fetchStatuses();
       await applicationStore.fetchApplication(props.application.id);
+      saved = true;
     } else {
       throw new Error("Failed to update status");
     }
@@ -228,6 +248,7 @@ async function updateStatus(formData: StatusFormData) {
   } finally {
     isSubmitting.value = false;
   }
+  if (saved && shouldRestore) await restoreStatusFocus(currentStatus.id);
 }
 
 function openDeleteModal(status: ApplicationStatusDto) {
@@ -291,7 +312,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="fr-grid-row fr-grid-row--middle fr-mb-3w" v-bind="$attrs" data-testid="statuses-header">
+  <div ref="statusActions" class="fr-grid-row fr-grid-row--middle fr-mb-3w" v-bind="$attrs" data-testid="statuses-header">
     <div class="fr-col">
       <h3 class="fr-mb-0">Historique des statuts</h3>
     </div>
@@ -355,7 +376,7 @@ onMounted(() => {
     <p>Aucun statut enregistré.</p>
   </div>
 
-  <div v-else-if="!errorMessage">
+  <div v-else-if="!errorMessage" ref="statusContent">
     <AppLoader v-if="isLoading" data-testid="statuses-loader"></AppLoader>
     <div v-else>
       <template v-if="!isMobile">
@@ -368,6 +389,7 @@ onMounted(() => {
                 icon="ri-edit-line"
                 :disabled="!canEdit"
                 data-testid="status-edit-btn"
+                :data-status-id="(data.Actions as ApplicationStatusDto).id"
                 title="Modifier le statut"
                 aria-label="Modifier le statut"
                 @click="() => openEditModal(data.Actions as ApplicationStatusDto)"

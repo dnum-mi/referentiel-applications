@@ -40,9 +40,11 @@ const isImpersonating = ref(false);
 const canToggleBlock = computed(() => canEditUser.value && props.user.id !== userStore.user?.id);
 const isBlockModalOpen = ref(false);
 const isTogglingBlock = ref(false);
+const blockError = ref("");
 
 function openBlockModal() {
   if (!canToggleBlock.value) return;
+  blockError.value = "";
   isBlockModalOpen.value = true;
 }
 
@@ -51,6 +53,8 @@ function closeBlockModal() {
 }
 
 async function toggleBlock() {
+  if (isTogglingBlock.value || !canToggleBlock.value) return;
+  blockError.value = "";
   isTogglingBlock.value = true;
   try {
     const response = props.user.isBlocked
@@ -63,11 +67,13 @@ async function toggleBlock() {
       emit("userUpdated", response.data);
     } else {
       const errorMessage = (response.error as { message: string })?.message ?? "Une erreur est survenue";
-      toaster.addErrorMessage(errorMessage);
+      if (isBlockModalOpen.value) blockError.value = errorMessage;
+      else toaster.addErrorMessage(errorMessage);
       console.error(response.error);
     }
   } catch (err) {
-    toaster.addErrorMessage("Une erreur est survenue");
+    if (isBlockModalOpen.value) blockError.value = "Une erreur est survenue. Vous pouvez réessayer.";
+    else toaster.addErrorMessage("Une erreur est survenue");
     console.error(err);
   } finally {
     isTogglingBlock.value = false;
@@ -75,12 +81,14 @@ async function toggleBlock() {
 }
 
 async function impersonate() {
+  if (isImpersonating.value || !canImpersonate.value) return;
   isImpersonating.value = true;
   try {
     await userStore.startImpersonation(props.user);
   } catch (err) {
     toaster.addErrorMessage("Impossible d'impersonner cet utilisateur");
     console.error(err);
+  } finally {
     isImpersonating.value = false;
   }
 }
@@ -351,7 +359,8 @@ const isScopeDisabled = computed(() => {
         :label="isImpersonating ? '...' : 'Se connecter en tant que'"
         size="sm"
         tertiary
-        :disabled="isImpersonating"
+        :aria-disabled="isImpersonating"
+        :aria-busy="isImpersonating"
         data-testid="admin-user-impersonate-btn"
         title="Se connecter en tant que cet utilisateur"
         aria-label="Se connecter en tant que cet utilisateur"
@@ -388,6 +397,9 @@ const isScopeDisabled = computed(() => {
       <p v-else class="alert-multiline" data-testid="user-unblock-confirm-text">
         Rétablir l'accès de <strong>{{ user.email }}</strong> ?
       </p>
+      <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="user-block-error">
+        <p v-if="blockError" class="fr-error-text">{{ blockError }}</p>
+      </div>
 
       <template #footer>
         <DsfrButtonGroup :inline-layout-when="true" :reverse="true">
@@ -405,7 +417,8 @@ const isScopeDisabled = computed(() => {
             <DsfrButton
               :label="user.isBlocked ? 'Rétablir' : 'Bloquer'"
               :danger="!user.isBlocked"
-              :disabled="isTogglingBlock"
+              :aria-disabled="isTogglingBlock"
+              :aria-busy="isTogglingBlock"
               data-testid="admin-block-user-confirm-btn"
               title="Confirmer"
               :aria-label="user.isBlocked ? `Rétablir l’accès de cet utilisateur` : `Bloquer l’accès de cet utilisateur`"

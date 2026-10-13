@@ -56,6 +56,15 @@ const showCreateForm = ref(false);
 const newlyCreatedToken = ref<ExposedTokenDto | null>(null);
 const showRevokeConfirmation = ref(false);
 const tokenToRevoke = ref<string | null>(null);
+const tokenHeading = ref<HTMLElement | null>(null);
+const tokenSection = ref<HTMLElement | null>(null);
+const createForm = ref<HTMLFormElement | null>(null);
+const tokenDisplay = ref<HTMLElement | null>(null);
+let revokeTrigger: HTMLElement | null = null;
+
+function focusCreateButton() {
+  tokenSection.value?.querySelector<HTMLButtonElement>("[data-testid=admin-token-create-btn]")?.focus();
+}
 
 type ServiceTokenForm = Omit<CreateServiceTokenDto, "scopeOrganizationId" | "serviceMode"> & {
   scopeOrganizationId?: string;
@@ -183,6 +192,8 @@ async function fetchTokens() {
 }
 
 async function createServiceToken() {
+  if (isLoading.value) return;
+  const focusOrigin = document.activeElement;
   isLoading.value = true;
   newlyCreatedToken.value = null;
   resetMessages();
@@ -205,15 +216,21 @@ async function createServiceToken() {
   showCreateForm.value = false;
   await fetchTokens();
   isLoading.value = false;
+  await nextTick();
+  if (document.activeElement === document.body || document.activeElement === focusOrigin) {
+    tokenDisplay.value?.querySelector<HTMLButtonElement>("button")?.focus();
+  }
 }
 
-function requestRevokeToken(tokenId: string) {
+function requestRevokeToken(tokenId: string, event: MouseEvent) {
+  revokeTrigger = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
   tokenToRevoke.value = tokenId;
   showRevokeConfirmation.value = true;
 }
 
 async function confirmRevokeToken() {
-  if (!tokenToRevoke.value) return;
+  if (!tokenToRevoke.value || isLoading.value) return;
+  const focusOrigin = document.activeElement;
 
   isLoading.value = true;
   resetMessages();
@@ -224,6 +241,8 @@ async function confirmRevokeToken() {
     isLoading.value = false;
     showRevokeConfirmation.value = false;
     tokenToRevoke.value = null;
+    await nextTick();
+    if (document.activeElement === document.body || document.activeElement === focusOrigin) revokeTrigger?.focus();
     return;
   }
 
@@ -232,16 +251,24 @@ async function confirmRevokeToken() {
   isLoading.value = false;
   showRevokeConfirmation.value = false;
   tokenToRevoke.value = null;
+  await nextTick();
+  if (document.activeElement === document.body || document.activeElement === focusOrigin) tokenHeading.value?.focus();
 }
 
-function cancelRevokeToken() {
+async function cancelRevokeToken() {
   showRevokeConfirmation.value = false;
   tokenToRevoke.value = null;
+  await nextTick();
+  if (revokeTrigger?.isConnected && !revokeTrigger.matches(":disabled")) revokeTrigger.focus();
+  else tokenHeading.value?.focus();
 }
 
-function toggleCreateForm() {
+async function toggleCreateForm() {
   showCreateForm.value = !showCreateForm.value;
   if (!showCreateForm.value) resetForm();
+  await nextTick();
+  if (showCreateForm.value) createForm.value?.querySelector<HTMLInputElement>("input")?.focus();
+  else focusCreateButton();
 }
 
 function formatDate(dateString?: string): string {
@@ -270,8 +297,10 @@ function copyToClipboard(text: string) {
   });
 }
 
-function dismissNewToken() {
+async function dismissNewToken() {
   newlyCreatedToken.value = null;
+  await nextTick();
+  focusCreateButton();
 }
 
 onMounted(() => {
@@ -281,7 +310,10 @@ onMounted(() => {
 
 <template>
   <div>
-    <h2 class="fr-h1" data-testid="admin-tokens-title">Gestion des tokens</h2>
+    <h2 ref="tokenHeading" tabindex="-1" class="fr-h1" data-testid="admin-tokens-title">Gestion des tokens</h2>
+    <output class="fr-sr-only" aria-live="polite" aria-atomic="true">
+      {{ isLoading ? "Opération sur le token en cours…" : (successMessage ?? "") }}
+    </output>
 
     <DsfrAlert alert v-if="error" type="error" :title="error" class="fr-mb-2w" closeable @close="error = null" />
 
@@ -298,13 +330,21 @@ onMounted(() => {
       <p class="fr-mb-1w"><strong>Mode d’accès :</strong> {{ ServiceTokenModeWording[newlyCreatedToken.serviceMode] }}</p>
       <p class="fr-mb-1w">{{ ServiceTokenModeHint[newlyCreatedToken.serviceMode] }}</p>
       <p class="fr-mb-1w"><strong>Attention :</strong> Copiez ce token maintenant, il ne sera plus affiché.</p>
-      <div class="token-display fr-mb-1w">
+      <div ref="tokenDisplay" class="token-display fr-mb-1w">
         <code class="token-value">{{ newlyCreatedToken.password }}</code>
-        <DsfrButton size="sm" secondary icon="ri-file-copy-line" @click="copyToClipboard(newlyCreatedToken.password)"> Copier </DsfrButton>
+        <DsfrButton
+          size="sm"
+          secondary
+          icon="ri-file-copy-line"
+          data-testid="admin-token-copy-btn"
+          @click="copyToClipboard(newlyCreatedToken.password)"
+        >
+          Copier
+        </DsfrButton>
       </div>
     </DsfrAlert>
 
-    <section class="fr-mb-6w">
+    <section ref="tokenSection" class="fr-mb-6w">
       <div class="header-row fr-mb-2w">
         <h3 class="fr-h3 fr-mb-0">Tokens applicatifs</h3>
         <DsfrButton v-if="!showCreateForm" icon="ri-add-line" data-testid="admin-token-create-btn" @click="toggleCreateForm">
@@ -315,7 +355,7 @@ onMounted(() => {
 
       <div v-if="showCreateForm" class="fr-card fr-p-3w fr-mb-3w">
         <h4 class="fr-h5 fr-mb-2w">Nouveau token applicatif</h4>
-        <form @submit.prevent="createServiceToken">
+        <form ref="createForm" @submit.prevent="createServiceToken">
           <p class="fr-text--sm" data-testid="admin-token-required-fields-hint">* = champs obligatoires</p>
           <DsfrRadioButtonSet
             v-model="newToken.serviceMode"
@@ -368,7 +408,7 @@ onMounted(() => {
           />
 
           <div class="fr-mt-2w">
-            <DsfrButton type="submit" :disabled="isLoading"> Créer le token </DsfrButton>
+            <DsfrButton type="submit" :aria-disabled="isLoading" :aria-busy="isLoading"> Créer le token </DsfrButton>
             <DsfrButton type="button" secondary class="fr-ml-2w" @click="toggleCreateForm"> Annuler </DsfrButton>
           </div>
         </form>
@@ -409,7 +449,7 @@ onMounted(() => {
             icon="ri-delete-bin-line"
             label="Révoquer"
             :disabled="isLoading"
-            @click="requestRevokeToken(data.actions.id)"
+            @click="requestRevokeToken(data.actions.id, $event)"
           />
         </template>
       </RefAppTable>
@@ -454,7 +494,7 @@ onMounted(() => {
             icon="ri-delete-bin-line"
             label="Révoquer"
             :disabled="isLoading"
-            @click="requestRevokeToken(data.actions.id)"
+            @click="requestRevokeToken(data.actions.id, $event)"
           />
         </template>
       </RefAppTable>
@@ -465,7 +505,7 @@ onMounted(() => {
       <template #footer>
         <DsfrButtonGroup :inline-layout-when="true" :reverse="true">
           <li><DsfrButton label="Annuler" secondary @click="cancelRevokeToken" /></li>
-          <li><DsfrButton label="Révoquer" @click="confirmRevokeToken" /></li>
+          <li><DsfrButton label="Révoquer" :aria-disabled="isLoading" :aria-busy="isLoading" @click="confirmRevokeToken" /></li>
         </DsfrButtonGroup>
       </template>
     </DsfrModal>

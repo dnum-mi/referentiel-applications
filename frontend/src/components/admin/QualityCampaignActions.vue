@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { nextTick, ref } from "vue";
 import type { QualityCampaignDto, UpdateQualityCampaignStatusDto } from "@/client/types.gen";
 import { useQualityCampaignStore } from "@/stores/qualityCampaignStore";
 import SponsorEmailsInput from "@/components/form/SponsorEmailsInput.vue";
@@ -20,6 +20,8 @@ const isDeleteModalOpen = ref(false);
 const isSaving = ref(false);
 useSubmissionFocus(isSaving);
 const isDeleting = ref(false);
+useSubmissionFocus(isDeleting);
+const deleteErrorMessage = ref("");
 const isSendingReport = ref(false);
 const isChangingStatus = ref(false);
 const errorMessage = ref<string>("");
@@ -59,11 +61,13 @@ function closeEditModal() {
 }
 
 function openDeleteModal() {
+  deleteErrorMessage.value = "";
   isDeleteModalOpen.value = true;
 }
 
 function closeDeleteModal() {
   isDeleteModalOpen.value = false;
+  deleteErrorMessage.value = "";
 }
 
 async function saveCampaign(event: MouseEvent) {
@@ -117,11 +121,26 @@ async function saveCampaign(event: MouseEvent) {
 }
 
 async function deleteCampaign() {
+  if (isDeleting.value) return;
+  const focusOrigin = document.activeElement;
   isDeleting.value = true;
-  await store.deleteCampaign(props.campaign.id);
-  closeDeleteModal();
-  emit("fetchCampaigns");
-  isDeleting.value = false;
+  deleteErrorMessage.value = "";
+  const contextTitle = document.querySelector<HTMLElement>("[data-testid=admin-quality-campaigns-title]");
+  try {
+    if (await store.deleteCampaign(props.campaign.id)) {
+      closeDeleteModal();
+      emit("fetchCampaigns");
+      await nextTick();
+      if (contextTitle?.isConnected && (document.activeElement === document.body || document.activeElement === focusOrigin)) {
+        contextTitle.tabIndex = -1;
+        contextTitle.focus();
+      }
+    } else {
+      deleteErrorMessage.value = "La campagne n’a pas été supprimée. Veuillez réessayer.";
+    }
+  } finally {
+    isDeleting.value = false;
+  }
 }
 
 async function sendSponsorReport() {
@@ -270,6 +289,7 @@ async function changeStatus(status: UpdateQualityCampaignStatusDto["status"]) {
     data-testid="admin-delete-quality-campaign-modal"
     @close="closeDeleteModal"
   >
+    <DsfrAlert v-if="deleteErrorMessage" alert type="error" :description="deleteErrorMessage" small class="fr-mb-3w" />
     <DsfrAlert
       title="Cette action est irréversible"
       :description="`Êtes-vous sûr de vouloir supprimer la campagne « ${campaign.name} » ?`"

@@ -5,6 +5,7 @@ import { signinStrong } from "@/services/authentication";
 import { getConfig } from "@/services/config";
 import { useUserStore } from "@/stores/userStore";
 import { computed, onMounted, ref } from "vue";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 // #1985 — Écran de reconnexion remplaçant les vues du référentiel en session faible.
 // Conditionné sur `downgraded` : le mode observe ne bloque pas l'accès.
@@ -13,6 +14,7 @@ const authLevelConfig = ref<AuthLevelConfigDto | undefined>();
 const isRedirecting = ref(false);
 const redirectError = ref("");
 const heading = ref<HTMLElement>();
+useSubmissionFocus(isRedirecting);
 
 onMounted(async () => {
   const config = await getConfig();
@@ -30,6 +32,7 @@ const strategy = computed<ReauthStrategy>(() => (reauthLoopState.value ? "logout
 const reauthLabel = computed(() => (strategy.value === "logout" ? "Se déconnecter puis se reconnecter" : "Se reconnecter"));
 
 async function reauth() {
+  if (isRedirecting.value) return;
   redirectError.value = "";
   isRedirecting.value = true;
   try {

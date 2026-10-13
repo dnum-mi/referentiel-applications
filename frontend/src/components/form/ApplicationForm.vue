@@ -17,17 +17,24 @@ import {
 import { useApplicationFormValidation } from "./application/application-form.validation";
 import { useApplicationFormState } from "./application/use-application-form-state";
 import { useApplicationFormActions } from "./application/use-application-form-actions";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = withDefaults(defineProps<{ mode?: ApplicationFormMode; initialData: ApplicationFormInitialData }>(), { mode: "create" });
 const emit = defineEmits<{ success: [application: ApplicationDto]; cancel: [] }>();
 const { form, moa, moe, isCreateFormDirty, getData } = useApplicationFormState(props.initialData, () => props.mode);
 const { errors, validateStep, validateAll } = useApplicationFormValidation(getData, () => props.mode);
-const { save, isSubmitting, syncContact, moaSyncing, moeSyncing, initialMoaOrganization, initialMoeOrganization } =
+const { save, isSubmitting, saveError, syncContact, moaSyncing, moeSyncing, initialMoaOrganization, initialMoeOrganization } =
   useApplicationFormActions(
     getData,
     () => props.mode,
     () => props.initialData.id,
+    () => {
+      const element = formElement.value;
+      const dialog = element?.closest('dialog, [role="dialog"]');
+      return !!element?.isConnected && !dialog?.matches('dialog:not([open]), [aria-hidden="true"]');
+    },
   );
+useSubmissionFocus(isSubmitting);
 const isCreateMode = computed(() => props.mode === "create");
 const hasAppWrite = useAppPermission(() => props.initialData.myPerms, [Permission.APP_WRITE]);
 const hasAppWritePriority = useAppPermission(() => props.initialData.myPerms, [Permission.APP_WRITE_PRIORITY]);
@@ -95,6 +102,9 @@ function confirmCancel() {
 <template>
   <DsfrStepper v-if="isCreateMode" :steps="applicationFormSteps" :current-step="currentStep" class="fr-mb-4w" />
   <form ref="formElement" data-testid="application-form" novalidate @submit.prevent="handleSubmit">
+    <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="application-save-error">
+      <p v-if="saveError" class="fr-error-text">{{ saveError }}</p>
+    </div>
     <p class="fr-text--sm fr-mb-3w" data-testid="required-fields-hint">Tous les champs avec un * sont obligatoires</p>
     <ApplicationMainStep
       v-if="!isCreateMode || currentStep === 1"

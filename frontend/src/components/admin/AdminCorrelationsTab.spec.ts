@@ -264,5 +264,52 @@ describe("adminCorrelationsTab (#2286, actions)", () => {
     await waitFor(() => expect(addErrorMessageMock).toHaveBeenCalledWith(expect.stringContaining("revue par ailleurs")));
     // La liste repart de l'état réel plutôt que d'afficher une ligne fantôme
     await waitFor(() => expect(findAllMock).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(screen.getByTestId("accept-suggestion-sug-1")).toHaveFocus());
+  });
+  it("garde la commande de détection disponible au focus tout en bloquant le doublon", async () => {
+    let finish = () => {};
+    runMock.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = () => resolve({ response: { ok: false, status: 500 } });
+        }),
+    );
+    renderTab();
+    await waitFor(() => expect(findAllMock).toHaveBeenCalledTimes(1));
+    const run = screen.getByTestId("run-detection-button");
+    run.focus();
+    await fireEvent.click(run);
+    expect(run).toHaveAttribute("aria-disabled", "true");
+    expect(run).toHaveFocus();
+    await fireEvent.click(run);
+    expect(runMock).toHaveBeenCalledTimes(1);
+    finish();
+    await waitFor(() => expect(run).toHaveAttribute("aria-disabled", "false"));
+    expect(run).toHaveFocus();
+  });
+  it.each(["success", "error"])("respecte le filtre rejoint pendant une revue lente (%s)", async (outcome) => {
+    let finish = () => {};
+    acceptMock.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = () =>
+            resolve(
+              outcome === "success"
+                ? { response: { ok: true }, data: { ...suggestionFixture, status: "ACCEPTED" } }
+                : { response: { ok: false, status: 500 } },
+            );
+        }),
+    );
+    renderTab();
+    await fireEvent.click(await screen.findByTestId("accept-suggestion-sug-1"));
+    const confirm = screen.getByTestId("correlation-confirm-btn");
+    confirm.focus();
+    await fireEvent.click(confirm);
+    const filter = screen.getByLabelText("Filtrer par statut");
+    filter.focus();
+    finish();
+    await waitFor(() => expect(findAllMock).toHaveBeenCalledTimes(2));
+    await screen.findByTestId("accept-suggestion-sug-1");
+    expect(filter).toHaveFocus();
   });
 });

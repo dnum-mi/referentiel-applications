@@ -125,6 +125,7 @@ function handlePageSizeChange(limit: number) {
 
 /** La remise à zéro suffit : le watcher débouncé déclenche l'unique rechargement. */
 function clearFilters() {
+  if (isLoading.value) return;
   statusFilter.value = "all";
   organizationFilter.value = "";
   searchFilter.value = "";
@@ -213,7 +214,7 @@ watch(
           type="button"
           secondary
           label="Effacer les filtres"
-          :disabled="isLoading"
+          :aria-disabled="isLoading"
           title="Effacer les filtres"
           data-testid="end-of-life-clear-filters"
           @click="clearFilters"

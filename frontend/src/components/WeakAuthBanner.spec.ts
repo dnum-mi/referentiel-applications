@@ -130,6 +130,48 @@ describe("WeakAuthBanner (#1985)", () => {
     expect(getByTestId("weak-auth-reauth-btn")).not.toBeDisabled();
   });
 
+  it("refuse un double envoi et rend le focus si la désactivation l'a fait perdre avant l'erreur", async () => {
+    let rejectPending: (reason: unknown) => void = () => {};
+    signinStrongMock.mockReturnValue(new Promise<void>((_resolve, reject) => (rejectPending = reject)));
+    downgraded("weak-method");
+    const { getByTestId, getByRole } = await renderLoaded();
+    const button = getByTestId("weak-auth-reauth-btn");
+    button.focus();
+    await fireEvent.click(button);
+    expect(button).toBeDisabled();
+    await fireEvent.click(button);
+    expect(signinStrongMock).toHaveBeenCalledOnce();
+    // Actual browsers can blur a button when disabled. The browser regression
+    // exercises that transition; jsdom needs the observed blur explicitly.
+    document.body.tabIndex = -1;
+    document.body.focus();
+    document.body.removeAttribute("tabindex");
+    expect(document.body).toHaveFocus();
+    rejectPending(new Error("Provider unavailable"));
+    await flushPromises();
+    expect(getByRole("alert")).toHaveTextContent("La redirection vers le fournisseur");
+    expect(button).not.toBeDisabled();
+    expect(button).toHaveFocus();
+  });
+
+  it("préserve le déplacement volontaire vers le lien d'aide pendant une réponse lente", async () => {
+    let rejectPending: (reason: unknown) => void = () => {};
+    signinStrongMock.mockReturnValue(new Promise<void>((_resolve, reject) => (rejectPending = reject)));
+    configMock.value = { authLevel: { reauth: { strategy: "prompt", prompt: "login" }, helpUrl: "https://intranet.example/aide" } };
+    downgraded("weak-method");
+    const { getByTestId, getByRole } = await renderLoaded();
+    const button = getByTestId("weak-auth-reauth-btn");
+    button.focus();
+    await fireEvent.click(button);
+    const help = getByTestId("weak-auth-help-link");
+    help.focus();
+    rejectPending(new Error("Provider unavailable"));
+    await flushPromises();
+    expect(getByRole("alert")).toHaveTextContent("La redirection vers le fournisseur");
+    expect(help).toHaveFocus();
+    expect(button).not.toBeDisabled();
+  });
+
   it("bascule sur la déconnexion complète après une reconnexion restée faible", async () => {
     downgraded("weak-method");
     setReauthLoop("prompt");

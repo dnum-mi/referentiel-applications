@@ -9,7 +9,7 @@ import { routeNames } from "@/router/route-names";
 import { useHostingStore } from "@/stores/hostingStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import type { DsfrAlertType } from "@gouvminint/vue-dsfr";
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import ApplicationForm from "./form/ApplicationForm.vue";
 import HostingList from "./hosting/HostingList.vue";
@@ -37,6 +37,8 @@ const errorMessage = ref<string>("");
 const isHostingModalOpen = ref(false);
 const isLabelModalOpen = ref(false);
 const hostingToEdit = ref<HostingDto | null>(null);
+const hostingEditTrigger = ref<HTMLElement | null>(null);
+const hostingsRegion = ref<HTMLElement | null>(null);
 const hostingToDelete = ref<HostingDto | null>(null);
 const labelToEdit = ref<LabelDto | null>(null);
 const labelToDelete = ref<LabelDto | null>(null);
@@ -186,7 +188,34 @@ async function updateApplication() {
 }
 
 function openEditHosting(hosting: HostingDto) {
+  hostingEditTrigger.value = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   hostingToEdit.value = hosting;
+}
+
+async function closeEditHosting() {
+  const hostingId = hostingToEdit.value?.id;
+  if (!hostingId) return;
+  const dialog = document.querySelector('[data-testid="hosting-modal"]');
+  const activeBeforeClose = document.activeElement;
+  const shouldRestore = activeBeforeClose === document.body || !!dialog?.contains(activeBeforeClose);
+  hostingToEdit.value = null;
+  await nextTick();
+  // Le rafraîchissement du store peut remplacer les boutons de la liste. Ne
+  // reprendre le focus que s'il était dans le dialogue ou a été perdu.
+  if (
+    !shouldRestore ||
+    (document.activeElement !== document.body &&
+      document.activeElement !== hostingEditTrigger.value &&
+      !dialog?.contains(document.activeElement))
+  )
+    return;
+  const row = hostingsRegion.value?.querySelector<HTMLElement>(`[data-testid="hosting-item-${hostingId}"]`);
+  const target =
+    hostingEditTrigger.value?.isConnected && !hostingEditTrigger.value.matches(":disabled")
+      ? hostingEditTrigger.value
+      : row?.querySelector<HTMLElement>('[data-testid="hosting-edit-btn"]') ||
+        hostingsRegion.value?.querySelector<HTMLElement>('[data-testid="info-add-hosting-btn"]');
+  target?.focus();
 }
 function openDeleteModal(hosting: HostingDto) {
   hostingToDelete.value = hosting;
@@ -375,7 +404,7 @@ watch(
         </div>
       </div>
 
-      <div v-if="canViewHostings" class="fr-card" data-testid="info-hostings">
+      <div v-if="canViewHostings" ref="hostingsRegion" class="fr-card" data-testid="info-hostings">
         <div class="fr-card__body">
           <div class="fr-card__content">
             <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
@@ -449,8 +478,8 @@ watch(
     :application-id="application.id"
     :initial-hosting="hostingToEdit"
     :error-message="errorMessage"
-    @close="hostingToEdit = null"
-    @hosting-updated="hostingToEdit = null"
+    @close="closeEditHosting"
+    @hosting-updated="closeEditHosting"
   />
   <DeleteConfirmationModal
     v-if="isDeleteModalOpen"

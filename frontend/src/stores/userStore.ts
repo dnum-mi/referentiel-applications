@@ -268,7 +268,10 @@ export const useUserStore = defineStore("userStore", () => {
       path: { id: target.id },
     });
 
-    if (generation === sessionGeneration && response.data && isApiSuccess(response)) {
+    if (generation !== sessionGeneration) return;
+    if (!isApiSuccess(response) || !response.data) throw new Error("La connexion sous cette identité a échoué.");
+
+    if (generation === sessionGeneration) {
       invalidateSession();
       setImpersonationState({
         userId: target.id,

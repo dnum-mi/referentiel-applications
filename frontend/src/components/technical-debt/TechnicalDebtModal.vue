@@ -49,10 +49,10 @@ const form = ref({
 
 // 12.8 : à l'ouverture, porter le focus sur le premier élément interactif de la modale (bouton « Fermer »).
 onMounted(async () => {
-  await loadActiveCampaigns();
-  if (!form.value.millesime) form.value.millesime = toInputValue(latestYear.value);
   await nextTick();
   document.querySelector<HTMLButtonElement>('[data-testid="technical-debt-modal"] .fr-btn--close')?.focus();
+  await loadActiveCampaigns();
+  if (!form.value.millesime) form.value.millesime = toInputValue(latestYear.value);
 });
 
 // Renvoie le score saisi (1-5) ou `undefined` si le champ est vide (non noté).

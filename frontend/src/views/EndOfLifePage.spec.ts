@@ -280,6 +280,48 @@ describe("EndOfLifePage", () => {
     expect(query.status).toBe("all");
   });
 
+  it("reste atteignable pendant le chargement sans réinitialiser les filtres avant sa fin", async () => {
+    render_();
+    await waitFor(() => expect(storeMock.fetchApplications).toHaveBeenCalledTimes(1));
+    const status = screen.getByTestId("end-of-life-filter-status");
+    await fireEvent.update(status, "eol");
+    await waitFor(() => expect(storeMock.fetchApplications).toHaveBeenCalledTimes(2));
+    storeMock.isLoading.value = true;
+    const clear = screen.getByRole("button", { name: "Effacer les filtres" });
+    await waitFor(() => expect(clear).toHaveAttribute("aria-disabled", "true"));
+    expect(clear).not.toBeDisabled();
+    clear.focus();
+    await fireEvent.click(clear);
+    expect(clear).toHaveFocus();
+    expect(status).toHaveValue("eol");
+    expect(storeMock.fetchApplications).toHaveBeenCalledTimes(2);
+    storeMock.isLoading.value = false;
+    await waitFor(() => expect(clear).toHaveAttribute("aria-disabled", "false"));
+    await fireEvent.click(clear);
+    await waitFor(() => expect(storeMock.fetchApplications).toHaveBeenCalledTimes(3));
+    expect(status).toHaveValue("all");
+    expect(storeMock.fetchApplications).toHaveBeenLastCalledWith(expect.objectContaining({ status: "all", page: 0 }));
+  });
+
+  it("conserve le focus de réinitialisation pendant le rechargement puis un déplacement volontaire", async () => {
+    render_();
+    await waitFor(() => expect(storeMock.fetchApplications).toHaveBeenCalledTimes(1));
+    await fireEvent.update(screen.getByTestId("end-of-life-filter-status"), "eol");
+    await waitFor(() => expect(storeMock.fetchApplications).toHaveBeenCalledTimes(2));
+    const clear = screen.getByRole("button", { name: "Effacer les filtres" });
+    clear.focus();
+    await fireEvent.click(clear);
+    await waitFor(() => expect(storeMock.fetchApplications).toHaveBeenCalledTimes(3));
+    storeMock.isLoading.value = true;
+    await waitFor(() => expect(clear).toHaveAttribute("aria-disabled", "true"));
+    expect(clear).toHaveFocus();
+    const search = screen.getByRole("textbox", { name: "Recherche" });
+    search.focus();
+    storeMock.isLoading.value = false;
+    await waitFor(() => expect(clear).toHaveAttribute("aria-disabled", "false"));
+    expect(search).toHaveFocus();
+  });
+
   it("affiche la date de fin de support actif pour une technologie sortie du support", async () => {
     storeMock.applications.value = [
       applicationFixture({

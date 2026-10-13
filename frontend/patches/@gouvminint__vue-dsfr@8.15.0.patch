@@ -11,7 +11,11 @@ index a437ecea2645779b318954776838c39739b1610c..c7732f253ac6c5bfbe8ef91e19ac54c1
  		};
  		onMounted(() => {
  			document.addEventListener("keydown", y);
-@@ -3284,7 +3284,7 @@ var FocusTrapProps = defineFocusTrapProps({
+@@ -3280,11 +3280,11 @@ var FocusTrapProps = defineFocusTrapProps({
+ 	setup(e, { emit: n }) {
+ 		let r = e, i = n, a = (e) => {
+-			e.key === "Escape" && S();
++			e.key === "Escape" && r.opened && S();
  		}, f = computed(() => r.isAlert ? "alertdialog" : "dialog"), p = ref(null), m = ref();
  		watch(() => r.opened, (e) => {
  			e ? (m.value?.showModal(), setTimeout(() => {
@@ -20,6 +24,7 @@ index a437ecea2645779b318954776838c39739b1610c..c7732f253ac6c5bfbe8ef91e19ac54c1
  			}, 100)) : m.value?.close(), h(e);
  		});
  		function h(e) {
+ 			typeof window < "u" && document.body.classList.toggle("modal-open", e);
 @@ -4762,9 +4762,20 @@ var FocusTrapProps = defineFocusTrapProps({
  		};
  		function s(e) {

@@ -16,10 +16,12 @@ const { currentUserMock, hasPermissionsMock, syncOrganizationMock, syncDirectMoc
   fetchUserMock: vi.fn(),
 }));
 
-const { blockMock, unblockMock, updateUserMock } = vi.hoisted(() => ({
+const { blockMock, unblockMock, updateUserMock, impersonateMock, errorMessageMock } = vi.hoisted(() => ({
   blockMock: vi.fn(),
   unblockMock: vi.fn(),
   updateUserMock: vi.fn(),
+  impersonateMock: vi.fn(),
+  errorMessageMock: vi.fn(),
 }));
 
 vi.mock("@/api/index", () => ({
@@ -34,7 +36,7 @@ vi.mock("@/api/index", () => ({
 
 vi.mock("@/stores/toasterStore", () => ({
   useToasterStore: () => ({
-    addErrorMessage: vi.fn(),
+    addErrorMessage: errorMessageMock,
     addSuccessMessage: vi.fn(),
   }),
 }));
@@ -51,7 +53,7 @@ vi.mock("@/stores/userStore", () => ({
       if (!scopePath) return true;
       return !targetOrganizationPath || targetOrganizationPath.startsWith(scopePath);
     },
-    startImpersonation: vi.fn(),
+    startImpersonation: impersonateMock,
     fetchUser: fetchUserMock,
   }),
 }));
@@ -148,6 +150,10 @@ describe("UserActions", () => {
     syncOrganizationMock.mockReset();
     syncDirectMock.mockReset();
     updateUserMock.mockReset();
+    blockMock.mockReset();
+    unblockMock.mockReset();
+    impersonateMock.mockReset();
+    errorMessageMock.mockReset();
     fetchUserMock.mockReset();
     currentUserMock.user.scopeOrganization = null;
     currentUserMock.user.id = "current-user";
@@ -160,6 +166,68 @@ describe("UserActions", () => {
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
+  });
+
+  it("garde le focus et l’erreur de blocage dans la fenêtre et refuse le double envoi", async () => {
+    hasPermissionsMock.mockReturnValue(true);
+    const pending = deferred<{ error: { message: string } }>();
+    blockMock.mockReturnValueOnce(pending.promise);
+    render(UserActions, { props: { user: targetUser }, global });
+    await fireEvent.click(screen.getByTestId("admin-user-block-btn"));
+    const button = screen.getByTestId("admin-block-user-confirm-btn");
+    button.focus();
+    await fireEvent.click(button);
+    expect(button).toHaveAttribute("aria-disabled", "true");
+    expect(button).not.toBeDisabled();
+    await fireEvent.click(button);
+    expect(blockMock).toHaveBeenCalledOnce();
+    pending.resolve({ error: { message: "Blocage refusé" } });
+    await flushPromises();
+    expect(screen.getByTestId("user-block-error")).toHaveTextContent("Blocage refusé");
+    expect(button).toHaveFocus();
+    expect(button).toHaveAttribute("aria-disabled", "false");
+    expect(errorMessageMock).not.toHaveBeenCalled();
+    blockMock.mockResolvedValueOnce({ data: { ...targetUser, isBlocked: true } });
+    await fireEvent.click(button);
+    await flushPromises();
+    expect(screen.queryByTestId("user-block-error")).not.toBeInTheDocument();
+  });
+
+  it("annonce le refus de blocage même si la fenêtre a été fermée pendant l’attente", async () => {
+    hasPermissionsMock.mockReturnValue(true);
+    const pending = deferred<{ error: { message: string } }>();
+    blockMock.mockReturnValueOnce(pending.promise);
+    render(UserActions, { props: { user: targetUser }, global });
+    await fireEvent.click(screen.getByTestId("admin-user-block-btn"));
+    await fireEvent.click(screen.getByTestId("admin-block-user-confirm-btn"));
+    await fireEvent.click(screen.getByTestId("admin-block-user-cancel-btn"));
+    const opener = screen.getByTestId("admin-user-block-btn");
+    opener.focus();
+    pending.resolve({ error: { message: "Blocage refusé tardivement" } });
+    await flushPromises();
+    expect(errorMessageMock).toHaveBeenCalledWith("Blocage refusé tardivement");
+    expect(opener).toHaveFocus();
+  });
+
+  it("rend l’impersonation disponible après refus sans perdre le focus ni doubler la demande", async () => {
+    const pending = deferred<void>();
+    impersonateMock.mockReturnValueOnce(pending.promise).mockRejectedValueOnce(new Error("Refus serveur"));
+    render(UserActions, { props: { user: targetUser }, global });
+    const button = screen.getByTestId("admin-user-impersonate-btn");
+    button.focus();
+    await fireEvent.click(button);
+    await fireEvent.click(button);
+    expect(impersonateMock).toHaveBeenCalledOnce();
+    expect(button).not.toBeDisabled();
+    expect(button).toHaveAttribute("aria-busy", "true");
+    pending.resolve();
+    await flushPromises();
+    await fireEvent.click(button);
+    await flushPromises();
+    expect(errorMessageMock).toHaveBeenCalledWith("Impossible d'impersonner cet utilisateur");
+    expect(button).toHaveFocus();
+    expect(button).toHaveAttribute("aria-disabled", "false");
+    expect(button).toHaveAttribute("aria-busy", "false");
   });
 
   it("demande confirmation après la saisie et garde l'édition si l'enregistrement confirmé est refusé", async () => {
