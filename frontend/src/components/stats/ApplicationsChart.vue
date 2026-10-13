@@ -105,10 +105,11 @@ onBeforeUnmount(() => chartInstance?.destroy());
       role="img"
       aria-labelledby="applications-chart-title"
       data-testid="applications-chart-canvas"
-      aria-describedby="applications-chart-desc"
+      aria-describedby="applications-chart-desc applications-chart-fallback"
       aria-details="applications-chart-data"
-      >Les valeurs mensuelles sont disponibles en activant le bouton « Voir le tableau ».</canvas
     >
+      <span id="applications-chart-fallback">Les valeurs mensuelles sont disponibles en activant le bouton « Voir le tableau ».</span>
+    </canvas>
     <StatisticsChartTable
       v-show="!isLoading && !errorMessage && isTableView"
       id="applications-chart-data"

@@ -95,10 +95,13 @@ onBeforeUnmount(() => chartInstance?.destroy());
       role="img"
       aria-labelledby="applications-iq-title"
       data-testid="applications-iq-chart-canvas"
-      aria-describedby="applications-iq-desc"
+      aria-describedby="applications-iq-desc applications-iq-fallback"
       aria-details="applications-iq-chart-data"
-      >Les effectifs par tranche d’IQ sont disponibles en activant le bouton « Voir le tableau ».</canvas
     >
+      <span id="applications-iq-fallback">
+        Les effectifs par tranche d’IQ sont disponibles en activant le bouton « Voir le tableau ».
+      </span>
+    </canvas>
     <StatisticsChartTable
       v-show="!isLoading && !errorMessage && isTableView"
       id="applications-iq-chart-data"

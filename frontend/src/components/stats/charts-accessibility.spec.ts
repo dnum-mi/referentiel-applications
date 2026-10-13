@@ -94,6 +94,39 @@ describe("Statistiques — données équivalentes et commandes de lecture", () =
     expect(rows.reduce((sum, row) => sum + row.total, 0)).toBe(28);
   });
 
+  it.each([
+    {
+      component: ApplicationsIqChart,
+      name: "Répartition des applications par IQ",
+      description: /^Répartition par tranches de 5 points/,
+      fallback: "Les effectifs par tranche d’IQ sont disponibles en activant le bouton « Voir le tableau ».",
+    },
+    {
+      component: ApplicationsChart,
+      name: "Nombre d'applications référencées",
+      description: /^Évolution mensuelle du nombre d’applications référencées/,
+      fallback: "Les valeurs mensuelles sont disponibles en activant le bouton « Voir le tableau ».",
+    },
+    {
+      component: IqChart,
+      name: /^Évolution de l’IQ moyen du/,
+      description: /^Évolution de l’IQ moyen du/,
+      fallback: "Les valeurs sont disponibles en activant le bouton « Voir le tableau ».",
+    },
+  ])("inclut le contenu alternatif du canvas $name dans sa description accessible", async ({ component, name, description, fallback }) => {
+    render(component, { global });
+    await flushPromises();
+    const canvas = screen.getByRole("img", { name });
+    const fallbackDescription = new RegExp(`${fallback.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`);
+    expect(canvas).toHaveTextContent(fallback);
+    expect(canvas).toHaveAccessibleDescription(description);
+    expect(canvas).toHaveAccessibleDescription(fallbackDescription);
+    await fireEvent.click(screen.getByRole("button", { name: "Voir le tableau" }));
+    expect(screen.getByRole("table")).toBeVisible();
+    await fireEvent.click(screen.getByRole("button", { name: "Voir le graphique" }));
+    expect(screen.getByRole("img", { name })).toHaveAccessibleDescription(fallbackDescription);
+  });
+
   it("affiche exactement les mêmes 21 tranches et effectifs dans le graphique IQ et le tableau", async () => {
     const { container } = render(ApplicationsIqChart, { global });
     await flushPromises();

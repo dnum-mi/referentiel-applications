@@ -170,10 +170,11 @@ onBeforeUnmount(() => {
               role="img"
               aria-labelledby="iq-chart-title"
               data-testid="iq-chart-canvas"
-              aria-describedby="iq-chart-desc"
+              aria-describedby="iq-chart-desc iq-chart-fallback"
               aria-details="iq-chart-data"
-              >Les valeurs sont disponibles en activant le bouton « Voir le tableau ».</canvas
             >
+              <span id="iq-chart-fallback">Les valeurs sont disponibles en activant le bouton « Voir le tableau ».</span>
+            </canvas>
           </figure>
           <div v-show="!isLoading && !error && isTableView && !!iqStats.length" data-testid="iq-chart-table">
             <StatisticsChartTable
