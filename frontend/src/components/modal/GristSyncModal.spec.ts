@@ -18,6 +18,11 @@ vi.mock("@/composables/use-application-search", async () => {
   const { ref } = await import("vue");
   return { useApplicationSearch: () => ({ filters: ref({ shortName: "app" }), total: ref(42) }) };
 });
+vi.mock("@/composables/use-column-preferences", async () => {
+  const { ref } = await import("vue");
+  return { useColumnPreferences: () => ({ visibleColumns: ref([{ field: "label" }, { field: "status" }]) }) };
+});
+const COLUMNS = ["label", "status"];
 
 async function renderModal() {
   const wrapper = mount(GristSyncModal, {
@@ -46,14 +51,16 @@ async function renderModal() {
 const confirm = (wrapper: Awaited<ReturnType<typeof renderModal>>) =>
   wrapper.get('[data-testid="grist-sync-confirm-btn"]').trigger("click");
 
-const ok = (docId: string, tableId: string, rowsGreyed = 0, rowsDeleted = 0) => ({
+const ok = (docId: string, tableId: string, rowsKept = 0, rowsDeleted = 0, columnsAdded: string[] = [], columnsRemoved: string[] = []) => ({
   docId,
   tableId,
   status: "ok",
   tableCreated: false,
   rowsWritten: 42,
-  rowsGreyed,
+  rowsKept,
   rowsDeleted,
+  columnsAdded,
+  columnsRemoved,
 });
 
 beforeEach(() => {
@@ -74,14 +81,18 @@ describe("GristSyncModal", () => {
     expect(options("doc2")).toEqual(["Nouvelle table"]);
   });
 
-  it("synchronise par défaut la première table, ou une nouvelle table sans table existante", async () => {
+  it("synchronise par défaut la première table, ou une nouvelle table sans table existante, avec les colonnes affichées", async () => {
     const wrapper = await renderModal();
     await confirm(wrapper);
 
-    expect(syncWithGrist).toHaveBeenCalledExactlyOnceWith({ shortName: "app" }, [
-      { docId: "doc1", tableId: "RefApp" },
-      { docId: "doc2", newTable: true },
-    ]);
+    expect(syncWithGrist).toHaveBeenCalledExactlyOnceWith(
+      { shortName: "app" },
+      [
+        { docId: "doc1", tableId: "RefApp" },
+        { docId: "doc2", newTable: true },
+      ],
+      COLUMNS,
+    );
   });
 
   it("envoie les tables choisies", async () => {
@@ -89,10 +100,14 @@ describe("GristSyncModal", () => {
     await wrapper.get('[data-testid="grist-sync-choice-doc1"] select').setValue("RefApp2");
     await confirm(wrapper);
 
-    expect(syncWithGrist).toHaveBeenCalledWith({ shortName: "app" }, [
-      { docId: "doc1", tableId: "RefApp2" },
-      { docId: "doc2", newTable: true },
-    ]);
+    expect(syncWithGrist).toHaveBeenCalledWith(
+      { shortName: "app" },
+      [
+        { docId: "doc1", tableId: "RefApp2" },
+        { docId: "doc2", newTable: true },
+      ],
+      COLUMNS,
+    );
   });
 
   it("ne synchronise rien si aucun document n'est lisible", async () => {
@@ -115,13 +130,13 @@ describe("GristSyncModal", () => {
     expect(doc2.get("select").attributes("disabled")).toBeDefined();
     expect(doc2.text()).toContain("Document illisible : Grist a refusé la requête (404).");
     await confirm(wrapper);
-    expect(syncWithGrist).toHaveBeenCalledWith({ shortName: "app" }, [{ docId: "doc1", tableId: "RefApp" }]);
+    expect(syncWithGrist).toHaveBeenCalledWith({ shortName: "app" }, [{ docId: "doc1", tableId: "RefApp" }], COLUMNS);
   });
 
   it("annonce les tables synchronisées et celles en échec, puis se ferme", async () => {
     syncWithGrist.mockResolvedValue({
       documents: [
-        ok("doc1", "RefApp", 3, 5),
+        ok("doc1", "RefApp", 3, 5, ["statut"], ["iq", "tags"]),
         { docId: "doc2", tableId: "RefApp2", status: "error", error: "Grist a refusé la requête (404)." },
       ],
     });
@@ -129,7 +144,9 @@ describe("GristSyncModal", () => {
     await confirm(wrapper);
     await flushPromises();
 
-    expect(addSuccessMessage).toHaveBeenCalledWith("Grist synchronisé (doc1 › RefApp) : 42 applications, 3 grisées, 5 retirées.");
+    expect(addSuccessMessage).toHaveBeenCalledWith(
+      "Grist synchronisé (doc1 › RefApp) : 42 applications, 3 conservées hors sélection, 5 retirées. Colonnes ajoutées : statut. Colonnes retirées : iq, tags.",
+    );
     expect(addErrorMessage).toHaveBeenCalledWith("Synchronisation Grist en échec pour doc2 › RefApp2 (Grist a refusé la requête (404).).");
     expect(wrapper.emitted("close")).toHaveLength(1);
   });

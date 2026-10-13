@@ -4723,11 +4723,13 @@ paths:
   /api/v2/grist/setup:
     post:
       description: >-
-        Écrit les applications correspondant aux filtres de recherche (mêmes
-        filtres et même périmètre que l'export Excel ; `page` et `pageSize` sont
-        ignorés) dans les documents Grist du profil de l'utilisateur
-        (gristDocIds). Sans document dans le profil, l'appel répond 400 ; une
-        cible hors profil répond 403.
+        Écrit dans les documents Grist du profil de l'utilisateur (gristDocIds)
+        ce que la page de recherche affiche : les applications correspondant aux
+        filtres (même périmètre que la recherche ; `page` et `pageSize` sont
+        ignorés), avec les colonnes visibles (`columns`) et les mêmes valeurs.
+        Une colonne réservée (ColumnRead) n'est jamais écrite pour un
+        utilisateur qui ne peut pas la voir. Sans document dans le profil,
+        l'appel répond 400 ; une cible hors profil répond 403.
 
 
         Le corps `targets` choisit, par document, une table existante
@@ -4739,15 +4741,18 @@ paths:
 
 
         Chaque application est retrouvée par son identifiant (refapp_id) : les
-        colonnes nom et statut sont mises à jour, les colonnes metadata_1 à
-        metadata_3 saisies dans Grist sont conservées. Chaque table garde sa
-        propre sélection : seule la table visée est modifiée.
+        colonnes RefApp sont mises à jour, les colonnes ajoutées dans Grist
+        (métadonnées) sont conservées. Les colonnes RefApp de la table suivent
+        les colonnes visibles : celles qui manquent sont ajoutées avant les
+        métadonnées, celles qui ne sont plus affichées sont supprimées (ainsi
+        que dans_selection et motif_sortie des versions précédentes). Chaque
+        table garde sa propre sélection : seule la table visée est modifiée.
 
 
-        Les lignes dont l'application n'est plus dans la sélection sont grisées
-        (dans_selection = false, motif_sortie = « hors filtre » ou « supprimée
-        de RefApp ») si elles portent des métadonnées, supprimées sinon. Une
-        application qui revient dans la sélection retrouve sa ligne, dégrisée.
+        Les lignes dont l'application n'est plus dans la sélection sont
+        conservées telles quelles si une colonne de données ajoutée dans Grist y
+        a une valeur, supprimées sinon. Une application qui revient dans la
+        sélection retrouve sa ligne.
 
 
         Les Access Rules rendent les colonnes écrites par RefApp non modifiables
@@ -5241,7 +5246,8 @@ paths:
   /api/v2/grist/records:
     get:
       description: Retourne les lignes d'une table RefApp du document (par défaut la
-        première), métadonnées saisies dans Grist comprises. Le document doit
+        première), avec dans `values` les colonnes écrites par RefApp et dans
+        `metadata` les colonnes de données ajoutées dans Grist. Le document doit
         figurer dans le profil de l'utilisateur (403 sinon) ; sans table RefApp,
         la liste est vide.
       operationId: GristController_records
@@ -11201,6 +11207,37 @@ components:
             RefApp2, RefApp3…"
       required:
         - docId
+    GristColumnField:
+      type: string
+      enum:
+        - quality
+        - label
+        - priorityRestart
+        - hostingDisplay
+        - tag
+        - moa
+        - moe
+        - hostingProviderDisplay
+        - hostingPlatformDisplay
+        - hostingManager
+        - businessDivision
+        - rsimm
+        - dima
+        - pdma
+        - rgaa
+        - dsfr
+        - rgpd
+        - pra
+        - homologation
+        - homologationDateEnd
+        - status
+        - applicationViews
+        - technicalMaturity
+        - businessMaturity
+        - costContainment
+      description: "Colonnes visibles de la page de recherche, dans l'ordre affiché.
+        Celles que le demandeur ne peut pas voir (ColumnRead) sont ignorées.
+        Sans cette liste : les colonnes affichées par défaut."
     GristSyncDto:
       type: object
       properties:
@@ -11211,6 +11248,21 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/GristSyncTargetDto"
+        columns:
+          type: array
+          uniqueItems: true
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/GristColumnField"
+          example:
+            - quality
+            - label
+            - priorityRestart
+            - hostingDisplay
+            - tag
+          description: "Colonnes visibles de la page de recherche, dans l'ordre affiché.
+            Celles que le demandeur ne peut pas voir (ColumnRead) sont ignorées.
+            Sans cette liste : les colonnes affichées par défaut."
     GristDocumentSyncStatus:
       type: string
       enum:
@@ -11239,13 +11291,26 @@ components:
         rowsWritten:
           type: number
           description: Nombre d'applications écrites (créées ou mises à jour)
-        rowsGreyed:
+        rowsKept:
           type: number
-          description: Lignes hors sélection conservées et grisées car elles portent des
-            métadonnées
+          description: Lignes hors sélection conservées telles quelles car une colonne
+            ajoutée dans Grist y a une valeur
         rowsDeleted:
           type: number
-          description: Lignes hors sélection supprimées car sans métadonnées
+          description: Lignes hors sélection supprimées car sans valeur dans les colonnes
+            ajoutées dans Grist
+        columnsAdded:
+          description: Colonnes ajoutées à la table par cet appel (affichées dans la page
+            de recherche mais absentes de la table)
+          type: array
+          items:
+            type: string
+        columnsRemoved:
+          description: Colonnes RefApp retirées de la table par cet appel (plus affichées
+            dans la page de recherche, ou d'une version précédente)
+          type: array
+          items:
+            type: string
       required:
         - docId
         - status
@@ -11286,43 +11351,21 @@ components:
         refapp_id:
           type: string
           description: Identifiant de l'application dans RefApp
-        nom:
-          type: string
-          description: Nom de l'application
-        statut:
-          type: string
-          description: Statut courant de l'application
-        dans_selection:
-          type: boolean
-          nullable: true
-          description: "false : l'application n'est plus dans la sélection synchronisée
-            (ligne grisée)"
-        motif_sortie:
-          type: string
-          description: "Motif de sortie de la sélection : « hors filtre », « supprimée de
-            RefApp », vide sinon"
-        metadata_1:
-          type: string
-          nullable: true
-          description: Saisie libre dans Grist
-        metadata_2:
-          type: string
-          nullable: true
-          description: Saisie libre dans Grist
-        metadata_3:
-          type: string
-          nullable: true
-          description: Saisie libre dans Grist
+        values:
+          type: object
+          additionalProperties: true
+          description: Valeurs des colonnes écrites par RefApp présentes dans la table
+            (iq, nom, statut…), par identifiant de colonne
+        metadata:
+          type: object
+          additionalProperties: true
+          description: "Métadonnées : valeurs des colonnes de données ajoutées dans Grist,
+            par identifiant de colonne"
       required:
         - rowId
         - refapp_id
-        - nom
-        - statut
-        - dans_selection
-        - motif_sortie
-        - metadata_1
-        - metadata_2
-        - metadata_3
+        - values
+        - metadata
     CreateHostingOptionDto:
       type: object
       properties:

@@ -108,6 +108,21 @@ describe("UserGristSettings — connexion", () => {
     expect(screen.getByLabelText(/Clé d'API/)).toHaveValue("");
   });
 
+  it("montre une clé enregistrée par des points, sans valeur dans le champ", () => {
+    hasGristApiKey.value = true;
+    render(UserGristSettings);
+
+    const input = screen.getByLabelText(/Clé d'API/);
+    expect(input).toHaveAttribute("placeholder", "••••••••••••••••");
+    expect(input).toHaveValue("");
+  });
+
+  it("n'affiche pas de points sans clé enregistrée", () => {
+    render(UserGristSettings);
+
+    expect(screen.getByLabelText(/Clé d'API/)).not.toHaveAttribute("placeholder");
+  });
+
   it("conserve la clé enregistrée quand le champ reste vide", async () => {
     hasGristApiKey.value = true;
     gristUrl.value = "https://grist.example";
