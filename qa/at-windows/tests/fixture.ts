@@ -212,6 +212,24 @@ export async function attachIdentity(
   browserVersion: string,
   info: TestInfo,
 ) {
+  // Guidepup 0.35 returns nested INI sections, not flattened dotted keys.
+  const profile = nvda.getSettings();
+  const setting = (...keys: string[]): unknown => {
+    let value: unknown = profile;
+    for (const key of keys) {
+      if (!value || typeof value !== "object" || !(key in value))
+        return undefined;
+      value = (value as Record<string, unknown>)[key];
+    }
+    return value;
+  };
+  const readerLanguage = setting("general", "language");
+  const synthesizer = setting("speech", "synth");
+  const voice = setting("speech", "espeak", "voice");
+  await info.attach("reader-profile", {
+    body: Buffer.from(JSON.stringify({ readerLanguage, synthesizer, voice })),
+    contentType: "application/json",
+  });
   const windows = await windowsSnapshot();
   const reader = windows.processes.find(
     (item: unknown) =>
@@ -248,11 +266,7 @@ export async function attachIdentity(
       "NVDA et Firefox ne sont pas confirmés dans la même session interactive.",
     );
   }
-  if (
-    nvda.getSetting("general.language") !== "fr" ||
-    nvda.getSetting("speech.synth") !== "espeak" ||
-    nvda.getSetting("speech.espeak.voice") !== "fr"
-  ) {
+  if (readerLanguage !== "fr" || synthesizer !== "espeak" || voice !== "fr") {
     throw new Error(
       "Langue française du profil ou de la synthèse non confirmée.",
     );
@@ -264,9 +278,9 @@ export async function attachIdentity(
           at: new Date().toISOString(),
           windows,
           readerBundle: nvda.version,
-          readerLanguage: nvda.getSetting("general.language"),
-          synthesizer: nvda.getSetting("speech.synth"),
-          voice: nvda.getSetting("speech.espeak.voice"),
+          readerLanguage,
+          synthesizer,
+          voice,
           browser: "Firefox Playwright (build patché)",
           browserVersion,
           checkoutHead: process.env.RGAA_PRODUCT_HEAD,
