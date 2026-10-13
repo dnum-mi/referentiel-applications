@@ -72,6 +72,36 @@ export class UserEntity {
   emailNotificationsEnabled?: boolean;
 
   @ApiProperty({
+    description:
+      "Identifiants des documents Grist synchronisés depuis la recherche",
+    required: false,
+    isArray: true,
+    type: String,
+  })
+  @IsOptional()
+  @IsString({ each: true })
+  gristDocIds?: string[];
+
+  @ApiProperty({
+    description: "Instance Grist des documents synchronisés",
+    required: false,
+    nullable: true,
+    type: String,
+  })
+  @IsOptional()
+  @IsString()
+  gristUrl?: string | null;
+
+  @ApiProperty({
+    description:
+      "Une clé d'API Grist est enregistrée (la clé elle-même n'est jamais renvoyée)",
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  hasGristApiKey?: boolean;
+
+  @ApiProperty({
     description: "Applications suivies par l'utilisateur",
     required: false,
     type: () => [UserFollowedApplicationDto],

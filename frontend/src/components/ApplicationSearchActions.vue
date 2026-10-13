@@ -9,6 +9,7 @@ import { useToasterStore } from "@/stores/toasterStore";
 import { routeNames } from "@/router/route-names";
 import ReportModal from "@/components/modal/ReportModal.vue";
 import CreateQualityCampaignModal from "@/components/modal/CreateQualityCampaignModal.vue";
+import GristSyncModal from "@/components/modal/GristSyncModal.vue";
 import ColumnCustomization from "@/components/ColumnCustomization.vue";
 import { Permission } from "@/client";
 
@@ -20,6 +21,7 @@ const toaster = useToasterStore();
 
 const isReportMissingOpen = ref(false);
 const isCreateCampaignOpen = ref(false);
+const isGristSyncOpen = ref(false);
 
 const reportStatusMessage = ref("");
 
@@ -41,6 +43,7 @@ function createModalHandlers(isOpen: Ref<boolean>) {
 
 const { open: openReport, close: closeReport } = createModalHandlers(isReportMissingOpen);
 const { open: openCreateCampaign, close: closeCreateCampaign } = createModalHandlers(isCreateCampaignOpen);
+const { open: openGristSync, close: closeGristSync } = createModalHandlers(isGristSyncOpen);
 
 async function exportToExcel() {
   try {
@@ -54,6 +57,20 @@ async function exportToExcel() {
 const hasExportPermissions = computed(() => {
   return userStore.hasPermissions([Permission.DATA_EXPORT]);
 });
+
+const hasGristSyncPermissions = computed(() => {
+  return userStore.hasPermissions([Permission.GRIST_SYNC]);
+});
+
+// La synchronisation utilise l'instance, la clé d'API et les documents du profil.
+const isGristConfigured = computed(
+  () => !!userStore.user?.gristUrl && !!userStore.user?.hasGristApiKey && (userStore.user?.gristDocIds?.length ?? 0) > 0,
+);
+const gristSyncTitle = computed(() =>
+  isGristConfigured.value
+    ? "Synchroniser avec Grist les applications correspondant aux filtres actuels, dans les tables de votre choix"
+    : "Renseignez votre connexion et vos documents Grist dans l'onglet « Synchronisation Grist » de votre profil pour synchroniser",
+);
 
 const hasCreateApplicationsPermissions = computed(() => {
   return userStore.hasPermissions([Permission.CREATE_APPLICATION]);
@@ -134,6 +151,34 @@ const hasQualityCampaignPermissions = computed(() => {
       ></DsfrButton>
 
       <DsfrButton
+        v-if="hasGristSyncPermissions"
+        label="Synchroniser avec Grist"
+        icon="ri-refresh-line"
+        secondary
+        :disabled="!isGristConfigured"
+        data-testid="grist-sync-btn"
+        class="action-btn icon-left hide-on-mobile"
+        aria-haspopup="dialog"
+        @click="openGristSync"
+        :aria-label="gristSyncTitle"
+        :title="gristSyncTitle"
+      ></DsfrButton>
+
+      <DsfrButton
+        v-if="hasGristSyncPermissions"
+        label="Synchroniser avec Grist"
+        icon="ri-refresh-line"
+        secondary
+        :disabled="!isGristConfigured"
+        data-testid="grist-sync-btn-mobile"
+        class="action-btn icon-left show-on-mobile"
+        aria-haspopup="dialog"
+        @click="openGristSync"
+        :aria-label="gristSyncTitle"
+        :title="gristSyncTitle"
+      ></DsfrButton>
+
+      <DsfrButton
         label="Créer une campagne qualité"
         icon="ri-mail-send-line"
         secondary
@@ -159,6 +204,8 @@ const hasQualityCampaignPermissions = computed(() => {
   ></ReportModal>
 
   <CreateQualityCampaignModal :opened="isCreateCampaignOpen" @close="closeCreateCampaign" />
+
+  <GristSyncModal v-if="hasGristSyncPermissions" :opened="isGristSyncOpen" @close="closeGristSync" />
 </template>
 
 <style scoped>

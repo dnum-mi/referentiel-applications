@@ -3,6 +3,7 @@ import appConfig from "./app.config";
 import { authLevelConfig } from "./auth-level.config";
 import { correlationConfig } from "./correlation.config";
 import databaseConfig from "./database.config";
+import { gristConfig } from "./grist.config";
 import { jwtValidationConfig } from "./jwt-validation.config";
 import { maiaConfig } from "./maia.config";
 import oidcConfig from "./oidc.config";
@@ -14,6 +15,7 @@ export {
   correlationConfig,
   databaseConfig,
   emailConfig,
+  gristConfig,
   jwtValidationConfig,
   maiaConfig,
   oidcConfig,
@@ -30,4 +32,5 @@ export const configs = [
   authLevelConfig,
   correlationConfig,
   technologyConfig,
+  gristConfig,
 ];

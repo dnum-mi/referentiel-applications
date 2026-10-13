@@ -920,6 +920,9 @@ erDiagram
   Roles role
   UserType type
   Boolean emailNotificationsEnabled
+  String gristDocIds
+  String gristUrl "nullable"
+  String gristApiKey "nullable"
   Permission additionalPermissions
   DateTime lastPermissionChangeAt "nullable"
   String lastPermissionChangedById "nullable"
@@ -1030,6 +1033,11 @@ Properties as follows:
 - `role`: Groupement de permissions par defaut
 - `type`: Type de compte utilisateur (humain ou bot)
 - `emailNotificationsEnabled`: Si les notifications par email sont activées
+- `gristDocIds`: Identifiants des documents Grist que l'utilisateur synchronise depuis la recherche
+- `gristUrl`: Instance Grist des documents synchronisés (ex : https://grist.numerique.gouv.fr)
+- `gristApiKey`
+  > Clé d'API Grist de l'utilisateur. Secret : omise de toutes les requêtes Prisma par défaut
+  > (cf. PrismaService) et jamais renvoyée par l'API.
 - `additionalPermissions`: Permissions supplémentaire (ancien capabilities)
 - `lastPermissionChangeAt`
   > Date de la dernière modification des droits (rôle/permissions) de cet utilisateur.
