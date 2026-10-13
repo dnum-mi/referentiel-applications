@@ -106,6 +106,42 @@ export function swaggerAccessibilityPlugin(system: SwaggerSystem) {
       container = React.createRef<HTMLElement>();
       observer: MutationObserver | null = null;
 
+      updateEditableFields() {
+        for (const control of Array.from(
+          this.container.current?.querySelectorAll<
+            HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+          >(
+            '.parameters-container input:not([type="hidden"]), .parameters-container select, .parameters-container textarea, .opblock-section-request-body input:not([type="hidden"]), .opblock-section-request-body select, .opblock-section-request-body textarea',
+          ) ?? [],
+        )) {
+          // Swagger assigns the same id to the wrapping label and select for
+          // request media types. Keep the control id as the unique reference.
+          const wrappingLabel = control.closest("label");
+          if (wrappingLabel?.id && wrappingLabel.id === control.id)
+            wrappingLabel.removeAttribute("id");
+          const hasLabel =
+            ["aria-label", "aria-labelledby", "title"].some((attribute) =>
+              control.getAttribute(attribute)?.trim(),
+            ) ||
+            Array.from(control.labels ?? []).some((label) =>
+              label.textContent?.trim(),
+            );
+          if (hasLabel) continue;
+          const label =
+            control
+              .closest("tr[data-param-name]")
+              ?.querySelector<HTMLElement>(".parameter__name") ??
+            control
+              .closest(".opblock-section-request-body")
+              ?.querySelector<HTMLElement>(".opblock-section-header h4");
+          if (!label?.textContent?.trim()) continue;
+          label.id ||= `refapp-swagger-field-label-${++headingIndex}`;
+          control.setAttribute("aria-labelledby", label.id);
+          if (label.classList.contains("required"))
+            control.setAttribute("aria-required", "true");
+        }
+      }
+
       updateLanguage = () => {
         for (const heading of Array.from(
           this.container.current?.querySelectorAll<HTMLElement>(
@@ -130,6 +166,10 @@ export function swaggerAccessibilityPlugin(system: SwaggerSystem) {
           if (language) element.lang = language;
           else element.removeAttribute("lang");
         }
+        // Try it out mounts fields inside existing operations after the layout
+        // itself rendered. Its observer also associates these new fields with
+        // their visible parameter names or request-body heading.
+        this.updateEditableFields();
       };
 
       componentDidMount() {

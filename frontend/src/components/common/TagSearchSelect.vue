@@ -2,6 +2,7 @@
 import { isApiSuccess } from "@/api/api-result";
 import type { TagDto } from "@/client";
 import api from "@/api";
+import { nextTick, ref } from "vue";
 
 defineOptions({ inheritAttrs: false });
 
@@ -19,6 +20,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   "update:tags": [value: string[]];
 }>();
+const fieldset = ref<HTMLFieldSetElement>();
 
 async function getTagsOptions(query: string) {
   const response = await api.tagsControllerFindAll({
@@ -43,21 +45,28 @@ function addTag(selection: TagDto) {
   }
 }
 
-function removeTag(index: number) {
+async function removeTag(index: number) {
+  const previousFocus = document.activeElement;
+  const restoreFocus = previousFocus instanceof HTMLElement && !!fieldset.value?.contains(previousFocus);
   emit(
     "update:tags",
     props.tags.filter((_, i) => i !== index),
   );
+  await nextTick();
+  if (!restoreFocus || (document.activeElement !== previousFocus && document.activeElement !== document.body)) return;
+  const remaining = fieldset.value?.querySelectorAll<HTMLButtonElement>(".fr-tags-group button");
+  const target = remaining?.[Math.min(index, remaining.length - 1)] ?? fieldset.value?.querySelector<HTMLInputElement>('[role="combobox"]');
+  target?.focus();
 }
 </script>
 <template>
-  <fieldset class="tag-search-fieldset" v-bind="$attrs">
+  <fieldset ref="fieldset" class="tag-search-fieldset" v-bind="$attrs">
     <legend class="fr-label tag-search-legend">
       Tags
       <DsfrTooltip v-if="tooltipContent" aria-label="Afficher l’aide sur le filtre Tags" :content="tooltipContent" />
     </legend>
     <ul class="fr-tags-group" data-testid="info-tags">
-      <li v-for="(tag, index) in props.tags" :key="index" class="tag-item">
+      <li v-for="(tag, index) in props.tags" :key="tag" class="tag-item">
         <DsfrTag
           :label="tag"
           tag-name="button"

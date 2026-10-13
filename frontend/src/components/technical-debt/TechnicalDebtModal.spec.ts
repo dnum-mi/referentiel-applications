@@ -93,3 +93,76 @@ it("ne reprend pas le focus après fermeture pendant le chargement des campagnes
   expect(outside).toHaveFocus();
   outside.remove();
 });
+
+it("annonce un échec de chargement et permet un réessai sans perdre les scores", async () => {
+  let reject!: (error: Error) => void;
+  mocks.loadCampaigns.mockReturnValueOnce(
+    new Promise((_, fail) => {
+      reject = fail;
+    }),
+  );
+  const wrapper = renderModal();
+  await flushPromises();
+  const field = wrapper.get<HTMLInputElement>('[data-testid="technical-maturity-select"]');
+  field.element.focus();
+  await field.setValue("4.25");
+  reject(new DOMException("The operation timed out.", "TimeoutError"));
+  await flushPromises();
+  expect(wrapper.get('[data-testid="technical-debt-campaigns-error"]').text()).toContain("Impossible de charger les campagnes");
+  expect(field.element).toHaveFocus();
+  expect(field.element).toHaveValue(4.25);
+  let release!: () => void;
+  mocks.loadCampaigns.mockReturnValueOnce(
+    new Promise<void>((resolve) => {
+      release = resolve;
+    }),
+  );
+  const retry = wrapper.get<HTMLButtonElement>('[data-testid="technical-debt-campaigns-retry"]');
+  retry.element.focus();
+  await retry.trigger("click");
+  await retry.trigger("click");
+  expect(mocks.loadCampaigns).toHaveBeenCalledTimes(2);
+  expect(retry.element).toHaveAttribute("aria-disabled", "true");
+  release();
+  await flushPromises();
+  expect(wrapper.find('[data-testid="technical-debt-campaigns-retry"]').exists()).toBe(false);
+  expect(wrapper.get('[data-testid="millesime-select"]').element).toHaveFocus();
+  expect(field.element).toHaveValue(4.25);
+});
+
+it("respecte le focus déplacé pendant le réessai des campagnes", async () => {
+  mocks.loadCampaigns.mockRejectedValueOnce(new Error("hors ligne"));
+  const wrapper = renderModal();
+  await flushPromises();
+  let release!: () => void;
+  mocks.loadCampaigns.mockReturnValueOnce(
+    new Promise<void>((resolve) => {
+      release = resolve;
+    }),
+  );
+  const retry = wrapper.get<HTMLButtonElement>('[data-testid="technical-debt-campaigns-retry"]');
+  retry.element.focus();
+  await retry.trigger("click");
+  const field = wrapper.get<HTMLInputElement>('[data-testid="technical-maturity-select"]');
+  field.element.focus();
+  release();
+  await flushPromises();
+  expect(field.element).toHaveFocus();
+});
+
+it("rétablit la soumission après un délai réseau dépassé et garde le brouillon", async () => {
+  mocks.save.mockRejectedValueOnce(new DOMException("The operation timed out.", "TimeoutError"));
+  const wrapper = renderModal();
+  await flushPromises();
+  const field = wrapper.get<HTMLInputElement>('[data-testid="technical-maturity-select"]');
+  await field.setValue("4.25");
+  const submit = wrapper.get<HTMLButtonElement>('[data-testid="technical-debt-submit-btn"]');
+  submit.element.focus();
+  await wrapper.get("form").trigger("submit");
+  await flushPromises();
+  expect(submit.element).not.toBeDisabled();
+  expect(submit.element).toHaveFocus();
+  expect(wrapper.get('[data-testid="technical-debt-form-error"]').text()).toContain("Votre saisie est conservée");
+  expect(field.element).toHaveValue(4.25);
+  expect(wrapper.emitted("close")).toBeUndefined();
+});

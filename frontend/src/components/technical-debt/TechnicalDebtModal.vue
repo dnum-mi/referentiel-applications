@@ -20,6 +20,8 @@ const emit = defineEmits<{
 const toaster = useToasterStore();
 const isSubmitting = ref(false);
 const formError = ref("");
+const campaignError = ref("");
+const isLoadingCampaigns = ref(false);
 useSubmissionFocus(isSubmitting);
 const isEditMode = computed(() => !!props.initialData);
 
@@ -51,9 +53,31 @@ const form = ref({
 onMounted(async () => {
   await nextTick();
   document.querySelector<HTMLButtonElement>('[data-testid="technical-debt-modal"] .fr-btn--close')?.focus();
-  await loadActiveCampaigns();
-  if (!form.value.millesime) form.value.millesime = toInputValue(latestYear.value);
+  await refreshCampaigns();
 });
+
+async function refreshCampaigns() {
+  if (isLoadingCampaigns.value) return;
+  const origin = document.activeElement;
+  isLoadingCampaigns.value = true;
+  try {
+    await loadActiveCampaigns();
+    if (!form.value.millesime) form.value.millesime = toInputValue(latestYear.value);
+    campaignError.value = "";
+  } catch {
+    campaignError.value = "Impossible de charger les campagnes de dette IT. Votre saisie est conservée. Réessayez le chargement.";
+  } finally {
+    isLoadingCampaigns.value = false;
+    await nextTick();
+    if (
+      origin instanceof HTMLElement &&
+      origin.dataset.testid === "technical-debt-campaigns-retry" &&
+      document.activeElement === document.body
+    ) {
+      document.querySelector<HTMLSelectElement>('[data-testid="technical-debt-modal"] [data-testid="millesime-select"]')?.focus();
+    }
+  }
+}
 
 // Renvoie le score saisi (1-5) ou `undefined` si le champ est vide (non noté).
 function toScoreOrUndefined(value: string): number | undefined {
@@ -103,18 +127,20 @@ async function handleSubmit() {
     costContainment: toScoreOrUndefined(form.value.costContainment),
   };
 
-  const response = await api.applicationTechnicalDebtInfoControllerCreate({ path: { applicationId: props.applicationId }, body });
-
-  isSubmitting.value = false;
-
-  if (!isApiSuccess(response) || !response.data) {
+  try {
+    const response = await api.applicationTechnicalDebtInfoControllerCreate({ path: { applicationId: props.applicationId }, body });
+    if (!isApiSuccess(response) || !response.data) {
+      formError.value = "Erreur lors de l'enregistrement des informations de dette technique. Votre saisie est conservée.";
+      return;
+    }
+    toaster.addSuccessMessage(`Informations de dette technique ${isEditMode.value ? "mises à jour" : "créées"} avec succès !`);
+    emit("saved", response.data);
+    emit("close");
+  } catch {
     formError.value = "Erreur lors de l'enregistrement des informations de dette technique. Votre saisie est conservée.";
-    return;
+  } finally {
+    isSubmitting.value = false;
   }
-
-  toaster.addSuccessMessage(`Informations de dette technique ${isEditMode.value ? "mises à jour" : "créées"} avec succès !`);
-  emit("saved", response.data);
-  emit("close");
 }
 </script>
 
@@ -129,6 +155,18 @@ async function handleSubmit() {
       <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="technical-debt-form-error">
         <p v-if="formError" class="fr-error-text">{{ formError }}</p>
       </div>
+      <div role="alert" aria-atomic="true" data-testid="technical-debt-campaigns-error">
+        <p v-if="campaignError" class="fr-error-text">{{ campaignError }}</p>
+      </div>
+      <DsfrButton
+        v-if="campaignError"
+        type="button"
+        secondary
+        :aria-disabled="isLoadingCampaigns"
+        :label="isLoadingCampaigns ? 'Chargement des campagnes…' : 'Réessayer le chargement des campagnes'"
+        data-testid="technical-debt-campaigns-retry"
+        @click="refreshCampaigns"
+      />
       <div class="fr-form-group">
         <DsfrSelect
           v-model="form.millesime"

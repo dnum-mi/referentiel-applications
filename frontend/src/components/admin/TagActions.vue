@@ -4,6 +4,7 @@ import { ref, nextTick } from "vue";
 import type { TagDto } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
 import api from "@/api";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 interface BadRequestResponse {
   error: string;
@@ -24,14 +25,17 @@ const toaster = useToasterStore();
 const isEditModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
 const isSaving = ref(false);
+useSubmissionFocus(isSaving);
 const isDeleting = ref(false);
 const editingName = ref<string>("");
 const errorMessage = ref<string>("");
 const tagInput = ref<{ $el?: HTMLElement } | null>(null);
 
-function focusTagField() {
+function focusTagField(origin: Element | null) {
   nextTick(() => {
-    tagInput.value?.$el?.querySelector?.("input")?.focus();
+    if (document.activeElement === document.body || document.activeElement === origin) {
+      tagInput.value?.$el?.querySelector?.("input")?.focus();
+    }
   });
 }
 
@@ -56,6 +60,7 @@ function closeDeleteModal() {
 }
 
 async function saveTag() {
+  const focusOrigin = document.activeElement;
   isSaving.value = true;
   errorMessage.value = "";
 
@@ -85,7 +90,7 @@ async function saveTag() {
       errorMessage.value = "Erreur lors de la sauvegarde du tag";
     }
     // 12.8 : porter le focus sur le champ en erreur après l'activation d'« Enregistrer ».
-    focusTagField();
+    focusTagField(focusOrigin);
   }
   isSaving.value = false;
 }

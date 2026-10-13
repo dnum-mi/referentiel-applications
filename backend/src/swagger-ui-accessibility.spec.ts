@@ -127,6 +127,69 @@ describe("Swagger accessibility plugin", () => {
     expect(schemas.textContent).toBe("Schemas");
   });
 
+  it("names dynamically mounted request fields from visible labels and preserves authored names", () => {
+    const plugin = swaggerAccessibilityPlugin({ React: createReactFixture() });
+    const Layout = plugin.wrapComponents.BaseLayout(() => null);
+    const layout = new Layout({});
+    const makeField = (
+      visibleName: string,
+      parameter: boolean,
+      required = false,
+      authoredName = "",
+    ) => {
+      const attributes = new Map<string, string>([
+        ["aria-label", authoredName],
+      ]);
+      const label = {
+        id: "",
+        textContent: visibleName,
+        classList: { contains: () => required },
+      };
+      const control = {
+        labels: [],
+        getAttribute: (name: string) => attributes.get(name),
+        setAttribute: (name: string, value: string) =>
+          attributes.set(name, value),
+        closest: (selector: string) =>
+          selector.includes("tr[") === parameter
+            ? { querySelector: () => label }
+            : null,
+      };
+      return { control, label, attributes };
+    };
+    const detail = makeField("detail", true);
+    const body = makeField("Request body", false, true);
+    const named = makeField(
+      "Existing heading",
+      false,
+      false,
+      "Request content type",
+    );
+    let controls = [detail, body, named];
+    layout.container.current = {
+      querySelectorAll: (selector: string) =>
+        selector.includes(".parameters-container")
+          ? controls.map((field) => field.control)
+          : [],
+    } as unknown as HTMLElement;
+    layout.componentDidUpdate();
+    expect(detail.attributes.get("aria-labelledby")).toBe(detail.label.id);
+    expect(body.attributes.get("aria-labelledby")).toBe(body.label.id);
+    expect(detail.label.id).not.toBe(body.label.id);
+    expect(body.attributes.get("aria-required")).toBe("true");
+    expect(named.attributes.has("aria-labelledby")).toBe(false);
+    expect(named.attributes.get("aria-label")).toBe("Request content type");
+    const previousId = detail.label.id;
+    const newlyMounted = makeField("active", true);
+    controls = [detail, newlyMounted];
+    layout.componentDidUpdate();
+    expect(detail.label.id).toBe(previousId);
+    expect(newlyMounted.attributes.get("aria-labelledby")).toBe(
+      newlyMounted.label.id,
+    );
+    expect(newlyMounted.label.id).not.toBe(previousId);
+  });
+
   it.each([true, false])(
     "uses the document's complete sprite only when already provided: %s",
     (provided) => {

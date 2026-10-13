@@ -11,6 +11,7 @@ import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps<{
   appPermsMatrix: AppPermsDto[];
+  isSaving?: boolean;
 }>();
 
 const emits = defineEmits<{
@@ -48,13 +49,36 @@ const gridKeys = permissionKeys.filter((k) => k !== "Metadata");
 // Clone la prop : c'est un brouillon local d'édition, il ne doit jamais muter l'état
 // du parent (`AdminPermsMatrixTab.vue`) tant que l'utilisateur n'a pas cliqué « Enregistrer ».
 const updatedMatrix = ref<AppPermsDto[]>(props.appPermsMatrix.map((perms) => ({ ...perms })));
+let lastLoadedMatrix = props.appPermsMatrix.map((perms) => ({ ...perms }));
+const submittedMatrix = ref<AppPermsDto[] | null>(null);
 
-// Resynchronise le brouillon si la matrice source est rechargée par le parent.
+// Intégrer les valeurs et nouvelles lignes renvoyées par le serveur, tout en
+// gardant les changements saisis après la soumission ou pendant un autre reload.
 watch(
   () => props.appPermsMatrix,
   (newMatrix) => {
-    updatedMatrix.value = newMatrix.map((perms) => ({ ...perms }));
+    const baseline = submittedMatrix.value ?? lastLoadedMatrix;
+    updatedMatrix.value = newMatrix.map((perms) => {
+      const draft = updatedMatrix.value.find((row) => row.actorTypeId === perms.actorTypeId);
+      const previous = baseline.find((row) => row.actorTypeId === perms.actorTypeId);
+      const changes: Partial<AppPermsDto> = {};
+      if (draft && previous) {
+        for (const key of Object.keys(draft) as (keyof AppPermsDto)[]) {
+          if (key !== "actorTypeId" && draft[key] !== previous[key]) changes[key] = draft[key];
+        }
+      }
+      return { ...perms, ...changes };
+    });
+    lastLoadedMatrix = newMatrix.map((perms) => ({ ...perms }));
+    submittedMatrix.value = null;
   },
+);
+watch(
+  () => props.isSaving,
+  (saving) => {
+    if (!saving) submittedMatrix.value = null;
+  },
+  { flush: "post" },
 );
 
 // Lignes triées par ordre alphabétique du type d'acteur, comme dans la modale create/edit acteur.
@@ -99,9 +123,14 @@ function updateReportMatrix(actorTypeId: string, values: ReportPermissionValue[]
 }
 
 function saveAppPermsMatrix() {
-  // Emit the updated matrix to the parent component
+  if (props.isSaving) return;
+  submittedMatrix.value = updatedMatrix.value.map((perms) => ({ ...perms }));
+  emits("update:appPermsMatrix", submittedMatrix.value);
+}
 
-  emits("update:appPermsMatrix", updatedMatrix.value);
+function reloadAppPermsMatrix() {
+  if (props.isSaving) return;
+  emits("reload");
 }
 
 const isHistoryModalOpen = ref(false);
@@ -266,6 +295,8 @@ async function createActorType() {
     <DsfrButton
       class="fr-mt-2w"
       data-testid="app-perms-save-btn"
+      :aria-disabled="isSaving"
+      :aria-busy="isSaving"
       title="Enregistrer la matrice des permissions"
       @click="saveAppPermsMatrix"
     >
@@ -275,7 +306,8 @@ async function createActorType() {
       class="fr-mt-2w fr-ml-2w"
       data-testid="app-perms-reload-btn"
       title="Recharger la matrice des permissions"
-      @click="$emit('reload')"
+      :aria-disabled="isSaving"
+      @click="reloadAppPermsMatrix"
     >
       Recharger les permissions
     </DsfrButton>
