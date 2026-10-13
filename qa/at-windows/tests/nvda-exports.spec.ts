@@ -127,11 +127,16 @@ for (const current of exportCases) {
         nvda,
         `${current.id}-server-500`,
         async () => {
-          network.release("error");
-          await expect(page.getByTestId("app-toaster")).toContainText(
-            current.error,
+          await nvda.capture(
+            async () => {
+              network.release("error");
+              await expect(page.getByTestId("app-toaster")).toContainText(
+                current.error,
+              );
+              await page.waitForTimeout(1200);
+            },
+            { capture: true },
           );
-          await page.waitForTimeout(1200);
         },
         info,
       );
@@ -155,9 +160,14 @@ for (const current of exportCases) {
         nvda,
         `${current.id}-download-success`,
         async () => {
-          network.release("success");
-          await downloadPromise;
-          await expect(button).toHaveAttribute("aria-busy", "false");
+          await nvda.capture(
+            async () => {
+              network.release("success");
+              await downloadPromise;
+              await expect(button).toHaveAttribute("aria-busy", "false");
+            },
+            { capture: true },
+          );
         },
         info,
       );

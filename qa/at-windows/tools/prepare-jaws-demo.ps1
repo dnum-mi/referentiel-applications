@@ -87,7 +87,7 @@ function Read-ReaderDialogs {
     [pscustomobject]@{ window = $_; nativeControls = @([JawsDemoNative]::Controls($handle)); uia = $nodes; uiaError = $uiaError }
   })
 }
-function Press-NativeKey([ushort]$Key) {
+function Press-NativeKey([System.UInt16]$Key) {
   try { [JawsBrowserFocus]::Key($Key, $false) } finally { [JawsBrowserFocus]::Key($Key, $true) }
 }
 function Invoke-ExactDialogCommand([object]$Dialog, [object]$Control) {

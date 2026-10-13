@@ -67,7 +67,7 @@ public static class JawsHistoryNative {
 '@
 }
 
-function Invoke-NativeChord([ushort[]]$Modifiers, [ushort]$Key, [bool]$Extended = $false) {
+function Invoke-NativeChord([System.UInt16[]]$Modifiers, [System.UInt16]$Key, [bool]$Extended = $false) {
   try {
     foreach ($modifier in $Modifiers) { [JawsHistoryNative]::Key($modifier, $false, $modifier -eq 0x2D) }
     [JawsHistoryNative]::Key($Key, $false, $Extended)

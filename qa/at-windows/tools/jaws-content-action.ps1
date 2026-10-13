@@ -32,7 +32,7 @@ if ($definitions.Count -ne 1) { throw 'Exactly one frozen native input definitio
 if (-not ('JawsHistoryNative' -as [type])) { Add-Type -TypeDefinition $definitions[0].Value }
 $frozenHash = (Get-FileHash -LiteralPath $FrozenCaptureScriptPath -Algorithm SHA256).Hash.ToLowerInvariant()
 
-function Invoke-Chord([ushort[]]$Modifiers, [ushort]$Key, [bool]$Extended = $false) {
+function Invoke-Chord([System.UInt16[]]$Modifiers, [System.UInt16]$Key, [bool]$Extended = $false) {
   try {
     foreach ($modifier in $Modifiers) { [JawsHistoryNative]::Key($modifier, $false, $modifier -eq 0x2D) }
     [JawsHistoryNative]::Key($Key, $false, $Extended)

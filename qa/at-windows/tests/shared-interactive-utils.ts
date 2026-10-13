@@ -96,7 +96,7 @@ export async function sharedNetwork(page: Page) {
         data = { results: [], total: 0 };
         break;
       case "/api/v2/actorTypes":
-        data = [];
+        data = { results: [], total: 0 };
         break;
       case "/api/v2/business-division":
         data = { results: [], total: 0 };

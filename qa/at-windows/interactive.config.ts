@@ -24,6 +24,11 @@ export default defineConfig({
     "nvda-operations.spec.ts",
     "nvda-exports.spec.ts",
     "nvda-swagger.spec.ts",
+    "nvda-admin-users.spec.ts",
+    "nvda-general.spec.ts",
+    "nvda-grist.spec.ts",
+    "nvda-last-families.spec.ts",
+    "nvda-admin.spec.ts",
   ],
   outputDir: caseId
     ? `./test-results/interactive/${caseId}`

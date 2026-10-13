@@ -1,9 +1,15 @@
 import { defineConfig, devices } from "@playwright/test";
 const phase = process.env.RGAA_PHASE === "smoke" ? "smoke" : "cases";
+const caseId = process.env.RGAA_CASE_ID;
+if (caseId && !/^[a-z0-9-]+$/.test(caseId))
+  throw new Error("RGAA_CASE_ID invalide.");
+const evidencePhase = caseId ? `${phase}-${caseId}` : phase;
 export default defineConfig({
   testDir: "./tests",
   testMatch: ["nvda-smoke.spec.ts", "nvda-cases.spec.ts"],
-  outputDir: `./test-results/${phase}`,
+  outputDir: caseId
+    ? `./test-results/${phase}/${caseId}`
+    : `./test-results/${phase}`,
   fullyParallel: false,
   workers: 1,
   retries: 0,
@@ -11,7 +17,7 @@ export default defineConfig({
   forbidOnly: true,
   reporter: [
     ["list"],
-    ["json", { outputFile: `evidence/${phase}-results.json` }],
+    ["json", { outputFile: `evidence/${evidencePhase}-results.json` }],
   ],
   use: {
     ...devices["Desktop Firefox"],

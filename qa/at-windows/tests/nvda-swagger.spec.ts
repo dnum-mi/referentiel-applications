@@ -59,7 +59,27 @@ test("AT-INT-U19-Authorize — noms/rôles, scopes, Close/Escape et retour", asy
     const input = page.locator(
       `[id="${scope}-authorizationCode-checkbox-oauth2"]`,
     );
+    // The product selects the declared OAuth scopes by default. Exercise both
+    // real state transitions instead of assuming an initially empty selection.
+    await expect(input).toBeChecked();
+    await captureStep(
+      nvda,
+      `swagger-${scope}-uncheck`,
+      () => nvda.press("Space", { capture: true }),
+      info,
+    );
     await expect(input).not.toBeChecked();
+    const unchecked = await captureStep(
+      nvda,
+      `swagger-${scope}-unchecked-state`,
+      () =>
+        nvda.perform(nvda.keyboardCommands.reportCurrentFocus, {
+          capture: true,
+        }),
+      info,
+    );
+    expect(unchecked.text).toContain(scope);
+    expect(unchecked.text).toMatch(/non coche|not checked/);
     await captureStep(
       nvda,
       `swagger-${scope}-check`,
@@ -143,7 +163,6 @@ test("AT-INT-U19-Operations — expansion GET/POST, paramètres/réponses et rep
       await nvda.perform(nvda.keyboardCommands.moveToNextTable, {
         capture: true,
       });
-      await nvda.press("ArrowDown", { capture: true });
     },
     info,
   );
@@ -174,7 +193,6 @@ test("AT-INT-U19-Operations — expansion GET/POST, paramètres/réponses et rep
       await nvda.perform(nvda.keyboardCommands.moveToNextTable, {
         capture: true,
       });
-      await nvda.press("ArrowDown", { capture: true });
       await nvda.perform(nvda.keyboardCommands.moveToNextRow, {
         capture: true,
       });

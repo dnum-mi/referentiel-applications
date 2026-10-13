@@ -6,12 +6,15 @@ import { resolve } from "node:path";
 const require = createRequire(import.meta.url);
 const cli = require.resolve("@playwright/test/cli");
 const listOnly = process.argv.includes("--list");
-const files = process.argv.slice(2).filter((arg) => arg !== "--list");
+const phase = process.argv.includes("--static") ? "cases" : "interactive";
+const files = process.argv
+  .slice(2)
+  .filter((arg) => !["--list", "--static"].includes(arg));
 if (
   !files.length ||
   files.some((file) => !/^tests\/nvda-[a-z-]+\.spec\.ts$/.test(file))
 )
-  throw new Error("Explicit interactive spec files are required.");
+  throw new Error("Explicit native spec files are required.");
 if (
   !listOnly &&
   (process.platform !== "win32" ||
@@ -22,7 +25,13 @@ if (
     "Execution is restricted to the authorised ephemeral Windows runner.",
   );
 
-const args = [cli, "test", "--config", "interactive.config.ts", ...files];
+const args = [
+  cli,
+  "test",
+  "--config",
+  phase === "interactive" ? "interactive.config.ts" : "playwright.config.ts",
+  ...files,
+];
 const listed = spawnSync(
   process.execPath,
   [...args, "--list", "--reporter=json"],
@@ -79,11 +88,11 @@ if (listOnly) {
   const persist = () => {
     aggregate.stats.duration = Date.now() - started.getTime();
     writeFileSync(
-      "evidence/interactive-results.json",
+      `evidence/${phase}-results.json`,
       JSON.stringify(aggregate, null, 2),
     );
     writeFileSync(
-      "evidence/interactive-isolation.json",
+      `evidence/${phase}-isolation.json`,
       JSON.stringify(isolation, null, 2),
     );
   };
@@ -98,7 +107,7 @@ if (listOnly) {
       {
         env: {
           ...process.env,
-          RGAA_PHASE: "interactive",
+          RGAA_PHASE: phase,
           RGAA_CASE_ID: caseId,
         },
         stdio: "inherit",
@@ -114,7 +123,7 @@ if (listOnly) {
     try {
       const report = JSON.parse(
         readFileSync(
-          resolve(`evidence/interactive-${caseId}-results.json`),
+          resolve(`evidence/${phase}-${caseId}-results.json`),
           "utf8",
         ),
       );

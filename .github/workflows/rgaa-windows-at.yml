@@ -83,7 +83,7 @@ jobs:
         run: pnpm test:smoke
       - name: Read seven real rendered figures and three generated HTML alternatives
         working-directory: driver/qa/at-windows
-        run: pnpm test:cases
+        run: node tools/run-interactive-isolated.mjs --static tests/nvda-cases.spec.ts
       - name: Record and enforce reader cleanup
         if: always()
         working-directory: driver/qa/at-windows
@@ -131,6 +131,19 @@ jobs:
             timeout: 60
           - group: swagger
             test_files: tests/nvda-swagger.spec.ts
+          - group: grist
+            test_files: tests/nvda-grist.spec.ts
+          - group: general-forms
+            test_files: tests/nvda-general.spec.ts
+          - group: admin-users
+            test_files: tests/nvda-admin-users.spec.ts
+            timeout: 50
+          - group: last-families
+            test_files: tests/nvda-last-families.spec.ts
+            timeout: 60
+          - group: admin-catalogues
+            test_files: tests/nvda-admin.spec.ts
+            timeout: 50
     env:
       RGAA_ALLOW_WINDOWS_AT: "1"
       RGAA_PRODUCT_HEAD: ${{ github.event_name == 'workflow_dispatch' && inputs.product_head || github.sha }}
@@ -262,11 +275,11 @@ jobs:
       github.ref == 'refs/heads/fix/rgaa-accessibility-20261008' &&
       github.run_attempt == '1' &&
       ((github.event_name == 'workflow_dispatch' && inputs.approve_jaws_install_use == true) ||
-       (github.event_name == 'push' && github.event.head_commit.message == 'test: inspect approved JAWS demo 2026-10-13-c9e1'))
+       (github.event_name == 'push' && github.event.head_commit.message == 'test: validate approved JAWS demo 2026-10-13-d1f2'))
     runs-on: windows-2022
-    # The two whole jobs consumed 270 + 290 seconds, including installation.
-    # 560 + 1500 = 2060 seconds remains strictly below the approved 35 minutes.
-    timeout-minutes: 25
+    # The three whole jobs consumed 270 + 290 + 232 seconds, including installation.
+    # 792 + 1200 = 1992 seconds remains strictly below the approved 35 minutes.
+    timeout-minutes: 20
     env:
       JAWS_ALLOW_INITIAL_RESTART_DEFER: "1"
       RGAA_PRODUCT_HEAD: ${{ github.event_name == 'workflow_dispatch' && inputs.product_head || github.sha }}
@@ -290,7 +303,7 @@ jobs:
         working-directory: driver/qa/at-windows
         run: |
           $expectedBranch = 'refs/heads/fix/rgaa-accessibility-20261008'
-          $expectedMessage = 'test: inspect approved JAWS demo 2026-10-13-c9e1'
+          $expectedMessage = 'test: validate approved JAWS demo 2026-10-13-d1f2'
           if (-not $env:GITHUB_REF.Equals($expectedBranch, [StringComparison]::Ordinal) -or $env:GITHUB_RUN_ATTEMPT -ne '1') { throw 'Branch/attempt guard failed.' }
           $event = Get-Content -LiteralPath $env:GITHUB_EVENT_PATH -Raw | ConvertFrom-Json
           $approved = if ($env:GITHUB_EVENT_NAME -eq 'push') {
@@ -300,7 +313,7 @@ jobs:
           }
           if (-not $approved) { throw 'Exact explicit JAWS approval signal missing.' }
           New-Item -ItemType Directory -Force ./evidence/jaws-approved | Out-Null
-          @{ approved = $true; source = $env:GITHUB_EVENT_NAME; package = '2025.2508.120.400'; eula = 'https://vispero.com/jaws-end-user-license-agreement/'; noPurchase = $true; noActivation = $true; rebootMayLimitResult = $true; installerStarted = $false; readerStarted = $false; priorRuns = @('38424775281', '38428223727'); priorWholeJobSeconds = 560; diagnosticJobMaximumSeconds = 1500; combinedMaximumSeconds = 2060; initialRestartMayBeDeferredOnlyByExposedCommand = $true; restartRequirementResolved = $false; retryPurpose = 'Inspect exact owned JAWS dialogs and correct actual Firefox PID before native witness; no reboot, reset or demo-time extension' } | ConvertTo-Json | Set-Content ./evidence/jaws-approved/approved-operation.json
+          @{ approved = $true; source = $env:GITHUB_EVENT_NAME; package = '2025.2508.120.400'; eula = 'https://vispero.com/jaws-end-user-license-agreement/'; noPurchase = $true; noActivation = $true; rebootMayLimitResult = $true; installerStarted = $false; readerStarted = $false; priorRuns = @('38424775281', '38428223727', '38436652519'); priorWholeJobSeconds = 792; diagnosticJobMaximumSeconds = 1200; combinedMaximumSeconds = 1992; initialRestartMayBeDeferredOnlyByExposedCommand = $true; restartRequirementResolved = $false; retryPurpose = 'Validate real PowerShell 5.1 bindings before installation, then inspect owned dialogs and attempt native witness; no reboot, reset or demo-time extension' } | ConvertTo-Json | Set-Content ./evidence/jaws-approved/approved-operation.json
       - uses: pnpm/action-setup@v4
         with:
           version: 10.34.6
@@ -335,6 +348,14 @@ jobs:
           node --check tools/jaws-smoke.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --check tools/jaws-content-cases.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Validate exact interop and types in real Windows PowerShell 5.1 before installation
+        working-directory: driver/qa/at-windows
+        env:
+          JAWS_ALLOW_APPROVED_USE: "1"
+        run: |
+          powershell.exe -NoProfile -STA -File ./tools/preflight-jaws-powershell51.ps1 `
+            -EvidenceDirectory ./evidence/jaws-approved
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Reacquire and verify exact signed package
         working-directory: driver/qa/at-windows

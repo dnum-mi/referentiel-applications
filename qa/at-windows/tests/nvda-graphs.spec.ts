@@ -65,7 +65,14 @@ for (const chart of charts) {
     await expect(button).toBeEnabled();
     await attachIdentity(nvda, browser.version(), info);
     await focusDocumentStart(page, nvda);
-    const reach = await tabTo(nvda, "Voir le tableau", info);
+    const reach = await captureStep(
+      nvda,
+      "native-first-chart-button",
+      () =>
+        nvda.perform(nvda.keyboardCommands.moveToNextButton, { capture: true }),
+      info,
+    );
+    expect(reach.text).toContain("voir le tableau");
     expect(reach.text).toMatch(/bouton/);
     const shown = await activateCurrent(nvda, info, "table-button-activated");
     await expect(button).toHaveAttribute("aria-pressed", "true");

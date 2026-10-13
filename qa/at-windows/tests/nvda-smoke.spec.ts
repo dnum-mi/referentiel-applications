@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { randomInt } from "node:crypto";
 import { expect } from "@playwright/test";
 import {
   attachIdentity,
@@ -34,9 +34,10 @@ test("Témoin réel : nom accessible, rôle français et activation annoncée pa
     "prune",
     "raisin",
   ];
-  const nonce = [...randomBytes(8)]
-    .map((byte) => words[byte % words.length])
-    .join(" ");
+  const nonce = Array.from(
+    { length: 8 },
+    () => words[randomInt(words.length)],
+  ).join(" ");
   const label = `Témoin parlé ${nonce}`;
   await installOfflinePage(
     page,

@@ -5,6 +5,7 @@ import {
   captureStep,
   focusDocumentStart,
 } from "./fixture.js";
+import { mountProductionScene } from "./interactive-utils.js";
 import { tabTo, shiftTabTo, activateCurrent } from "./native-utils.js";
 import {
   mountFormsScene,
@@ -113,6 +114,31 @@ test("AT-FORM-Markdown — neuf noms, trois fonctions, modes puis retour", async
   );
   await tabTo(nvda, "Description", info);
   await expect(textarea).toHaveValue(/Alpha/);
+  await nvda.press("Control+a", { capture: true });
+  await nvda.type("- Alpha", { capture: true });
+  await captureStep(
+    nvda,
+    "markdown-enter-continues-list",
+    () => nvda.press("Enter", { capture: true }),
+    info,
+  );
+  await expect(textarea).toHaveValue("- Alpha\n- ");
+  await captureStep(
+    nvda,
+    "markdown-tab-leaves-editor",
+    () => nvda.press("Tab", { capture: true }),
+    info,
+  );
+  await expect(
+    page.getByRole("button", { name: "Gras", exact: true }),
+  ).toBeFocused();
+  await captureStep(
+    nvda,
+    "markdown-shift-tab-returns-editor",
+    () => nvda.press("Shift+Tab", { capture: true }),
+    info,
+  );
+  await expect(textarea).toBeFocused();
   expect(network.formsCalls.some((call) => call.method !== "GET")).toBe(false);
   await finishForms(page, network, info);
 });
@@ -259,3 +285,62 @@ test("AT-FORM-Notifications — panneau, deux rôles, vrai aperçu e-mail puis f
   ).toHaveLength(1);
   await finishForms(page, network, info);
 });
+
+for (const disabled of [false, true]) {
+  test(`AT-FORM-Mermaid-${disabled ? "readonly" : "editable"} — aperçu réel, description et source dépliable`, async ({
+    page,
+    browser,
+    nvda,
+  }, info) => {
+    const network = await simulatedFormsNetwork(page);
+    await page.goto(network.base);
+    await mountProductionScene(page, "/src/components/MarkdownEditor.vue", {
+      modelValue:
+        "```mermaid\nflowchart LR\n  accTitle: Dependances fictives\n  accDescr: Alpha transmet une information a Beta.\n  A[Alpha] --> B[Beta]\n```",
+      disabled,
+      ariaLabel: "Description synthétique",
+      id: "native-mermaid-description",
+    });
+    await attachIdentity(nvda, browser.version(), info);
+    await focusDocumentStart(page, nvda);
+    await tabTo(nvda, "Visualiser l’aperçu", info);
+    const preview = await activateCurrent(nvda, info, "mermaid-preview-open");
+    await expect(page.getByTestId("markdown-tab-preview")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    const image = page.getByRole("img", {
+      name: "Dependances fictives",
+      exact: true,
+    });
+    await expect(image).toBeVisible();
+    await tabTo(nvda, "Description et source du diagramme", info);
+    const expanded = await activateCurrent(nvda, info, "mermaid-source-open");
+    await expect(page.locator("details")).toHaveAttribute("open", "");
+    const read = await captureStep(
+      nvda,
+      "mermaid-source-native-reading",
+      () => nvda.perform(nvda.keyboardCommands.sayAll, { capture: true }),
+      info,
+    );
+    expect(expanded.text + read.text).toContain("alpha");
+    expect(read.text).toContain("beta");
+    await focusDocumentStart(page, nvda);
+    await tabTo(nvda, "Description et source du diagramme", info);
+    await activateCurrent(nvda, info, "mermaid-source-close");
+    await expect(page.locator("details")).not.toHaveAttribute("open", "");
+    await shiftTabTo(nvda, "Éditer le texte en format markdown", info);
+    await activateCurrent(nvda, info, "mermaid-return-editor");
+    await expect(page.getByTestId("markdown-textarea")).toHaveValue(
+      /flowchart LR/,
+    );
+    if (disabled)
+      await expect(page.getByTestId("markdown-textarea")).toBeDisabled();
+    else {
+      await tabTo(nvda, "Description synthétique", info);
+      await expect(page.getByTestId("markdown-textarea")).toBeFocused();
+    }
+    expect(preview.phrases.length).toBeGreaterThan(0);
+    await finishForms(page, network, info);
+  });
+}

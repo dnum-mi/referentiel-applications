@@ -278,9 +278,14 @@ test("AT-OPS-U12 — suppression application, annulation, saisie et DELETE500 pu
     "application-delete500-local-error",
     async () => {
       await nvda.press("Enter", { capture: true });
-      await expect(
-        dialog.getByTestId("application-delete-error"),
-      ).toContainText("Erreur lors de la suppression définitive");
+      await nvda.capture(
+        async () => {
+          await expect(
+            dialog.getByTestId("application-delete-error"),
+          ).toContainText("Erreur lors de la suppression définitive");
+        },
+        { capture: true },
+      );
     },
     info,
   );
@@ -359,11 +364,16 @@ test("AT-OPS-U15 — import batch, attente, erreur, rapport et MAIA refusé, tou
     "batch-import-concurrent-enter-and500",
     async () => {
       await nvda.press("Enter", { capture: true });
-      await expect(
-        page
-          .getByRole("alert")
-          .filter({ hasText: "Erreur lors de l'import du fichier Excel" }),
-      ).toBeVisible();
+      await nvda.capture(
+        async () => {
+          await expect(
+            page
+              .getByRole("alert")
+              .filter({ hasText: "Erreur lors de l'import du fichier Excel" }),
+          ).toBeVisible();
+        },
+        { capture: true },
+      );
     },
     info,
   );

@@ -159,6 +159,21 @@ export async function operationsNetwork(page: Page) {
       data = { results: [targetUser], total: 1 };
     else if (
       method === "GET" &&
+      [
+        "/api/v2/actorTypes",
+        "/api/v2/actors",
+        "/api/v2/label-sources",
+      ].includes(url.pathname)
+    )
+      data = { results: [], total: 0 };
+    else if (
+      method === "GET" &&
+      url.pathname === "/api/v2/tokens" &&
+      ["service", "personal"].includes(url.searchParams.get("kind") ?? "")
+    )
+      data = { results: [], total: 0 };
+    else if (
+      method === "GET" &&
       url.pathname === `/api/v2/applications/${alpha}`
     )
       data = app;
