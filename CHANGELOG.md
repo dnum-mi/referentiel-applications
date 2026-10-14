@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.99.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.98.0...v1.99.0) (2026-10-14)
+
+
+### Features
+
+* add column to grist sync ([#2901](https://github.com/dnum-mi/referentiel-applications/issues/2901)) ([70e1480](https://github.com/dnum-mi/referentiel-applications/commit/70e14801da711038a1d8ce0cceb754cec8b7f124))
+
+
+### Bug Fixes
+
+* **security:** update bundled pnpm dependencies ([#2898](https://github.com/dnum-mi/referentiel-applications/issues/2898)) ([bca93b3](https://github.com/dnum-mi/referentiel-applications/commit/bca93b36f58db12fa6155d67ec9e679e93cfaff1))
+
 ## [1.98.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.97.0...v1.98.0) (2026-10-13)
 
 
