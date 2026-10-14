@@ -28,9 +28,10 @@ describe("GristController", () => {
 
     const targets = [{ docId: "doc1", tableId: "RefApp2" }];
 
-    await controller.setup(filters, { targets }, requestor);
+    const columns = ["label", "status"];
+    await controller.setup(filters, { targets, columns }, requestor);
 
-    expect(setup).toHaveBeenCalledWith(filters, requestor, targets);
+    expect(setup).toHaveBeenCalledWith(filters, requestor, targets, columns);
   });
 
   it("lit le document demandé pour le compte du demandeur", async () => {

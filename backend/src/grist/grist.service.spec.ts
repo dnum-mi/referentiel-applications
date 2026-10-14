@@ -6,11 +6,14 @@ import {
 } from "@nestjs/common";
 import type { ApplicationSearchDto } from "src/applications/dto/search-application.dto";
 import type { ApplicationExportService } from "src/applications/export.service";
+import type { ApplicationRepository } from "src/applications/infrastructure/repository/application.repository";
+import type { CheckPermissions } from "src/common/service/check-permissions.service";
 import type { PrismaService } from "src/prisma/prisma.service";
 import type { Requestor } from "src/user/entities/user.entity";
 import type { GristClient, GristDocument, GristRequest } from "./grist.client";
-import { EXIT_REASON, GristService } from "./grist.service";
+import { GristService } from "./grist.service";
 import { encryptGristApiKey } from "./grist-api-key";
+import type { GristApplication } from "./grist-columns";
 
 process.env.GRIST_ENCRYPTION_KEY = "secret-de-test";
 
@@ -22,14 +25,28 @@ type Column = {
   rules?: number[];
   formula?: string;
   widgetOptions?: string;
+  parentPos?: number;
+};
+type ViewField = {
+  id: number;
+  section: number;
+  colId: string;
+  parentPos: number;
 };
 
-const ALL_COLUMNS = [
+/// Colonnes écrites avec les colonnes affichées par défaut dans la page de recherche.
+const LOCKED_COLUMNS = [
   "refapp_id",
-  "nom",
-  "statut",
   "dans_selection",
-  "motif_sortie",
+  "iq",
+  "nom",
+  "priorite",
+  "hebergement",
+  "tags",
+];
+/// Table existante : colonnes de RefApp et métadonnées ajoutées dans Grist.
+const ALL_COLUMNS = [
+  ...LOCKED_COLUMNS,
   "metadata_1",
   "metadata_2",
   "metadata_3",
@@ -37,7 +54,7 @@ const ALL_COLUMNS = [
 
 /// Faux document Grist : répond selon la route et garde la trace des appels. `columns` vaut pour
 /// toutes les tables, sauf celles décrites dans `columnsByTable` ; `failingDocs` répondent 502, comme
-/// les requêtes `failingPaths` (« MÉTHODE chemin »).
+/// les requêtes `failingPaths` (« MÉTHODE chemin »). `formulas` : colonnes calculées.
 function fakeGrist({
   tables = [] as string[],
   columns = ALL_COLUMNS,
@@ -48,6 +65,8 @@ function fakeGrist({
   resources = [] as { tableId: string; colIds: string; id: number }[],
   rules = [] as { id: number; resource: number; permissionsText: string }[],
   metaColumns = [] as Column[],
+  viewFields = [] as ViewField[],
+  formulas = [] as string[],
 } = {}) {
   const calls: Call[] = [];
   let nextId = 100;
@@ -69,13 +88,19 @@ function fakeGrist({
       if (path.endsWith("/columns")) {
         const tableId = path.split("/")[2];
         return {
-          columns: (columnsByTable[tableId] ?? columns).map((id) => ({ id })),
+          columns: (columnsByTable[tableId] ?? columns).map((id) => ({
+            id,
+            fields: { isFormula: formulas.includes(id) },
+          })),
         };
       }
       if (path.endsWith("/records") && method !== "GET") return {};
       if (path.endsWith("/records")) return { records: rows };
       if (path === "/sql") {
         const { sql, args } = body as { sql: string; args: unknown[] };
+        if (sql.includes("_grist_Views_section_field")) {
+          return { records: viewFields.map((f) => ({ id: f.id, fields: f })) };
+        }
         if (sql.includes("_grist_Tables_column")) {
           return {
             records: metaColumns.map((c) => ({
@@ -121,35 +146,36 @@ function fakeGrist({
 }
 
 function apps(count: number) {
-  return Array.from({ length: count }, (_, i) => ({
-    id: `app-${i}`,
-    label: `App ${i}`,
-    currentStatus: i === 0 ? null : { status: "in_production" },
-  }));
+  return Array.from(
+    { length: count },
+    (_, i) =>
+      ({
+        id: `app-${i}`,
+        label: `App ${i}`,
+        quality: i === 0 ? null : 80,
+        priorityRestart: i === 0 ? null : "R1_STAR",
+        hostings: [],
+        tags: i === 0 ? [] : [{ name: "a" }, { name: "b" }],
+        currentStatus: i === 0 ? null : { status: "in_production" },
+      }) as unknown as GristApplication,
+  );
 }
 
-/// `inRefApp` : ids encore présents en base, hors sélection comprise.
+/// `canReadRestricted` : le demandeur détient ColumnRead. `inScope` : applications lisibles par le
+/// demandeur hors des filtres de la page (relues pour les lignes sorties conservées).
 function service(
   client: GristClient,
   {
     applications = apps(2),
-    inRefApp = [] as string[],
     where = {} as object | null,
     docIds = ["doc1"],
     gristUrl = "https://grist.example" as string | null,
     gristApiKey = encryptGristApiKey("cle-api") as string | null,
+    canReadRestricted = true,
+    inScope = [] as GristApplication[],
   } = {},
 ) {
-  const findMany = jest.fn(
-    async (args: { where: { id?: { in: string[] } } }) =>
-      args.where.id
-        ? inRefApp
-            .filter((id) => args.where.id?.in.includes(id))
-            .map((id) => ({ id }))
-        : applications,
-  );
   const prisma = {
-    application: { findMany },
     user: {
       findUnique: jest
         .fn()
@@ -160,10 +186,28 @@ function service(
   const applicationExport = {
     buildScopedWhere,
   } as unknown as ApplicationExportService;
+  const findSearchItems = jest.fn(
+    async (query: { AND?: { id?: { in: string[] } }[] }) => {
+      const ids = query.AND?.[1]?.id?.in;
+      return ids ? inScope.filter((app) => ids.includes(app.id)) : applications;
+    },
+  );
+  const repository = {
+    findSearchItems,
+  } as unknown as ApplicationRepository;
+  const can = jest.fn().mockResolvedValue(canReadRestricted);
+  const checkPermissions = { can } as unknown as CheckPermissions;
   return {
-    sut: new GristService(client, prisma, applicationExport),
-    findMany,
+    sut: new GristService(
+      client,
+      prisma,
+      applicationExport,
+      repository,
+      checkPermissions,
+    ),
+    findSearchItems,
     buildScopedWhere,
+    can,
   };
 }
 
@@ -173,16 +217,24 @@ const requestor = { id: "u1" } as Requestor;
 const setup = async (
   client: GristClient,
   options?: Parameters<typeof service>[1],
+  columns?: string[],
 ) => {
   const { documents } = await service(client, options).sut.setup(
     filters,
     requestor,
+    undefined,
+    columns,
   );
   return documents[0];
 };
 
 const puts = (calls: Call[]) => calls.filter((c) => c.method === "PUT");
 const patches = (calls: Call[]) => calls.filter((c) => c.method === "PATCH");
+const addedColumns = (calls: Call[]) =>
+  calls
+    .filter((c) => c.path.endsWith("/columns") && c.method === "POST")
+    .flatMap((c) => (c.body as { columns: { id: string }[] }).columns)
+    .map(({ id }) => id);
 const applied = (calls: Call[]) =>
   calls
     .filter((c) => c.path === "/apply")
@@ -197,8 +249,6 @@ function row(
     id,
     fields: {
       refapp_id: refappId,
-      dans_selection: true,
-      motif_sortie: "",
       metadata_1: null,
       metadata_2: null,
       metadata_3: null,
@@ -208,8 +258,8 @@ function row(
 }
 
 describe("GristService.setup", () => {
-  it("crée la table au premier appel, avec les colonnes verrouillées et trois métadonnées", async () => {
-    const { client, calls } = fakeGrist();
+  it("crée la table au premier appel, avec refapp_id et les colonnes affichées", async () => {
+    const { client, calls } = fakeGrist({ columns: LOCKED_COLUMNS });
     const report = await setup(client);
 
     expect(report.tableCreated).toBe(true);
@@ -219,13 +269,133 @@ describe("GristService.setup", () => {
     const columns = (
       create?.body as {
         tables: {
-          columns: { id: string; fields: { label: string; type: string } }[];
+          columns: { id: string; fields: Record<string, unknown> }[];
         }[];
       }
     ).tables[0].columns;
-    expect(columns.map((c) => c.id)).toEqual(ALL_COLUMNS);
-    expect(columns[3].fields.type).toBe("Bool");
-    expect(columns[5].fields.label).toBe("metadata 1");
+    expect(columns.map((c) => c.id)).toEqual(LOCKED_COLUMNS);
+    expect(columns.map((c) => c.fields.label)).toEqual([
+      "refapp_id",
+      "Dans la sélection",
+      "IQ",
+      "Nom",
+      "Priorité",
+      "Hébergement",
+      "Tags",
+    ]);
+    expect(columns[1].fields.type).toBe("Bool");
+    expect(columns[3].fields).toEqual({
+      label: "Nom",
+      type: "Text",
+      untieColIdFromLabel: true,
+    });
+    expect(report).toMatchObject({ columnsAdded: [], columnsRemoved: [] });
+  });
+
+  it("masque dans_selection des vues d'une table créée, hors données brutes", async () => {
+    const { client, calls } = fakeGrist({
+      columns: LOCKED_COLUMNS,
+      viewFields: [
+        { id: 30, section: 1, colId: "dans_selection", parentPos: 2 },
+      ],
+    });
+    await setup(client);
+
+    const hide = calls.find(
+      (c) =>
+        c.path === "/sql" &&
+        (c.body as { sql: string }).sql.includes("_grist_Views_section_field"),
+    );
+    expect((hide?.body as { sql: string; args: unknown[] }).args).toEqual([
+      "RefApp",
+      "dans_selection",
+    ]);
+    expect((hide?.body as { sql: string }).sql).toContain("rawViewSectionRef");
+    expect(applied(calls)).toContainEqual([
+      "BulkRemoveRecord",
+      "_grist_Views_section_field",
+      [30],
+    ]);
+  });
+
+  it("grise par une règle conditionnelle chaque colonne qui ne l'est pas encore, métadonnées comprises", async () => {
+    const grey = { textColor: "#929292", fillColor: "#EEEEEE" };
+    const { client, calls } = fakeGrist({
+      tables: ["RefApp"],
+      metaColumns: [
+        { id: 1, colId: "manualSort" },
+        { id: 2, colId: "refapp_id" },
+        { id: 3, colId: "dans_selection" },
+        // Le SQL de Grist renvoie la RefList sans le préfixe "L".
+        {
+          id: 4,
+          colId: "nom",
+          rules: [9],
+          widgetOptions: JSON.stringify({ rulesOptions: [grey] }),
+        },
+        // Règle grise ajoutée en double sans son style (versions précédentes) : style réparé.
+        {
+          id: 6,
+          colId: "statut",
+          rules: [9, 10],
+          widgetOptions: JSON.stringify({ rulesOptions: [grey] }),
+        },
+        {
+          id: 5,
+          colId: "toto",
+          rules: ["L" as unknown as number, 8],
+          widgetOptions: JSON.stringify({
+            alignment: "left",
+            rulesOptions: [{ textColor: "#FF0000" }],
+          }),
+        },
+        { id: 8, colId: "gristHelper_ConditionalRule", formula: "$x > 1" },
+        {
+          id: 9,
+          colId: "gristHelper_ConditionalRule2",
+          formula: "not $dans_selection",
+        },
+        {
+          id: 10,
+          colId: "gristHelper_ConditionalRule3",
+          formula: "not $dans_selection",
+        },
+      ],
+    });
+    await setup(client);
+
+    const actions = applied(calls);
+    expect(actions.filter(([action]) => action === "AddEmptyRule")).toEqual([
+      ["AddEmptyRule", "RefApp", 0, 2],
+      ["AddEmptyRule", "RefApp", 0, 5],
+    ]);
+    expect(actions).toContainEqual([
+      "UpdateRecord",
+      "_grist_Tables_column",
+      5,
+      {
+        widgetOptions: JSON.stringify({
+          alignment: "left",
+          rulesOptions: [{ textColor: "#FF0000" }, grey],
+        }),
+      },
+    ]);
+    expect(actions).toContainEqual([
+      "UpdateRecord",
+      "_grist_Tables_column",
+      6,
+      { widgetOptions: JSON.stringify({ rulesOptions: [grey, grey] }) },
+    ]);
+    expect(
+      actions.some(([action, , id]) => action === "UpdateRecord" && id === 4),
+    ).toBe(false);
+    expect(
+      actions.filter(
+        ([action, , , fields]) =>
+          action === "UpdateRecord" &&
+          (fields as { formula?: string }).formula === "not $dans_selection",
+      ),
+    ).toHaveLength(2);
   });
 
   it("ne recrée pas une table existante", async () => {
@@ -238,19 +408,191 @@ describe("GristService.setup", () => {
     );
   });
 
-  it("ajoute à une table existante les colonnes qui lui manquent", async () => {
+  it("ajoute à une table existante les colonnes affichées manquantes, avant celles ajoutées dans Grist", async () => {
+    // Après l'ajout, Grist a placé statut à droite de toto.
+    const order = ["refapp_id", "iq", "nom", "toto", "statut"];
     const { client, calls } = fakeGrist({
       tables: ["RefApp"],
-      columns: ["refapp_id", "nom", "statut", "metadata_1"],
+      columns: ["refapp_id", "dans_selection", "iq", "nom", "toto"],
+      // Deux vues : la vue brute (section 1) et un widget où l'utilisateur a mis toto en tête.
+      viewFields: [
+        ...order.map((colId, i) => ({
+          id: 10 + i,
+          section: 1,
+          colId,
+          parentPos: i + 1,
+        })),
+        { id: 20, section: 2, colId: "toto", parentPos: 1 },
+        { id: 21, section: 2, colId: "refapp_id", parentPos: 2 },
+        { id: 22, section: 2, colId: "statut", parentPos: 3 },
+      ],
+      metaColumns: [
+        { id: 1, colId: "manualSort", parentPos: 1 },
+        ...order.map((colId, i) => ({ id: 2 + i, colId, parentPos: i + 2 })),
+        { id: 8, colId: "gristHelper_ConditionalRule", parentPos: 3.5 },
+      ],
+    });
+    const report = await setup(client, {}, ["quality", "label", "status"]);
+
+    expect(addedColumns(calls)).toEqual(["statut"]);
+    expect(report).toMatchObject({
+      columnsAdded: ["statut"],
+      columnsRemoved: [],
+    });
+    expect(applied(calls)).toContainEqual([
+      "BulkUpdateRecord",
+      "_grist_Views_section_field",
+      [14, 13, 21, 22, 20],
+      { parentPos: [4, 5, 1, 2, 3] },
+    ]);
+    expect(applied(calls)).toContainEqual([
+      "BulkUpdateRecord",
+      "_grist_Tables_column",
+      [6, 5],
+      { parentPos: [5, 6] },
+    ]);
+  });
+
+  it("retire les colonnes RefApp qui ne sont plus affichées, jamais celles ajoutées dans Grist", async () => {
+    // Synchronisée avec IQ, Nom et Statut, puis avec IQ, Statut et Tags.
+    const { client, calls } = fakeGrist({
+      tables: ["RefApp"],
+      columns: ["refapp_id", "dans_selection", "iq", "nom", "statut", "toto"],
+      rows: [row(1, "app-0", { toto: "garde" })],
+    });
+    const report = await setup(client, {}, ["quality", "status", "tag"]);
+
+    expect(report).toMatchObject({
+      columnsAdded: ["tags"],
+      columnsRemoved: ["nom"],
+    });
+    expect(applied(calls)).toContainEqual(["RemoveColumn", "RefApp", "nom"]);
+    expect(
+      applied(calls).filter(([action]) => action === "RemoveColumn"),
+    ).toHaveLength(1);
+    expect(addedColumns(calls)).toEqual(["tags"]);
+    // Les règles d'accès (qui désignent les colonnes) sont retirées avant la colonne.
+    const index = (predicate: (c: Call) => boolean) =>
+      calls.findIndex(predicate);
+    const isApplied = (action: string) => (c: Call) =>
+      c.path === "/apply" &&
+      (c.body as unknown[][]).some(([a]) => a === action);
+    expect(index((c) => c.path === "/sql")).toBeLessThan(
+      index(isApplied("RemoveColumn")),
+    );
+    expect(
+      (puts(calls)[0].body as { records: { fields: object }[] }).records[1],
+    ).toEqual({
+      require: { refapp_id: "app-1" },
+      fields: {
+        dans_selection: true,
+        iq: "80%",
+        statut: "En production",
+        tags: "a, b",
+      },
+    });
+  });
+
+  it("retire motif_sortie des versions précédentes, et garde dans_selection visible", async () => {
+    const { client, calls } = fakeGrist({
+      tables: ["RefApp"],
+      columns: [
+        "refapp_id",
+        "nom",
+        "statut",
+        "dans_selection",
+        "motif_sortie",
+        "metadata_1",
+      ],
+      viewFields: [
+        { id: 30, section: 1, colId: "dans_selection", parentPos: 4 },
+      ],
+    });
+    const report = await setup(client, {}, ["label", "status"]);
+
+    expect(report).toMatchObject({
+      columnsAdded: [],
+      columnsRemoved: ["motif_sortie"],
+    });
+    expect(
+      applied(calls).filter(([action]) => action === "BulkRemoveRecord"),
+    ).toEqual([]);
+  });
+
+  it("ajoute et masque dans_selection dans une table qui ne l'a pas", async () => {
+    const { client, calls } = fakeGrist({
+      tables: ["RefApp"],
+      columns: ["refapp_id", "nom", "metadata_1"],
+      viewFields: [
+        { id: 30, section: 1, colId: "dans_selection", parentPos: 3 },
+      ],
+    });
+    const report = await setup(client, {}, ["label"]);
+
+    expect(report.columnsAdded).toEqual(["dans_selection"]);
+    expect(applied(calls)).toContainEqual([
+      "BulkRemoveRecord",
+      "_grist_Views_section_field",
+      [30],
+    ]);
+  });
+
+  it("n'écrit que les colonnes que le demandeur peut voir dans la page", async () => {
+    const { client, calls } = fakeGrist({ tables: ["RefApp"] });
+    const report = await setup(client, { canReadRestricted: false }, [
+      "label",
+      "moa",
+      "hostingDisplay",
+    ]);
+
+    expect(report.columnsRemoved).toEqual([
+      "iq",
+      "priorite",
+      "hebergement",
+      "tags",
+    ]);
+    expect(
+      (puts(calls)[0].body as { records: { fields: object }[] }).records[0]
+        .fields,
+    ).toEqual({ dans_selection: true, nom: "App 0" });
+    expect(
+      applied(calls).find(
+        ([action, table]) =>
+          action === "AddRecord" && table === "_grist_ACLResources",
+      )?.[3],
+    ).toEqual({ tableId: "RefApp", colIds: "refapp_id,dans_selection,nom" });
+  });
+
+  it("refuse une synchronisation sans aucune colonne visible", async () => {
+    const { client, calls } = fakeGrist({ tables: ["RefApp"] });
+
+    await expect(
+      service(client, { canReadRestricted: false }).sut.setup(
+        filters,
+        requestor,
+        undefined,
+        ["moa"],
+      ),
+    ).rejects.toThrow(BadRequestException);
+    expect(calls).toHaveLength(0);
+  });
+
+  it("ne déplace aucune colonne quand il n'en manque pas", async () => {
+    const { client, calls } = fakeGrist({
+      tables: ["RefApp"],
+      columns: [...ALL_COLUMNS, "toto"],
+      viewFields: [{ id: 20, section: 2, colId: "toto", parentPos: 1 }],
     });
     await setup(client);
 
-    const added = calls.find(
-      (c) => c.path === "/tables/RefApp/columns" && c.method === "POST",
-    );
     expect(
-      (added?.body as { columns: { id: string }[] }).columns.map((c) => c.id),
-    ).toEqual(["dans_selection", "motif_sortie", "metadata_2", "metadata_3"]);
+      calls.some(
+        (c) => c.path === "/tables/RefApp/columns" && c.method === "POST",
+      ),
+    ).toBe(false);
+    expect(
+      applied(calls).some(([action]) => action === "BulkUpdateRecord"),
+    ).toBe(false);
   });
 
   it("crée RefApp2 si la table RefApp existante n'est pas la nôtre, sans toucher à RefApp", async () => {
@@ -288,11 +630,13 @@ describe("GristService.setup", () => {
   it("sélectionne les applications avec les filtres et le périmètre du demandeur", async () => {
     const { client } = fakeGrist({ tables: ["RefApp"] });
     const where = { AND: [{ shortName: "app" }] };
-    const { sut, findMany, buildScopedWhere } = service(client, { where });
+    const { sut, findSearchItems, buildScopedWhere } = service(client, {
+      where,
+    });
     await sut.setup(filters, requestor);
 
     expect(buildScopedWhere).toHaveBeenCalledWith(filters, requestor);
-    expect(findMany.mock.calls[0][0].where).toBe(where);
+    expect(findSearchItems).toHaveBeenCalledWith(where, { label: "asc" });
   });
 
   it("n'écrit aucune application si le demandeur ne peut en lire aucune", async () => {
@@ -303,7 +647,7 @@ describe("GristService.setup", () => {
     expect(puts(calls)).toHaveLength(0);
   });
 
-  it("fait un upsert sur refapp_id qui dégrise, sans jamais envoyer les métadonnées", async () => {
+  it("fait un upsert sur refapp_id des valeurs affichées, sans jamais envoyer les métadonnées", async () => {
     const { client, calls } = fakeGrist({ tables: ["RefApp"] });
     const report = await setup(client);
 
@@ -312,19 +656,23 @@ describe("GristService.setup", () => {
       {
         require: { refapp_id: "app-0" },
         fields: {
-          nom: "App 0",
-          statut: "",
           dans_selection: true,
-          motif_sortie: "",
+          iq: "",
+          nom: "App 0",
+          priorite: "",
+          hebergement: "",
+          tags: "",
         },
       },
       {
         require: { refapp_id: "app-1" },
         fields: {
-          nom: "App 1",
-          statut: "in_production",
           dans_selection: true,
-          motif_sortie: "",
+          iq: "80%",
+          nom: "App 1",
+          priorite: "R1*",
+          hebergement: "",
+          tags: "a, b",
         },
       },
     ]);
@@ -346,69 +694,105 @@ describe("GristService.setup", () => {
     });
     const report = await setup(client);
 
-    expect(report).toMatchObject({ rowsGreyed: 0, rowsDeleted: 0 });
-    expect(patches(calls)).toHaveLength(0);
+    expect(report).toMatchObject({ rowsKept: 0, rowsDeleted: 0 });
+    expect(
+      applied(calls).some(([action]) => action === "BulkRemoveRecord"),
+    ).toBe(false);
   });
 
-  it("grise une ligne sortie du filtre qui porte des métadonnées", async () => {
+  it("conserve et grise une ligne sortie qui porte des métadonnées, et met à jour ses colonnes RefApp", async () => {
     const { client, calls } = fakeGrist({
       tables: ["RefApp"],
       rows: [row(7, "old", { metadata_2: "note" })],
     });
-    const report = await setup(client, { inRefApp: ["old"] });
-
-    expect(report).toMatchObject({ rowsGreyed: 1, rowsDeleted: 0 });
-    expect(patches(calls)[0].body).toEqual({
-      records: [
-        {
-          id: 7,
-          fields: {
-            dans_selection: false,
-            motif_sortie: EXIT_REASON.outOfFilter,
-          },
-        },
-      ],
+    const [old] = apps(2).slice(1);
+    const where = { AND: [{ shortName: "app" }] };
+    const { sut, buildScopedWhere, findSearchItems } = service(client, {
+      where,
+      inScope: [{ ...old, id: "old", label: "Ancienne" } as GristApplication],
     });
+    const {
+      documents: [report],
+    } = await sut.setup(filters, requestor);
+
+    expect(report).toMatchObject({ rowsKept: 1, rowsDeleted: 0 });
+    // Relue dans le seul périmètre du demandeur, sans les filtres de la page.
+    expect(buildScopedWhere).toHaveBeenCalledWith({}, requestor);
+    expect(findSearchItems).toHaveBeenLastCalledWith(
+      { AND: [where, { id: { in: ["old"] } }] },
+      { label: "asc" },
+    );
+    expect((puts(calls)[1].body as { records: unknown[] }).records).toEqual([
+      {
+        require: { refapp_id: "old" },
+        fields: expect.objectContaining({
+          dans_selection: false,
+          nom: "Ancienne",
+        }),
+      },
+    ]);
+    expect(patches(calls)).toHaveLength(0);
+    expect(
+      applied(calls).some(([action]) => action === "BulkRemoveRecord"),
+    ).toBe(false);
   });
 
-  it("indique qu'une application grisée a été supprimée de RefApp", async () => {
+  it("grise sans autre changement une ligne conservée dont l'application n'est plus lisible", async () => {
     const { client, calls } = fakeGrist({
       tables: ["RefApp"],
       rows: [
-        row(7, "gone", {
-          metadata_1: "note",
-          dans_selection: false,
-          motif_sortie: EXIT_REASON.outOfFilter,
-        }),
+        row(7, "old", { metadata_2: "note", dans_selection: true }),
+        row(8, "deja", { metadata_2: "note", dans_selection: false }),
       ],
     });
-    await setup(client);
+    const report = await setup(client);
 
-    expect(patches(calls)[0].body).toEqual({
-      records: [
-        {
-          id: 7,
-          fields: { dans_selection: false, motif_sortie: EXIT_REASON.deleted },
-        },
-      ],
-    });
+    expect(report).toMatchObject({ rowsKept: 2, rowsDeleted: 0 });
+    expect(puts(calls)).toHaveLength(1);
+    expect(patches(calls).map((c) => c.body)).toEqual([
+      { records: [{ id: 7, fields: { dans_selection: false } }] },
+    ]);
   });
 
-  it("ne réécrit pas une ligne déjà grisée avec le bon motif", async () => {
+  it("conserve une ligne sortie qui n'a de valeur que dans une colonne ajoutée dans Grist", async () => {
+    const { client } = fakeGrist({
+      tables: ["RefApp"],
+      columns: [...LOCKED_COLUMNS, "toto", "budget"],
+      rows: [row(7, "old", { toto: "", budget: 1200 })],
+    });
+    const report = await setup(client);
+
+    expect(report).toMatchObject({ rowsKept: 1, rowsDeleted: 0 });
+  });
+
+  it("supprime une ligne sortie dont les colonnes ajoutées sont vides ou calculées", async () => {
     const { client, calls } = fakeGrist({
       tables: ["RefApp"],
+      columns: [
+        ...LOCKED_COLUMNS,
+        "texte",
+        "nombre",
+        "case",
+        "liste",
+        "date",
+        "calcul",
+      ],
+      formulas: ["calcul"],
       rows: [
         row(7, "old", {
-          metadata_1: "note",
-          dans_selection: false,
-          motif_sortie: EXIT_REASON.outOfFilter,
+          texte: " ",
+          nombre: 0,
+          case: false,
+          liste: ["L"],
+          date: null,
+          calcul: "toujours rempli",
         }),
       ],
     });
-    const report = await setup(client, { inRefApp: ["old"] });
+    const report = await setup(client);
 
-    expect(report.rowsGreyed).toBe(1);
-    expect(patches(calls)).toHaveLength(0);
+    expect(report).toMatchObject({ rowsKept: 0, rowsDeleted: 1 });
+    expect(applied(calls)).toContainEqual(["BulkRemoveRecord", "RefApp", [7]]);
   });
 
   it("supprime les lignes sorties sans métadonnées, espaces seuls compris", async () => {
@@ -416,15 +800,14 @@ describe("GristService.setup", () => {
       tables: ["RefApp"],
       rows: [row(7, "old"), row(8, "gone", { metadata_3: "  " })],
     });
-    const report = await setup(client, { inRefApp: ["old"] });
+    const report = await setup(client);
 
-    expect(report).toMatchObject({ rowsGreyed: 0, rowsDeleted: 2 });
+    expect(report).toMatchObject({ rowsKept: 0, rowsDeleted: 2 });
     expect(applied(calls)).toContainEqual([
       "BulkRemoveRecord",
       "RefApp",
       [7, 8],
     ]);
-    expect(patches(calls)).toHaveLength(0);
   });
 
   it("retire avant l'upsert toutes les règles de la table, anciennes exemptions comprises", async () => {
@@ -481,56 +864,7 @@ describe("GristService.setup", () => {
     ).toEqual([["BulkRemoveRecord", "_grist_ACLRules", [30, 100]]]);
   });
 
-  it("grise par style conditionnel les colonnes qui ne le sont pas encore", async () => {
-    const { client, calls } = fakeGrist({
-      tables: ["RefApp"],
-      metaColumns: [
-        { id: 1, colId: "manualSort" },
-        {
-          id: 2,
-          colId: "nom",
-          rules: [5],
-          widgetOptions: JSON.stringify({
-            alignment: "left",
-            rulesOptions: [{ textColor: "#FF0000" }],
-          }),
-        },
-        { id: 3, colId: "statut", rules: [6] },
-        { id: 5, colId: "gristHelper_ConditionalRule", formula: "$x > 1" },
-        {
-          id: 6,
-          colId: "gristHelper_ConditionalRule2",
-          formula: "not $dans_selection",
-        },
-      ],
-    });
-    await setup(client);
-
-    const actions = applied(calls);
-    expect(actions).toContainEqual(["AddEmptyRule", "RefApp", 0, 2]);
-    expect(actions.filter(([a]) => a === "AddEmptyRule")).toHaveLength(1);
-    const helper = actions.find(
-      ([a, , , fields]) =>
-        a === "UpdateRecord" &&
-        (fields as { formula?: string }).formula !== undefined,
-    );
-    expect(helper?.[3]).toEqual({ formula: "not $dans_selection" });
-    const styled = actions.find(
-      ([a, table, id]) =>
-        a === "UpdateRecord" && table === "_grist_Tables_column" && id === 2,
-    );
-    expect(
-      JSON.parse((styled?.[3] as { widgetOptions: string }).widgetOptions),
-    ).toEqual({
-      alignment: "left",
-      rulesOptions: [
-        { textColor: "#FF0000" },
-        { textColor: "#929292", fillColor: "#EEEEEE" },
-      ],
-    });
-  });
-
-  it("remet le verrou pour tous une fois les lignes écrites, grisées et stylées", async () => {
+  it("remet le verrou pour tous une fois les colonnes et les lignes écrites", async () => {
     const { client, calls } = fakeGrist({
       tables: ["RefApp"],
       rows: [row(7, "gone", { metadata_1: "note" })],
@@ -546,8 +880,10 @@ describe("GristService.setup", () => {
     };
     const isWrite = (c: Call) =>
       c.method === "PUT" ||
-      c.method === "PATCH" ||
-      ["AddEmptyRule", "UpdateRecord"].includes(firstAction(c)[0] as string);
+      (c.path.endsWith("/columns") && c.method === "POST") ||
+      ["BulkRemoveRecord", "RemoveColumn", "UpdateRecord"].includes(
+        firstAction(c)[0] as string,
+      );
 
     expect(
       calls
@@ -588,7 +924,7 @@ describe("GristService.setup", () => {
       resources: [
         {
           tableId: "RefApp",
-          colIds: "refapp_id,nom,statut,dans_selection,motif_sortie",
+          colIds: "refapp_id,dans_selection,iq,nom,priorite,hebergement,tags",
           id: 1,
         },
         { tableId: "RefApp", colIds: "*", id: 2 },
@@ -609,22 +945,21 @@ describe("GristService.setup", () => {
 });
 
 describe("GristService.records", () => {
-  it("expose le rowId Grist avec les colonnes de la table", async () => {
+  it("expose le rowId Grist, les colonnes de RefApp et les métadonnées", async () => {
     const { client } = fakeGrist({
       tables: ["RefApp"],
-      rows: [row(7, "a1", { nom: "App", statut: "poc", metadata_1: "x" })],
+      columns: ["refapp_id", "nom", "statut", "metadata_1", "toto", "calcul"],
+      formulas: ["calcul"],
+      rows: [
+        row(7, "a1", { nom: "App", statut: "POC", metadata_1: "x", calcul: 1 }),
+      ],
     });
     expect(await service(client).sut.records("doc1", requestor)).toEqual([
       {
         rowId: 7,
         refapp_id: "a1",
-        nom: "App",
-        statut: "poc",
-        dans_selection: true,
-        motif_sortie: "",
-        metadata_1: "x",
-        metadata_2: null,
-        metadata_3: null,
+        values: { nom: "App", statut: "POC" },
+        metadata: { metadata_1: "x", toto: null },
       },
     ]);
   });
@@ -661,14 +996,16 @@ describe("GristService.setup, plusieurs documents", () => {
 
   it("synchronise chaque document du profil avec la même sélection", async () => {
     const { client, calls } = fakeGrist({ tables: ["RefApp"] });
-    const { sut, findMany } = service(client, { docIds: ["doc1", "doc2"] });
+    const { sut, findSearchItems } = service(client, {
+      docIds: ["doc1", "doc2"],
+    });
     const { documents } = await sut.setup(filters, requestor);
 
     expect(documents.map(({ docId, status }) => ({ docId, status }))).toEqual([
       { docId: "doc1", status: "ok" },
       { docId: "doc2", status: "ok" },
     ]);
-    expect(findMany).toHaveBeenCalledTimes(1);
+    expect(findSearchItems).toHaveBeenCalledTimes(1);
     expect(puts(calls).map((c) => c.docId)).toEqual(["doc1", "doc2"]);
   });
 

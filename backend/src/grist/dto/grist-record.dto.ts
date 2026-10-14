@@ -7,44 +7,19 @@ export class GristRecordDto {
   @ApiProperty({ description: "Identifiant de l'application dans RefApp" })
   refapp_id: string;
 
-  @ApiProperty({ description: "Nom de l'application" })
-  nom: string;
-
-  @ApiProperty({ description: "Statut courant de l'application" })
-  statut: string;
-
   @ApiProperty({
-    nullable: true,
-    type: Boolean,
+    type: "object",
+    additionalProperties: true,
     description:
-      "false : l'application n'est plus dans la sélection synchronisée (ligne grisée)",
+      "Valeurs des colonnes écrites par RefApp présentes dans la table (iq, nom, statut…), par identifiant de colonne",
   })
-  dans_selection: boolean | null;
+  values: Record<string, unknown>;
 
   @ApiProperty({
+    type: "object",
+    additionalProperties: true,
     description:
-      "Motif de sortie de la sélection : « hors filtre », « supprimée de RefApp », vide sinon",
+      "Métadonnées : valeurs des colonnes de données ajoutées dans Grist, par identifiant de colonne",
   })
-  motif_sortie: string;
-
-  @ApiProperty({
-    nullable: true,
-    type: String,
-    description: "Saisie libre dans Grist",
-  })
-  metadata_1: string | null;
-
-  @ApiProperty({
-    nullable: true,
-    type: String,
-    description: "Saisie libre dans Grist",
-  })
-  metadata_2: string | null;
-
-  @ApiProperty({
-    nullable: true,
-    type: String,
-    description: "Saisie libre dans Grist",
-  })
-  metadata_3: string | null;
+  metadata: Record<string, unknown>;
 }
