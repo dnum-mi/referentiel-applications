@@ -4,6 +4,7 @@ import { ref } from "vue";
 import type { LabelSourceDto } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
 import api from "@/api";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps<{
   labelSource?: LabelSourceDto;
@@ -18,7 +19,9 @@ const toaster = useToasterStore();
 const isEditModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
 const isSaving = ref(false);
+useSubmissionFocus(isSaving);
 const isDeleting = ref(false);
+useSubmissionFocus(isDeleting);
 const editingSource = ref<string>("");
 const errorMessage = ref<string>("");
 
@@ -43,6 +46,7 @@ function closeDeleteModal() {
 }
 
 async function saveLabelSource() {
+  if (isSaving.value) return;
   isSaving.value = true;
   errorMessage.value = "";
 
@@ -73,7 +77,7 @@ async function saveLabelSource() {
 }
 
 async function deleteLabelSource() {
-  if (!props.labelSource?.id) return;
+  if (!props.labelSource?.id || isDeleting.value) return;
 
   isDeleting.value = true;
 
@@ -96,7 +100,7 @@ async function deleteLabelSource() {
     label="Créer une source"
     data-testid="admin-create-label-source-btn"
     title="Créer une nouvelle source"
-    aria-label="Créer une nouvelle source"
+    aria-label="Créer une source"
     @click="openEditModal"
   />
 
@@ -187,7 +191,7 @@ async function deleteLabelSource() {
         label="Supprimer"
         data-testid="admin-delete-confirm-btn"
         title="Confirmer la suppression"
-        aria-label="Confirmer la suppression"
+        aria-label="Supprimer la source"
         danger
         :disabled="isDeleting"
         @click="deleteLabelSource"

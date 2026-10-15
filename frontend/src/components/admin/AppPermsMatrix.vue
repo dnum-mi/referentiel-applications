@@ -7,9 +7,11 @@ import api from "@/api/index";
 import type { AppPermsDto, CreateActorTypeDto } from "@/client/types.gen";
 import AppPermsMatrixHistory from "./AppPermsMatrixHistory.vue";
 import PermissionWritePriorityRestart from "../PermissionWritePriorityRestart.vue";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps<{
   appPermsMatrix: AppPermsDto[];
+  isSaving?: boolean;
 }>();
 
 const emits = defineEmits<{
@@ -47,13 +49,36 @@ const gridKeys = permissionKeys.filter((k) => k !== "Metadata");
 // Clone la prop : c'est un brouillon local d'édition, il ne doit jamais muter l'état
 // du parent (`AdminPermsMatrixTab.vue`) tant que l'utilisateur n'a pas cliqué « Enregistrer ».
 const updatedMatrix = ref<AppPermsDto[]>(props.appPermsMatrix.map((perms) => ({ ...perms })));
+let lastLoadedMatrix = props.appPermsMatrix.map((perms) => ({ ...perms }));
+const submittedMatrix = ref<AppPermsDto[] | null>(null);
 
-// Resynchronise le brouillon si la matrice source est rechargée par le parent.
+// Intégrer les valeurs et nouvelles lignes renvoyées par le serveur, tout en
+// gardant les changements saisis après la soumission ou pendant un autre reload.
 watch(
   () => props.appPermsMatrix,
   (newMatrix) => {
-    updatedMatrix.value = newMatrix.map((perms) => ({ ...perms }));
+    const baseline = submittedMatrix.value ?? lastLoadedMatrix;
+    updatedMatrix.value = newMatrix.map((perms) => {
+      const draft = updatedMatrix.value.find((row) => row.actorTypeId === perms.actorTypeId);
+      const previous = baseline.find((row) => row.actorTypeId === perms.actorTypeId);
+      const changes: Partial<AppPermsDto> = {};
+      if (draft && previous) {
+        for (const key of Object.keys(draft) as (keyof AppPermsDto)[]) {
+          if (key !== "actorTypeId" && draft[key] !== previous[key]) changes[key] = draft[key];
+        }
+      }
+      return { ...perms, ...changes };
+    });
+    lastLoadedMatrix = newMatrix.map((perms) => ({ ...perms }));
+    submittedMatrix.value = null;
   },
+);
+watch(
+  () => props.isSaving,
+  (saving) => {
+    if (!saving) submittedMatrix.value = null;
+  },
+  { flush: "post" },
 );
 
 // Lignes triées par ordre alphabétique du type d'acteur, comme dans la modale create/edit acteur.
@@ -98,18 +123,26 @@ function updateReportMatrix(actorTypeId: string, values: ReportPermissionValue[]
 }
 
 function saveAppPermsMatrix() {
-  // Emit the updated matrix to the parent component
+  if (props.isSaving) return;
+  submittedMatrix.value = updatedMatrix.value.map((perms) => ({ ...perms }));
+  emits("update:appPermsMatrix", submittedMatrix.value);
+}
 
-  emits("update:appPermsMatrix", updatedMatrix.value);
+function reloadAppPermsMatrix() {
+  if (props.isSaving) return;
+  emits("reload");
 }
 
 const isHistoryModalOpen = ref(false);
 
 const isCreateActorTypeModalOpen = ref(false);
 const isCreatingActorType = ref(false);
+const createActorTypeError = ref("");
+useSubmissionFocus(isCreatingActorType);
 const newActorTypeForm = ref<CreateActorTypeDto>({ code: "", label: "", description: "" });
 
 function openCreateActorTypeModal() {
+  createActorTypeError.value = "";
   newActorTypeForm.value = { code: "", label: "", description: "" };
   isCreateActorTypeModalOpen.value = true;
 }
@@ -121,6 +154,7 @@ function closeCreateActorTypeModal() {
 const isNewActorTypeFormValid = computed(() => newActorTypeForm.value.code.trim() !== "" && newActorTypeForm.value.label.trim() !== "");
 
 async function createActorType() {
+  createActorTypeError.value = "";
   isCreatingActorType.value = true;
   try {
     const response = await api.actorTypeControllerCreate({
@@ -140,11 +174,11 @@ async function createActorType() {
       await actorTypeStore.fetchAll(true);
       emits("reload");
     } else {
-      toaster.addErrorMessage("Erreur lors de la création du type d'acteur");
+      createActorTypeError.value = "Erreur lors de la création du type d'acteur. Votre saisie est conservée.";
     }
   } catch (error) {
     console.error("Error creating actor type:", error);
-    toaster.addErrorMessage("Erreur lors de la création du type d'acteur");
+    createActorTypeError.value = "Erreur lors de la création du type d'acteur. Votre saisie est conservée.";
   } finally {
     isCreatingActorType.value = false;
   }
@@ -182,7 +216,7 @@ async function createActorType() {
       </tr>
     </template>
     <tr v-for="perms in sortedMatrix" :key="perms.actorTypeId" :data-testid="`app-perms-row-${perms.actorTypeId}`">
-      <td>{{ actorTypeStore.actorTypes.find((at) => at.id === perms.actorTypeId)?.label ?? perms.actorTypeId }}</td>
+      <th scope="row">{{ actorTypeStore.actorTypes.find((at) => at.id === perms.actorTypeId)?.label ?? perms.actorTypeId }}</th>
       <td v-for="perm in gridKeys" :key="perm">
         <PermissionSelect
           v-if="perm === 'App'"
@@ -220,6 +254,7 @@ async function createActorType() {
           v-else-if="perm === 'PriorityRestart'"
           :id="`${perms.actorTypeId}-${perm}`"
           :checked="perms.AppWritePriority"
+          :actor-type-label="actorTypeStore.actorTypes.find((at) => at.id === perms.actorTypeId)?.label ?? perms.actorTypeId"
           :data-testid="`app-perms-select-${perms.actorTypeId}-${perm}`"
           @update:model-value="(value: boolean) => updateWritePriorityRestart(perms.actorTypeId, value)"
         />
@@ -260,8 +295,9 @@ async function createActorType() {
     <DsfrButton
       class="fr-mt-2w"
       data-testid="app-perms-save-btn"
+      :aria-disabled="isSaving"
+      :aria-busy="isSaving"
       title="Enregistrer la matrice des permissions"
-      aria-label="Enregistrer la matrice des permissions"
       @click="saveAppPermsMatrix"
     >
       Enregistrer les modifications
@@ -270,8 +306,8 @@ async function createActorType() {
       class="fr-mt-2w fr-ml-2w"
       data-testid="app-perms-reload-btn"
       title="Recharger la matrice des permissions"
-      aria-label="Recharger la matrice des permissions"
-      @click="$emit('reload')"
+      :aria-disabled="isSaving"
+      @click="reloadAppPermsMatrix"
     >
       Recharger les permissions
     </DsfrButton>
@@ -303,6 +339,10 @@ async function createActorType() {
     data-testid="create-actor-type-modal"
     @close="closeCreateActorTypeModal"
   >
+    <p class="fr-text--sm fr-mb-3w" data-testid="required-fields-hint">* = champs obligatoires</p>
+    <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="create-actor-type-error">
+      <p v-if="createActorTypeError" class="fr-error-text">{{ createActorTypeError }}</p>
+    </div>
     <DsfrInput
       v-model="newActorTypeForm.code"
       label="Code"

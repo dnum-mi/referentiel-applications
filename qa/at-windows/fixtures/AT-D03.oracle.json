@@ -1,0 +1,214 @@
+{
+  "id": "AT-D03",
+  "source": "inputs.json : données entièrement synthétiques + titres/étiquettes connus des générateurs ; aucune extraction du DOM pour construire ces attentes",
+  "requiredNativeText": [
+    "Rapport d’import",
+    "Détail par ligne",
+    "Résumé de l’import",
+    "Journal d’exécution",
+    "Onglet",
+    "Ligne",
+    "Statut",
+    "Identifiant",
+    "Détail",
+    "Acteurs synthétiques",
+    "Applications synthétiques",
+    "Conformités synthétiques",
+    "Acteur fictif A",
+    "app-synthetic-001",
+    "created",
+    "updated",
+    "error",
+    "Deuxième ligne",
+    "texte fictif",
+    "Créés",
+    "Mis à jour",
+    "Erreurs",
+    "Onglet traité",
+    "Onglet ignoré",
+    "Onglet de démonstration",
+    "Journal synthétique",
+    "avec guillemets",
+    "Suite de démonstration",
+    "Message"
+  ],
+  "interpretation": "La lecture native doit atteindre le footer, chaque champ complet doit être annoncé dans son contexte, et les déplacements de cellules couvrent tous les tableaux. Les candidats vocaux spécifiques proviennent de vraies annonces ; aucune valeur manquante ne peut être compensée par un autre champ.",
+  "syntheticOnly": true,
+  "modelSource": "Données synthétiques inputs.json, modèle calculé par les vrais générateurs et libellés source ; aucune attente extraite du DOM HTML.",
+  "spokenEquivalenceSource": {
+    "run": 38420957659,
+    "file": "cases-results-native-observed.json",
+    "method": "Only complete, actually observed native phrases; literal source value is retained separately.",
+    "sourceSha256": "1e3eb9cb3abd75f9fd021cfbf1fafc7ca58d79267abad86c91889768a60d44b2"
+  },
+  "tables": [
+    {
+      "caption": "Détail par ligne — entrée 1",
+      "columnHeaders": ["Champ", "Valeur"],
+      "columnHeaderNativeCandidates": [["Champ"], ["Valeur"]],
+      "rows": [
+        {
+          "label": "Onglet",
+          "value": "Acteurs synthétiques",
+          "nativeTextCandidates": ["Acteurs synthétiques"]
+        },
+        {
+          "label": "Ligne",
+          "value": "2",
+          "nativeTextCandidates": ["2"]
+        },
+        {
+          "label": "Statut",
+          "value": "created",
+          "nativeTextCandidates": ["created"]
+        },
+        {
+          "label": "Identifiant",
+          "value": "Acteur fictif A",
+          "nativeTextCandidates": ["Acteur fictif A"]
+        },
+        {
+          "label": "Détail",
+          "value": "Détail; \"exact\"\r\nDeuxième ligne 😀",
+          "nativeTextCandidates": ["Détail; exact Deuxième ligne visage rieur"]
+        }
+      ]
+    },
+    {
+      "caption": "Détail par ligne — entrée 2",
+      "columnHeaders": ["Champ", "Valeur"],
+      "columnHeaderNativeCandidates": [["Champ"], ["Valeur"]],
+      "rows": [
+        {
+          "label": "Onglet",
+          "value": "Applications synthétiques",
+          "nativeTextCandidates": ["Applications synthétiques"]
+        },
+        {
+          "label": "Ligne",
+          "value": "3",
+          "nativeTextCandidates": ["3"]
+        },
+        {
+          "label": "Statut",
+          "value": "updated",
+          "nativeTextCandidates": ["updated"]
+        },
+        {
+          "label": "Identifiant",
+          "value": "",
+          "nativeTextCandidates": [""]
+        },
+        {
+          "label": "Détail",
+          "value": "",
+          "nativeTextCandidates": [""]
+        }
+      ]
+    },
+    {
+      "caption": "Détail par ligne — entrée 3",
+      "columnHeaders": ["Champ", "Valeur"],
+      "columnHeaderNativeCandidates": [["Champ"], ["Valeur"]],
+      "rows": [
+        {
+          "label": "Onglet",
+          "value": "Conformités synthétiques",
+          "nativeTextCandidates": ["Conformités synthétiques"]
+        },
+        {
+          "label": "Ligne",
+          "value": "4",
+          "nativeTextCandidates": ["4"]
+        },
+        {
+          "label": "Statut",
+          "value": "error",
+          "nativeTextCandidates": ["error"]
+        },
+        {
+          "label": "Identifiant",
+          "value": "app-synthetic-001",
+          "nativeTextCandidates": ["app-synthetic-001"]
+        },
+        {
+          "label": "Détail",
+          "value": "<script>texte fictif</script> & démonstration",
+          "nativeTextCandidates": [
+            "inférieur script supérieur texte fictif inférieur barre oblique script supérieur et commercial démonstration"
+          ]
+        }
+      ]
+    },
+    {
+      "caption": "Résumé de l’import",
+      "columnHeaders": ["Information", "Valeur"],
+      "columnHeaderNativeCandidates": [["Information"], ["Valeur"]],
+      "rows": [
+        {
+          "label": "Créés",
+          "value": "1",
+          "nativeTextCandidates": ["1"]
+        },
+        {
+          "label": "Mis à jour",
+          "value": "1",
+          "nativeTextCandidates": ["1"]
+        },
+        {
+          "label": "Erreurs",
+          "value": "1",
+          "nativeTextCandidates": ["1"]
+        },
+        {
+          "label": "Onglet traité",
+          "value": "Acteurs synthétiques",
+          "nativeTextCandidates": ["Acteurs synthétiques"]
+        },
+        {
+          "label": "Onglet traité",
+          "value": "Applications synthétiques",
+          "nativeTextCandidates": ["Applications synthétiques"]
+        },
+        {
+          "label": "Onglet ignoré",
+          "value": "Onglet de démonstration",
+          "nativeTextCandidates": ["Onglet de démonstration"]
+        }
+      ]
+    },
+    {
+      "caption": "Journal d’exécution",
+      "columnHeaders": ["N°", "Message"],
+      "columnHeaderNativeCandidates": [["N°", "N degrees"], ["Message"]],
+      "rows": [
+        {
+          "label": "1",
+          "value": "Journal synthétique; \"avec guillemets\"\nSuite de démonstration",
+          "nativeTextCandidates": [
+            "Journal synthétique; \"avec guillemets\"\nSuite de démonstration"
+          ]
+        },
+        {
+          "label": "2",
+          "value": "Onglet ignoré : <img alt='texte fictif'>",
+          "nativeTextCandidates": [
+            "Onglet ignoré : inférieur img alt égal texte fictif supérieur"
+          ]
+        }
+      ]
+    }
+  ],
+  "blocks": [],
+  "emptySections": [],
+  "modelCompleteness": {
+    "tables": 5,
+    "dataRows": 23,
+    "entries": 3,
+    "fieldsPerEntry": 5,
+    "counters": 3,
+    "processedSheets": 2,
+    "ignoredSheets": 1,
+    "logs": 2
+  }
+}

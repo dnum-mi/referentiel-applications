@@ -5,6 +5,7 @@ import type { TechnicalDebtInfoDto, CreateTechnicalDebtInfoDto } from "@/client/
 import { useToasterStore } from "@/stores/toasterStore";
 import { useMditCampaigns } from "@/composables/use-mdit-campaigns";
 import api from "@/api/index.js";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps<{
   applicationId: string;
@@ -18,6 +19,10 @@ const emit = defineEmits<{
 
 const toaster = useToasterStore();
 const isSubmitting = ref(false);
+const formError = ref("");
+const campaignError = ref("");
+const isLoadingCampaigns = ref(false);
+useSubmissionFocus(isSubmitting);
 const isEditMode = computed(() => !!props.initialData);
 
 // Champ vide = score non noté (`null`). Une valeur saisie doit être comprise entre 1 et 5.
@@ -46,11 +51,33 @@ const form = ref({
 
 // 12.8 : à l'ouverture, porter le focus sur le premier élément interactif de la modale (bouton « Fermer »).
 onMounted(async () => {
-  await loadActiveCampaigns();
-  if (!form.value.millesime) form.value.millesime = toInputValue(latestYear.value);
   await nextTick();
   document.querySelector<HTMLButtonElement>('[data-testid="technical-debt-modal"] .fr-btn--close')?.focus();
+  await refreshCampaigns();
 });
+
+async function refreshCampaigns() {
+  if (isLoadingCampaigns.value) return;
+  const origin = document.activeElement;
+  isLoadingCampaigns.value = true;
+  try {
+    await loadActiveCampaigns();
+    if (!form.value.millesime) form.value.millesime = toInputValue(latestYear.value);
+    campaignError.value = "";
+  } catch {
+    campaignError.value = "Impossible de charger les campagnes de dette IT. Votre saisie est conservée. Réessayez le chargement.";
+  } finally {
+    isLoadingCampaigns.value = false;
+    await nextTick();
+    if (
+      origin instanceof HTMLElement &&
+      origin.dataset.testid === "technical-debt-campaigns-retry" &&
+      document.activeElement === document.body
+    ) {
+      document.querySelector<HTMLSelectElement>('[data-testid="technical-debt-modal"] [data-testid="millesime-select"]')?.focus();
+    }
+  }
+}
 
 // Renvoie le score saisi (1-5) ou `undefined` si le champ est vide (non noté).
 function toScoreOrUndefined(value: string): number | undefined {
@@ -73,11 +100,13 @@ function isValidMillesime(value: string): boolean {
 }
 
 async function handleSubmit() {
+  if (isSubmitting.value) return;
+  formError.value = "";
   isSubmitting.value = true;
 
   if (!isValidMillesime(form.value.millesime)) {
     isSubmitting.value = false;
-    toaster.addErrorMessage("Le millésime doit être une année valide.");
+    formError.value = "Le millésime doit être une année valide.";
     return;
   }
 
@@ -87,7 +116,7 @@ async function handleSubmit() {
     !isValidScore(form.value.costContainment)
   ) {
     isSubmitting.value = false;
-    toaster.addErrorMessage("Les valeurs de maturité doivent être comprises entre 1 et 5 (ou laissées vides).");
+    formError.value = "Les valeurs de maturité doivent être comprises entre 1 et 5 (ou laissées vides).";
     return;
   }
 
@@ -98,18 +127,20 @@ async function handleSubmit() {
     costContainment: toScoreOrUndefined(form.value.costContainment),
   };
 
-  const response = await api.applicationTechnicalDebtInfoControllerCreate({ path: { applicationId: props.applicationId }, body });
-
-  isSubmitting.value = false;
-
-  if (!isApiSuccess(response) || !response.data) {
-    toaster.addErrorMessage("Erreur lors de l'enregistrement des informations de dette technique.");
-    return;
+  try {
+    const response = await api.applicationTechnicalDebtInfoControllerCreate({ path: { applicationId: props.applicationId }, body });
+    if (!isApiSuccess(response) || !response.data) {
+      formError.value = "Erreur lors de l'enregistrement des informations de dette technique. Votre saisie est conservée.";
+      return;
+    }
+    toaster.addSuccessMessage(`Informations de dette technique ${isEditMode.value ? "mises à jour" : "créées"} avec succès !`);
+    emit("saved", response.data);
+    emit("close");
+  } catch {
+    formError.value = "Erreur lors de l'enregistrement des informations de dette technique. Votre saisie est conservée.";
+  } finally {
+    isSubmitting.value = false;
   }
-
-  toaster.addSuccessMessage(`Informations de dette technique ${isEditMode.value ? "mises à jour" : "créées"} avec succès !`);
-  emit("saved", response.data);
-  emit("close");
 }
 </script>
 
@@ -121,6 +152,21 @@ async function handleSubmit() {
     @close="$emit('close')"
   >
     <form data-testid="technical-debt-form" @submit.prevent="handleSubmit">
+      <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="technical-debt-form-error">
+        <p v-if="formError" class="fr-error-text">{{ formError }}</p>
+      </div>
+      <div role="alert" aria-atomic="true" data-testid="technical-debt-campaigns-error">
+        <p v-if="campaignError" class="fr-error-text">{{ campaignError }}</p>
+      </div>
+      <DsfrButton
+        v-if="campaignError"
+        type="button"
+        secondary
+        :aria-disabled="isLoadingCampaigns"
+        :label="isLoadingCampaigns ? 'Chargement des campagnes…' : 'Réessayer le chargement des campagnes'"
+        data-testid="technical-debt-campaigns-retry"
+        @click="refreshCampaigns"
+      />
       <div class="fr-form-group">
         <DsfrSelect
           v-model="form.millesime"

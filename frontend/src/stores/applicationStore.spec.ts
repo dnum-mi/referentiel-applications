@@ -1,24 +1,47 @@
 import { createPinia, setActivePinia } from "pinia";
+import type { GristColumnField } from "@/client/types.gen";
 import { useApplicationStore } from "./applicationStore";
+import * as downloadUtils from "@/utils/download-blob";
 
-const { removeMock, exportPowerpointMock, exportExcelMock, downloadBlob, addErrorMessage, addSuccessMessage, push } = vi.hoisted(() => ({
+const {
+  removeMock,
+  exportPowerpointMock,
+  exportExcelMock,
+  exportHtmlMock,
+  exportProductHtmlMock,
+  gristSetupMock,
+  gristTablesMock,
+  fetchWithTimeoutMock,
+  addErrorMessage,
+  addSuccessMessage,
+  push,
+} = vi.hoisted(() => ({
   removeMock: vi.fn(),
   exportPowerpointMock: vi.fn(),
   exportExcelMock: vi.fn(),
-  downloadBlob: vi.fn(),
+  exportHtmlMock: vi.fn(),
+  exportProductHtmlMock: vi.fn(),
+  gristSetupMock: vi.fn(),
+  gristTablesMock: vi.fn(),
+  fetchWithTimeoutMock: vi.fn(),
   addErrorMessage: vi.fn(),
   addSuccessMessage: vi.fn(),
   push: vi.fn(),
 }));
+
+vi.mock("@/api/fetch-with-timeout", () => ({ fetchWithTimeout: fetchWithTimeoutMock }));
 
 vi.mock("@/api/index", () => ({
   default: {
     applicationControllerRemove: removeMock,
     applicationControllerExportProductPowerpoint: exportPowerpointMock,
     applicationControllerExportExcel: exportExcelMock,
+    applicationControllerExportHtml: exportHtmlMock,
+    applicationControllerExportProductHtml: exportProductHtmlMock,
+    gristControllerSetup: gristSetupMock,
+    gristControllerTables: gristTablesMock,
   },
 }));
-vi.mock("@/utils/download-blob", () => ({ downloadBlob }));
 
 vi.mock("@/router", () => ({
   default: { push },
@@ -83,6 +106,46 @@ describe("applicationStore.deleteApplication — retour d'erreur (#2542)", () =>
   });
 });
 
+describe("applicationStore — versions HTML des exports", () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    exportHtmlMock.mockReset();
+    exportProductHtmlMock.mockReset();
+    vi.stubGlobal("URL", { createObjectURL: vi.fn(() => "blob:export"), revokeObjectURL: vi.fn() });
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("conserve tous les filtres et le tri de l'export, indépendamment de la pagination", async () => {
+    exportHtmlMock.mockResolvedValueOnce({ response: { ok: true, status: 200 }, data: "<!doctype html><html lang='fr'></html>" });
+    await useApplicationStore().downloadHtml({
+      label: "Portail",
+      page: 3,
+      pageSize: 15,
+      sortBy: "label",
+      order: "desc",
+      tag: [],
+      hostingSite: undefined,
+    });
+    expect(exportHtmlMock).toHaveBeenCalledExactlyOnceWith({
+      query: { label: "Portail", page: 3, pageSize: 0, sortBy: "label", order: "desc" },
+      parseAs: "blob",
+    });
+    expect(HTMLAnchorElement.prototype.click).toHaveBeenCalledOnce();
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:export");
+  });
+
+  it("demande la même fiche produit par identifiant et signale une erreur avant tout téléchargement", async () => {
+    exportProductHtmlMock.mockResolvedValueOnce({ response: { ok: false, status: 403 }, error: { message: "Forbidden" } });
+    await expect(useApplicationStore().downloadProductHtml("app-1")).rejects.toThrow("Erreur lors de l’export de la fiche produit HTML.");
+    expect(exportProductHtmlMock).toHaveBeenCalledExactlyOnceWith({ path: { applicationId: "app-1" }, parseAs: "blob" });
+    expect(HTMLAnchorElement.prototype.click).not.toHaveBeenCalled();
+  });
+});
+
 describe("applicationStore.downloadProductPowerpoint — erreurs du client API", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
@@ -100,12 +163,74 @@ describe("applicationStore.downloadProductPowerpoint — erreurs du client API",
   });
 });
 
+describe("applicationStore — synchronisation Grist", () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    gristSetupMock.mockReset();
+    gristTablesMock.mockReset();
+    fetchWithTimeoutMock.mockReset().mockResolvedValue(new Response());
+  });
+
+  it("conserve les filtres et les cibles Grist sans modifier le contrat des exports", async () => {
+    const report = { documents: [{ docId: "doc1", tableId: "RefApp", status: "ok", rowsWritten: 2 }] };
+    gristSetupMock.mockResolvedValueOnce({ response: { ok: true, status: 200 }, data: report });
+    const targets = [
+      { docId: "doc1", tableId: "RefApp" },
+      { docId: "doc2", newTable: true },
+    ];
+    const columns: GristColumnField[] = ["label", "status"];
+    const result = await useApplicationStore().syncWithGrist(
+      { shortName: "Portail", page: 2, tag: [], hostingSite: undefined },
+      targets,
+      columns,
+    );
+    expect(gristSetupMock).toHaveBeenCalledExactlyOnceWith({
+      query: { shortName: "Portail", page: 2 },
+      body: { targets, columns },
+      fetch: expect.any(Function),
+    });
+    const request = new Request("https://refapp.test/api/v2/grist/setup");
+    await gristSetupMock.mock.calls[0][0].fetch(request);
+    expect(fetchWithTimeoutMock).toHaveBeenCalledExactlyOnceWith(request, undefined, 5 * 60_000);
+    expect(result).toEqual(report);
+  });
+
+  it("laisse le backend choisir les tables par défaut quand aucune cible n'est fournie", async () => {
+    gristSetupMock.mockResolvedValueOnce({ response: { ok: true, status: 200 }, data: { documents: [] } });
+    await useApplicationStore().syncWithGrist();
+    expect(gristSetupMock).toHaveBeenCalledExactlyOnceWith({
+      query: {},
+      body: { targets: undefined, columns: undefined },
+      fetch: expect.any(Function),
+    });
+  });
+
+  it("rend les documents et tables disponibles dans le profil", async () => {
+    const documents = [{ docId: "doc1", tables: ["RefApp", "RefApp2"] }];
+    gristTablesMock.mockResolvedValueOnce({ response: { ok: true, status: 200 }, data: documents });
+    await expect(useApplicationStore().listGristTables()).resolves.toEqual(documents);
+    expect(gristTablesMock).toHaveBeenCalledExactlyOnceWith();
+  });
+
+  it.each([
+    { response: undefined, error: new TypeError("Failed to fetch") },
+    { response: { ok: false, status: 403 }, error: { message: "Forbidden" } },
+  ])("relaie les échecs Grist au composant sans confirmer une synchronisation", async ({ response, error }) => {
+    gristSetupMock.mockResolvedValueOnce({ response, error });
+    gristTablesMock.mockResolvedValueOnce({ response, error });
+    await expect(useApplicationStore().syncWithGrist()).rejects.toThrow("Erreur lors de la synchronisation avec Grist.");
+    await expect(useApplicationStore().listGristTables()).rejects.toThrow("Erreur lors de la lecture des documents Grist.");
+  });
+});
+
 describe("applicationStore.downloadExcel — filtres technologies", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     exportExcelMock.mockReset();
-    downloadBlob.mockReset();
+    vi.spyOn(downloadUtils, "downloadBlob").mockImplementation(() => {});
   });
+
+  afterEach(() => vi.restoreAllMocks());
 
   it("conserve le statut technologies et les autres filtres pour exporter toutes les pages", async () => {
     exportExcelMock.mockResolvedValueOnce({ response: { ok: true }, data: new Blob(["xlsx"]) });
@@ -113,6 +238,9 @@ describe("applicationStore.downloadExcel — filtres technologies", () => {
     expect(exportExcelMock).toHaveBeenCalledExactlyOnceWith({
       query: { technologyEolStatus: "eol", search: "portail", page: 2, pageSize: 0, order: "desc" },
     });
-    expect(downloadBlob).toHaveBeenCalledExactlyOnceWith(expect.any(Blob), expect.stringMatching(/^applications_export_.*\.xlsx$/));
+    expect(downloadUtils.downloadBlob).toHaveBeenCalledExactlyOnceWith(
+      expect.any(Blob),
+      expect.stringMatching(/^applications_export_.*\.xlsx$/),
+    );
   });
 });

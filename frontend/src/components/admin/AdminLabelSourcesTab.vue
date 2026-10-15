@@ -72,7 +72,7 @@ onMounted(fetchLabelSources);
 
 <template>
   <div class="header-row">
-    <h1 class="fr-h1" data-testid="admin-label-sources-title">Gestion des sources de noms alternatifs</h1>
+    <h2 class="fr-h1" data-testid="admin-label-sources-title">Gestion des sources de noms alternatifs</h2>
 
     <LabelSourceActions @fetch-tags="fetchLabelSources" :is-creating="true" />
   </div>

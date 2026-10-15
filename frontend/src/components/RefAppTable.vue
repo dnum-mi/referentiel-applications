@@ -1,11 +1,13 @@
 <script setup lang="ts" generic="T">
-import { ref, nextTick, watch } from "vue";
+import { computed, ref, nextTick, useId, watch } from "vue";
 import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 import Skeleton from "primevue/skeleton";
+import type { CheckboxPassThroughOptions } from "primevue/checkbox";
+import PaginationFooter from "./PaginationFooter.vue";
 import type { TableColumn, TableSortEvent } from "@/types/table";
 import type { DataTableSortEvent, DataTablePageEvent, DataTableColumnResizeEndEvent } from "primevue/datatable";
-import { PAGE_SIZE_OPTIONS } from "@/constants/pagination";
+import { DEFAULT_COLUMN_WIDTH, MIN_COLUMN_WIDTH, MAX_COLUMN_WIDTH, normalizeColumnWidth } from "@/utils/column-width";
 
 export interface Props<T> {
   items: T[];
@@ -27,6 +29,8 @@ export interface Props<T> {
   paginator?: boolean;
   dataTestId?: string;
   emptyMessage?: string;
+  /** Intitulé du tableau, associé à la table HTML native. */
+  caption?: string;
   /** Affiche une colonne de sélection multiple (cases à cocher) — nécessite `dataKey`. */
   selectable?: boolean;
 }
@@ -45,6 +49,76 @@ const props = withDefaults(defineProps<Props<T>>(), {
   emptyMessage: "Aucune donnée ne correspond à votre recherche.",
   selectable: false,
 });
+const tableTitleId = `table-title-${useId()}`;
+const tableCaption = computed(() => props.caption ?? `Tableau : ${props.columns.map((column) => column.header).join(", ")}`);
+const tableSection = ref<HTMLElement>();
+const resizedWidths = ref<Record<string, number>>({});
+const widthInputs = ref<Record<string, string>>({});
+const widthStatus = ref("");
+const hasControlledWidths = computed(
+  () => Object.keys(resizedWidths.value).length > 0 || props.columns.some((column) => normalizeColumnWidth(column.width) !== undefined),
+);
+const columnWidth = (column: Pick<TableColumn, "field" | "width">) =>
+  resizedWidths.value[column.field] ?? normalizeColumnWidth(column.width) ?? DEFAULT_COLUMN_WIDTH;
+const tableStyle = computed(() => {
+  if (!hasControlledWidths.value) return { minWidth: "50rem" };
+  const width = props.columns.reduce((sum, column) => sum + columnWidth(column), props.selectable ? 48 : 0);
+  return { width: `${width}px`, minWidth: `${width}px`, tableLayout: "fixed" };
+});
+
+function columnStyle(column: TableColumn) {
+  if (!hasControlledWidths.value) return column.width ? { width: column.width } : undefined;
+  // PrimeVue écrit des règles !important au redimensionnement souris. Le modèle partagé
+  // pilote aussi ces largeurs pour que le réglage clavier reste effectif après un glissement.
+  const width = `${columnWidth(column)}px !important`;
+  return { width, maxWidth: width, minWidth: `${MIN_COLUMN_WIDTH}px`, overflowWrap: "anywhere" };
+}
+
+function renderedWidths() {
+  return Object.fromEntries(
+    props.columns.map((column) => {
+      const header = Array.from(tableSection.value?.querySelectorAll<HTMLElement>("thead th[data-column-field]") ?? []).find(
+        (element) => element.dataset.columnField === column.field,
+      );
+      return [column.field, normalizeColumnWidth(header?.getBoundingClientRect().width) ?? columnWidth(column)];
+    }),
+  );
+}
+
+function prepareWidthInputs() {
+  widthInputs.value = Object.fromEntries(Object.entries(renderedWidths()).map(([field, width]) => [field, String(width)]));
+}
+
+function updateWidths(widths: Record<string, number>, previousWidths: Record<string, number>) {
+  resizedWidths.value = { ...resizedWidths.value, ...widths };
+  widthInputs.value = Object.fromEntries(Object.entries(widths).map(([field, width]) => [field, String(width)]));
+  for (const [field, width] of Object.entries(widths)) {
+    if (width !== previousWidths[field]) emit("columnResize", { field, width: `${width}px` });
+  }
+}
+
+function applyColumnWidth(column: TableColumn) {
+  const width = Number(widthInputs.value[column.field]);
+  if (!Number.isInteger(width) || width < MIN_COLUMN_WIDTH || width > MAX_COLUMN_WIDTH) return;
+  const previousWidths = renderedWidths();
+  updateWidths({ ...previousWidths, [column.field]: width }, previousWidths);
+  widthStatus.value = `La largeur de la colonne ${column.header} est maintenant de ${width} pixels.`;
+}
+
+watch(
+  () => props.columns.map(({ field, width }) => ({ field, width })),
+  (columns, previousColumns) => {
+    for (const column of columns) {
+      if (column.width !== previousColumns.find((previous) => previous.field === column.field)?.width) {
+        delete resizedWidths.value[column.field];
+        widthInputs.value[column.field] = String(columnWidth(column));
+      }
+    }
+    for (const field of Object.keys(resizedWidths.value)) {
+      if (!columns.some((column) => column.field === field)) delete resizedWidths.value[field];
+    }
+  },
+);
 
 const emit = defineEmits<{
   sort: [event: TableSortEvent];
@@ -53,6 +127,14 @@ const emit = defineEmits<{
 }>();
 
 const selection = defineModel<T[]>("selection", { default: () => [] });
+// PrimeVue inverse actuellement les noms d'action de ses cases de sélection.
+// Le pass-through de l'input utilise l'état réel du Checkbox sans changer la locale des autres widgets.
+const rowCheckboxPt = {
+  input: ({ context }) => ({ "aria-label": context.checked ? "Désélectionner la ligne" : "Sélectionner la ligne" }),
+} satisfies CheckboxPassThroughOptions;
+const headerCheckboxPt = {
+  input: ({ context }) => ({ "aria-label": context.checked ? "Tout désélectionner" : "Tout sélectionner" }),
+} satisfies CheckboxPassThroughOptions;
 
 const internalSortField = ref(props.sortField);
 const internalSortOrder = ref(props.sortOrder);
@@ -114,13 +196,32 @@ function sortTitle(column: TableColumn): string {
 }
 
 function onColumnResize(event: DataTableColumnResizeEndEvent) {
-  if (event.element && event.element.style) {
-    const field = event.element.dataset.pColumnField || event.element.getAttribute("aria-label");
-    const width = event.element.style.width;
-    if (field && width) {
-      emit("columnResize", { field, width });
-    }
+  const field = event.element?.dataset.columnField;
+  const index = props.columns.findIndex((column) => column.field === field);
+  if (!field || index < 0) return;
+  const previousWidths = renderedWidths();
+  if (!hasControlledWidths.value) {
+    // Dans ce cas PrimeVue a déjà changé les cellules : mémoriser le rendu obtenu.
+    resizedWidths.value = previousWidths;
+    widthInputs.value = Object.fromEntries(Object.entries(previousWidths).map(([key, width]) => [key, String(width)]));
+    emit("columnResize", { field, width: `${previousWidths[field]}px` });
+    const nextField = props.columns[index + 1]?.field;
+    if (nextField) emit("columnResize", { field: nextField, width: `${previousWidths[nextField]}px` });
+    return;
   }
+  const nextField = props.columns[index + 1]?.field;
+  const minimumDelta = Math.max(
+    MIN_COLUMN_WIDTH - previousWidths[field],
+    nextField ? previousWidths[nextField] - MAX_COLUMN_WIDTH : Number.NEGATIVE_INFINITY,
+  );
+  const maximumDelta = Math.min(
+    MAX_COLUMN_WIDTH - previousWidths[field],
+    nextField ? previousWidths[nextField] - MIN_COLUMN_WIDTH : Number.POSITIVE_INFINITY,
+  );
+  const delta = Math.max(minimumDelta, Math.min(maximumDelta, event.delta));
+  const widths = { ...previousWidths, [field]: previousWidths[field] + delta };
+  if (nextField) widths[nextField] = previousWidths[nextField] - delta;
+  updateWidths(widths, previousWidths);
 }
 
 watch(
@@ -137,7 +238,36 @@ watch(
 </script>
 
 <template>
-  <section class="fr-table" :aria-label="`Tableau de ${totalRecords} éléments`">
+  <section ref="tableSection" class="fr-table" :aria-labelledby="tableTitleId">
+    <p :id="tableTitleId" class="fr-sr-only">{{ tableCaption }}</p>
+    <details class="ref-table-width-settings fr-mb-2w" @toggle="prepareWidthInputs">
+      <summary>Régler la largeur des colonnes</summary>
+      <p :id="`${tableTitleId}-width-help`" class="fr-hint-text">
+        Choisissez une largeur entre {{ MIN_COLUMN_WIDTH }} et {{ MAX_COLUMN_WIDTH }} pixels, puis activez Appliquer.
+      </p>
+      <form v-for="column in columns" :key="column.field" class="ref-table-width-form" @submit.prevent="applyColumnWidth(column)">
+        <label class="fr-label" :for="`${tableTitleId}-width-${column.field}`">{{ column.header }} — largeur en pixels</label>
+        <input
+          :id="`${tableTitleId}-width-${column.field}`"
+          v-model="widthInputs[column.field]"
+          class="fr-input"
+          type="number"
+          required
+          :min="MIN_COLUMN_WIDTH"
+          :max="MAX_COLUMN_WIDTH"
+          step="1"
+          :aria-describedby="`${tableTitleId}-width-help`"
+        />
+        <button
+          type="submit"
+          class="fr-btn fr-btn--secondary fr-btn--sm"
+          :aria-label="`Appliquer la largeur de la colonne ${column.header}`"
+        >
+          Appliquer
+        </button>
+      </form>
+    </details>
+    <output class="fr-sr-only">{{ widthStatus }}</output>
     <DataTable
       v-model:selection="selection"
       :value="items"
@@ -147,30 +277,46 @@ watch(
       :rows="rows"
       :first="first"
       :paginator="paginator"
-      :rows-per-page-options="PAGE_SIZE_OPTIONS"
-      :paginator-template="'RowsPerPageDropdown FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport'"
-      current-page-report-template="{first} à {last} sur {totalRecords}"
       :sort-field="internalSortField"
       :sort-order="internalSortOrder"
       :loading="loading && !isSorting"
       :data-testid="dataTestId"
-      :pt="{ column: { headerCell: { tabindex: null } } }"
+      :table-props="{ 'aria-labelledby': tableTitleId }"
+      :pt="{
+        column: { headerCell: { tabindex: null, scope: 'col' } },
+        pcPaginator: { paginatorContainer: { 'aria-label': 'Pagination' } },
+      }"
       striped-rows
       resizable-columns
       column-resize-mode="fit"
       responsive-layout="scroll"
-      aria-live="polite"
       :aria-busy="loading || isSorting"
       @sort="onSort"
       @page="onPage"
       @column-resize-end="onColumnResize"
-      table-style="min-width: 50rem"
+      :table-style="tableStyle"
     >
+      <template #paginatorcontainer="pagination">
+        <PaginationFooter
+          embedded
+          :total-filtered="pagination.totalRecords ?? 0"
+          :page="pagination.page"
+          :limit="pagination.rows"
+          @update:page="pagination.changePageCallback"
+          @update:limit="pagination.rowChangeCallback"
+        />
+      </template>
       <template #empty>
         <output class="fr-py-2w fr-text--center" aria-live="polite" style="display: block">{{ emptyMessage }}</output>
       </template>
 
-      <Column v-if="selectable" selection-mode="multiple" header-style="width: 3rem" :exportable="false" />
+      <Column
+        v-if="selectable"
+        selection-mode="multiple"
+        header-style="width: 3rem"
+        :exportable="false"
+        :pt="{ pcHeaderCheckbox: headerCheckboxPt, pcRowCheckbox: rowCheckboxPt }"
+      />
 
       <Column
         v-for="column in columns"
@@ -178,16 +324,25 @@ watch(
         :field="column.field"
         :header="$slots[`header-${column.field}`] || column.sortable ? undefined : column.header"
         :sortable="column.sortable"
-        :style="column.width ? { width: column.width } : undefined"
+        :style="columnStyle(column)"
+        :pt="{ headerCell: { 'data-column-field': column.field } }"
         :aria-label="column.header"
       >
-        <!-- RGAA-027 : en-tête personnalisé — soit le slot fourni par le parent, soit un bouton de tri accessible
-             (le th n'est plus focusable via pt.headerCell.tabindex ; le bouton déclenche le tri via requestSort). -->
+        <!-- Le bouton de tri reste distinct des commandes supplémentaires de l'en-tête.
+             PrimeVue ne doit pas annuler l'activation native du bouton avec Entrée ou Espace. -->
         <template v-if="$slots[`header-${column.field}`] || column.sortable" #header>
-          <slot v-if="$slots[`header-${column.field}`]" :name="`header-${column.field}`" />
-          <button v-else type="button" class="ref-table-sort-button" :title="sortTitle(column)" @click="requestSort(column)">
+          <button
+            v-if="column.sortable"
+            type="button"
+            class="ref-table-sort-button"
+            :title="sortTitle(column)"
+            @click="requestSort(column)"
+            @keydown.enter.stop
+            @keydown.space.stop
+          >
             {{ column.header }}
           </button>
+          <slot v-if="$slots[`header-${column.field}`]" :name="`header-${column.field}`" />
         </template>
         <template #body="slotProps">
           <Skeleton v-if="isSorting" width="80%" height="1rem" aria-label="Chargement en cours" />
@@ -201,6 +356,31 @@ watch(
 </template>
 
 <style scoped>
+.ref-table-width-settings summary {
+  cursor: pointer;
+}
+
+.ref-table-width-settings summary:focus-visible {
+  outline: 2px solid var(--text-action-high-blue-france, #000);
+  outline-offset: 2px;
+}
+
+.ref-table-width-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.ref-table-width-form .fr-label {
+  flex: 1 1 14rem;
+}
+
+.ref-table-width-form .fr-input {
+  width: 7rem;
+}
+
 :deep(.p-datatable) {
   font-family: inherit;
   width: 100%;
@@ -318,7 +498,7 @@ watch(
    doux qu'un aplat bleu plein. Le style de PrimeVue est injecté dynamiquement en JS (useStyle) :
    comme pour les icônes de tri ci-dessus, seul `!important` le bat de façon fiable. */
 :deep(.p-checkbox-box) {
-  border-color: var(--border-default-grey) !important;
+  border-color: var(--text-mention-grey) !important;
 }
 
 :deep(.p-checkbox-box:hover) {
@@ -342,7 +522,8 @@ watch(
   color: var(--background-action-high-blue-france) !important;
 }
 
-:deep(.p-checkbox.p-focus .p-checkbox-box) {
+:deep(.p-checkbox.p-focus .p-checkbox-box),
+:deep(.p-checkbox:has(input:focus-visible) .p-checkbox-box) {
   outline-color: var(--background-action-high-blue-france) !important;
   box-shadow: 0 0 0 2px var(--background-action-high-blue-france) !important;
 }

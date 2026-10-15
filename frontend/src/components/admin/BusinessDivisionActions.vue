@@ -4,6 +4,7 @@ import { ref } from "vue";
 import type { BusinessDivisionDto } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
 import api from "@/api";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps<{
   businessDivision?: BusinessDivisionDto;
@@ -18,7 +19,9 @@ const toaster = useToasterStore();
 const isEditModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
 const isSaving = ref(false);
+useSubmissionFocus(isSaving);
 const isDeleting = ref(false);
+useSubmissionFocus(isDeleting);
 const editingLabel = ref<string>("");
 const errorMessage = ref<string>("");
 
@@ -42,6 +45,7 @@ function closeDeleteModal() {
 }
 
 async function saveBusinessDivision() {
+  if (isSaving.value) return;
   const label = editingLabel.value.trim();
   if (!label) {
     errorMessage.value = "Le nom de la direction métier est obligatoire.";
@@ -74,7 +78,7 @@ async function saveBusinessDivision() {
 }
 
 async function deleteBusinessDivision() {
-  if (!props.businessDivision?.id) return;
+  if (!props.businessDivision?.id || isDeleting.value) return;
 
   isDeleting.value = true;
 
@@ -97,7 +101,7 @@ async function deleteBusinessDivision() {
     label="Créer une direction métier"
     data-testid="admin-create-business-division-btn"
     title="Créer une nouvelle direction métier"
-    aria-label="Créer une nouvelle direction métier"
+    aria-label="Créer une direction métier"
     @click="openEditModal"
   />
 
@@ -133,6 +137,7 @@ async function deleteBusinessDivision() {
     </p>
 
     <DsfrAlert
+      alert
       v-if="errorMessage"
       type="error"
       :description="errorMessage"
@@ -153,22 +158,26 @@ async function deleteBusinessDivision() {
 
     <template #footer>
       <DsfrButtonGroup :inline-layout-when="true" :reverse="true">
-        <DsfrButton
-          label="Annuler"
-          secondary
-          data-testid="admin-business-division-cancel-btn"
-          title="Annuler"
-          aria-label="Annuler"
-          @click="closeEditModal"
-        />
-        <DsfrButton
-          :label="isSaving ? 'Enregistrement…' : 'Enregistrer'"
-          title="Enregistrer"
-          aria-label="Enregistrer"
-          :disabled="isSaving"
-          data-testid="admin-business-division-save-btn"
-          @click="saveBusinessDivision"
-        />
+        <li>
+          <DsfrButton
+            label="Annuler"
+            secondary
+            data-testid="admin-business-division-cancel-btn"
+            title="Annuler"
+            aria-label="Annuler"
+            @click="closeEditModal"
+          />
+        </li>
+        <li>
+          <DsfrButton
+            :label="isSaving ? 'Enregistrement…' : 'Enregistrer'"
+            title="Enregistrer"
+            aria-label="Enregistrer"
+            :disabled="isSaving"
+            data-testid="admin-business-division-save-btn"
+            @click="saveBusinessDivision"
+          />
+        </li>
       </DsfrButtonGroup>
     </template>
   </DsfrModal>
@@ -190,23 +199,27 @@ async function deleteBusinessDivision() {
 
     <template #footer>
       <DsfrButtonGroup :inline-layout-when="true" :reverse="true">
-        <DsfrButton
-          label="Annuler"
-          secondary
-          data-testid="admin-business-division-delete-cancel-btn"
-          title="Annuler la suppression"
-          aria-label="Annuler la suppression"
-          @click="closeDeleteModal"
-        />
-        <DsfrButton
-          label="Supprimer"
-          data-testid="admin-business-division-delete-confirm-btn"
-          title="Confirmer la suppression"
-          aria-label="Confirmer la suppression"
-          danger
-          :disabled="isDeleting"
-          @click="deleteBusinessDivision"
-        />
+        <li>
+          <DsfrButton
+            label="Annuler"
+            secondary
+            data-testid="admin-business-division-delete-cancel-btn"
+            title="Annuler la suppression"
+            aria-label="Annuler la suppression"
+            @click="closeDeleteModal"
+          />
+        </li>
+        <li>
+          <DsfrButton
+            label="Supprimer"
+            data-testid="admin-business-division-delete-confirm-btn"
+            title="Confirmer la suppression"
+            aria-label="Supprimer la direction métier"
+            danger
+            :disabled="isDeleting"
+            @click="deleteBusinessDivision"
+          />
+        </li>
       </DsfrButtonGroup>
     </template>
   </DsfrModal>

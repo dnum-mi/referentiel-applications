@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, watch } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import api from "@/api";
 import type { BusinessDivisionDto } from "@/client";
 
@@ -21,6 +21,7 @@ const emit = defineEmits<{
 }>();
 
 const selectedDivisions = ref<BusinessDivisionDto[]>([]);
+const container = ref<HTMLDivElement>();
 
 // Filtre alimenté par l'URL : le prop peut arriver comme une simple chaîne plutôt qu'un tableau
 // (deep-link à un seul id), voire comme un tableau dont un élément porte encore plusieurs ids
@@ -36,12 +37,14 @@ watch(
   normalizedIds,
   async (ids) => {
     const missingIds = ids.filter((id) => !selectedDivisions.value.some((division) => division.id === id));
-    const resolved = await Promise.all(
-      missingIds.map(async (id) => {
-        const { data } = await api.businessDivisionControllerFindById({ path: { id } });
-        return data;
-      }),
-    );
+    const resolved = missingIds.length
+      ? await Promise.all(
+          missingIds.map(async (id) => {
+            const { data } = await api.businessDivisionControllerFindById({ path: { id } });
+            return data;
+          }),
+        )
+      : [];
     selectedDivisions.value = ids
       .map((id) => resolved.find((division) => division?.id === id) ?? selectedDivisions.value.find((division) => division.id === id))
       .filter((division): division is BusinessDivisionDto => Boolean(division));
@@ -54,11 +57,19 @@ function addDivision(division?: BusinessDivisionDto) {
   emit("update:businessDivisionIds", [...normalizedIds.value, division.id]);
 }
 
-function removeDivision(index: number) {
+async function removeDivision(index: number) {
+  const previousFocus = document.activeElement;
+  const restoreFocus = previousFocus instanceof HTMLElement && !!container.value?.contains(previousFocus);
   emit(
     "update:businessDivisionIds",
     normalizedIds.value.filter((_, i) => i !== index),
   );
+  await nextTick();
+  if (!restoreFocus || (document.activeElement !== previousFocus && document.activeElement !== document.body)) return;
+  const remaining = container.value?.querySelectorAll<HTMLButtonElement>(".fr-tags-group button");
+  const target =
+    remaining?.[Math.min(index, remaining.length - 1)] ?? container.value?.querySelector<HTMLInputElement>('[role="combobox"]');
+  target?.focus();
 }
 
 async function performSearch(query: string) {
@@ -71,7 +82,7 @@ async function performSearch(query: string) {
 </script>
 
 <template>
-  <div class="business-relation-filters">
+  <div ref="container" class="business-relation-filters">
     <SuggestionsInput
       @update:selected-value="addDivision"
       :search-data-function="performSearch"

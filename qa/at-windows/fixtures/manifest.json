@@ -1,0 +1,342 @@
+{
+  "capturedStyles": {
+    "file": "rendered-styles.css",
+    "sha256": "f60118d44d94d004c2b5ad0e00c67a7d840271f9ba5eacbee5efacdc3202478d",
+    "note": "Règles CSS réelles du client monté ; assets de police externes non embarqués dans ce premier pilote de restitution."
+  },
+  "capturedAt": "2026-10-13T17:07:36.501Z",
+  "productHead": "e8c028b2e721f8b87a1d4e2d48b5e9e5c9724983",
+  "captureBrowser": "Chromium 155.0.8059.40",
+  "locale": "fr-FR",
+  "mode": "Vrais composants montés avec fixtures entièrement synthétiques ; DOM copié pour restitution seule, handlers absents (7.1.2 exclu).",
+  "sourcePaths": [
+    {
+      "file": "frontend/src/components/stats/ApplicationsIqChart.vue",
+      "sha256": "ce7e837f011429ea5d393acae7014a7007de956f44f488dc6bd73ff2f4825991"
+    },
+    {
+      "file": "frontend/src/components/stats/StatisticsChartTable.vue",
+      "sha256": "4ca173baf83f1fc9b42fc7299fa6c7834efb938cb4e934d9763260e95aabd6fd"
+    },
+    {
+      "file": "frontend/src/components/stats/ApplicationsChart.vue",
+      "sha256": "d7f53b85e9b07842e5e30ae1adcee7bd46b45256c49783e58598a319a181c113"
+    },
+    {
+      "file": "frontend/src/components/stats/IqChart.vue",
+      "sha256": "d25b1bc0cd6067db63f87cb51d7f6b46ea2a6e6987f81b5913e1b223b2ea0e98"
+    },
+    {
+      "file": "frontend/src/components/technical-debt/TechnicalDebtChart.vue",
+      "sha256": "c5895c6292954e71d95108e6c2a991d449bd0c49be600f8c0710bf71e08d2d86"
+    },
+    {
+      "file": "frontend/src/components/RelationShipGraph.vue",
+      "sha256": "24085c7465f9b509e67de2c7a984e90513df5d545c6177f536327e2f51ec9b32"
+    },
+    {
+      "file": "frontend/src/composables/use-d3-graph.ts",
+      "sha256": "64b47f34ec7ef51bbdf968b00445d51f1393aac4799b690ac7eb07400f932692"
+    },
+    {
+      "file": "frontend/src/components/RelationGraphList.vue",
+      "sha256": "4055967eae939c44e7e84d64b3880cdd81242ac60314eb2fd5def481eb6da403"
+    },
+    {
+      "file": "frontend/src/components/MarkdownEditor.vue",
+      "sha256": "fc625ce74fe7755d33202fd887ca96a6f52bc397098054ac154c4e572fb550eb"
+    },
+    {
+      "file": "frontend/src/composables/use-mermaid.ts",
+      "sha256": "dd43b2a81772fbec745024fa6008aef42f4d292f2ffb0aa8f3585ab1b94973a4"
+    },
+    {
+      "file": "frontend/src/utils/chart.ts",
+      "sha256": "b47d2301d9501a134bc92e118eb507f85712d87d6e9194a2e77784cdb883d516"
+    },
+    {
+      "file": "frontend/src/chart/time-chart.builder.ts",
+      "sha256": "fe50efaceb02bb4b2a7ccfc3956242f917d9b5f24c392626e9fab9c89b2ba54e"
+    },
+    {
+      "file": "frontend/src/utils/iq-distribution.ts",
+      "sha256": "d5444f3d91449ce873638424a8d171e947eb9f47cf377a6287f82b925c0638a8"
+    },
+    {
+      "file": "frontend/src/composables/use-technical-debt-chart.ts",
+      "sha256": "60f77631f60c6a111ee7ec3f1682c0b1ce5c9c3318432f7f502defa743eaa88b"
+    },
+    {
+      "file": "frontend/src/composables/use-graph-style.ts",
+      "sha256": "5e347181e2912c89b6abf572c669d8666fed694381e0b5bd4815b5c3514a7fc1"
+    },
+    {
+      "file": "frontend/src/utils/relation-graph.ts",
+      "sha256": "8592c88fe2d37899c25b0bbc43c2c824e93899cc60ffb633e4dfb5512cdd7360"
+    },
+    {
+      "file": "frontend/src/constants/dictionary.ts",
+      "sha256": "faf1b47a03c805de5b3b951f646f72b43de10b32e70a96658535af49f951212e"
+    },
+    {
+      "file": "frontend/package.json",
+      "sha256": "76a344f678971544be6d290d926cb40d2d61e3bff3b9ece85d24b83f5c32c82d"
+    },
+    {
+      "file": "pnpm-lock.yaml",
+      "sha256": "d568ceddd47f3327006e6f780084bd5523acceca96fa52bc30a9553cb6ce10b0"
+    }
+  ],
+  "syntheticInputsSha256": "0af03e5f113d2d5dc92a98eb256bab40a6d369182cb87afd41af069ef754c832",
+  "scenes": [
+    {
+      "id": "AT-C01",
+      "file": "AT-C01.html",
+      "sha256": "f62a147e22e6a67192617c1ff0946a16f764bc154e67c2fd20fd98f8e9be8a18",
+      "selector": "#applications-iq-chart-canvas",
+      "rootSelector": "section",
+      "references": [
+        {
+          "id": "applications-iq-title",
+          "text": "Répartition des applications par IQ",
+          "outsideRoot": false,
+          "html": "<h3 id=\"applications-iq-title\">Répartition des applications par IQ</h3>"
+        },
+        {
+          "id": "applications-iq-desc",
+          "text": "Répartition par tranches de 5 points de l’Indice de Qualité (IQ), arrondi à l’entier le plus proche. Le tableau présente les mêmes tranches et effectifs que le graphique.",
+          "outsideRoot": false,
+          "html": "<p id=\"applications-iq-desc\"> Répartition par tranches de 5 points de l’Indice de Qualité (IQ), arrondi à l’entier le plus proche. Le tableau présente les mêmes tranches et effectifs que le graphique. </p>"
+        },
+        {
+          "id": "applications-iq-fallback",
+          "text": "Les effectifs par tranche d’IQ sont disponibles en activant le bouton « Voir le tableau ».",
+          "outsideRoot": false,
+          "html": "<span id=\"applications-iq-fallback\"> Les effectifs par tranche d’IQ sont disponibles en activant le bouton « Voir le tableau ». </span>"
+        },
+        {
+          "id": "applications-iq-chart-data",
+          "text": "Répartition des applications par tranche d’IQ arrondiTranche d'IQNombre d'applications0–4 %05–9 %010–14 %015–19 %020–24 %225–29 %030–34 %035–39 %040–44 %045–49 %050–54 %055–59 %060–64 %065–69 %070–74 %375–79 %080–84 %085–89 %090–94 %095–99 %0100 %1",
+          "outsideRoot": false,
+          "html": "<section data-v-f755fcea=\"\" id=\"applications-iq-chart-data\" class=\"fr-table statistics-table\" aria-label=\"Répartition des applications par tranche d’IQ arrondi\" tabindex=\"0\" data-testid=\"applications-iq-chart-table\" style=\"display: none;\"><table data-v-f755fcea=\"\"><caption data-v-f755fcea=\"\">Répartition des applications par tranche d’IQ arrondi</caption><thead data-v-f755fcea=\"\"><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"col\">Tranche d'IQ</th><th data-v-f755fcea=\"\" scope=\"col\">Nombre d'applications</th></tr></thead><tbody data-v-f755fcea=\"\"><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"row\">0–4 %</th><td data-v-f755fcea=\"\">0</td></tr><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"row\">5–9 %</th><td data-v-f755fcea=\"\">0</td></tr><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"row\">10–14 %</th><td data-v-f755fcea=\"\">0</td></tr><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"row\">15–19 %</th><td data-v-f755fcea=\"\">0</td></tr><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"row\">20–24 %</th><td data-v-f755fcea=\"\">2</td></tr><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"row\">25–29 %</th><td data-v-f755fcea=\"\">0</td></tr><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"row\">30–34 %</th><td data-v-f755fcea=\"\">0</td></tr><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"row\">35–39 %</th><td data-v-f755fcea=\"\">0</td></tr><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"row\">40–44 %</th><td data-v-f755fcea=\"\">0</td></tr><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"row\">45–49 %</th><td data-v-f755fcea=\"\">0</td></tr><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"row\">50–54 %</th><td data-v-f755fcea=\"\">0</td></tr><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"row\">55–59 %</th><td data-v-f755fcea=\"\">0</td></tr><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"row\">60–64 %</th><td data-v-f755fcea=\"\">0</td></tr><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"row\">65–69 %</th><td data-v-f755fcea=\"\">0</td></tr><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"row\">70–74 %</th><td data-v-f755fcea=\"\">3</td></tr><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"row\">75–79 %</th><td data-v-f755fcea=\"\">0</td></tr><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"row\">80–84 %</th><td data-v-f755fcea=\"\">0</td></tr><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"row\">85–89 %</th><td data-v-f755fcea=\"\">0</td></tr><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"row\">90–94 %</th><td data-v-f755fcea=\"\">0</td></tr><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"row\">95–99 %</th><td data-v-f755fcea=\"\">0</td></tr><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"row\">100 %</th><td data-v-f755fcea=\"\">1</td></tr></tbody></table></section>"
+        }
+      ],
+      "name": "Répartition des applications par IQ",
+      "role": "img",
+      "internalFallback": "Les effectifs par tranche d’IQ sont disponibles en activant le bouton « Voir le tableau »."
+    },
+    {
+      "id": "AT-C02",
+      "file": "AT-C02.html",
+      "sha256": "57403ead4142b4554b86aa132f56096f4c161fd5a0a5e40a5639adc02cf9e55b",
+      "selector": "#applications-chart-canvas",
+      "rootSelector": "section",
+      "references": [
+        {
+          "id": "applications-chart-title",
+          "text": "Nombre d'applications référencées",
+          "outsideRoot": false,
+          "html": "<h3 id=\"applications-chart-title\">Nombre d'applications référencées</h3>"
+        },
+        {
+          "id": "applications-chart-desc",
+          "text": "Évolution mensuelle du nombre d’applications référencées. Le bouton « Voir le tableau » donne accès aux mêmes mois et effectifs.",
+          "outsideRoot": false,
+          "html": "<p id=\"applications-chart-desc\"> Évolution mensuelle du nombre d’applications référencées. Le bouton « Voir le tableau » donne accès aux mêmes mois et effectifs. </p>"
+        },
+        {
+          "id": "applications-chart-fallback",
+          "text": "Les valeurs mensuelles sont disponibles en activant le bouton « Voir le tableau ».",
+          "outsideRoot": false,
+          "html": "<span id=\"applications-chart-fallback\">Les valeurs mensuelles sont disponibles en activant le bouton « Voir le tableau ».</span>"
+        },
+        {
+          "id": "applications-chart-data",
+          "text": "Nombre d’applications référencées par moisMoisNombre d'applicationsmai 20262juin 20264juillet 20266",
+          "outsideRoot": false,
+          "html": "<section data-v-f755fcea=\"\" id=\"applications-chart-data\" class=\"fr-table statistics-table\" aria-label=\"Nombre d’applications référencées par mois\" tabindex=\"0\" data-testid=\"applications-chart-table\" style=\"display: none;\"><table data-v-f755fcea=\"\"><caption data-v-f755fcea=\"\">Nombre d’applications référencées par mois</caption><thead data-v-f755fcea=\"\"><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"col\">Mois</th><th data-v-f755fcea=\"\" scope=\"col\">Nombre d'applications</th></tr></thead><tbody data-v-f755fcea=\"\"><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"row\">mai 2026</th><td data-v-f755fcea=\"\">2</td></tr><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"row\">juin 2026</th><td data-v-f755fcea=\"\">4</td></tr><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"row\">juillet 2026</th><td data-v-f755fcea=\"\">6</td></tr></tbody></table></section>"
+        }
+      ],
+      "name": "Nombre d'applications référencées",
+      "role": "img",
+      "internalFallback": "Les valeurs mensuelles sont disponibles en activant le bouton « Voir le tableau »."
+    },
+    {
+      "id": "AT-C03",
+      "file": "AT-C03.html",
+      "sha256": "6b2812fe90b7b6a374a640980f74341eeaa10bafbb139db8c253b24d382621cd",
+      "selector": "#at-scene [data-testid=iq-chart-canvas]",
+      "rootSelector": "section",
+      "references": [
+        {
+          "id": "iq-chart-title",
+          "text": "Évolution de l’IQ moyen du 01/05/2026 au 13/10/2026",
+          "outsideRoot": false,
+          "html": "<h3 id=\"iq-chart-title\">Évolution de l’IQ moyen du 01/05/2026 au 13/10/2026</h3>"
+        },
+        {
+          "id": "iq-chart-desc",
+          "text": "Évolution de l’IQ moyen du 01/05/2026 au 13/10/2026. L’axe horizontal représente la date, l’axe vertical l’IQ moyen en pourcentage. Le bouton « Voir le tableau » donne accès aux mêmes périodes et valeurs.",
+          "outsideRoot": false,
+          "html": "<p id=\"iq-chart-desc\"> Évolution de l’IQ moyen du 01/05/2026 au 13/10/2026. L’axe horizontal représente la date, l’axe vertical l’IQ moyen en pourcentage. Le bouton « Voir le tableau » donne accès aux mêmes périodes et valeurs. </p>"
+        },
+        {
+          "id": "iq-chart-fallback",
+          "text": "Les valeurs sont disponibles en activant le bouton « Voir le tableau ».",
+          "outsideRoot": false,
+          "html": "<span id=\"iq-chart-fallback\">Les valeurs sont disponibles en activant le bouton « Voir le tableau ».</span>"
+        },
+        {
+          "id": "iq-chart-data",
+          "text": "IQ moyen du 01/05/2026 au 13/10/2026Date ↕IQ moyen ↕2026-05422026-06642026-0778",
+          "outsideRoot": false,
+          "html": "<section data-v-f755fcea=\"\" id=\"iq-chart-data\" class=\"fr-table statistics-table\" aria-label=\"IQ moyen du 01/05/2026 au 13/10/2026\" tabindex=\"0\" data-testid=\"iq-chart-datatable\"><table data-v-f755fcea=\"\"><caption data-v-f755fcea=\"\">IQ moyen du 01/05/2026 au 13/10/2026</caption><thead data-v-f755fcea=\"\"><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"col\" aria-sort=\"none\"><button data-v-f755fcea=\"\" type=\"button\" class=\"sort-button\" aria-label=\"Date : trier par ordre croissant\">Date <span data-v-f755fcea=\"\" aria-hidden=\"true\">↕</span></button></th><th data-v-f755fcea=\"\" scope=\"col\" aria-sort=\"none\"><button data-v-f755fcea=\"\" type=\"button\" class=\"sort-button\" aria-label=\"IQ moyen : trier par ordre croissant\">IQ moyen <span data-v-f755fcea=\"\" aria-hidden=\"true\">↕</span></button></th></tr></thead><tbody data-v-f755fcea=\"\"><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"row\">2026-05</th><td data-v-f755fcea=\"\">42</td></tr><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"row\">2026-06</th><td data-v-f755fcea=\"\">64</td></tr><tr data-v-f755fcea=\"\"><th data-v-f755fcea=\"\" scope=\"row\">2026-07</th><td data-v-f755fcea=\"\">78</td></tr></tbody></table></section>"
+        }
+      ],
+      "name": "Évolution de l’IQ moyen du 01/05/2026 au 13/10/2026",
+      "role": "img",
+      "internalFallback": "Les valeurs sont disponibles en activant le bouton « Voir le tableau »."
+    },
+    {
+      "id": "AT-S01",
+      "file": "AT-S01.html",
+      "sha256": "44669205d51ae9bae54e89a29c17674e28a23e3bfac6710b78425e621d3d475b",
+      "selector": "#at-scene .td-svg",
+      "rootSelector": ".technical-debt-scatter",
+      "references": [
+        {
+          "id": "time-v-0-title",
+          "text": "Diagramme TIME",
+          "outsideRoot": false,
+          "html": "<summary data-v-9f354f93=\"\" id=\"time-v-0-title\">Diagramme TIME</summary>"
+        },
+        {
+          "id": "time-v-0-description",
+          "text": "La position représente la maturité métier (axe horizontal) et technique (axe vertical), de 1 à 5. Les axes se croisent au seuil 3. La taille et la couleur des bulles représentent la maîtrise des coûts MCO. Chaque bulle ouvre la fiche de l’application ; ses valeurs s’affichent au survol ou au clavier et Échap ferme l’infobulle. Les bulles vides en pointillés ont une maîtrise des coûts non renseignée. Les applications sans maturités renseignées figurent uniquement dans le tableau.",
+          "outsideRoot": false,
+          "html": "<p data-v-9f354f93=\"\" id=\"time-v-0-description\"> La position représente la maturité métier (axe horizontal) et technique (axe vertical), de 1 à 5. Les axes se croisent au seuil 3. La taille et la couleur des bulles représentent la maîtrise des coûts MCO. Chaque bulle ouvre la fiche de l’application ; ses valeurs s’affichent au survol ou au clavier et Échap ferme l’infobulle. Les bulles vides en pointillés ont une maîtrise des coûts non renseignée. Les applications sans maturités renseignées figurent uniquement dans le tableau. </p>"
+        },
+        {
+          "id": "time-v-0-table",
+          "text": "Maturités, maîtrise des coûts MCO et quadrant TIME de toutes les applications du diagramme (échelle de 1 à 5) ApplicationMaturité techniqueMaturité métierMaîtrise des coûts MCOQuadrant TIMEApplication fictive Alpha (Alpha)443À privilégierApplication fictive Bêta (Bêta)24—À migrerApplication fictive Gamma ————",
+          "outsideRoot": false,
+          "html": "<table data-v-9f354f93=\"\" id=\"time-v-0-table\" tabindex=\"-1\"><caption data-v-9f354f93=\"\"> Maturités, maîtrise des coûts MCO et quadrant TIME de toutes les applications du diagramme (échelle de 1 à 5) </caption><thead data-v-9f354f93=\"\"><tr data-v-9f354f93=\"\"><th data-v-9f354f93=\"\" scope=\"col\">Application</th><th data-v-9f354f93=\"\" scope=\"col\">Maturité technique</th><th data-v-9f354f93=\"\" scope=\"col\">Maturité métier</th><th data-v-9f354f93=\"\" scope=\"col\">Maîtrise des coûts MCO</th><th data-v-9f354f93=\"\" scope=\"col\">Quadrant TIME</th></tr></thead><tbody data-v-9f354f93=\"\"><tr data-v-9f354f93=\"\"><th data-v-9f354f93=\"\" scope=\"row\"><a data-v-9f354f93=\"\" href=\"/applications/11111111-1111-4111-8111-111111111111\" class=\"\">Application fictive Alpha <span data-v-9f354f93=\"\"> (Alpha)</span></a></th><td data-v-9f354f93=\"\">4</td><td data-v-9f354f93=\"\">4</td><td data-v-9f354f93=\"\">3</td><td data-v-9f354f93=\"\">À privilégier</td></tr><tr data-v-9f354f93=\"\"><th data-v-9f354f93=\"\" scope=\"row\"><a data-v-9f354f93=\"\" href=\"/applications/22222222-2222-4222-8222-222222222222\" class=\"\">Application fictive Bêta <span data-v-9f354f93=\"\"> (Bêta)</span></a></th><td data-v-9f354f93=\"\">2</td><td data-v-9f354f93=\"\">4</td><td data-v-9f354f93=\"\">—</td><td data-v-9f354f93=\"\">À migrer</td></tr><tr data-v-9f354f93=\"\"><th data-v-9f354f93=\"\" scope=\"row\"><a data-v-9f354f93=\"\" href=\"/applications/33333333-3333-4333-8333-333333333333\" class=\"\">Application fictive Gamma <!--v-if--></a></th><td data-v-9f354f93=\"\">—</td><td data-v-9f354f93=\"\">—</td><td data-v-9f354f93=\"\">—</td><td data-v-9f354f93=\"\">—</td></tr></tbody></table>"
+        }
+      ],
+      "name": "Diagramme TIME",
+      "role": "img",
+      "internalFallback": null
+    },
+    {
+      "id": "AT-S02",
+      "file": "AT-S02.html",
+      "sha256": "f3712ff7550096dfbb9250359c9a4a96995114daa4ff3881eafd9a6739fb49cc",
+      "selector": "#at-scene .graph-container svg[role=img]",
+      "rootSelector": "section",
+      "references": [
+        {
+          "id": "relations-v-0-svg-container-title",
+          "text": "Relations de Application fictive Alpha, profondeur 1",
+          "outsideRoot": false,
+          "html": "<title id=\"relations-v-0-svg-container-title\">Relations de Application fictive Alpha, profondeur 1</title>"
+        },
+        {
+          "id": "relations-v-0-svg-container-description",
+          "text": "3 applications. 2 relations. Application fictive Alpha (application racine), En production ; Application fictive Bêta, En construction ; Application fictive Gamma, En production. Application fictive Alpha utilise les données de Application fictive Bêta ; Application fictive Bêta fait partie de Application fictive Gamma. Chaque application est un lien. Majuscule et les flèches déplacent le nœud sélectionné. Les commandes à côté du graphe permettent aussi de déplacer chaque nœud, de zoomer et de déplacer la vue. La liste complète avec les liens des applications est disponible après le graphe.",
+          "outsideRoot": false,
+          "html": "<desc id=\"relations-v-0-svg-container-description\">3 applications. 2 relations. Application fictive Alpha (application racine), En production ; Application fictive Bêta, En construction ; Application fictive Gamma, En production. Application fictive Alpha utilise les données de Application fictive Bêta ; Application fictive Bêta fait partie de Application fictive Gamma. Chaque application est un lien. Majuscule et les flèches déplacent le nœud sélectionné. Les commandes à côté du graphe permettent aussi de déplacer chaque nœud, de zoomer et de déplacer la vue. La liste complète avec les liens des applications est disponible après le graphe.</desc>"
+        },
+        {
+          "id": "relations-v-0-description",
+          "text": "La liste complète présente toutes les applications, leur statut et les relations à la profondeur choisie, avec les mêmes filtres que le graphe. Dans le graphe, Entrée ouvre le lien de l’application. Majuscule et les flèches déplacent un nœud. Vous pouvez aussi utiliser la molette et le glisser-déposer, ou les commandes à côté du graphe pour déplacer la vue et chaque nœud. Les liens de la liste complète ouvrent les mêmes applications.",
+          "outsideRoot": true,
+          "html": "<p data-v-44731dd1=\"\" id=\"relations-v-0-description\"> La liste complète présente toutes les applications, leur statut et les relations à la profondeur choisie, avec les mêmes filtres que le graphe. Dans le graphe, Entrée ouvre le lien de l’application. Majuscule et les flèches déplacent un nœud. Vous pouvez aussi utiliser la molette et le glisser-déposer, ou les commandes à côté du graphe pour déplacer la vue et chaque nœud. Les liens de la liste complète ouvrent les mêmes applications.</p>"
+        },
+        {
+          "id": "relations-v-0-transcription",
+          "text": "Liste complète du réseau de relations — profondeur 1 Les applications et relations ci-dessous correspondent au graphe et aux types de relation sélectionnés. Les flèches vont de la source vers la cible ; les corrélations sont réciproques. Applications du réseau (3)Application fictive Alpha — application racine — En productionApplication fictive Bêta — En constructionApplication fictive Gamma — En production Relations du réseau — profondeur 1 (2 relations) Application sourceRelationApplication cibleDirectionApplication fictive Alphautilise les données deApplication fictive BêtaSource vers cibleApplication fictive Bêtafait partie deApplication fictive GammaSource vers cible",
+          "outsideRoot": true,
+          "html": "<section data-v-8bd7a4a3=\"\" data-v-44731dd1=\"\" id=\"relations-v-0-transcription\" class=\"graph-transcription fr-mt-3w\" tabindex=\"-1\" aria-labelledby=\"relations-v-0-transcription-title\" data-testid=\"relations-graph-transcription\"><h4 data-v-8bd7a4a3=\"\" id=\"relations-v-0-transcription-title\">Liste complète du réseau de relations — profondeur 1</h4><p data-v-8bd7a4a3=\"\"> Les applications et relations ci-dessous correspondent au graphe et aux types de relation sélectionnés. Les flèches vont de la source vers la cible ; les corrélations sont réciproques. </p><h5 data-v-8bd7a4a3=\"\">Applications du réseau (3)</h5><ul data-v-8bd7a4a3=\"\"><li data-v-8bd7a4a3=\"\"><a data-v-8bd7a4a3=\"\" href=\"/applications/11111111-1111-4111-8111-111111111111\" class=\"\">Application fictive Alpha</a><span data-v-8bd7a4a3=\"\"> — application racine</span><span data-v-8bd7a4a3=\"\"> — En production</span></li><li data-v-8bd7a4a3=\"\"><a data-v-8bd7a4a3=\"\" href=\"/applications/22222222-2222-4222-8222-222222222222\" class=\"\">Application fictive Bêta</a><!--v-if--><span data-v-8bd7a4a3=\"\"> — En construction</span></li><li data-v-8bd7a4a3=\"\"><a data-v-8bd7a4a3=\"\" href=\"/applications/33333333-3333-4333-8333-333333333333\" class=\"\">Application fictive Gamma</a><!--v-if--><span data-v-8bd7a4a3=\"\"> — En production</span></li></ul><section data-v-8bd7a4a3=\"\" class=\"fr-table graph-table\" aria-label=\"Relations du réseau, profondeur 1\" tabindex=\"0\"><table data-v-8bd7a4a3=\"\"><caption data-v-8bd7a4a3=\"\"> Relations du réseau — profondeur 1 (2 relations) </caption><thead data-v-8bd7a4a3=\"\"><tr data-v-8bd7a4a3=\"\"><th data-v-8bd7a4a3=\"\" scope=\"col\">Application source</th><th data-v-8bd7a4a3=\"\" scope=\"col\">Relation</th><th data-v-8bd7a4a3=\"\" scope=\"col\">Application cible</th><th data-v-8bd7a4a3=\"\" scope=\"col\">Direction</th></tr></thead><tbody data-v-8bd7a4a3=\"\"><tr data-v-8bd7a4a3=\"\"><th data-v-8bd7a4a3=\"\" scope=\"row\"><a data-v-8bd7a4a3=\"\" href=\"/applications/11111111-1111-4111-8111-111111111111\" class=\"\">Application fictive Alpha</a></th><td data-v-8bd7a4a3=\"\">utilise les données de</td><td data-v-8bd7a4a3=\"\"><a data-v-8bd7a4a3=\"\" href=\"/applications/22222222-2222-4222-8222-222222222222\" class=\"\">Application fictive Bêta</a></td><td data-v-8bd7a4a3=\"\">Source vers cible</td></tr><tr data-v-8bd7a4a3=\"\"><th data-v-8bd7a4a3=\"\" scope=\"row\"><a data-v-8bd7a4a3=\"\" href=\"/applications/22222222-2222-4222-8222-222222222222\" class=\"\">Application fictive Bêta</a></th><td data-v-8bd7a4a3=\"\">fait partie de</td><td data-v-8bd7a4a3=\"\"><a data-v-8bd7a4a3=\"\" href=\"/applications/33333333-3333-4333-8333-333333333333\" class=\"\">Application fictive Gamma</a></td><td data-v-8bd7a4a3=\"\">Source vers cible</td></tr></tbody></table></section></section>"
+        }
+      ],
+      "name": "Relations de Application fictive Alpha, profondeur 1",
+      "role": "img",
+      "internalFallback": null
+    },
+    {
+      "id": "AT-S03",
+      "file": "AT-S03.html",
+      "sha256": "68b00d09329eef52f8354d78ccb7c27db306d630569ee74a170d163bdcf30e59",
+      "selector": "#AT-S03 svg",
+      "rootSelector": "section",
+      "references": [
+        {
+          "id": "mermaid-1791899389650-1-title",
+          "text": "Dépendance de deux applications fictives",
+          "outsideRoot": false,
+          "html": "<title id=\"mermaid-1791899389650-1-title\">Dépendance de deux applications fictives</title>"
+        },
+        {
+          "id": "mermaid-1791899389650-1-description",
+          "text": "Portail fictif consulte le référentiel fictif.",
+          "outsideRoot": false,
+          "html": "<desc id=\"mermaid-1791899389650-1-description\">Portail fictif consulte le référentiel fictif.</desc>"
+        },
+        {
+          "id": "mermaid-1791899389650-1-source",
+          "text": "Description et source du diagrammePortail fictif consulte le référentiel fictif.flowchart LR accTitle: Dépendance de deux applications fictives accDescr: Portail fictif consulte le référentiel fictif. A[Portail fictif] -->|consulte| B[Référentiel fictif]",
+          "outsideRoot": false,
+          "html": "<details id=\"mermaid-1791899389650-1-source\"><summary>Description et source du diagramme</summary><p>Portail fictif consulte le référentiel fictif.</p><pre>flowchart LR\naccTitle: Dépendance de deux applications fictives\naccDescr: Portail fictif consulte le référentiel fictif.\nA[Portail fictif] --&gt;|consulte| B[Référentiel fictif]</pre></details>"
+        }
+      ],
+      "name": "Dépendance de deux applications fictives",
+      "role": "img",
+      "internalFallback": null,
+      "source": "flowchart LR\naccTitle: Dépendance de deux applications fictives\naccDescr: Portail fictif consulte le référentiel fictif.\nA[Portail fictif] -->|consulte| B[Référentiel fictif]",
+      "controlledIdentifierClock": 1791899389650,
+      "productionRenderer": "useMermaid().renderDiagram, vrai Mermaid + sanitation du dépôt"
+    },
+    {
+      "id": "AT-S04",
+      "file": "AT-S04.html",
+      "sha256": "a11a09edab854ff670bc94035802928bc584c15218ddf3b8c39761af7c612698",
+      "selector": "#AT-S04 svg",
+      "rootSelector": "section",
+      "references": [
+        {
+          "id": "mermaid-1791899389726-2-title",
+          "text": "Diagramme : consulte, Portail fictif, Référentiel fictif",
+          "outsideRoot": false,
+          "html": "<title id=\"mermaid-1791899389726-2-title\">Diagramme : consulte, Portail fictif, Référentiel fictif</title>"
+        },
+        {
+          "id": "mermaid-1791899389726-2-description",
+          "text": "Une version textuelle du diagramme est disponible après l’image.",
+          "outsideRoot": false,
+          "html": "<desc id=\"mermaid-1791899389726-2-description\">Une version textuelle du diagramme est disponible après l’image.</desc>"
+        },
+        {
+          "id": "mermaid-1791899389726-2-source",
+          "text": "Description et source du diagrammeflowchart LR A[Portail fictif] -->|consulte| B[Référentiel fictif]",
+          "outsideRoot": false,
+          "html": "<details id=\"mermaid-1791899389726-2-source\"><summary>Description et source du diagramme</summary><pre>flowchart LR\nA[Portail fictif] --&gt;|consulte| B[Référentiel fictif]</pre></details>"
+        }
+      ],
+      "name": "Diagramme : consulte, Portail fictif, Référentiel fictif",
+      "role": "img",
+      "internalFallback": null,
+      "source": "flowchart LR\nA[Portail fictif] -->|consulte| B[Référentiel fictif]",
+      "controlledIdentifierClock": 1791899389726,
+      "productionRenderer": "useMermaid().renderDiagram, vrai Mermaid + sanitation du dépôt"
+    }
+  ],
+  "intercepted": [
+    "/api/v2/applications/count-by-iq",
+    "/api/v2/applications/count-by-month",
+    "/api/v2/stats/iq-avg/period",
+    "/api/v2/applications/11111111-1111-4111-8111-111111111111/relations/graph"
+  ],
+  "externalBlocked": [],
+  "blockedWrites": [],
+  "pageErrors": []
+}

@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onBeforeUnmount, computed, watch, nextTick } from "vue";
 import { useStatisticsStore } from "@/stores/statisticsStore";
 import type { Chart } from "chart.js";
 import type { CountByIqDto } from "@/client/types.gen";
 import { renderChart } from "@/utils/chart";
-import RefAppTable from "@/components/RefAppTable.vue";
+import StatisticsChartTable from "./StatisticsChartTable.vue";
+import { iqDistribution } from "@/utils/iq-distribution";
 import type { TableColumn } from "@/types/table";
 
 const chartRef = ref<HTMLCanvasElement | null>(null);
@@ -13,7 +14,9 @@ let chartInstance: Chart | null = null;
 const isLoading = ref(false);
 const isTableView = ref(false);
 const errorMessage = ref("");
+const chartErrorMessage = ref("");
 const countApplicationsByIq = ref<CountByIqDto[]>([]);
+const distribution = computed(() => iqDistribution(countApplicationsByIq.value));
 
 const tableColumns: TableColumn[] = [
   { field: "iq", header: "Tranche d'IQ", sortable: false },
@@ -24,26 +27,37 @@ const statisticsStore = useStatisticsStore();
 
 async function loadData() {
   isLoading.value = true;
+  errorMessage.value = "";
+  chartErrorMessage.value = "";
   try {
     countApplicationsByIq.value = await statisticsStore.countApplicationsByIq();
-
-    const labels = Array.from({ length: 21 }, (_, i) => (i === 20 ? "100%" : `${i * 5}-${i * 5 + 4}%`));
-    const data: number[] = Array.from({ length: 21 }, () => 0);
-
-    countApplicationsByIq.value.forEach(({ iq, total }) => {
-      const index = Math.floor(Math.round(iq) / 5);
-      if (index >= 0 && index <= 20) data[index] += total;
-    });
-
-    chartInstance = renderChart(chartRef, chartInstance, labels, data, "bar");
   } catch {
     errorMessage.value = "Erreur lors du chargement des données";
   } finally {
     isLoading.value = false;
   }
+  if (errorMessage.value) return;
+  await nextTick();
+
+  try {
+    const labels = distribution.value.map((row) => row.iq);
+    const data = distribution.value.map((row) => row.total);
+
+    chartInstance = renderChart(chartRef, chartInstance, labels, data, "bar");
+  } catch {
+    chartErrorMessage.value = "Impossible d’afficher le graphique. Les données restent disponibles dans le tableau.";
+    isTableView.value = true;
+  }
 }
 
 onMounted(loadData);
+watch(isTableView, async (showTable) => {
+  if (!showTable) {
+    await nextTick();
+    chartInstance?.resize();
+  }
+});
+onBeforeUnmount(() => chartInstance?.destroy());
 </script>
 
 <template>
@@ -53,13 +67,21 @@ onMounted(loadData);
     <div v-else-if="errorMessage" role="alert" data-testid="applications-iq-chart-error">
       {{ errorMessage }}
     </div>
-    <p id="applications-iq-desc" class="fr-sr-only">
-      Ce graphique présente la répartition par tranches de 5% de l'Indice de Qualité (IQ) des applications.
+    <div v-else-if="chartErrorMessage" role="alert" data-testid="applications-iq-chart-render-error">
+      {{ chartErrorMessage }}
+    </div>
+    <p id="applications-iq-desc">
+      Répartition par tranches de 5 points de l’Indice de Qualité (IQ), arrondi à l’entier le plus proche. Le tableau présente les mêmes
+      tranches et effectifs que le graphique.
     </p>
     <dsfr-button
+      v-if="!chartErrorMessage"
       :label="isTableView ? 'Voir le graphique' : 'Voir le tableau'"
       class="fr-mb-2v"
       data-testid="applications-iq-chart-toggle-view"
+      :aria-pressed="isTableView"
+      aria-controls="applications-iq-chart-canvas applications-iq-chart-data"
+      :disabled="isLoading || !!errorMessage"
       @click="
         () => {
           isTableView = !isTableView;
@@ -67,14 +89,24 @@ onMounted(loadData);
       "
     />
     <canvas
-      v-show="!isLoading && !errorMessage && !isTableView"
+      v-show="!isLoading && !errorMessage && !chartErrorMessage && !isTableView"
       ref="chartRef"
+      id="applications-iq-chart-canvas"
+      role="img"
+      aria-labelledby="applications-iq-title"
       data-testid="applications-iq-chart-canvas"
-      aria-describedby="applications-iq-desc"
-    />
-    <RefAppTable
+      aria-describedby="applications-iq-desc applications-iq-fallback"
+      aria-details="applications-iq-chart-data"
+    >
+      <span id="applications-iq-fallback">
+        Les effectifs par tranche d’IQ sont disponibles en activant le bouton « Voir le tableau ».
+      </span>
+    </canvas>
+    <StatisticsChartTable
       v-show="!isLoading && !errorMessage && isTableView"
-      :items="countApplicationsByIq"
+      id="applications-iq-chart-data"
+      caption="Répartition des applications par tranche d’IQ arrondi"
+      :rows="distribution"
       :columns="tableColumns"
       data-testid="applications-iq-chart-table"
     />

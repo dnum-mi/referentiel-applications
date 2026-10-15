@@ -40,6 +40,7 @@ describe("Test Swagger documentation", () => {
     const pathsAllowedWithoutBody = [
       "/users/me/subscribe/{appId}",
       "/applications/{applicationId}/export/powerpoint",
+      "/applications/{applicationId}/export/html",
       "/applications/{applicationId}/compliances/ecoindex/scan",
       "/users/{id}/sync-organization-from-maia",
       "/users/{id}/impersonate",

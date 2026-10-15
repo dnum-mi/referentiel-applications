@@ -16,6 +16,7 @@ import api from "@/api/index";
 import { useToasterStore } from "@/stores/toasterStore";
 import { Permission, type ComplianceDto } from "@/client/types.gen";
 import { useAppPermission } from "@/composables/use-app-permission";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps<{
   applicationId: string;
@@ -32,6 +33,8 @@ const emit = defineEmits<{
 const toaster = useToasterStore();
 const form = ref<Partial<ComplianceDto>>({});
 const submitting = ref(false);
+useSubmissionFocus(submitting);
+const formError = ref("");
 const dimaDurationError = ref<string | undefined>(undefined);
 
 const isHomologationHomologuee = computed(() => form.value.homologation_status === "homologuee");
@@ -80,6 +83,8 @@ onMounted(() => {
 });
 
 async function save() {
+  if (submitting.value) return;
+  formError.value = "";
   if (props.type === "dima") {
     dimaDurationError.value =
       form.value.dima_duration_hours == null ? "Veuillez compléter le champ : Durée d'interruption maximale" : undefined;
@@ -129,9 +134,8 @@ async function save() {
 
     emit("saved", response.data as ComplianceDto);
   } catch {
-    toaster.addErrorMessage(
-      props.mode === "edit" ? "Erreur lors de la modification de la conformité." : "Erreur lors de la création de la conformité.",
-    );
+    formError.value =
+      props.mode === "edit" ? "Erreur lors de la modification de la conformité." : "Erreur lors de la création de la conformité.";
   } finally {
     submitting.value = false;
   }
@@ -140,8 +144,12 @@ async function save() {
 
 <template>
   <form data-testid="compliance-form" @submit.prevent="save">
+    <p v-if="type === 'dima'" class="fr-text--sm fr-mb-3w" data-testid="required-fields-hint">* = champs obligatoires</p>
+    <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="compliance-form-error">
+      <p v-if="formError" class="fr-error-text">{{ formError }}</p>
+    </div>
     <AppLoader v-if="submitting" data-testid="compliance-loader" />
-    <div v-else>
+    <div :inert="submitting">
       <template v-if="type === 'dima'">
         <DsfrSelect
           :model-value="form.dima_duration_hours"
@@ -330,6 +338,7 @@ async function save() {
         <DsfrAlert
           v-if="showEcoIndexUrlWarning"
           type="warning"
+          alert
           title="Attention"
           description="Modifier l'URL réinitialisera les valeurs de l'éco-index."
           class="fr-mt-2w"

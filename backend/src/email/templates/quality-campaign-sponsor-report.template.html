@@ -1,9 +1,6 @@
 <table
   role="presentation"
-  width="100%"
-  cellpadding="0"
-  cellspacing="0"
-  border="0"
+  style="border-collapse: collapse; border-spacing: 0; width: 100%"
 >
   <tr>
     <td style="padding-bottom: 20px">
@@ -31,21 +28,53 @@
   <tr>
     <td style="padding-bottom: 20px">
       <table
-        role="presentation"
-        width="100%"
-        cellpadding="8"
-        cellspacing="0"
-        border="0"
-        style="border-collapse: collapse; font-size: 14px"
+        style="
+          border-collapse: collapse;
+          font-size: 14px;
+          border-spacing: 0;
+          width: 100%;
+        "
       >
-        <tr style="background-color: #f6f6f6; text-align: left">
-          <th style="border-bottom: 1px solid #dddddd">Application</th>
-          <th style="border-bottom: 1px solid #dddddd">IQ au démarrage</th>
-          <th style="border-bottom: 1px solid #dddddd">IQ actuel</th>
-          <th style="border-bottom: 1px solid #dddddd">Progression</th>
-          <th style="border-bottom: 1px solid #dddddd">Actions complétées</th>
-        </tr>
-        {{targetsRows}}
+        <caption style="text-align: left; font-weight: bold; padding: 0 0 8px">
+          Résultats par application de la campagne « {{campaignName}} »
+        </caption>
+        <thead>
+          <tr style="background-color: #f6f6f6; text-align: left">
+            <th
+              scope="col"
+              style="padding: 8px; border-bottom: 1px solid #dddddd"
+            >
+              Application
+            </th>
+            <th
+              scope="col"
+              style="padding: 8px; border-bottom: 1px solid #dddddd"
+            >
+              IQ au démarrage
+            </th>
+            <th
+              scope="col"
+              style="padding: 8px; border-bottom: 1px solid #dddddd"
+            >
+              IQ actuel
+            </th>
+            <th
+              scope="col"
+              style="padding: 8px; border-bottom: 1px solid #dddddd"
+            >
+              Progression
+            </th>
+            <th
+              scope="col"
+              style="padding: 8px; border-bottom: 1px solid #dddddd"
+            >
+              Actions complétées
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {{targetsRows}}
+        </tbody>
       </table>
     </td>
   </tr>

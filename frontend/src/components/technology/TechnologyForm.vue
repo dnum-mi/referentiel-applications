@@ -109,6 +109,7 @@ function handleSubmit() {
 
 <template>
   <form data-testid="technology-form" @submit.prevent="handleSubmit">
+    <p class="fr-text--sm fr-mb-3w" data-testid="required-fields-hint">* = champs obligatoires</p>
     <DsfrInput
       v-model="form.technology"
       label="Technologie"

@@ -9,6 +9,7 @@ import { EmailTemplateService } from "./email-templates.services";
 import { ReportStatus } from "@prisma/client";
 import { ReportStatusLabels } from "src/applications/constants/enum-label";
 import { escapeHtml } from "src/utils/escape-html.util";
+import { safeExportLink } from "src/utils/export.util";
 
 @Injectable()
 export class EmailService {
@@ -220,16 +221,22 @@ export class EmailService {
               },
             );
             const actionLabel = this.getActionLabel(change.action);
-            return `<li style="margin-bottom: 8px;"><strong>${time}</strong> - ${actionLabel}: ${change.description}</li>`;
+            return `<li style="margin-bottom: 8px;"><strong>${escapeHtml(time)}</strong> - ${escapeHtml(actionLabel)}: ${escapeHtml(change.description)}</li>`;
           })
           .join("");
 
+        const url = safeExportLink(
+          `${this.appUrl}/applications/${encodeURIComponent(app.applicationId)}`,
+        );
+        const link = url
+          ? `<a href="${escapeHtml(url)}" style="color: #000091; text-decoration: underline; font-size: 14px;">Voir l'application ${escapeHtml(app.applicationLabel)}</a>`
+          : "";
         return `
           <div style="margin-bottom: 20px; padding: 15px; background-color: #f6f6f6; border-left: 4px solid #000091; border-radius: 4px;">
-            <h3 style="margin: 0 0 10px 0; color: #000091; font-size: 16px;">
-              ${app.applicationLabel} (${app.changes.length} modification${app.changes.length > 1 ? "s" : ""})
-            </h3>
-            <a href="${this.appUrl}/applications/${app.applicationId}" style="color: #000091; text-decoration: underline; font-size: 14px;">Voir l'application</a>
+            <h2 style="margin: 0 0 10px 0; color: #000091; font-size: 16px;">
+              ${escapeHtml(app.applicationLabel)} (${app.changes.length} modification${app.changes.length > 1 ? "s" : ""})
+            </h2>
+            ${link}
             <ul style="margin: 10px 0 0 0; padding-left: 20px; font-size: 14px; color: #161616;">
               ${changesHtml}
             </ul>
@@ -625,11 +632,11 @@ export class EmailService {
       .map(
         (target) => `
           <tr>
-            <td style="border-bottom: 1px solid #eeeeee">${target.applicationLabel}</td>
-            <td style="border-bottom: 1px solid #eeeeee">${formatIq(target.iqAtStart)}</td>
-            <td style="border-bottom: 1px solid #eeeeee">${formatIq(target.iqCurrent)}</td>
-            <td style="border-bottom: 1px solid #eeeeee">${formatProgress(target.iqAtStart, target.iqCurrent)}</td>
-            <td style="border-bottom: 1px solid #eeeeee">${formatCompletedActions(target.completedActions)}</td>
+            <th scope="row" style="padding: 8px; border-bottom: 1px solid #eeeeee; text-align: left">${escapeHtml(target.applicationLabel)}</th>
+            <td style="padding: 8px; border-bottom: 1px solid #eeeeee">${formatIq(target.iqAtStart)}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eeeeee">${formatIq(target.iqCurrent)}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eeeeee">${formatProgress(target.iqAtStart, target.iqCurrent)}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eeeeee">${escapeHtml(formatCompletedActions(target.completedActions))}</td>
           </tr>`,
       )
       .join("");
@@ -686,7 +693,7 @@ export class EmailService {
     applicationName?: string;
     notes: string;
   }): Promise<EmailLog | null> {
-    const subject = "Anomalie notification update";
+    const subject = "Mise à jour de votre signalement";
     const html = this.templateService.render("report-status-update", {
       title: subject,
       headerTitle: "Référentiel des Applications",

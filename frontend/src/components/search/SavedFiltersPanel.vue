@@ -1,29 +1,51 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { nextTick, onMounted, ref } from "vue";
 import { DEFAULT_FILTERS, useApplicationSearch, type Filters } from "@/composables/use-application-search";
 import { useSavedFilterStore } from "@/stores/savedFilterStore";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const { filters, setFilter } = useApplicationSearch();
 const savedFilterStore = useSavedFilterStore();
 
 const showSaveModal = ref(false);
 const filterName = ref("");
+const saveError = ref("");
+const panel = ref<HTMLElement | null>(null);
+const pendingDeleteIds = ref(new Set<string>());
+const isSavingFilter = ref(false);
+useSubmissionFocus(isSavingFilter);
 
 function openSaveModal() {
   filterName.value = "";
+  saveError.value = "";
   showSaveModal.value = true;
 }
 
 function closeSaveModal() {
   showSaveModal.value = false;
+  saveError.value = "";
 }
 
-async function confirmSave() {
+async function confirmSave(event: Event) {
   const name = filterName.value.trim();
-  if (!name) return;
-  const saved = await savedFilterStore.saveFilter(name, filters.value);
-  if (saved) {
-    closeSaveModal();
+  if (!name || isSavingFilter.value) return;
+  const existing = savedFilterStore.savedFilters.find((saved) => saved.name === name);
+  if (existing && !globalThis.confirm(`Remplacer le filtre sauvegardé « ${name} » par les filtres actuels ?`)) {
+    if (event.currentTarget instanceof HTMLElement) event.currentTarget.focus();
+    return;
+  }
+
+  isSavingFilter.value = true;
+  saveError.value = "";
+  try {
+    const saved = await savedFilterStore.saveFilter(name, filters.value);
+    if (saved) {
+      closeSaveModal();
+    } else {
+      saveError.value = "Erreur lors de la sauvegarde du filtre. Votre saisie est conservée.";
+    }
+  } finally {
+    isSavingFilter.value = false;
   }
 }
 
@@ -38,9 +60,37 @@ function applyFilter(id: string) {
   setFilter({ ...structuredClone(DEFAULT_FILTERS), ...(saved.filters as Filters), page: 0 });
 }
 
-function removeFilter(id: string, event: Event) {
+async function removeFilter(id: string, event: Event) {
   event.stopPropagation();
-  savedFilterStore.deleteFilter(id);
+  if (pendingDeleteIds.value.has(id)) return;
+  const index = savedFilterStore.savedFilters.findIndex((filter) => filter.id === id);
+  const saved = savedFilterStore.savedFilters[index];
+  if (!saved) return;
+  const trigger = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
+  if (!globalThis.confirm(`Supprimer définitivement le filtre sauvegardé « ${saved.name} » ?`)) {
+    trigger?.focus();
+    return;
+  }
+
+  pendingDeleteIds.value.add(id);
+  try {
+    await savedFilterStore.deleteFilter(id);
+  } finally {
+    pendingDeleteIds.value.delete(id);
+    await nextTick();
+    if (document.activeElement === document.body || document.activeElement === trigger) {
+      if (trigger?.isConnected) {
+        trigger.focus();
+      } else {
+        const remainingButtons = Array.from(panel.value?.querySelectorAll<HTMLElement>(".saved-filter-delete") ?? []);
+        (
+          remainingButtons[index] ??
+          remainingButtons.at(-1) ??
+          panel.value?.querySelector<HTMLElement>('[data-testid="save-filter-button"]')
+        )?.focus();
+      }
+    }
+  }
 }
 
 onMounted(() => {
@@ -49,7 +99,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="saved-filters" data-testid="saved-filters">
+  <div ref="panel" class="saved-filters" data-testid="saved-filters">
     <DsfrButton
       tertiary
       size="small"
@@ -72,6 +122,7 @@ onMounted(() => {
           class="saved-filter-delete"
           :data-testid="`saved-filter-delete-${saved.id}`"
           :aria-label="`Supprimer le filtre ${saved.name}`"
+          :aria-disabled="pendingDeleteIds.has(saved.id) ? true : undefined"
           @click="removeFilter(saved.id, $event)"
         >
           <VIcon name="ri-delete-bin-line" />
@@ -90,6 +141,9 @@ onMounted(() => {
         data-testid="save-filter-modal"
         @close="closeSaveModal"
       >
+        <div role="alert" aria-live="assertive" aria-atomic="true">
+          <p v-if="saveError" class="fr-error-text" data-testid="save-filter-error">{{ saveError }}</p>
+        </div>
         <DsfrInputGroup
           v-model.trim="filterName"
           label="Nom du filtre"
@@ -101,8 +155,15 @@ onMounted(() => {
         />
         <template #footer>
           <DsfrButtonGroup :inline-layout-when="true" :reverse="true">
-            <DsfrButton label="Annuler" secondary @click="closeSaveModal" />
-            <DsfrButton label="Sauvegarder" :disabled="!filterName.trim()" data-testid="confirm-save-filter-button" @click="confirmSave" />
+            <li><DsfrButton label="Annuler" secondary @click="closeSaveModal" /></li>
+            <li>
+              <DsfrButton
+                label="Sauvegarder"
+                :disabled="!filterName.trim() || isSavingFilter"
+                data-testid="confirm-save-filter-button"
+                @click="confirmSave"
+              />
+            </li>
           </DsfrButtonGroup>
         </template>
       </DsfrModal>

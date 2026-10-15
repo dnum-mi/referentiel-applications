@@ -59,8 +59,8 @@ defineExpose({ focusField });
       tertiary
       :disabled="isSyncing || !actor.email"
       :data-testid="`application-${role}-sync-maia-btn`"
-      :title="`Synchroniser l'organisation ${contactLabel} depuis MAIA`"
-      :aria-label="`Synchroniser l'organisation ${contactLabel} depuis MAIA`"
+      :title="`Synchroniser depuis MAIA (par email) — contact ${contactLabel}`"
+      :aria-label="`Synchroniser depuis MAIA (par email) — contact ${contactLabel}`"
       class="fr-mb-3w"
       @click="emit('sync')"
     />
@@ -82,7 +82,10 @@ defineExpose({ focusField });
         <template #label>
           <span style="display: inline-flex; align-items: center; gap: 0.25rem">
             Cet acteur est rattaché(e) à une entité
-            <DsfrTooltip content="Établir le lien entre une personne physique et une boîte e-mail fonctionnelle (ex: equipe, service)" />
+            <DsfrTooltip
+              aria-label="Aide : rattachement du contact MOA à une entité"
+              content="Établir le lien entre une personne physique et une boîte e-mail fonctionnelle (ex: equipe, service)"
+            />
           </span>
         </template>
       </DsfrCheckbox>

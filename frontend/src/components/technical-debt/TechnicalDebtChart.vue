@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { TechnicalDebtPoint } from "@/composables/use-application-search";
 import { useTechnicalDebtChart } from "@/composables/use-technical-debt-chart";
-import { getTimeQuadrant, type TimeQuadrant } from "@/utils/get-time-quadrant";
-import { computed } from "vue";
+import { getTimeQuadrant, TimeQuadrantWording, TRESHOLD_TIME_MATURITY } from "@/utils/get-time-quadrant";
+import { computed, ref, useId } from "vue";
 
 const props = defineProps<{
   data: TechnicalDebtPoint[];
@@ -16,12 +16,8 @@ const { containerRef, svgRef } = useTechnicalDebtChart(props);
 
 // RGAA-082 (1.6) : transcription textuelle du diagramme SVG. Libellés de quadrant
 // alignés sur ceux affichés dans le graphe (cf. time-chart.builder.ts).
-const QUADRANT_LABELS_FR: Record<TimeQuadrant, string> = {
-  Tolerate: "Tolérer",
-  Invest: "À privilégier",
-  Migrate: "À migrer",
-  Eliminate: "À décommissionner",
-};
+const id = `time-${useId()}`;
+const transcriptionRef = ref<HTMLDetailsElement | null>(null);
 
 const PLACEHOLDER = "—";
 
@@ -32,12 +28,13 @@ const transcriptionRows = computed(() =>
     const businessMaturity = info?.businessMaturity;
     const quadrant =
       typeof technicalMaturity === "number" && typeof businessMaturity === "number"
-        ? QUADRANT_LABELS_FR[getTimeQuadrant(technicalMaturity, businessMaturity)]
+        ? TimeQuadrantWording[getTimeQuadrant(technicalMaturity, businessMaturity)]
         : PLACEHOLDER;
     return {
       key: point.id,
       id: point.id,
-      name: point.shortName || point.label,
+      name: point.label,
+      shortName: point.shortName && point.shortName !== point.label ? point.shortName : "",
       technicalMaturity: technicalMaturity ?? PLACEHOLDER,
       businessMaturity: businessMaturity ?? PLACEHOLDER,
       cost: info?.costContainment ?? PLACEHOLDER,
@@ -51,20 +48,42 @@ const transcriptionRows = computed(() =>
   <div ref="containerRef" class="technical-debt-scatter">
     <template v-if="props.data.length">
       <details class="td-accordion fr-mt-2w" data-testid="technical-debt-diagram" open>
-        <summary>Diagramme TIME</summary>
-        <svg
-          ref="svgRef"
-          role="img"
-          class="td-svg"
-          aria-label="Diagramme TIME de la maturité technique et métier du portefeuille applicatif. La transcription détaillée est disponible juste après le graphique."
-          preserveAspectRatio="xMidYMid meet"
-        ></svg>
+        <summary :id="`${id}-title`">Diagramme TIME</summary>
+        <p :id="`${id}-description`">
+          La position représente la maturité métier (axe horizontal) et technique (axe vertical), de 1 à 5. Les axes se croisent au seuil
+          {{ TRESHOLD_TIME_MATURITY }}. La taille et la couleur des bulles représentent la maîtrise des coûts MCO. Chaque bulle ouvre la
+          fiche de l’application ; ses valeurs s’affichent au survol ou au clavier et Échap ferme l’infobulle. Les bulles vides en
+          pointillés ont une maîtrise des coûts non renseignée. Les applications sans maturités renseignées figurent uniquement dans le
+          tableau.
+        </p>
+        <a class="fr-link fr-mb-2w" :href="`#${id}-table`" @click="transcriptionRef && (transcriptionRef.open = true)"
+          >Consulter le tableau complet du diagramme TIME</a
+        >
+        <section class="td-diagram-scroller" aria-label="Diagramme TIME, zone défilante" tabindex="0">
+          <svg
+            :id="`${id}-svg`"
+            ref="svgRef"
+            role="img"
+            class="td-svg"
+            :aria-labelledby="`${id}-title`"
+            :aria-describedby="`${id}-description`"
+            :aria-details="`${id}-table`"
+            preserveAspectRatio="xMidYMid meet"
+          ></svg>
+        </section>
       </details>
 
-      <details class="td-accordion fr-mt-2w" data-testid="technical-debt-transcription">
-        <summary id="technical-debt-transcription-title">Tableau de synthèse</summary>
-        <div class="fr-table fr-table--bordered fr-mt-1w">
-          <table aria-labelledby="technical-debt-transcription-title">
+      <details ref="transcriptionRef" class="td-accordion fr-mt-2w" data-testid="technical-debt-transcription">
+        <summary :id="`${id}-transcription-title`">Tableau de synthèse TIME</summary>
+        <section
+          class="fr-table fr-table--bordered fr-mt-1w td-table"
+          aria-label="Tableau complet du diagramme TIME, zone défilante"
+          tabindex="0"
+        >
+          <table :id="`${id}-table`" tabindex="-1">
+            <caption>
+              Maturités, maîtrise des coûts MCO et quadrant TIME de toutes les applications du diagramme (échelle de 1 à 5)
+            </caption>
             <thead>
               <tr>
                 <th scope="col">Application</th>
@@ -76,11 +95,12 @@ const transcriptionRows = computed(() =>
             </thead>
             <tbody>
               <tr v-for="row in transcriptionRows" :key="row.key">
-                <td>
+                <th scope="row">
                   <router-link :to="{ name: 'application', params: { id: row.key } }">
                     {{ row.name }}
+                    <span v-if="row.shortName"> ({{ row.shortName }})</span>
                   </router-link>
-                </td>
+                </th>
                 <td>{{ row.technicalMaturity }}</td>
                 <td>{{ row.businessMaturity }}</td>
                 <td>{{ row.cost }}</td>
@@ -88,7 +108,7 @@ const transcriptionRows = computed(() =>
               </tr>
             </tbody>
           </table>
-        </div>
+        </section>
       </details>
     </template>
     <p v-else class="fr-text--sm fr-text--italic fr-mt-2w" data-testid="technical-debt-empty">
@@ -101,16 +121,29 @@ const transcriptionRows = computed(() =>
 .technical-debt-scatter {
   position: relative;
   width: 100%;
+  min-width: 0;
 }
 
-.td-tooltip {
-  z-index: 1;
+.td-diagram-scroller,
+.td-table {
+  max-width: 100%;
+  overflow: auto;
+}
+.td-table caption {
+  text-align: left;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+.td-table th,
+.td-table td {
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .td-svg {
   width: 100%;
   height: auto;
-  max-width: 100%;
+  min-width: 640px;
 }
 
 .td-accordion > summary {

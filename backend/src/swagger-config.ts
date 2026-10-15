@@ -6,7 +6,13 @@ import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { stringify } from "yaml";
+import {
+  swaggerAccessibilityCss,
+  swaggerAccessibilityPlugin,
+  swaggerDownloadUrlPlugin,
+} from "./swagger-ui-accessibility";
 import { API_KEY_HEADER } from "./utils/constants.util";
+import { swaggerDocumentationLanguage } from "./swagger-documentation-language";
 
 const API_PREFIX = "/api/v2";
 const SWAGGER_PATH = "/swagger";
@@ -78,13 +84,19 @@ export function setupSwagger(
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
+  Object.assign(document, {
+    "x-refapp-documentation-language": swaggerDocumentationLanguage,
+  });
 
   SwaggerModule.setup(SWAGGER_PATH, app, document, {
     explorer: true,
+    customSiteTitle: "Documentation API — Référentiel Applications",
+    customCss: swaggerAccessibilityCss,
     jsonDocumentUrl: `${SWAGGER_PATH}/json`,
     yamlDocumentUrl: `${SWAGGER_PATH}/yaml`,
     useGlobalPrefix: true,
     swaggerOptions: {
+      plugins: [swaggerDownloadUrlPlugin, swaggerAccessibilityPlugin],
       oauth2RedirectUrl: `${swaggerPublicUrl}${API_PREFIX}${SWAGGER_PATH}/oauth2-redirect.html`,
       usePkceWithAuthorizationCodeGrant: true,
       initOAuth: {

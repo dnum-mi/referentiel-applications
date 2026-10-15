@@ -8,10 +8,12 @@ import { useToasterStore } from "@/stores/toasterStore";
 import type { PropType } from "vue";
 import { computed, ref, watch } from "vue";
 import OrganizationSearchSelect from "../common/OrganizationSearchSelect.vue";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps({
   initialData: Object as PropType<CreateActorDto>,
   isSubmitting: Boolean,
+  errorMessage: { type: String, default: "" },
   application: {
     type: Object as PropType<Application>,
     required: true,
@@ -23,6 +25,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["submit", "cancel"]);
+useSubmissionFocus(() => props.isSubmitting);
 
 const organizationStore = useOrganizationStore();
 const toaster = useToasterStore();
@@ -124,6 +127,7 @@ const isFormValid = computed(() => {
 const isGroup = computed(() => !!form.value.isGroup);
 
 function handleSubmit() {
+  if (props.isSubmitting || !isFormValid.value) return;
   const formData = {
     ...form.value,
     email: form.value.email?.trim() || "",
@@ -131,12 +135,25 @@ function handleSubmit() {
     lastname: isGroup.value ? null : (form.value.lastname?.trim() ?? undefined),
   };
 
+  if (
+    props.initialData &&
+    !window.confirm(
+      `Confirmer la modification des coordonnées de cet acteur ?\n\nNom : ${[formData.firstname, formData.lastname].filter(Boolean).join(" ") || "Non renseigné"}\nEmail : ${formData.email || "Non renseigné"}\n\nLes coordonnées et le rattachement affichés seront enregistrés.`,
+    )
+  ) {
+    return;
+  }
+
   emit("submit", formData);
 }
 </script>
 
 <template>
   <form data-testid="actor-form" @submit.prevent="handleSubmit">
+    <p class="fr-text--sm fr-mb-3w" data-testid="required-fields-hint">* = champs obligatoires</p>
+    <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="actor-form-error">
+      <p v-if="errorMessage" class="fr-error-text">{{ errorMessage }}</p>
+    </div>
     <DsfrSelect
       v-model="form.actorTypeId"
       label="Type d'acteur"
@@ -162,8 +179,8 @@ function handleSubmit() {
       tertiary
       :disabled="isSyncingFromMaia || !form.email"
       data-testid="admin-user-sync-maia-btn"
-      title="Synchroniser l'organisation depuis MAIA"
-      aria-label="Synchroniser l'organisation depuis MAIA"
+      title="Synchroniser depuis MAIA (par email)"
+      aria-label="Synchroniser depuis MAIA (par email)"
       @click="syncFromMaiaByEmail"
       style="margin-bottom: 1rem"
     />
@@ -202,6 +219,7 @@ function handleSubmit() {
       <DsfrButton
         type="submit"
         :disabled="isSubmitting || !isFormValid"
+        :aria-busy="isSubmitting"
         :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'"
         data-testid="actor-submit-btn"
       >

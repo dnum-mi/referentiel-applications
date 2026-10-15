@@ -91,8 +91,10 @@ export const useQualityCampaignStore = defineStore("qualityCampaignStore", () =>
         throw new Error("Erreur lors de la suppression de la campagne");
       }
       campaigns.value = campaigns.value.filter((c) => c.id !== id);
+      return true;
     } catch {
       toaster.addErrorMessage("Erreur lors de la suppression de la campagne.");
+      return false;
     }
   }
 

@@ -85,7 +85,7 @@ onMounted(async () => {
 
 <template>
   <div>
-    <h1 class="fr-h1" data-testid="admin-actors-title">Gestion des acteurs</h1>
+    <h2 class="fr-h1" data-testid="admin-actors-title">Gestion des acteurs</h2>
 
     <div class="fr-mb-4w">
       <DsfrSearchBar
@@ -137,12 +137,13 @@ onMounted(async () => {
         </template>
 
         <template #header-isGroup>
+          <span>Rattaché(e)</span>
           <DsfrTooltip
-            on-hover
+            aria-label="Afficher l’aide sur le rattachement des acteurs"
             content="Établir le lien entre une personne physique et une boîte e-mail fonctionnelle (ex: equipe, service)"
-          >
-            Rattaché(e)
-          </DsfrTooltip>
+            @keydown.enter.stop
+            @keydown.space.stop
+          />
         </template>
 
         <template #body-actions="{ data: { actions } }">

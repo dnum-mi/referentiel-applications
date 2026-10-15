@@ -79,15 +79,21 @@ onMounted(() => {
       visibles. Les informations indisponibles peuvent correspondre à un claim absent, une évaluation désactivée ou un ancien journal.
     </p>
 
-    <div v-if="errorMessage" class="fr-alert fr-alert--error" data-testid="connexion-log-history-error">
-      <p>{{ errorMessage }}</p>
+    <div
+      role="alert"
+      aria-live="assertive"
+      aria-atomic="true"
+      :class="errorMessage ? 'fr-alert fr-alert--error' : undefined"
+      data-testid="connexion-log-history-error"
+    >
+      <p v-if="errorMessage">{{ errorMessage }}</p>
     </div>
 
-    <div v-else-if="!isLoading && logs.length === 0" class="text-center" data-testid="connexion-log-history-empty">
+    <div v-if="!errorMessage && !isLoading && logs.length === 0" class="text-center" data-testid="connexion-log-history-empty">
       <p>Aucune connexion enregistrée.</p>
     </div>
 
-    <div v-else>
+    <div v-else-if="!errorMessage">
       <AppLoader v-if="isLoading" data-testid="connexion-log-history-loader" />
       <RefAppTable
         v-else

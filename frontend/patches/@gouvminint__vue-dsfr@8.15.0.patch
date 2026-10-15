@@ -1,8 +1,21 @@
 diff --git a/dist/vue-dsfr.js b/dist/vue-dsfr.js
-index a437ecea2645779b318954776838c39739b1610c..57c10e5dbcbaab5341c98eb01d1189bf2a867894 100644
+index a437ecea2645779b318954776838c39739b1610c..c7732f253ac6c5bfbe8ef91e19ac54c1e64ef3b0 100644
 --- a/dist/vue-dsfr.js
 +++ b/dist/vue-dsfr.js
-@@ -3284,7 +3284,7 @@ var FocusTrapProps = defineFocusTrapProps({
+@@ -2990,7 +2990,7 @@ var FocusTrapProps = defineFocusTrapProps({
+ 		let r = e, i = n, a = useSlots(), p = toRef(r, "languageSelector"), m = ref(!1), h = ref(!1), g = ref(!1), _ = () => {
+ 			g.value = !1, m.value = !1, h.value = !1, document.getElementById("button-menu")?.focus();
+ 		}, y = (e) => {
+-			e.key === "Escape" && _();
++			e.key === "Escape" && g.value && _();
+ 		};
+ 		onMounted(() => {
+ 			document.addEventListener("keydown", y);
+@@ -3280,11 +3280,11 @@ var FocusTrapProps = defineFocusTrapProps({
+ 	setup(e, { emit: n }) {
+ 		let r = e, i = n, a = (e) => {
+-			e.key === "Escape" && S();
++			e.key === "Escape" && r.opened && S();
  		}, f = computed(() => r.isAlert ? "alertdialog" : "dialog"), p = ref(null), m = ref();
  		watch(() => r.opened, (e) => {
  			e ? (m.value?.showModal(), setTimeout(() => {
@@ -11,3 +24,27 @@ index a437ecea2645779b318954776838c39739b1610c..57c10e5dbcbaab5341c98eb01d1189bf
  			}, 100)) : m.value?.close(), h(e);
  		});
  		function h(e) {
+ 			typeof window < "u" && document.body.classList.toggle("modal-open", e);
+@@ -4762,9 +4762,20 @@ var FocusTrapProps = defineFocusTrapProps({
+ 		};
+ 		function s(e) {
+ 			let n = o[e?.key];
+-			n && i(n);
++			n && (e.preventDefault(), i(n));
+ 		}
+ 		let { isVisible: d } = inject(registerTabKey)(toRef(() => r.tabId)), p = useTemplateRef("button");
+ 		return watch(d, () => {
+-			d.value && p.value?.focus();
++			if (!d.value || !p.value) return;
++			const button = p.value;
++			button.focus();
++			const list = button.closest(".fr-tabs__list");
++			if (!list || document.activeElement !== button) return;
++			const tabRect = button.getBoundingClientRect(), listRect = list.getBoundingClientRect(), style = getComputedStyle(button);
++			const left = tabRect.left - (parseFloat(style.marginLeft) || 0) - listRect.left - list.clientLeft;
++			const right = tabRect.right + (parseFloat(style.marginRight) || 0) - listRect.left - list.clientLeft - list.clientWidth;
++			if (left < 0 && right > 0) return;
++			const narrower = tabRect.width + (parseFloat(style.marginLeft) || 0) + (parseFloat(style.marginRight) || 0) <= list.clientWidth;
++			if (left < 0) list.scrollLeft += narrower ? left : right;
++			else if (right > 0) list.scrollLeft += narrower ? right : left;
+ 		}), (n, r) => (openBlock(), createElementBlock("li", _hoisted_1$11, [createElementVNode("button", mergeProps(n.$attrs, {

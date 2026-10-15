@@ -134,6 +134,15 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     downloadBlob(blob, `applications_export_${date}.xlsx`);
   };
 
+  const downloadHtml = async (filters: Filters): Promise<void> => {
+    const query = cleanFilters(filters);
+    query.pageSize = 0;
+    const response = await api.applicationControllerExportHtml({ query, parseAs: "blob" });
+    if (!isApiSuccess(response) || !response.data) throw new Error("Erreur lors de l’export HTML.");
+    const date = new Date().toISOString().split("T")[0];
+    downloadBlob(new Blob([response.data], { type: "text/html;charset=utf-8" }), `applications_export_${date}.html`);
+  };
+
   // Écrit dans les documents Grist du profil les applications correspondant aux filtres, avec les
   // colonnes `columns` (champs des colonnes visibles du tableau, dans leur ordre).
   /// Sans `targets`, chaque document du profil est synchronisé dans sa première table RefApp.
@@ -175,6 +184,12 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     downloadBlob(blob, `fiche-produit-${applicationId}.pptx`);
   };
 
+  const downloadProductHtml = async (applicationId: string): Promise<void> => {
+    const response = await api.applicationControllerExportProductHtml({ path: { applicationId }, parseAs: "blob" });
+    if (!isApiSuccess(response) || !response.data) throw new Error("Erreur lors de l’export de la fiche produit HTML.");
+    downloadBlob(new Blob([response.data], { type: "text/html;charset=utf-8" }), `fiche-produit-${applicationId}.html`);
+  };
+
   return {
     application,
     applicationsById,
@@ -187,9 +202,11 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     patchApplicationsQuality,
     deleteApplication,
     downloadExcel,
+    downloadHtml,
     syncWithGrist,
     listGristTables,
     downloadProductPowerpoint,
+    downloadProductHtml,
   };
 });
 

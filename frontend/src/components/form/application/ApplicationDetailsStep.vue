@@ -65,6 +65,8 @@ async function removePopulation(index: number) {
             <DsfrInput
               v-model.trim="form.targetPopulations[index]"
               :disabled="!canEditBase"
+              :label="`Population cible ${index + 1}`"
+              label-visible
               :title="`Population cible champ numéro ${index + 1}`"
               :data-testid="`application-population-${index}`"
             />
@@ -106,6 +108,8 @@ async function removePopulation(index: number) {
             <DsfrInput
               v-model.trim="form.purposes[index]"
               :disabled="!canEditBase"
+              :label="`Objectif ${index + 1}`"
+              label-visible
               :title="`Objectif champ numéro ${index + 1}`"
               :data-testid="`application-purpose-${index}`"
             />

@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import api from "@/api";
+import { isApiSuccess } from "@/api/api-result";
 import type { ImportReportDto, UserControllerSyncOrganizationsFromMaiaData } from "@/client";
 import { useApplicationStore } from "@/stores/applicationStore";
 import { useToasterStore } from "@/stores/toasterStore";
+import { createImportReportCsv, createImportReportHtml } from "@/utils/import-report-export";
 
 const toaster = useToasterStore();
 const applicationStore = useApplicationStore();
 const isLoading = ref(false);
+const progressMessage = ref("");
 
 const selectedFile = ref<File | null>(null);
 const importReport = ref<ImportReportDto | null>(null);
@@ -18,7 +21,9 @@ function onImportFileChange(event: Event) {
 }
 
 async function recomputeQuality() {
+  if (isLoading.value) return;
   isLoading.value = true;
+  progressMessage.value = "Calcul des indices de qualité en cours…";
   try {
     await applicationStore.patchApplicationsQuality();
     toaster.addSuccessMessage("Indice de qualité recalculé pour toutes les applications.");
@@ -26,15 +31,17 @@ async function recomputeQuality() {
     console.error(error);
   } finally {
     isLoading.value = false;
+    progressMessage.value = "";
   }
 }
 
 async function runImport() {
-  if (!selectedFile.value) return;
+  if (isLoading.value || !selectedFile.value) return;
   isLoading.value = true;
+  progressMessage.value = "Import du fichier Excel en cours…";
   try {
     const response = await api.importControllerImportExcel({ body: { file: selectedFile.value } });
-    if (!response.data) {
+    if (!isApiSuccess(response) || !response.data) {
       throw new Error("Réponse d'import vide.");
     }
     importReport.value = response.data;
@@ -50,21 +57,18 @@ async function runImport() {
     console.error(error);
   } finally {
     isLoading.value = false;
+    progressMessage.value = "";
   }
 }
 
-function downloadImportReport() {
+function downloadImportReport(format: "csv" | "html") {
   if (!importReport.value) return;
-  const header = ["Onglet", "Ligne", "Statut", "Identifiant", "Détail"].join(";");
-  const rows = importReport.value.entries.map((entry) =>
-    [entry.sheet, String(entry.row), entry.status, entry.identifier ?? "", (entry.message ?? "").replace(/[\r\n;]+/g, " ")].join(";"),
-  );
-  const csv = [header, ...rows, "", ...importReport.value.logs].join("\n");
-  const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
+  const content = format === "csv" ? createImportReportCsv(importReport.value) : createImportReportHtml(importReport.value);
+  const blob = new Blob([content], { type: `text/${format === "csv" ? "csv" : "html"};charset=utf-8` });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
   const date = new Date().toISOString().split("T")[0];
-  link.download = `rapport_import_acteurs_${date}.csv`;
+  link.download = `rapport_import_acteurs_${date}.${format}`;
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -75,43 +79,51 @@ type MaiaBatchBody = NonNullable<UserControllerSyncOrganizationsFromMaiaData["bo
 const DEFAULT_MAIA_BATCH_BODY: MaiaBatchBody = { onlyMissing: true };
 
 async function runMaiaBatch(body: MaiaBatchBody = DEFAULT_MAIA_BATCH_BODY) {
+  if (isLoading.value) return;
   isLoading.value = true;
+  progressMessage.value = "Synchronisation MAIA des utilisateurs en cours…";
   try {
-    await api.userControllerSyncOrganizationsFromMaia({ body });
+    const response = await api.userControllerSyncOrganizationsFromMaia({ body });
+    if (!isApiSuccess(response)) throw new Error("Lancement du batch MAIA refusé.");
     toaster.addSuccessMessage("Batch MAIA lancé en tâche de fond.");
   } catch (error) {
     toaster.addErrorMessage("Erreur lors du lancement du batch MAIA.");
     console.error(error);
   } finally {
     isLoading.value = false;
+    progressMessage.value = "";
   }
 }
 
 async function runMaiaActorSync() {
+  if (isLoading.value) return;
   isLoading.value = true;
+  progressMessage.value = "Synchronisation MAIA des acteurs en cours…";
   try {
-    await api.actorControllerSyncFromMaia();
+    const response = await api.actorControllerSyncFromMaia();
+    if (!isApiSuccess(response)) throw new Error("Lancement du batch MAIA des acteurs refusé.");
     toaster.addSuccessMessage("Batch MAIA lancé en tâche de fond.");
   } catch (error) {
     toaster.addErrorMessage("Erreur lors du lancement du batch MAIA.");
     console.error(error);
   } finally {
     isLoading.value = false;
+    progressMessage.value = "";
   }
 }
 </script>
 
 <template>
   <div class="container">
+    <output class="fr-sr-only" aria-live="polite" aria-atomic="true" data-testid="admin-batch-progress">{{ progressMessage }}</output>
     <div class="section-card--mt">
       <h2 class="fr-h2">Gestion de l'indice de qualité</h2>
       <DsfrButton
         :label="isLoading ? 'Mise à jour en cours...' : 'Calculer l’indice de qualité de toutes les applications'"
         :icon="{ name: 'ri-refresh-line', animation: isLoading ? 'spin' : undefined }"
-        :disabled="isLoading"
+        :aria-disabled="isLoading"
         data-testid="admin-quality-recompute-btn"
         title="Lance le calcul de l'indice de qualité pour toutes les applications"
-        aria-label="Calculer l'indice de qualité"
         @click="recomputeQuality()"
       />
     </div>
@@ -124,7 +136,7 @@ async function runMaiaActorSync() {
               ? 'Batch MAIA en cours...'
               : 'Synchroniser les utilisateurs et organisations avec MAIA (utilisateurs sans organisation)'
           "
-          :disabled="isLoading"
+          :aria-disabled="isLoading"
           :icon="{ name: 'ri-refresh-line', animation: isLoading ? 'spin' : undefined }"
           data-testid="admin-users-maia-batch-btn"
           @click="runMaiaBatch()"
@@ -135,7 +147,7 @@ async function runMaiaActorSync() {
               ? 'Batch MAIA en cours...'
               : 'Synchroniser les utilisateurs et organisations avec MAIA (utilisateurs avec organisation)'
           "
-          :disabled="isLoading"
+          :aria-disabled="isLoading"
           :icon="{ name: 'ri-refresh-line', animation: isLoading ? 'spin' : undefined }"
           data-testid="admin-users-maia-batch-btn"
           @click="runMaiaBatch({ onlyMissing: false })"
@@ -147,7 +159,7 @@ async function runMaiaActorSync() {
       <div class="maia-sync-actor-container">
         <DsfrButton
           :label="isLoading ? 'Batch MAIA en cours...' : 'Synchroniser les acteurs MAIA'"
-          :disabled="isLoading"
+          :aria-disabled="isLoading"
           :icon="{ name: 'ri-refresh-line', animation: isLoading ? 'spin' : undefined }"
           data-testid="admin-actor-maia-batch-btn"
           @click="runMaiaActorSync()"
@@ -175,7 +187,8 @@ async function runMaiaActorSync() {
         </div>
         <DsfrButton
           :label="isLoading ? 'Import en cours...' : 'Importer le fichier'"
-          :disabled="isLoading || !selectedFile"
+          :disabled="!selectedFile"
+          :aria-disabled="isLoading || !selectedFile"
           :icon="{ name: 'ri-upload-2-line', animation: isLoading ? 'spin' : undefined }"
           data-testid="admin-import-submit"
           @click="runImport()"
@@ -190,6 +203,22 @@ async function runMaiaActorSync() {
             erreur.
           </span>
         </p>
+        <div class="import-report-sheets">
+          <div>
+            <h3 class="fr-h6">Onglets traités</h3>
+            <ul v-if="importReport.summary.processedSheets.length" data-testid="admin-import-processed-sheets">
+              <li v-for="(sheet, index) in importReport.summary.processedSheets" :key="index">{{ sheet }}</li>
+            </ul>
+            <p v-else>Aucun onglet traité.</p>
+          </div>
+          <div>
+            <h3 class="fr-h6">Onglets ignorés</h3>
+            <ul v-if="importReport.summary.ignoredSheets.length" data-testid="admin-import-ignored-sheets">
+              <li v-for="(sheet, index) in importReport.summary.ignoredSheets" :key="index">{{ sheet }}</li>
+            </ul>
+            <p v-else>Aucun onglet ignoré.</p>
+          </div>
+        </div>
         <DsfrTable
           v-if="importReport.entries.length > 0"
           title="Détail par ligne"
@@ -207,13 +236,31 @@ async function runMaiaActorSync() {
             <td>{{ entry.message }}</td>
           </tr>
         </DsfrTable>
-        <DsfrButton
-          label="Télécharger le rapport"
-          secondary
-          icon="ri-download-2-line"
-          data-testid="admin-import-report-download"
-          @click="downloadImportReport()"
-        />
+        <section aria-labelledby="admin-import-log-title" class="import-report-logs">
+          <h3 id="admin-import-log-title" class="fr-h6">Journal d’exécution</h3>
+          <ol v-if="importReport.logs.length" data-testid="admin-import-report-logs">
+            <li v-for="(message, index) in importReport.logs" :key="index">
+              <p>{{ message }}</p>
+            </li>
+          </ol>
+          <p v-else>Aucun message dans le journal.</p>
+        </section>
+        <div class="import-report-downloads" role="group" aria-label="Télécharger le rapport complet">
+          <DsfrButton
+            label="Télécharger le rapport CSV"
+            secondary
+            icon="ri-download-2-line"
+            data-testid="admin-import-report-download"
+            @click="downloadImportReport('csv')"
+          />
+          <DsfrButton
+            label="Télécharger le rapport HTML"
+            secondary
+            icon="ri-download-2-line"
+            data-testid="admin-import-report-download-html"
+            @click="downloadImportReport('html')"
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -254,6 +301,23 @@ async function runMaiaActorSync() {
   flex-direction: column;
   align-items: flex-start;
   gap: 1rem;
+}
+
+.import-report-sheets,
+.import-report-downloads {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.import-report-logs {
+  width: 100%;
+  min-width: 0;
+}
+
+.import-report-logs p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .section-card--mt {

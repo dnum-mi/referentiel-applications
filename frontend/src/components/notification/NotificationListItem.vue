@@ -18,16 +18,18 @@ const relativeDate = computed(() => formatRelativeDate(props.notification.create
 
 <template>
   <component
-    :is="notification.link && !notification.emailLogId ? 'router-link' : 'div'"
+    :is="notification.link && !notification.emailLogId ? 'router-link' : 'button'"
+    :type="notification.link && !notification.emailLogId ? undefined : 'button'"
     :to="notification.emailLogId ? undefined : (notification.link ?? undefined)"
     class="notification-item fr-p-2w"
     :class="{ 'notification-item--unread': !notification.isRead }"
     data-testid="notification-item"
-    @click="emit('select', notification)"
+    @click.prevent="emit('select', notification)"
   >
     <span :class="icon" class="notification-item__icon" aria-hidden="true" />
     <span class="notification-item__body">
       <span class="notification-item__message">{{ notification.message }}</span>
+      <span v-if="!notification.isRead" class="fr-sr-only">Non lue</span>
       <span class="notification-item__date">
         {{ relativeDate }}
         <span v-if="notification.emailLogId" class="notification-item__email-hint">
@@ -45,7 +47,12 @@ const relativeDate = computed(() => formatRelativeDate(props.notification.create
   align-items: flex-start;
   gap: 0.75rem;
   text-decoration: none;
+  text-align: left;
+  font: inherit;
+  width: 100%;
   color: inherit;
+  background-color: var(--background-default-grey);
+  border: 0;
   border-bottom: 1px solid var(--border-default-grey);
   cursor: pointer;
 }
@@ -72,6 +79,7 @@ const relativeDate = computed(() => formatRelativeDate(props.notification.create
 
 .notification-item__message {
   font-size: 0.875rem;
+  overflow-wrap: anywhere;
 }
 
 .notification-item__date {

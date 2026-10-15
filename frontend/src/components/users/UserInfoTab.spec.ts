@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/vue";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/vue";
 import { ref } from "vue";
 import { Roles, type ContactAdminDto } from "@/client/types.gen";
 import UserInfoTab from "./UserInfoTab.vue";
@@ -14,11 +14,19 @@ vi.mock("@/api/index", () => ({
 const role = ref<Roles>(Roles.READER);
 const scopeOrganization = ref<{ path: string } | null>(null);
 const fetchUser = vi.fn().mockResolvedValue(undefined);
+const emailNotificationsEnabled = ref(false);
+const updateEmailPreferences = vi.fn();
 
 vi.mock("@/stores/userStore", () => ({
   useUserStore: () => ({
     get user() {
-      return { email: "agent@interieur.gouv.fr", organization: { path: "MI/DNUM" }, scopeOrganization: scopeOrganization.value };
+      return {
+        id: "user-1",
+        email: "agent@interieur.gouv.fr",
+        emailNotificationsEnabled: emailNotificationsEnabled.value,
+        organization: { path: "MI/DNUM" },
+        scopeOrganization: scopeOrganization.value,
+      };
     },
     // Getter : un vrai store Pinia déroule ses refs, un objet simple exposerait le ComputedRef.
     get userRole() {
@@ -27,7 +35,7 @@ vi.mock("@/stores/userStore", () => ({
     authLevel: undefined,
     isAuthDowngraded: false,
     fetchUser,
-    updateEmailPreferences: vi.fn(),
+    updateEmailPreferences,
   }),
 }));
 
@@ -41,6 +49,10 @@ describe("UserInfoTab — administrateur à contacter", () => {
     scopeOrganization.value = null;
     fetchUser.mockClear();
     contactAdminMock.mockReset().mockResolvedValue({ data: localAdmin });
+    emailNotificationsEnabled.value = false;
+    updateEmailPreferences.mockReset().mockImplementation(async (enabled: boolean) => {
+      emailNotificationsEnabled.value = enabled;
+    });
   });
 
   it("affiche l'administrateur en lien mailto avec l'origine de la résolution", async () => {
@@ -96,6 +108,59 @@ describe("UserInfoTab — administrateur à contacter", () => {
     expect(await screen.findByTestId("user-profile-email")).toHaveTextContent("agent@interieur.gouv.fr");
     await waitFor(() => expect(contactAdminMock).toHaveBeenCalled());
     expect(screen.queryByTestId("user-profile-contact-admin")).not.toBeInTheDocument();
+    consoleError.mockRestore();
+  });
+
+  it("restitue la préférence enregistrée, son succès et le focus sur le vrai contrôle DSFR", async () => {
+    render(UserInfoTab, { global: { stubs: { UserPermissions: true } } });
+    const checkbox = screen.getByRole("checkbox", { name: "Recevoir les notifications par email" });
+    expect(checkbox).not.toBeChecked();
+    await fireEvent.click(checkbox);
+    await waitFor(() => expect(updateEmailPreferences).toHaveBeenCalledWith(true));
+    await waitFor(() => expect(checkbox).toHaveFocus());
+    expect(checkbox).toBeChecked();
+    expect(screen.getByRole("status")).toHaveTextContent("Vos préférences de notification ont été mises à jour avec succès.");
+  });
+
+  it("annonce le refus et restitue la préférence inchangée", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    updateEmailPreferences.mockRejectedValue(new Error("refus"));
+    render(UserInfoTab, { global: { stubs: { UserPermissions: true } } });
+    const checkbox = screen.getByRole("checkbox", { name: "Recevoir les notifications par email" });
+    await fireEvent.click(checkbox);
+    await waitFor(() => expect(screen.getByTestId("email-preferences-error")).toHaveAttribute("role", "alert"));
+    expect(checkbox).not.toBeChecked();
+    expect(checkbox).toHaveFocus();
+    expect(screen.getByRole("status")).toBeEmptyDOMElement();
+    consoleError.mockRestore();
+  });
+
+  it.each(["succès", "refus"] as const)("préserve le lien rejoint pendant la mise à jour différée (%s)", async (outcome) => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    let finish = () => {};
+    updateEmailPreferences.mockImplementationOnce(
+      (enabled: boolean) =>
+        new Promise<void>((resolve, reject) => {
+          finish = () => {
+            if (outcome === "refus") reject(new Error("refus"));
+            else {
+              emailNotificationsEnabled.value = enabled;
+              resolve();
+            }
+          };
+        }),
+    );
+    render(UserInfoTab, { global: { stubs: { UserPermissions: true } } });
+    const link = await screen.findByTestId("user-profile-contact-admin-link");
+    const checkbox = screen.getByRole("checkbox", { name: "Recevoir les notifications par email" });
+    checkbox.focus();
+    await fireEvent.click(checkbox);
+    expect(checkbox).toBeDisabled();
+    link.focus();
+    finish();
+    await waitFor(() => expect(checkbox).not.toBeDisabled());
+    expect(link).toHaveFocus();
+    expect(checkbox).toHaveProperty("checked", outcome === "succès");
     consoleError.mockRestore();
   });
 });

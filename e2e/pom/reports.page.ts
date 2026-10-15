@@ -29,6 +29,24 @@ export class ReportsPage extends BasePage {
     await this.searchBar().locator("input").fill(value);
   }
 
+  /** La réponse à la recherche ne fait pas perdre le champ ni le focus de saisie. */
+  async expectSearchKeepsFocus(value: string): Promise<void> {
+    const input = this.searchBar().locator("input");
+    const response = this.page.waitForResponse((res) => {
+      const url = new URL(res.url());
+      return (
+        url.pathname === "/api/v2/reports" &&
+        url.searchParams.get("searchReport") === value &&
+        res.request().method() === "GET" &&
+        res.status() === 200
+      );
+    });
+    await input.fill(value);
+    await response;
+    await expect(input).toHaveValue(value);
+    await expect(input).toBeFocused();
+  }
+
   /** Vérifie que la table contient une ligne avec ce texte (après recherche). */
   async expectRowContaining(text: string): Promise<void> {
     await expect(this.table()).toContainText(text);

@@ -6,6 +6,7 @@ import { PrismaQueryBuilder } from "./prisma-query-builder.service";
 import { Requestor } from "src/user/entities/user.entity";
 import { CheckPermissions } from "src/common/service/check-permissions.service";
 import { Permission } from "@prisma/client";
+import type { ApplicationWithAllRelations } from "./types/application.type";
 import { ApplicationSearchService } from "./search/application-search.service";
 
 @Injectable()
@@ -22,8 +23,26 @@ export class ApplicationExportService {
     searchParams: ApplicationSearchDto,
     requestor: Requestor,
   ): Promise<Buffer> {
+    return this.exportApplicationsUseCase.executeWithApps(
+      await this.getSearchResults(searchParams, requestor),
+    );
+  }
+
+  async exportSearchResultsToHtml(
+    searchParams: ApplicationSearchDto,
+    requestor: Requestor,
+  ): Promise<Buffer> {
+    return this.exportApplicationsUseCase.executeHtmlWithApps(
+      await this.getSearchResults(searchParams, requestor),
+    );
+  }
+
+  private async getSearchResults(
+    searchParams: ApplicationSearchDto,
+    requestor: Requestor,
+  ): Promise<ApplicationWithAllRelations[]> {
     const where = await this.buildScopedWhere(searchParams, requestor);
-    if (!where) return this.exportApplicationsUseCase.executeWithApps([]);
+    if (where === null) return [];
 
     const { sortBy = "shortName", order = "asc" } = searchParams;
     const orderBy = this.prismaQueryBuilder.buildOrderBy(sortBy, order);
@@ -48,9 +67,7 @@ export class ApplicationExportService {
       }),
     );
 
-    return this.exportApplicationsUseCase.executeWithApps(
-      authorizedApplications,
-    );
+    return authorizedApplications;
   }
 
   /// Filtre de recherche restreint au périmètre du demandeur, sans pagination : toutes les

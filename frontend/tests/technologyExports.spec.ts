@@ -116,8 +116,10 @@ test("l'export Technologies conserve filtres et tri et télécharge toutes les p
 
   await page.getByTestId("end-of-life-table").getByRole("button", { name: "Application", exact: true }).click();
   await expect.poll(() => requests.technologies.at(-1)?.searchParams.get("order")).toBe("desc");
-  await page.getByRole("link", { name: "Page 2", exact: true }).click();
+  const secondPage = page.getByRole("button", { name: "Page 2 sur 3", exact: true });
+  await secondPage.click();
   await expect.poll(() => requests.technologies.at(-1)?.searchParams.get("page")).toBe("1");
+  await expect(secondPage).toHaveAttribute("aria-current", "page");
 
   const downloadPromise = page.waitForEvent("download");
   await page.getByTestId("end-of-life-export-excel").click();

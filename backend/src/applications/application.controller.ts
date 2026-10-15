@@ -53,6 +53,7 @@ import {
 import { ApplicationSearchDto } from "./dto/search-application.dto";
 import { ApplicationExportService } from "./export.service";
 import { ApplicationProductExportService } from "./product-export.service";
+import { HTML_EXPORT_CONTENT_TYPE } from "./export-html";
 import { POWERPOINT_CONTENT_TYPE } from "./product-powerpoint";
 
 @ApiTags("applications")
@@ -254,6 +255,50 @@ Vous devez fournir les informations suivantes :
       "Content-Disposition",
       "attachment; filename=applications_export.xlsx",
     );
+    res.setHeader("Cache-Control", "no-store");
+    res.send(buffer);
+  }
+
+  @Get("export/html")
+  @UseGuards(PermissionGuard)
+  @RequiredPermissions([Permission.DataExport])
+  @ApiOperation({
+    summary: "Exporter les applications en HTML",
+    description:
+      "Version HTML autonome des mêmes données et colonnes que l'export Excel. " +
+      "Les mêmes filtres, le tri et le périmètre de lecture s'appliquent. " +
+      "L'export n'est pas paginé : page et pageSize sont ignorés.",
+  })
+  @ApiOkResponse({
+    description: "Export HTML des applications",
+    content: {
+      "text/html": { schema: { type: "string", format: "binary" } },
+    },
+  })
+  @ApiForbiddenResponse({ description: "Droit d'export requis" })
+  async exportHtml(
+    @Query() searchParams: ApplicationSearchDto,
+    @Res() res: Response,
+    @UserId() requestorId: string,
+    @User() user: Requestor,
+  ) {
+    const buffer =
+      await this.applicationExportService.exportSearchResultsToHtml(
+        searchParams,
+        user,
+      );
+    await this.metadataService.createMetadata({
+      createdById: requestorId,
+      title: "des données en HTML",
+      type: "export",
+    });
+    res.setHeader("Content-Type", HTML_EXPORT_CONTENT_TYPE);
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=applications_export.html",
+    );
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader("X-Content-Type-Options", "nosniff");
     res.send(buffer);
   }
 
@@ -299,6 +344,49 @@ Vous devez fournir les informations suivantes :
       `attachment; filename=fiche-produit-${applicationId}.pptx`,
     );
     res.setHeader("Cache-Control", "no-store");
+    res.send(buffer);
+  }
+
+  @Post(":applicationId/export/html")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(PermissionGuard)
+  @RequiredPermissions([Permission.AppRead])
+  @ApiOperation({
+    summary: "Exporter la fiche produit en HTML",
+    description:
+      "Version HTML autonome des informations générales de la fiche produit " +
+      "PowerPoint. Le même droit AppRead et la même sélection de données " +
+      "s'appliquent, sans dette technique ni contacts. Chaque export est journalisé.",
+  })
+  @ApiParam({ name: "applicationId", type: String })
+  @ApiOkResponse({
+    description: "Fiche produit HTML",
+    content: {
+      "text/html": { schema: { type: "string", format: "binary" } },
+    },
+  })
+  @ApiForbiddenResponse({ description: "Lecture de la fiche non autorisée" })
+  @ApiNotFoundResponse({ description: "Application non trouvée" })
+  async exportProductHtml(
+    @Param("applicationId") applicationId: string,
+    @UserId() requestorId: string,
+    @Res() res: Response,
+  ) {
+    const buffer =
+      await this.productExportService.exportProductCardToHtml(applicationId);
+    await this.metadataService.createMetadata({
+      applicationId,
+      createdById: requestorId,
+      title: "de la fiche produit en HTML",
+      type: "export",
+    });
+    res.setHeader("Content-Type", HTML_EXPORT_CONTENT_TYPE);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=fiche-produit-${applicationId}.html`,
+    );
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader("X-Content-Type-Options", "nosniff");
     res.send(buffer);
   }
 

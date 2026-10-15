@@ -10,6 +10,7 @@ import App from "./App.vue";
 import router from "./router/index";
 import { logDsfrVersion } from "./utils/log-dsfr-version";
 import { reloadOnStaleChunk } from "./utils/stale-chunk";
+import { primeVueFrenchLocale } from "./constants/primevue-locale";
 import "@gouvfr/dsfr/dist/core/core.main.min.css";
 import "@gouvfr/dsfr/dist/component/component.main.min.css";
 import "@gouvfr/dsfr/dist/utility/utility.main.min.css";
@@ -70,8 +71,10 @@ if (isSilentRenewFrame) {
     });
   }
   app.use(PrimeVue, {
+    locale: primeVueFrenchLocale,
     theme: {
       preset: Aura,
+      options: { darkModeSelector: '[data-fr-theme="dark"]' },
     },
   });
 

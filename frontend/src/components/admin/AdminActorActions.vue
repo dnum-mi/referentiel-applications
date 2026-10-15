@@ -8,6 +8,7 @@ import type { Application } from "@/models/Application";
 import { useOrganizationStore } from "@/stores/organizationStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import { computed, ref } from "vue";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps<{
   actor: ActorDto;
@@ -29,19 +30,21 @@ const actorTypeOptions = computed(() =>
 
 const availableApplications = ref<Array<{ id: string; label: string }>>([]);
 const isLoadingApplications = ref(false);
+const applicationsError = ref("");
 
 async function fetchApplicationsForEmail() {
   if (!props.actor.email) return;
+  availableApplications.value = [];
+  applicationsError.value = "";
   isLoadingApplications.value = true;
   try {
     const response = await api.actorControllerFindApplicationsByEmail({
       query: { email: props.actor.email },
     });
-    if (isApiSuccess(response) && response.data) {
-      availableApplications.value = response.data as Array<{ id: string; label: string }>;
-    }
+    if (!isApiSuccess(response) || !response.data) throw new Error("Application lookup refused");
+    availableApplications.value = response.data as Array<{ id: string; label: string }>;
   } catch {
-    availableApplications.value = [];
+    applicationsError.value = "Impossible de charger les applications concernées. Fermez cette fenêtre puis réessayez.";
   } finally {
     isLoadingApplications.value = false;
   }
@@ -56,6 +59,7 @@ const applicationMultiselectOptions = computed(() =>
 
 const isEditModalOpen = ref(false);
 const isSaving = ref(false);
+const editError = ref("");
 
 const editInitialData = computed<CreateActorDto>(() => ({
   email: props.actor.email || "",
@@ -69,14 +73,18 @@ const editInitialData = computed<CreateActorDto>(() => ({
 const editApplication = computed(() => ({ id: props.actor.applicationId }) as Application);
 
 function openEditModal() {
+  editError.value = "";
   isEditModalOpen.value = true;
 }
 
 function closeEditModal() {
+  editError.value = "";
   isEditModalOpen.value = false;
 }
 
 async function saveActor(formData: CreateActorDto) {
+  if (isSaving.value) return;
+  editError.value = "";
   isSaving.value = true;
   try {
     const response = await api.actorControllerUpdateActor({
@@ -88,10 +96,10 @@ async function saveActor(formData: CreateActorDto) {
       closeEditModal();
       emit("updated");
     } else {
-      toaster.addErrorMessage("Erreur lors de la mise à jour de l'acteur");
+      editError.value = "Erreur lors de la mise à jour de l'acteur. Votre saisie est conservée.";
     }
   } catch {
-    toaster.addErrorMessage("Erreur lors de la mise à jour de l'acteur");
+    editError.value = "Erreur lors de la mise à jour de l'acteur. Votre saisie est conservée.";
   } finally {
     isSaving.value = false;
   }
@@ -99,6 +107,8 @@ async function saveActor(formData: CreateActorDto) {
 
 const isEditAllModalOpen = ref(false);
 const isSavingAll = ref(false);
+useSubmissionFocus(isSavingAll);
+const editAllError = ref("");
 const editAllForm = ref<UpdateActorDto>({});
 const selectedEditAppIds = ref<string[]>([]);
 const editAllOrganizationId = computed({
@@ -111,12 +121,16 @@ const isEditAllGroup = computed(() => !!editAllForm.value.isGroup);
 const replaceActorType = ref(false);
 const replaceOrganization = ref(false);
 const isSyncingFromMaia = ref(false);
+const editAllStatus = ref("");
 const editAllInitialOrganization = ref<OrganizationDto | null>(null);
 
 async function syncEditAllFromMaia() {
+  if (isSyncingFromMaia.value) return;
+  editAllError.value = "";
+  editAllStatus.value = "";
   const email = editAllForm.value.email?.trim();
   if (!email) {
-    toaster.addErrorMessage("L'email est requis pour synchroniser depuis MAIA");
+    editAllError.value = "L'email est requis pour synchroniser depuis MAIA";
     return;
   }
   isSyncingFromMaia.value = true;
@@ -133,18 +147,23 @@ async function syncEditAllFromMaia() {
         }
         editAllForm.value.organizationId = newOrgId;
       }
-      toaster.addSuccessMessage("Synchronisation depuis MAIA effectuée");
+      editAllStatus.value = "Synchronisation depuis MAIA effectuée";
     } else {
-      toaster.addErrorMessage("Erreur lors de la synchronisation MAIA (email non trouvé)");
+      if (isEditAllModalOpen.value) editAllError.value = "Erreur lors de la synchronisation MAIA. Votre saisie est conservée.";
+      else toaster.addErrorMessage("Erreur lors de la synchronisation MAIA");
     }
   } catch {
-    toaster.addErrorMessage("Erreur lors de la synchronisation MAIA");
+    if (isEditAllModalOpen.value) editAllError.value = "Erreur lors de la synchronisation MAIA. Votre saisie est conservée.";
+    else toaster.addErrorMessage("Erreur lors de la synchronisation MAIA");
   } finally {
     isSyncingFromMaia.value = false;
   }
 }
 
 async function openEditAllModal() {
+  if (isLoadingApplications.value) return;
+  editAllError.value = "";
+  editAllStatus.value = "";
   editAllForm.value = {
     email: props.actor.email || "",
     firstname: props.actor.firstname || "",
@@ -162,11 +181,20 @@ async function openEditAllModal() {
 }
 
 function closeEditAllModal() {
+  editAllError.value = "";
   isEditAllModalOpen.value = false;
 }
 
 async function saveAllByEmail() {
-  if (!props.actor.email) return;
+  if (!props.actor.email || isSavingAll.value || selectedEditAppIds.value.length === 0) return;
+  if (
+    !window.confirm(
+      `Confirmer la modification des acteurs avec l'email « ${props.actor.email} » dans les ${selectedEditAppIds.value.length} application(s) sélectionnée(s) ?\n\nNom : ${!isEditAllGroup.value ? [editAllForm.value.firstname, editAllForm.value.lastname].filter(Boolean).join(" ") || "Non renseigné" : "Acteur rattaché à une entité"}\nNouvel email : ${editAllForm.value.email?.trim() || "Non renseigné"}\n\nLes coordonnées et les options affichées seront enregistrées.`,
+    )
+  ) {
+    return;
+  }
+  editAllError.value = "";
   isSavingAll.value = true;
   try {
     const { actorTypeId, organizationId, ...restForm } = editAllForm.value;
@@ -192,10 +220,10 @@ async function saveAllByEmail() {
       closeEditAllModal();
       emit("updated");
     } else {
-      toaster.addErrorMessage("Erreur lors de la mise à jour des acteurs");
+      editAllError.value = "Erreur lors de la mise à jour des acteurs. Votre saisie est conservée.";
     }
   } catch {
-    toaster.addErrorMessage("Erreur lors de la mise à jour des acteurs");
+    editAllError.value = "Erreur lors de la mise à jour des acteurs. Votre saisie est conservée.";
   } finally {
     isSavingAll.value = false;
   }
@@ -203,8 +231,10 @@ async function saveAllByEmail() {
 
 const isDeleteModalOpen = ref(false);
 const isDeleting = ref(false);
+const deleteError = ref("");
 
 function openDeleteModal() {
+  deleteError.value = "";
   isDeleteModalOpen.value = true;
 }
 
@@ -213,6 +243,8 @@ function closeDeleteModal() {
 }
 
 async function confirmDelete() {
+  if (isDeleting.value) return;
+  deleteError.value = "";
   isDeleting.value = true;
   try {
     const response = await api.actorControllerDeleteActor({
@@ -223,10 +255,12 @@ async function confirmDelete() {
       closeDeleteModal();
       emit("updated");
     } else {
-      toaster.addErrorMessage("Erreur lors de la suppression de l'acteur");
+      if (isDeleteModalOpen.value) deleteError.value = "Erreur lors de la suppression de l'acteur. Vous pouvez réessayer.";
+      else toaster.addErrorMessage("Erreur lors de la suppression de l'acteur");
     }
   } catch {
-    toaster.addErrorMessage("Erreur lors de la suppression de l'acteur");
+    if (isDeleteModalOpen.value) deleteError.value = "Erreur lors de la suppression de l'acteur. Vous pouvez réessayer.";
+    else toaster.addErrorMessage("Erreur lors de la suppression de l'acteur");
   } finally {
     isDeleting.value = false;
   }
@@ -234,9 +268,12 @@ async function confirmDelete() {
 
 const isDeleteAllModalOpen = ref(false);
 const isDeletingAll = ref(false);
+const deleteAllError = ref("");
 const selectedDeleteAppIds = ref<string[]>([]);
 
 async function openDeleteAllModal() {
+  if (isLoadingApplications.value) return;
+  deleteAllError.value = "";
   await fetchApplicationsForEmail();
   selectedDeleteAppIds.value = availableApplications.value.map((a) => a.id);
   isDeleteAllModalOpen.value = true;
@@ -247,7 +284,8 @@ function closeDeleteAllModal() {
 }
 
 async function confirmDeleteAll() {
-  if (!props.actor.email) return;
+  if (!props.actor.email || isDeletingAll.value || selectedDeleteAppIds.value.length === 0) return;
+  deleteAllError.value = "";
   isDeletingAll.value = true;
   try {
     const allSelected = selectedDeleteAppIds.value.length === availableApplications.value.length;
@@ -263,10 +301,12 @@ async function confirmDeleteAll() {
       closeDeleteAllModal();
       emit("updated");
     } else {
-      toaster.addErrorMessage("Erreur lors de la suppression des acteurs");
+      if (isDeleteAllModalOpen.value) deleteAllError.value = "Erreur lors de la suppression des acteurs. Votre sélection est conservée.";
+      else toaster.addErrorMessage("Erreur lors de la suppression des acteurs");
     }
   } catch {
-    toaster.addErrorMessage("Erreur lors de la suppression des acteurs");
+    if (isDeleteAllModalOpen.value) deleteAllError.value = "Erreur lors de la suppression des acteurs. Votre sélection est conservée.";
+    else toaster.addErrorMessage("Erreur lors de la suppression des acteurs");
   } finally {
     isDeletingAll.value = false;
   }
@@ -303,6 +343,8 @@ const actorDisplayName = computed(() => {
       size="sm"
       tertiary
       data-testid="admin-actor-edit-all-btn"
+      :aria-disabled="isLoadingApplications"
+      :aria-busy="isLoadingApplications"
       @click="openEditAllModal"
     />
     <DsfrButton
@@ -312,6 +354,8 @@ const actorDisplayName = computed(() => {
       size="sm"
       tertiary
       data-testid="admin-actor-delete-all-btn"
+      :aria-disabled="isLoadingApplications"
+      :aria-busy="isLoadingApplications"
       @click="openDeleteAllModal"
     />
   </div>
@@ -320,6 +364,7 @@ const actorDisplayName = computed(() => {
     <ActorForm
       :initial-data="editInitialData"
       :is-submitting="isSaving"
+      :error-message="editError"
       :application="editApplication"
       :actor-types="actorTypes"
       @submit="saveActor"
@@ -333,6 +378,11 @@ const actorDisplayName = computed(() => {
     data-testid="admin-edit-all-actor-modal"
     @close="closeEditAllModal"
   >
+    <p class="fr-text--sm fr-mb-3w" data-testid="required-fields-hint">* = champs obligatoires</p>
+    <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="admin-actor-all-error">
+      <p v-if="editAllError || applicationsError" class="fr-error-text">{{ editAllError || applicationsError }}</p>
+    </div>
+    <output aria-live="polite" aria-atomic="true" data-testid="admin-actor-all-status">{{ editAllStatus }}</output>
     <DsfrAlert
       :description="`Les acteurs avec l'email « ${actor.email} » dans les applications sélectionnées seront modifiés.`"
       type="info"
@@ -386,7 +436,9 @@ const actorDisplayName = computed(() => {
       label="Synchroniser depuis MAIA (par email)"
       size="sm"
       tertiary
-      :disabled="isSyncingFromMaia || !editAllForm.email"
+      :disabled="!editAllForm.email"
+      :aria-disabled="isSyncingFromMaia || !editAllForm.email"
+      :aria-busy="isSyncingFromMaia"
       data-testid="admin-actor-all-sync-maia-btn"
       class="fr-mb-3w"
       @click="syncEditAllFromMaia"
@@ -420,24 +472,29 @@ const actorDisplayName = computed(() => {
       data-testid="admin-actor-all-is-group-checkbox"
       class="fr-mb-3w checkbox-align"
     />
-    <template v-if="!isEditAllGroup">
-      <DsfrInput
-        v-model="editAllForm.firstname"
-        label="Prénom"
-        label-visible
-        placeholder="Prénom"
-        data-testid="admin-actor-all-firstname-input"
-        class="fr-mb-3w"
-      />
-      <DsfrInput
-        v-model="editAllForm.lastname"
-        label="Nom"
-        label-visible
-        placeholder="Nom de famille"
-        data-testid="admin-actor-all-lastname-input"
-        class="fr-mb-3w"
-      />
-    </template>
+    <fieldset v-if="!isEditAllGroup" class="fr-fieldset fr-mb-3w">
+      <legend class="fr-fieldset__legend">Identité des acteurs</legend>
+      <div class="fr-fieldset__element">
+        <DsfrInput
+          v-model="editAllForm.firstname"
+          label="Prénom"
+          label-visible
+          placeholder="Prénom"
+          data-testid="admin-actor-all-firstname-input"
+          class="fr-mb-3w"
+        />
+      </div>
+      <div class="fr-fieldset__element">
+        <DsfrInput
+          v-model="editAllForm.lastname"
+          label="Nom"
+          label-visible
+          placeholder="Nom de famille"
+          data-testid="admin-actor-all-lastname-input"
+          class="fr-mb-3w"
+        />
+      </div>
+    </fieldset>
     <template #footer>
       <DsfrButton label="Annuler" secondary @click="closeEditAllModal" />
       <DsfrButton
@@ -450,6 +507,9 @@ const actorDisplayName = computed(() => {
   </DsfrModal>
 
   <DsfrModal :opened="isDeleteModalOpen" title="Supprimer cet acteur" data-testid="admin-delete-actor-modal" @close="closeDeleteModal">
+    <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="admin-actor-delete-error">
+      <p v-if="deleteError" class="fr-error-text">{{ deleteError }}</p>
+    </div>
     <DsfrAlert
       title="Cette action est irréversible"
       :description="`Êtes-vous sûr de vouloir supprimer l'acteur : ${actorDisplayName} ?`"
@@ -458,7 +518,14 @@ const actorDisplayName = computed(() => {
     />
     <template #footer>
       <DsfrButton label="Annuler" secondary @click="closeDeleteModal" />
-      <DsfrButton label="Supprimer" danger :disabled="isDeleting" data-testid="admin-actor-delete-confirm-btn" @click="confirmDelete" />
+      <DsfrButton
+        label="Supprimer"
+        danger
+        :aria-disabled="isDeleting"
+        :aria-busy="isDeleting"
+        data-testid="admin-actor-delete-confirm-btn"
+        @click="confirmDelete"
+      />
     </template>
   </DsfrModal>
 
@@ -468,6 +535,9 @@ const actorDisplayName = computed(() => {
     data-testid="admin-delete-all-actor-modal"
     @close="closeDeleteAllModal"
   >
+    <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="admin-actor-delete-all-error">
+      <p v-if="deleteAllError || applicationsError" class="fr-error-text">{{ deleteAllError || applicationsError }}</p>
+    </div>
     <DsfrAlert
       title="Cette action est irréversible"
       :description="`Les acteurs avec l'email « ${actor.email} » seront supprimés des applications sélectionnées.`"
@@ -491,7 +561,9 @@ const actorDisplayName = computed(() => {
       <DsfrButton
         label="Supprimer"
         danger
-        :disabled="isDeletingAll || selectedDeleteAppIds.length === 0"
+        :disabled="selectedDeleteAppIds.length === 0"
+        :aria-disabled="isDeletingAll || selectedDeleteAppIds.length === 0"
+        :aria-busy="isDeletingAll"
         data-testid="admin-actor-delete-all-confirm-btn"
         @click="confirmDeleteAll"
       />

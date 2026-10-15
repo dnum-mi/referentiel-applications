@@ -95,6 +95,7 @@ describe.each([
   it("émet la synchronisation MAIA et bloque le bouton pendant la requête", async () => {
     const { wrapper } = renderStep();
     const button = wrapper.get(`[data-testid="application-${role}-sync-maia-btn"]`);
+    expect(button.element).toHaveAccessibleName(`Synchroniser depuis MAIA (par email) — contact ${role.toUpperCase()}`);
     await button.trigger("click");
     expect(wrapper.emitted("sync")).toEqual([[]]);
     await wrapper.setProps({ isSyncing: true });

@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { isApiSuccess } from "@/api/api-result";
-import { nextTick, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import api from "@/api/index";
 import type { DataExposureDto } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps<{
   applicationId: string;
@@ -16,7 +17,12 @@ const emit = defineEmits(["close", "exposureCreated", "exposureUpdated"]);
 
 const toaster = useToasterStore();
 const isSubmitting = ref(false);
+useSubmissionFocus(isSubmitting);
+const submissionError = ref("");
+const isClosed = ref(false);
+const displayedError = computed(() => submissionError.value || (props.initialExposure ? props.errorMessage : ""));
 const typeError = ref<string | undefined>(undefined);
+const formElement = ref<HTMLFormElement | null>(null);
 
 const form = ref({
   type: "",
@@ -28,6 +34,7 @@ const form = ref({
 });
 
 function setInitialValues() {
+  submissionError.value = "";
   if (!props.initialExposure) {
     form.value = { type: "", format: "", endpoint: "", url: "", swaggerUrl: "", authenticationType: "" };
     return;
@@ -50,8 +57,14 @@ onMounted(async () => {
 });
 
 async function handleSubmit() {
+  if (isSubmitting.value) return;
+  submissionError.value = "";
   typeError.value = form.value.type.trim() ? undefined : "Veuillez renseigner un type d'exposition.";
-  if (typeError.value) return;
+  if (typeError.value) {
+    await nextTick();
+    formElement.value?.querySelector<HTMLInputElement>('[data-testid="data-exposure-type-input"]')?.focus();
+    return;
+  }
 
   isSubmitting.value = true;
   try {
@@ -81,13 +94,20 @@ async function handleSubmit() {
       toaster.addSuccessMessage("Exposition créée avec succès");
       emit("exposureCreated");
     }
-    emit("close");
+    closeModal();
   } catch (error) {
     console.error("Error submitting exposure form:", error);
-    toaster.addErrorMessage("Une erreur est survenue lors de l'enregistrement de l'exposition.");
+    const message = "Une erreur est survenue lors de l'enregistrement de l'exposition.";
+    if (!isClosed.value && formElement.value?.isConnected) submissionError.value = message;
+    else toaster.addErrorMessage(message);
   } finally {
     isSubmitting.value = false;
   }
+}
+
+function closeModal() {
+  isClosed.value = true;
+  emit("close");
 }
 </script>
 
@@ -96,47 +116,53 @@ async function handleSubmit() {
     :opened="true"
     :title="props.initialExposure ? 'Modifier une exposition' : 'Ajouter une exposition'"
     data-testid="data-exposure-modal"
-    @close="$emit('close')"
+    @close="closeModal"
   >
-    <DsfrAlert
-      v-show="props.initialExposure && props.errorMessage.length > 0"
-      class="mb-4"
-      tabindex="-1"
-      type="error"
-      role="alert"
-      aria-live="assertive"
-      title="Une erreur est survenue"
-      :description="props.errorMessage"
-    />
-    <form data-testid="data-exposure-form" @submit.prevent="handleSubmit">
-      <p class="fr-text--sm fr-mb-2w" data-testid="required-fields-hint">Tous les champs avec un * sont obligatoires</p>
+    <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="data-exposure-submit-error">
+      <DsfrAlert
+        v-if="displayedError.length > 0"
+        class="mb-4"
+        tabindex="-1"
+        type="error"
+        title="Une erreur est survenue"
+        :description="displayedError"
+      />
+    </div>
+    <form ref="formElement" data-testid="data-exposure-form" @submit.prevent="handleSubmit">
+      <p class="fr-text--sm fr-mb-2w" data-testid="required-fields-hint">Les champs obligatoires sont indiqués dans leur étiquette.</p>
 
-      <DsfrInput
-        v-model="form.type"
-        label-visible
-        required
-        hint="Ex : API, Fichier, Flux"
-        aria-describedby="data-exposure-type-tooltip-desc"
-        class="fr-mb-3w"
-        :error-message="typeError"
-        data-testid="data-exposure-type-input"
-      >
-        <template #label>
-          <span class="tooltip-label">
-            Type
-            <DsfrTooltip
-              id="data-exposure-type-tooltip-desc"
-              content="Mode d'exposition technique de la donnée : décrit COMMENT elle est mise à disposition (ex : API REST, fichier plat, flux)."
-            />
-          </span>
+      <DsfrInputGroup class="fr-mb-3w" description-id="data-exposure-type-error" :error-message="typeError">
+        <template #default="{ descriptionId }">
+          <DsfrInput
+            id="data-exposure-type"
+            v-model="form.type"
+            label-visible
+            required
+            hint="Ex : API, Fichier, Flux"
+            :description-id="['data-exposure-type-tooltip-desc', descriptionId].filter(Boolean).join(' ')"
+            :is-invalid="!!typeError"
+            :aria-invalid="typeError ? true : undefined"
+            data-testid="data-exposure-type-input"
+          >
+            <template #label>
+              <span class="tooltip-label">
+                Type (obligatoire)
+                <DsfrTooltip
+                  id="data-exposure-type-tooltip-desc"
+                  aria-label="Aide : type d’exposition"
+                  content="Mode d'exposition technique de la donnée : décrit COMMENT elle est mise à disposition (ex : API REST, fichier plat, flux)."
+                />
+              </span>
+            </template>
+          </DsfrInput>
         </template>
-      </DsfrInput>
+      </DsfrInputGroup>
 
       <DsfrInput
         v-model="form.format"
         label-visible
         hint="Ex : JSON, CSV, XML"
-        aria-describedby="data-exposure-format-tooltip-desc"
+        description-id="data-exposure-format-tooltip-desc"
         class="fr-mb-3w"
         data-testid="data-exposure-format-input"
       >
@@ -145,6 +171,7 @@ async function handleSubmit() {
             Format
             <DsfrTooltip
               id="data-exposure-format-tooltip-desc"
+              aria-label="Aide : format de données"
               content="Format des données échangées lors de cette exposition (ex : JSON, CSV, XML)."
             />
           </span>
@@ -154,7 +181,7 @@ async function handleSubmit() {
       <DsfrInput
         v-model="form.endpoint"
         label-visible
-        aria-describedby="data-exposure-endpoint-tooltip-desc"
+        description-id="data-exposure-endpoint-tooltip-desc"
         class="fr-mb-3w"
         data-testid="data-exposure-endpoint-input"
       >
@@ -163,6 +190,7 @@ async function handleSubmit() {
             Point de terminaison technique
             <DsfrTooltip
               id="data-exposure-endpoint-tooltip-desc"
+              aria-label="Aide : point de terminaison technique"
               content="Chemin ou identifiant technique du point d'accès (ex : /api/v2/donnee), à distinguer de l'URL complète."
             />
           </span>
@@ -172,7 +200,7 @@ async function handleSubmit() {
       <DsfrInput
         v-model="form.url"
         label-visible
-        aria-describedby="data-exposure-url-tooltip-desc"
+        description-id="data-exposure-url-tooltip-desc"
         class="fr-mb-3w"
         data-testid="data-exposure-url-input"
       >
@@ -181,6 +209,7 @@ async function handleSubmit() {
             URL d'accès à la ressource
             <DsfrTooltip
               id="data-exposure-url-tooltip-desc"
+              aria-label="Aide : URL d’accès à la ressource"
               content="Adresse complète permettant d'accéder directement à la donnée exposée."
             />
           </span>
@@ -190,7 +219,7 @@ async function handleSubmit() {
       <DsfrInput
         v-model="form.swaggerUrl"
         label-visible
-        aria-describedby="data-exposure-swagger-url-tooltip-desc"
+        description-id="data-exposure-swagger-url-tooltip-desc"
         class="fr-mb-3w"
         data-testid="data-exposure-swagger-url-input"
       >
@@ -199,6 +228,7 @@ async function handleSubmit() {
             URL Swagger / OpenAPI
             <DsfrTooltip
               id="data-exposure-swagger-url-tooltip-desc"
+              aria-label="Aide : documentation Swagger / OpenAPI"
               content="Lien vers la documentation technique de l'API (spécification Swagger/OpenAPI), si disponible."
             />
           </span>
@@ -209,7 +239,7 @@ async function handleSubmit() {
         v-model="form.authenticationType"
         label-visible
         hint="Ex : OAuth2, API Key"
-        aria-describedby="data-exposure-authentication-type-tooltip-desc"
+        description-id="data-exposure-authentication-type-tooltip-desc"
         class="fr-mb-3w"
         data-testid="data-exposure-authentication-type-input"
       >
@@ -218,6 +248,7 @@ async function handleSubmit() {
             Type d'authentification
             <DsfrTooltip
               id="data-exposure-authentication-type-tooltip-desc"
+              aria-label="Aide : type d’authentification"
               content="Mécanisme de sécurité requis pour accéder à cette exposition (ex : OAuth2, clé d'API, aucune)."
             />
           </span>
@@ -225,10 +256,11 @@ async function handleSubmit() {
       </DsfrInput>
 
       <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
-        <DsfrButton type="button" secondary label="Annuler" data-testid="data-exposure-cancel-btn" @click="$emit('close')" />
+        <DsfrButton type="button" secondary label="Annuler" data-testid="data-exposure-cancel-btn" @click="closeModal" />
         <DsfrButton
           type="submit"
           :disabled="isSubmitting"
+          :aria-busy="isSubmitting"
           :label="props.initialExposure ? 'Modifier' : 'Ajouter'"
           data-testid="data-exposure-submit-btn"
         >

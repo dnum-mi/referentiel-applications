@@ -45,11 +45,10 @@ export const useReportStore = defineStore("reportStore", () => {
 
   const updateReport = async (id: string, applicationId: string, status: ReportStatus, notify: boolean = false) => {
     try {
-      if (applicationId) {
-        await api.applicationReportsControllerUpdate({ path: { applicationId, id }, body: { status }, query: { notify } });
-      } else {
-        await api.reportsControllerUpdate({ path: { id }, body: { status }, query: { notify } });
-      }
+      const response = applicationId
+        ? await api.applicationReportsControllerUpdate({ path: { applicationId, id }, body: { status }, query: { notify } })
+        : await api.reportsControllerUpdate({ path: { id }, body: { status }, query: { notify } });
+      if (!isApiSuccess(response)) throw new Error("Erreur lors de la mise à jour du statut du signalement.");
       return true;
     } catch (error) {
       console.error("Erreur lors de l'enregistrement des modifications : ", error);
@@ -61,7 +60,8 @@ export const useReportStore = defineStore("reportStore", () => {
 
   const updateNotes = async (id: string, notes: string = "", notify: boolean = false) => {
     try {
-      await api.reportsControllerUpdate({ path: { id }, body: { notes }, query: { notify } });
+      const response = await api.reportsControllerUpdate({ path: { id }, body: { notes }, query: { notify } });
+      if (!isApiSuccess(response)) throw new Error("Erreur lors de l'enregistrement de la note.");
       return true;
     } catch (error) {
       console.error("Erreur lors de l'enregistrement des modifications : ", error);

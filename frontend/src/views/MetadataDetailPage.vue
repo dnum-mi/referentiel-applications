@@ -121,8 +121,8 @@ onMounted(() => {
       icon="ri-arrow-left-line"
       class="fr-mb-3w"
       data-testid="back-button"
-      title="Retour à la page d'historique"
-      aria-label="Retour à la page d'historique"
+      title="Retour à l'historique"
+      aria-label="Retour à l'historique"
       @click="router.push(route.query.from as string)"
     />
 
@@ -132,7 +132,7 @@ onMounted(() => {
       <AppLoader data-testid="metadata-loader" />
     </div>
 
-    <div v-else-if="error" class="fr-alert fr-alert--error fr-mb-3w" data-testid="metadata-error">
+    <div v-else-if="error" role="alert" class="fr-alert fr-alert--error fr-mb-3w" data-testid="metadata-error">
       <p>{{ error }}</p>
     </div>
 

@@ -70,6 +70,7 @@ watchDebounced(
       <span style="display: inline-flex; align-items: center; gap: 0.25rem">
         Type d'acteur
         <DsfrTooltip
+          aria-label="Afficher l’aide sur le filtre Type d’acteur"
           id="actor-type-tooltip-desc"
           content="Filtre les applications selon le type d'acteur associé (maîtrise d'ouvrage, maîtrise d'œuvre…), ou selon l'absence de MOA ou de MOE."
         />
@@ -81,7 +82,7 @@ watchDebounced(
     :model-value="filters.actorEmail || ''"
     label-visible
     type="email"
-    aria-describedby="actor-email-tooltip-desc"
+    description-id="actor-email-tooltip-desc"
     data-testid="actor-email-filter-input"
     class="fr-mb-2w"
     @update:model-value="setFilter({ actorEmail: $event ? String($event) : undefined, page: 0 })"
@@ -90,6 +91,7 @@ watchDebounced(
       <span style="display: inline-flex; align-items: center; gap: 0.25rem">
         Email
         <DsfrTooltip
+          aria-label="Afficher l’aide sur le filtre Email"
           id="actor-email-tooltip-desc"
           content="Recherche les applications ayant un acteur dont l'adresse email contient le texte saisi."
         />
@@ -102,7 +104,7 @@ watchDebounced(
     label-visible
     list="organizationSuggestionsList"
     placeholder="Rechercher une organisation"
-    aria-describedby="actor-organization-tooltip-desc"
+    description-id="actor-organization-tooltip-desc"
     data-testid="organization-filter-input"
     @update:model-value="setFilter({ organization: $event ? String($event) : undefined, page: 0 })"
   >
@@ -110,6 +112,7 @@ watchDebounced(
       <span style="display: inline-flex; align-items: center; gap: 0.25rem">
         Nom de l'organisation
         <DsfrTooltip
+          aria-label="Afficher l’aide sur le filtre Organisation"
           id="actor-organization-tooltip-desc"
           content="Recherche les applications rattachées à une organisation dont le nom contient le texte saisi."
         />

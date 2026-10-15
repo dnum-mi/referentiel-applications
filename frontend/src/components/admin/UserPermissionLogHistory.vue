@@ -66,15 +66,21 @@ onMounted(() => {
   <div class="fr-mt-4w" data-testid="user-permission-log-history">
     <h3 class="fr-h6 fr-mb-2w">Historique des modifications de droits</h3>
 
-    <div v-if="errorMessage" class="fr-alert fr-alert--error" data-testid="permission-log-history-error">
-      <p>{{ errorMessage }}</p>
+    <div
+      role="alert"
+      aria-live="assertive"
+      aria-atomic="true"
+      :class="errorMessage ? 'fr-alert fr-alert--error' : undefined"
+      data-testid="permission-log-history-error"
+    >
+      <p v-if="errorMessage">{{ errorMessage }}</p>
     </div>
 
-    <div v-else-if="!isLoading && logs.length === 0" class="text-center" data-testid="permission-log-history-empty">
+    <div v-if="!errorMessage && !isLoading && logs.length === 0" class="text-center" data-testid="permission-log-history-empty">
       <p>Aucune modification enregistrée.</p>
     </div>
 
-    <div v-else>
+    <div v-else-if="!errorMessage">
       <AppLoader v-if="isLoading" data-testid="permission-log-history-loader" />
       <RefAppTable
         v-else

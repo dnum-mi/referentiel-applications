@@ -117,6 +117,48 @@ describe("POST /applications/:applicationId/export/powerpoint (#434)", () => {
     await request(app().getHttpServer())
       .post(`/applications/${applicationId}/export/powerpoint`)
       .expect(401);
+    await request(app().getHttpServer())
+      .post(`/applications/${applicationId}/export/html`)
+      .expect(401);
+  });
+
+  it("offre au visiteur une version HTML des seules informations générales, avec une trace d'export", async () => {
+    const response = await request(app().getHttpServer())
+      .post(`/applications/${applicationId}/export/html`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    expect(response.headers["content-type"]).toMatch(
+      /^text\/html;\s*charset=utf-8$/i,
+    );
+    expect(response.headers["content-disposition"]).toBe(
+      `attachment; filename=fiche-produit-${applicationId}.html`,
+    );
+    expect(response.headers["cache-control"]).toBe("no-store");
+    expect(response.text).toContain('<html lang="fr">');
+    expect(response.text).toContain("Fiche produit à exporter");
+    expect(response.text).not.toMatch(
+      /technicalMaturity|costContainment|Dette technique/,
+    );
+    expect(
+      await getPrismaClient().metadata.findFirst({
+        where: {
+          applicationId,
+          createdById: userId,
+          action: MetadataAction.export,
+          description: { contains: "HTML" },
+        },
+      }),
+    ).not.toBeNull();
+    expect(
+      await getPrismaClient().notification.count({
+        where: { applicationId, userId: subscriberId },
+      }),
+    ).toBe(0);
+    // DataExport reste distinct de la lecture d'une fiche.
+    await request(app().getHttpServer())
+      .get("/applications/export/html")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(403);
   });
 
   it("exclut le téléchargement du digest et conserve la relance d'une fiche ancienne", async () => {
@@ -186,6 +228,10 @@ describe("POST /applications/:applicationId/export/powerpoint (#434)", () => {
       .post(
         "/applications/00000000-0000-0000-0000-000000000000/export/powerpoint",
       )
+      .set("Authorization", `Bearer ${token}`)
+      .expect(404);
+    await request(app().getHttpServer())
+      .post("/applications/00000000-0000-0000-0000-000000000000/export/html")
       .set("Authorization", `Bearer ${token}`)
       .expect(404);
     expect(

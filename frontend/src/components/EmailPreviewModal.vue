@@ -3,6 +3,7 @@ import type { EmailLogDto } from "@/client/types.gen";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { computed } from "vue";
+import { createEmailWebPreview } from "@/utils/email-web-preview";
 
 const props = defineProps<{
   log: EmailLogDto | null;
@@ -12,6 +13,7 @@ const props = defineProps<{
 const emit = defineEmits<{ close: [] }>();
 
 const sentAtLabel = computed(() => (props.log ? format(new Date(props.log.sentAt), "dd/MM/yyyy HH:mm", { locale: fr }) : ""));
+const webPreview = computed(() => (props.log ? createEmailWebPreview(props.log.html, props.log.subject) : ""));
 </script>
 
 <template>
@@ -39,7 +41,13 @@ const sentAtLabel = computed(() => (props.log ? format(new Date(props.log.sentAt
         <!-- L'e-mail peut contenir du texte fourni par un utilisateur (ex: description d'un
              signalement) inséré tel quel dans le HTML : on l'affiche dans une iframe totalement
              sandboxée (aucun script, aucune origine) pour ne pas ouvrir de XSS stocké. -->
-        <iframe class="email-preview-iframe" title="Contenu de l'e-mail" sandbox="" :srcdoc="log.html" data-testid="email-preview-iframe" />
+        <iframe
+          class="email-preview-iframe"
+          title="Contenu de l'e-mail"
+          sandbox=""
+          :srcdoc="webPreview"
+          data-testid="email-preview-iframe"
+        />
       </template>
     </DsfrModal>
   </Teleport>
@@ -48,7 +56,7 @@ const sentAtLabel = computed(() => (props.log ? format(new Date(props.log.sentAt
 <style scoped>
 .email-preview-meta {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 0.25rem 1rem;
 }
 
@@ -58,6 +66,8 @@ const sentAtLabel = computed(() => (props.log ? format(new Date(props.log.sentAt
 
 .email-preview-meta dd {
   margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .email-preview-iframe {

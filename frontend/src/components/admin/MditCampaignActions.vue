@@ -4,6 +4,7 @@ import { ref } from "vue";
 import type { MditCampaignDto } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
 import api from "@/api";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps<{
   campaign?: MditCampaignDto;
@@ -18,7 +19,9 @@ const toaster = useToasterStore();
 const isEditModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
 const isSaving = ref(false);
+useSubmissionFocus(isSaving);
 const isDeleting = ref(false);
+useSubmissionFocus(isDeleting);
 const editingYear = ref<number | undefined>(undefined);
 const editingLabel = ref<string>("");
 const editingActive = ref<boolean>(true);
@@ -46,6 +49,7 @@ function closeDeleteModal() {
 }
 
 async function saveCampaign() {
+  if (isSaving.value) return;
   const year = Number(editingYear.value);
   if (!Number.isInteger(year) || year < 2000 || year > 2100) {
     errorMessage.value = "Le millésime doit être une année entre 2000 et 2100.";
@@ -80,7 +84,7 @@ async function saveCampaign() {
 }
 
 async function deleteCampaign() {
-  if (!props.campaign?.id) return;
+  if (!props.campaign?.id || isDeleting.value) return;
 
   isDeleting.value = true;
 
@@ -103,7 +107,7 @@ async function deleteCampaign() {
     label="Créer une campagne"
     data-testid="admin-create-campaign-btn"
     title="Créer une nouvelle campagne"
-    aria-label="Créer une nouvelle campagne"
+    aria-label="Créer une campagne"
     @click="openEditModal"
   />
 
@@ -134,12 +138,21 @@ async function deleteCampaign() {
     :data-testid="!campaign?.id ? 'admin-create-campaign-modal' : 'admin-edit-campaign-modal'"
     @close="closeEditModal"
   >
+    <p class="fr-text--sm fr-mb-3w" data-testid="required-fields-hint">* = champs obligatoires</p>
     <p class="fr-text--sm fr-hint-text fr-mb-3w" style="white-space: normal">
       Une campagne correspond à un millésime (année) de collecte de la dette IT. La campagne active la plus récente est présentée par défaut
       dans le diagramme Time.
     </p>
 
-    <DsfrAlert v-if="errorMessage" type="error" :description="errorMessage" small class="fr-mb-3w" data-testid="campaign-form-error" />
+    <DsfrAlert
+      alert
+      v-if="errorMessage"
+      type="error"
+      :description="errorMessage"
+      small
+      class="fr-mb-3w"
+      data-testid="campaign-form-error"
+    />
 
     <DsfrInputGroup
       v-model.number="editingYear"
@@ -173,22 +186,26 @@ async function deleteCampaign() {
 
     <template #footer>
       <DsfrButtonGroup :inline-layout-when="true" :reverse="true">
-        <DsfrButton
-          label="Annuler"
-          secondary
-          data-testid="admin-campaign-cancel-btn"
-          title="Annuler"
-          aria-label="Annuler"
-          @click="closeEditModal"
-        />
-        <DsfrButton
-          :label="isSaving ? 'Enregistrement…' : 'Enregistrer'"
-          title="Enregistrer"
-          aria-label="Enregistrer"
-          :disabled="isSaving"
-          data-testid="admin-campaign-save-btn"
-          @click="saveCampaign"
-        />
+        <li>
+          <DsfrButton
+            label="Annuler"
+            secondary
+            data-testid="admin-campaign-cancel-btn"
+            title="Annuler"
+            aria-label="Annuler"
+            @click="closeEditModal"
+          />
+        </li>
+        <li>
+          <DsfrButton
+            :label="isSaving ? 'Enregistrement…' : 'Enregistrer'"
+            title="Enregistrer"
+            :aria-label="isSaving ? 'Enregistrement…' : 'Enregistrer'"
+            :disabled="isSaving"
+            data-testid="admin-campaign-save-btn"
+            @click="saveCampaign"
+          />
+        </li>
       </DsfrButtonGroup>
     </template>
   </DsfrModal>
@@ -205,23 +222,27 @@ async function deleteCampaign() {
 
     <template #footer>
       <DsfrButtonGroup :inline-layout-when="true" :reverse="true">
-        <DsfrButton
-          label="Annuler"
-          secondary
-          data-testid="admin-campaign-delete-cancel-btn"
-          title="Annuler la suppression"
-          aria-label="Annuler la suppression"
-          @click="closeDeleteModal"
-        />
-        <DsfrButton
-          label="Supprimer"
-          data-testid="admin-campaign-delete-confirm-btn"
-          title="Confirmer la suppression"
-          aria-label="Confirmer la suppression"
-          danger
-          :disabled="isDeleting"
-          @click="deleteCampaign"
-        />
+        <li>
+          <DsfrButton
+            label="Annuler"
+            secondary
+            data-testid="admin-campaign-delete-cancel-btn"
+            title="Annuler la suppression"
+            aria-label="Annuler la suppression"
+            @click="closeDeleteModal"
+          />
+        </li>
+        <li>
+          <DsfrButton
+            label="Supprimer"
+            data-testid="admin-campaign-delete-confirm-btn"
+            title="Confirmer la suppression"
+            aria-label="Supprimer la campagne"
+            danger
+            :disabled="isDeleting"
+            @click="deleteCampaign"
+          />
+        </li>
       </DsfrButtonGroup>
     </template>
   </DsfrModal>

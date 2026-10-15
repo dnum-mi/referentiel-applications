@@ -14,6 +14,7 @@ import type {
 import { useToasterStore } from "@/stores/toasterStore";
 import { backendErrorMessage } from "@/utils/api-error";
 import { computed, ref } from "vue";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 interface BadRequestResponse {
   error: string;
@@ -34,6 +35,7 @@ const toaster = useToasterStore();
 const isEditModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
 const isSaving = ref(false);
+useSubmissionFocus(isSaving);
 const isDeleting = ref(false);
 const errorMessage = ref("");
 const isCreateMode = computed(() => !props.organization?.id);
@@ -284,6 +286,7 @@ async function deleteOrganization() {
     :data-testid="isCreateMode ? 'admin-create-organization-modal' : 'admin-edit-organization-modal'"
     @close="closeEditModal"
   >
+    <p class="fr-text--sm fr-mb-3w" data-testid="required-fields-hint">* = champs obligatoires</p>
     <DsfrInputGroup
       v-model="form.path"
       class="fr-mb-2w"
@@ -390,6 +393,7 @@ async function deleteOrganization() {
 
     <div v-if="scopedAdmins.length" data-testid="organization-delete-scoped-admins-alert">
       <DsfrAlert
+        alert
         title="Des administrateurs ont cette organisation pour périmètre"
         description="Réaffectez leur périmètre à une autre organisation avant de supprimer celle-ci."
         type="error"
@@ -414,7 +418,7 @@ async function deleteOrganization() {
       <DsfrButton
         label="Supprimer"
         title="Confirmer la suppression"
-        aria-label="Confirmer la suppression"
+        aria-label="Supprimer l’organisation"
         danger
         :disabled="isDeleting || scopedAdmins.length > 0"
         data-testid="admin-delete-confirm-btn"

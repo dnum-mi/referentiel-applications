@@ -9,8 +9,11 @@ export function useTechnicalDebtChart(props: { data: TechnicalDebtPoint[]; heigh
   const resizeObserver = ref<ResizeObserver>();
 
   const chartHeight = computed(() => props.height ?? 700);
+  let builder: TimeChartBuilder | null = null;
 
   function destroyChart() {
+    builder?.destroy();
+    builder = null;
     if (svgRef.value) {
       d3.select(svgRef.value).selectAll("*").remove();
     }
@@ -19,21 +22,19 @@ export function useTechnicalDebtChart(props: { data: TechnicalDebtPoint[]; heigh
   function drawChart() {
     const root = containerRef.value;
     const svgEl = svgRef.value;
+    const activeElement = document.activeElement;
+    const focusedPointId =
+      svgEl && activeElement instanceof SVGElement && svgEl.contains(activeElement) ? activeElement.dataset.applicationId : null;
+    destroyChart();
     if (!root || !svgEl) return;
 
-    const width = root.clientWidth;
-    const height = chartHeight.value;
-    const margin = { top: 60, right: 60, bottom: 80, left: 80 };
+    const width = Math.max(root.clientWidth, 640);
+    const height = Math.max(chartHeight.value, 600);
+    const margin = { top: 60, right: 60, bottom: 150, left: 80 };
     const plotWidth = width - margin.left - margin.right;
     const plotHeight = height - margin.top - margin.bottom;
 
-    destroyChart();
-
-    const svg = d3
-      .select(svgEl)
-      .attr("viewBox", `0 0 ${width} ${height}`)
-      .attr("role", "img")
-      .attr("aria-label", "Distribution des applications selon les maturites TIME");
+    const svg = d3.select(svgEl).attr("viewBox", `0 0 ${width} ${height}`);
 
     const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
@@ -54,19 +55,25 @@ export function useTechnicalDebtChart(props: { data: TechnicalDebtPoint[]; heigh
       radius: d3.scaleLinear().domain([1, 5]).range([4, 12]),
     };
 
-    new TimeChartBuilder(g, svg, root, scales, { plotWidth, plotHeight, margin }, props.data)
-      .drawTitle()
-      .drawAxes()
-      .drawQuadrants()
-      .drawAxisLegends()
-      .drawBubbles()
-      .drawColorLegend();
+    const plottedData = props.data.filter(
+      (point) =>
+        typeof point.technicalDebtInfo?.technicalMaturity === "number" &&
+        Number.isFinite(point.technicalDebtInfo.technicalMaturity) &&
+        typeof point.technicalDebtInfo?.businessMaturity === "number" &&
+        Number.isFinite(point.technicalDebtInfo.businessMaturity),
+    );
+    builder = new TimeChartBuilder(g, svg, root, scales, { plotWidth, plotHeight, margin }, plottedData);
+    builder.drawTitle().drawAxes().drawQuadrants().drawAxisLegends().drawBubbles().drawColorLegend();
+    if (focusedPointId) {
+      const replacement = Array.from(svgEl.querySelectorAll<SVGAElement>("a[data-application-id]")).find(
+        (point) => point.dataset.applicationId === focusedPointId,
+      );
+      if (replacement) replacement.focus();
+      else svgEl.parentElement?.focus();
+    }
   }
 
-  function handleResize() {
-    destroyChart();
-    nextTick(drawChart);
-  }
+  const handleResize = () => nextTick(drawChart);
 
   onMounted(() => {
     nextTick(drawChart);

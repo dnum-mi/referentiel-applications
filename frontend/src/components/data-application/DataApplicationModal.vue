@@ -17,6 +17,7 @@ import { useToasterStore } from "@/stores/toasterStore";
 import { OPEN_DATA_STATUS_LABELS, UPDATE_FREQUENCY_LABELS } from "@/constants/data-catalog.constants";
 import { useAsyncSearch } from "@/composables/use-async-search";
 import AccessibleAutocomplete from "@/components/AccessibleAutocomplete.vue";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps<{
   applicationId: string;
@@ -28,6 +29,11 @@ const emit = defineEmits(["close", "dataCreated", "dataUpdated"]);
 
 const toaster = useToasterStore();
 const isSubmitting = ref(false);
+useSubmissionFocus(isSubmitting);
+const submissionError = ref("");
+const isClosed = ref(false);
+const displayedError = computed(() => submissionError.value || (props.initialItem ? props.errorMessage : ""));
+const formElement = ref<HTMLFormElement | null>(null);
 const isLoadingOptions = ref(false);
 const {
   results: descriptionsList,
@@ -62,6 +68,11 @@ const descriptionFamilies = ref<DataFamilyDto[]>([]);
 const isCreatingNewFamily = ref(false);
 const newFamilyPath = ref("");
 const newFamilyError = ref<string | undefined>(undefined);
+
+async function focusFormField(testId: string) {
+  await nextTick();
+  formElement.value?.querySelector<HTMLElement>(`[data-testid="${testId}"]`)?.focus();
+}
 
 function resetDescriptionFormFields() {
   descriptionForm.value = { name: "", description: "", officialUrl: "" };
@@ -122,15 +133,17 @@ function removeDescriptionFamily(index: number) {
   descriptionFamilies.value = descriptionFamilies.value.filter((_, i) => i !== index);
 }
 
-function toggleCreateNewFamily(value: boolean) {
+async function toggleCreateNewFamily(value: boolean) {
   isCreatingNewFamily.value = value;
   newFamilyPath.value = "";
   newFamilyError.value = undefined;
+  await focusFormField(value ? "new-family-path-input" : "new-description-create-family-toggle");
 }
 
 async function createAndAddFamily() {
   if (!newFamilyPath.value.trim()) {
     newFamilyError.value = "Veuillez renseigner un chemin de famille.";
+    await focusFormField("new-family-path-input");
     return;
   }
   try {
@@ -142,6 +155,7 @@ async function createAndAddFamily() {
   } catch (error) {
     console.error("Error creating family:", error);
     newFamilyError.value = "Erreur lors de la création de la famille.";
+    await focusFormField("new-family-path-input");
   }
 }
 
@@ -177,10 +191,11 @@ function emptyForm(): DataApplicationForm {
 
 const form = ref<DataApplicationForm>(emptyForm());
 
-function toggleCreateNewDescription(value: boolean) {
+async function toggleCreateNewDescription(value: boolean) {
   isCreatingNewDescription.value = value;
   resetDescriptionFormFields();
   descriptionSearch.value = "";
+  await focusFormField(value ? "new-description-name-input" : "data-description-search-input");
 }
 
 function formatDescriptionText(description: DataDescriptionDto): string {
@@ -251,6 +266,7 @@ async function fetchOptions() {
 }
 
 function setInitialValues() {
+  submissionError.value = "";
   if (!props.initialItem) {
     form.value = emptyForm();
     descriptionSearch.value = "";
@@ -357,7 +373,14 @@ function validateDescription() {
 }
 
 async function handleSubmit() {
-  if (!validateDescription()) return;
+  if (isSubmitting.value || isLoadingOptions.value) return;
+  submissionError.value = "";
+  if (!validateDescription()) {
+    await focusFormField(
+      props.initialItem || isCreatingNewDescription.value ? "new-description-name-input" : "data-description-search-input",
+    );
+    return;
+  }
 
   isSubmitting.value = true;
   try {
@@ -403,13 +426,20 @@ async function handleSubmit() {
       );
       emit("dataCreated");
     }
-    emit("close");
+    closeModal();
   } catch (error) {
     console.error("Error submitting data application form:", error);
-    toaster.addErrorMessage("Une erreur est survenue lors de l'enregistrement de la donnée.");
+    const message = "Une erreur est survenue lors de l'enregistrement de la donnée.";
+    if (!isClosed.value && formElement.value?.isConnected) submissionError.value = message;
+    else toaster.addErrorMessage(message);
   } finally {
     isSubmitting.value = false;
   }
+}
+
+function closeModal() {
+  isClosed.value = true;
+  emit("close");
 }
 </script>
 
@@ -418,49 +448,65 @@ async function handleSubmit() {
     :opened="true"
     :title="props.initialItem ? 'Modifier une donnée' : 'Rattacher une donnée'"
     data-testid="data-application-modal"
-    @close="$emit('close')"
+    @close="closeModal"
   >
-    <DsfrAlert
-      v-show="props.initialItem && props.errorMessage.length > 0"
-      class="mb-4"
-      tabindex="-1"
-      type="error"
-      role="alert"
-      aria-live="assertive"
-      title="Une erreur est survenue"
-      :description="props.errorMessage"
-    />
-    <form data-testid="data-application-form" @submit.prevent="handleSubmit">
-      <p class="fr-text--sm fr-mb-2w" data-testid="required-fields-hint">Tous les champs avec un * sont obligatoires</p>
+    <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="data-application-submit-error">
+      <DsfrAlert
+        v-if="displayedError.length > 0"
+        class="mb-4"
+        tabindex="-1"
+        type="error"
+        title="Une erreur est survenue"
+        :description="displayedError"
+      />
+    </div>
+    <form ref="formElement" data-testid="data-application-form" @submit.prevent="handleSubmit">
+      <p class="fr-text--sm fr-mb-2w" data-testid="required-fields-hint">Les champs obligatoires sont indiqués dans leur étiquette.</p>
 
-      <div v-if="isLoadingOptions" class="fr-text--center fr-mb-2w" data-testid="data-application-options-loading">
+      <output
+        v-if="isLoadingOptions"
+        class="options-loading-status fr-text--center fr-mb-2w"
+        data-testid="data-application-options-loading"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         <span class="fr-loading fr-loading--sm" data-testid="data-application-options-spinner">
           <span class="fr-loading__icon" aria-hidden="true" />
         </span>
         Chargement des options...
-      </div>
+      </output>
       <div v-else class="fr-form-group">
         <template v-if="!isCreatingNewDescription">
           <DsfrInputGroup
-            v-model="descriptionSearch"
-            label-visible
-            hint="Commencez à taper pour rechercher une donnée existante"
-            aria-describedby="data-description-search-tooltip-desc"
-            list="dataDescriptionsList"
-            required
-            :disabled="!!props.initialItem"
             class="fr-mb-1w"
+            description-id="data-description-search-error"
             :error-message="descriptionError || descriptionSearchError"
-            data-testid="data-description-search-input"
           >
-            <template #label>
-              <span class="tooltip-label">
-                Donnée d'application
-                <DsfrTooltip
-                  id="data-description-search-tooltip-desc"
-                  content="Recherchez une donnée déjà existante dans le catalogue pour la rattacher à cette application. Si elle n'existe pas encore, utilisez le lien ci-dessous pour la créer."
-                />
-              </span>
+            <template #default="{ descriptionId }">
+              <DsfrInput
+                id="data-description-search"
+                v-model="descriptionSearch"
+                label-visible
+                hint="Commencez à taper pour rechercher une donnée existante"
+                :description-id="['data-description-search-tooltip-desc', descriptionId].filter(Boolean).join(' ')"
+                :is-invalid="!!(descriptionError || descriptionSearchError)"
+                :aria-invalid="descriptionError || descriptionSearchError ? true : undefined"
+                list="dataDescriptionsList"
+                required
+                :disabled="!!props.initialItem"
+                data-testid="data-description-search-input"
+              >
+                <template #label>
+                  <span class="tooltip-label">
+                    Donnée d'application (obligatoire)
+                    <DsfrTooltip
+                      id="data-description-search-tooltip-desc"
+                      aria-label="Aide : recherche de donnée"
+                      content="Recherchez une donnée déjà existante dans le catalogue pour la rattacher à cette application. Si elle n'existe pas encore, utilisez le lien ci-dessous pour la créer."
+                    />
+                  </span>
+                </template>
+              </DsfrInput>
             </template>
           </DsfrInputGroup>
           <datalist id="dataDescriptionsList" data-testid="data-descriptions-list">
@@ -508,31 +554,37 @@ async function handleSubmit() {
               </div>
             </div>
 
-            <DsfrInput
-              v-model="descriptionForm.name"
-              label-visible
-              required
-              aria-describedby="new-description-name-tooltip-desc"
-              class="fr-mb-3w"
-              :error-message="newDescriptionError"
-              data-testid="new-description-name-input"
-            >
-              <template #label>
-                <span class="tooltip-label">
-                  Nom de la donnée
-                  <DsfrTooltip
-                    id="new-description-name-tooltip-desc"
-                    content="Nom de la donnée du catalogue, visible par toutes les applications qui la réutilisent."
-                  />
-                </span>
+            <DsfrInputGroup class="fr-mb-3w" description-id="new-description-name-error" :error-message="newDescriptionError">
+              <template #default="{ descriptionId }">
+                <DsfrInput
+                  id="new-description-name"
+                  v-model="descriptionForm.name"
+                  label-visible
+                  required
+                  :description-id="['new-description-name-tooltip-desc', descriptionId].filter(Boolean).join(' ')"
+                  :is-invalid="!!newDescriptionError"
+                  :aria-invalid="newDescriptionError ? true : undefined"
+                  data-testid="new-description-name-input"
+                >
+                  <template #label>
+                    <span class="tooltip-label">
+                      Nom de la donnée (obligatoire)
+                      <DsfrTooltip
+                        id="new-description-name-tooltip-desc"
+                        aria-label="Aide : nom de la donnée"
+                        content="Nom de la donnée du catalogue, visible par toutes les applications qui la réutilisent."
+                      />
+                    </span>
+                  </template>
+                </DsfrInput>
               </template>
-            </DsfrInput>
+            </DsfrInputGroup>
 
             <DsfrInput
               v-model="descriptionForm.description"
               label-visible
               is-textarea
-              aria-describedby="new-description-description-tooltip-desc"
+              description-id="new-description-description-tooltip-desc"
               class="fr-mb-3w"
               data-testid="new-description-description-input"
             >
@@ -541,6 +593,7 @@ async function handleSubmit() {
                   Description
                   <DsfrTooltip
                     id="new-description-description-tooltip-desc"
+                    aria-label="Aide : description de la donnée"
                     content="Description détaillée de la donnée, utile aux autres équipes qui envisagent de la réutiliser."
                   />
                 </span>
@@ -550,7 +603,7 @@ async function handleSubmit() {
             <DsfrInput
               v-model="descriptionForm.officialUrl"
               label-visible
-              aria-describedby="new-description-official-url-tooltip-desc"
+              description-id="new-description-official-url-tooltip-desc"
               class="fr-mb-3w"
               data-testid="new-description-official-url-input"
             >
@@ -559,6 +612,7 @@ async function handleSubmit() {
                   URL officielle
                   <DsfrTooltip
                     id="new-description-official-url-tooltip-desc"
+                    aria-label="Aide : URL officielle"
                     content="Lien vers la source officielle faisant référence pour cette donnée (ex : référentiel externe, documentation métier)."
                   />
                 </span>
@@ -571,6 +625,7 @@ async function handleSubmit() {
                   Familles métier
                   <DsfrTooltip
                     id="new-description-families-tooltip-desc"
+                    aria-label="Aide : familles métier"
                     content="Regroupement thématique de la donnée. Une donnée peut appartenir à plusieurs familles."
                   />
                 </span>
@@ -611,12 +666,16 @@ async function handleSubmit() {
               </p>
               <div v-else class="fr-grid-row fr-grid-row--bottom fr-grid-row--gutters fr-mt-1w">
                 <div class="fr-col">
-                  <DsfrInput
+                  <DsfrInputGroup
+                    id="new-family-path"
                     v-model="newFamilyPath"
                     label="Chemin de la nouvelle famille"
                     label-visible
-                    hint="Ex : Identité / Etat civil"
+                    hint="Obligatoire pour ajouter une famille. Ex : Identité / État civil"
+                    aria-required="true"
+                    description-id="new-family-path-error"
                     :error-message="newFamilyError"
+                    :aria-invalid="newFamilyError ? true : undefined"
                     data-testid="new-family-path-input"
                   />
                 </div>
@@ -642,6 +701,7 @@ async function handleSubmit() {
                   Applications source
                   <DsfrTooltip
                     id="new-description-applications-source-tooltip-desc"
+                    aria-label="Aide : applications source"
                     content="Applications RefApp qui produisent ou possèdent cette donnée à l'origine."
                   />
                 </span>
@@ -679,6 +739,7 @@ async function handleSubmit() {
                   Tags
                   <DsfrTooltip
                     id="new-description-tags-tooltip-desc"
+                    aria-label="Aide : tags métier"
                     content="Mots-clés libres facilitant la recherche et le filtrage de cette donnée dans le catalogue."
                   />
                 </span>
@@ -726,6 +787,7 @@ async function handleSubmit() {
               Sensibilité
               <DsfrTooltip
                 id="data-application-sensibility-tooltip-desc"
+                aria-label="Aide : sensibilité"
                 content="Niveau de sensibilité de la donnée dans le contexte de cette application (ex : RGPD, donnée sensible)."
               />
             </span>
@@ -748,6 +810,7 @@ async function handleSubmit() {
               Statut open data
               <DsfrTooltip
                 id="data-application-open-data-tooltip-desc"
+                aria-label="Aide : statut open data"
                 content="Indique si cette donnée est exposée, exposable ou non exposable en open data."
               />
             </span>
@@ -770,6 +833,7 @@ async function handleSubmit() {
               Fréquence de mise à jour
               <DsfrTooltip
                 id="data-application-update-frequency-tooltip-desc"
+                aria-label="Aide : fréquence de mise à jour"
                 content="Fréquence à laquelle la donnée est mise à jour dans cette application."
               />
             </span>
@@ -788,6 +852,7 @@ async function handleSubmit() {
               Donnée de référence (source de vérité)
               <DsfrTooltip
                 id="data-application-is-reference-tooltip-desc"
+                aria-label="Aide : donnée de référence"
                 content="À cocher si cette application est la source de vérité pour cette donnée (le référentiel faisant autorité)."
               />
             </span>
@@ -798,7 +863,7 @@ async function handleSubmit() {
           v-model="form.businessUsage"
           label-visible
           is-textarea
-          aria-describedby="data-application-business-usage-tooltip-desc"
+          description-id="data-application-business-usage-tooltip-desc"
           class="fr-mb-3w"
           data-testid="data-application-business-usage-input"
         >
@@ -807,6 +872,7 @@ async function handleSubmit() {
               Usage métier
               <DsfrTooltip
                 id="data-application-business-usage-tooltip-desc"
+                aria-label="Aide : usage métier"
                 content="Description de l'usage métier fait de cette donnée dans cette application."
               />
             </span>
@@ -817,7 +883,7 @@ async function handleSubmit() {
           v-model="form.example"
           label-visible
           is-textarea
-          aria-describedby="data-application-example-tooltip-desc"
+          description-id="data-application-example-tooltip-desc"
           class="fr-mb-3w"
           data-testid="data-application-example-input"
         >
@@ -826,6 +892,7 @@ async function handleSubmit() {
               Exemple de valeur
               <DsfrTooltip
                 id="data-application-example-tooltip-desc"
+                aria-label="Aide : exemple de valeur"
                 content="Exemple concret de contenu de la donnée, pour aider à sa compréhension."
               />
             </span>
@@ -835,7 +902,7 @@ async function handleSubmit() {
         <DsfrInput
           v-model="form.conservation"
           label-visible
-          aria-describedby="data-application-conservation-tooltip-desc"
+          description-id="data-application-conservation-tooltip-desc"
           class="fr-mb-3w"
           data-testid="data-application-conservation-input"
         >
@@ -844,6 +911,7 @@ async function handleSubmit() {
               Durée de conservation
               <DsfrTooltip
                 id="data-application-conservation-tooltip-desc"
+                aria-label="Aide : durée de conservation"
                 content="Durée pendant laquelle la donnée est conservée dans cette application."
               />
             </span>
@@ -857,7 +925,7 @@ async function handleSubmit() {
               type="number"
               min="0"
               label-visible
-              aria-describedby="data-application-volumetry-tooltip-desc"
+              description-id="data-application-volumetry-tooltip-desc"
               data-testid="data-application-volumetry-input"
             >
               <template #label>
@@ -865,6 +933,7 @@ async function handleSubmit() {
                   Volumétrie totale
                   <DsfrTooltip
                     id="data-application-volumetry-tooltip-desc"
+                    aria-label="Aide : volumétrie totale"
                     content="Nombre total estimé d'enregistrements de cette donnée."
                   />
                 </span>
@@ -877,7 +946,7 @@ async function handleSubmit() {
               type="number"
               min="0"
               label-visible
-              aria-describedby="data-application-monthly-volumetry-tooltip-desc"
+              description-id="data-application-monthly-volumetry-tooltip-desc"
               data-testid="data-application-monthly-volumetry-input"
             >
               <template #label>
@@ -885,6 +954,7 @@ async function handleSubmit() {
                   Volumétrie mensuelle
                   <DsfrTooltip
                     id="data-application-monthly-volumetry-tooltip-desc"
+                    aria-label="Aide : volumétrie mensuelle"
                     content="Nombre d'enregistrements ajoutés en moyenne chaque mois."
                   />
                 </span>
@@ -898,7 +968,7 @@ async function handleSubmit() {
           label-visible
           is-textarea
           hint="Une URL par ligne"
-          aria-describedby="data-application-documentation-tooltip-desc"
+          description-id="data-application-documentation-tooltip-desc"
           class="fr-mb-3w"
           data-testid="data-application-documentation-input"
         >
@@ -907,6 +977,7 @@ async function handleSubmit() {
               Liens de documentation
               <DsfrTooltip
                 id="data-application-documentation-tooltip-desc"
+                aria-label="Aide : liens de documentation"
                 content="URLs de documentation technique ou fonctionnelle associées à cette donnée, une par ligne."
               />
             </span>
@@ -914,10 +985,11 @@ async function handleSubmit() {
         </DsfrInput>
       </div>
       <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
-        <DsfrButton type="button" secondary label="Annuler" data-testid="data-application-cancel-btn" @click="$emit('close')" />
+        <DsfrButton type="button" secondary label="Annuler" data-testid="data-application-cancel-btn" @click="closeModal" />
         <DsfrButton
           type="submit"
           :disabled="isSubmitting || isLoadingOptions"
+          :aria-busy="isSubmitting"
           :label="props.initialItem ? 'Modifier' : 'Rattacher'"
           data-testid="data-application-submit-btn"
         >
@@ -933,6 +1005,10 @@ async function handleSubmit() {
 </template>
 
 <style scoped>
+.options-loading-status {
+  display: block;
+}
+
 /* `DsfrTooltip` positionne sa bulle via un `transform` calculé en JS par rapport à la largeur de LA
    FENÊTRE entière, pas de la modale (plus étroite et centrée) : la bulle peut rester « dans l'écran »
    selon son propre calcul tout en débordant largement de la modale (bug constaté, y compris après
@@ -956,7 +1032,7 @@ async function handleSubmit() {
 }
 
 .new-description-panel {
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-default-grey);
   border-radius: 4px;
   padding: 1rem;
 }

@@ -1,0 +1,26 @@
+{
+  "name": "refapp-real-windows-at-prototype",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.34.6",
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "lint": "eslint .",
+    "format:check": "prettier package.json pnpm-workspace.yaml tsconfig.json eslint.config.mjs playwright.config.ts interactive.config.ts tests tools --check",
+    "test:smoke": "playwright test tests/nvda-smoke.spec.ts",
+    "test:cases": "playwright test tests/nvda-cases.spec.ts",
+    "test:all": "playwright test",
+    "test:interactive": "playwright test --config interactive.config.ts"
+  },
+  "devDependencies": {
+    "@guidepup/guidepup": "0.35.0",
+    "@guidepup/playwright": "0.19.1",
+    "@guidepup/setup": "0.29.2",
+    "@playwright/test": "1.64.0",
+    "@types/node": "24.19.0",
+    "typescript": "5.9.3",
+    "eslint": "10.11.0",
+    "typescript-eslint": "8.71.0",
+    "prettier": "3.6.2"
+  }
+}

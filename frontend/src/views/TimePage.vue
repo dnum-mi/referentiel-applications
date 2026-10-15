@@ -8,15 +8,18 @@ import { useMditCampaigns } from "@/composables/use-mdit-campaigns";
 import { useToasterStore } from "@/stores/toasterStore";
 import { useUserStore } from "@/stores/userStore";
 import { watchDebounced } from "@vueuse/core";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onBeforeUnmount, ref } from "vue";
 
-const { searchApplications, setFilter, filters, technicalDebtPoints: applications } = useApplicationSearch();
+const { searchApplications, setFilter, filters } = useApplicationSearch();
 const { loadActiveCampaigns, latestYear } = useMditCampaigns();
 const userStore = useUserStore();
 const toaster = useToasterStore();
 
 const technicalDebtPoints = ref<TechnicalDebtPoint[]>([]);
-const isTechnicalDebtLoading = ref(false);
+const isTechnicalDebtLoading = ref(true);
+const technicalDebtError = ref("");
+let latestRequest = 0;
+let disposed = false;
 const hasMDITReadPermission = computed(() => userStore.hasPermissions([Permission.MDIT_LIST]));
 
 onMounted(async () => {
@@ -36,15 +39,22 @@ onMounted(async () => {
 });
 
 async function loadTechnicalDebtPoints() {
+  if (disposed) return;
+  const request = ++latestRequest;
   isTechnicalDebtLoading.value = true;
+  technicalDebtError.value = "";
   try {
     // Sans choix explicite, on présente la campagne la plus récente.
     const millesime = filters.value.millesime ?? latestYear.value;
-    await searchApplications({ pageSize: 0, ...(millesime == null ? undefined : { millesime }) });
+    const response = await searchApplications({ pageSize: 0, ...(millesime == null ? undefined : { millesime }) });
+    if (request === latestRequest) technicalDebtPoints.value = response.technicalDebtPoints;
   } catch {
-    technicalDebtPoints.value = [];
+    if (request === latestRequest) {
+      technicalDebtPoints.value = [];
+      technicalDebtError.value = "Impossible de charger les données TIME pour les filtres sélectionnés.";
+    }
   } finally {
-    isTechnicalDebtLoading.value = false;
+    if (request === latestRequest) isTechnicalDebtLoading.value = false;
   }
 }
 
@@ -55,6 +65,10 @@ watchDebounced(
   },
   { deep: true, debounce: 300 },
 );
+onBeforeUnmount(() => {
+  disposed = true;
+  latestRequest++;
+});
 </script>
 
 <template>
@@ -69,7 +83,11 @@ watchDebounced(
           <AppLoader />
           <span class="sr-only">Chargement du graphique…</span>
         </output>
-        <TechnicalDebtChart v-else :data="applications" />
+        <div v-else-if="technicalDebtError">
+          <p role="alert">{{ technicalDebtError }}</p>
+          <DsfrButton @click="loadTechnicalDebtPoints">Réessayer le chargement TIME</DsfrButton>
+        </div>
+        <TechnicalDebtChart v-else :data="technicalDebtPoints" />
       </section>
     </section>
   </div>
@@ -89,6 +107,7 @@ watchDebounced(
 
 .main-content {
   flex: 1;
+  min-width: 0;
   padding: 1rem 2rem;
 }
 

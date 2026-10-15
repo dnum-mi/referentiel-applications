@@ -152,6 +152,91 @@ export class UserProfilePage extends BasePage {
     ).toBeVisible();
   }
 
+  /** Ouvre un brouillon sans le soumettre et vérifie le focus pendant le redimensionnement DSFR. */
+  async openTokenFormAndExpectTabsVisible(): Promise<void> {
+    await this.waitForTabsResize();
+    const create = this.byTestId("token-create-btn");
+    await expect(create).toBeEnabled();
+    await create.click();
+    const name = this.tokensPanel().getByRole("textbox", { name: /^Nom\b/ });
+    await expect(name).toBeFocused();
+    await this.expectTabBarWithinContainer();
+    await this.waitForTabsResize();
+    await this.expectTabBarWithinContainer();
+    await expect(name).toBeFocused();
+  }
+
+  private async waitForTabsResize(): Promise<void> {
+    // La hauteur est animée après observation du panneau : attendre son état final réel.
+    await expect
+      .poll(() =>
+        this.tabs().evaluate(async (container) => {
+          const initialHeight = container.getBoundingClientRect().height;
+          await new Promise<void>((resolve) =>
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+          );
+          return (
+            container
+              .getAnimations({ subtree: true })
+              .every(
+                (animation) =>
+                  !animation.pending &&
+                  ["finished", "idle"].includes(animation.playState),
+              ) &&
+            Math.abs(container.getBoundingClientRect().height - initialHeight) <
+              0.5
+          );
+        }),
+      )
+      .toBe(true);
+  }
+
+  private async expectTabBarWithinContainer(): Promise<void> {
+    const geometry = await this.tabs().evaluate((container) => {
+      const tabList = container.querySelector('[role="tablist"]');
+      if (!tabList) throw new Error("Barre d'onglets du profil absente");
+      const containerRect = container.getBoundingClientRect();
+      const margins = (element: Element) => {
+        const rect = element.getBoundingClientRect();
+        return {
+          top: rect.top - containerRect.top,
+          bottom: containerRect.bottom - rect.bottom,
+          left: rect.left - containerRect.left,
+          right: containerRect.right - rect.right,
+          height: rect.height,
+        };
+      };
+      return {
+        list: margins(tabList),
+        tabs: [...tabList.querySelectorAll('[role="tab"]')]
+          .filter((tab) => tab.getClientRects().length > 0)
+          .map((tab) => ({ label: tab.textContent?.trim(), ...margins(tab) })),
+      };
+    });
+    expect(geometry.list.height).toBeGreaterThan(0);
+    for (const edge of ["top", "bottom", "left", "right"] as const) {
+      expect(
+        geometry.list[edge],
+        `Barre d'onglets rognée : ${edge}`,
+      ).toBeGreaterThanOrEqual(-1);
+    }
+    expect(geometry.tabs.length).toBeGreaterThanOrEqual(3);
+    for (const tab of geometry.tabs) {
+      expect(
+        tab.height,
+        `Hauteur de l'onglet « ${tab.label} »`,
+      ).toBeGreaterThan(0);
+      expect(
+        tab.top,
+        `Haut de l'onglet « ${tab.label} » rogné`,
+      ).toBeGreaterThanOrEqual(-1);
+      expect(
+        tab.bottom,
+        `Bas de l'onglet « ${tab.label} » rogné`,
+      ).toBeGreaterThanOrEqual(-1);
+    }
+  }
+
   async followedAppCount(): Promise<number> {
     return this.unsubscribeButtons().count();
   }

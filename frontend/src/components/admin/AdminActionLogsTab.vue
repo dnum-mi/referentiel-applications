@@ -13,6 +13,12 @@ const data = ref<PaginatedActionLogDto>({ results: [], total: 0 });
 const isLoading = ref(false);
 const hasLoadedOnce = ref(false);
 const errorMessage = ref("");
+const statusMessage = computed(() => {
+  if (isLoading.value) return "Chargement du journal des actions…";
+  if (!hasLoadedOnce.value || errorMessage.value) return "";
+  if (data.value.total === 0) return "Aucune action journalisée.";
+  return `${data.value.total} action${data.value.total > 1 ? "s" : ""} journalisée${data.value.total > 1 ? "s" : ""}.`;
+});
 const search = ref("");
 const createdAtGte = ref("");
 const createdAtLte = ref("");
@@ -105,7 +111,7 @@ onActivated(fetchLogs);
 
 <template>
   <div>
-    <h1 class="fr-h1" data-testid="admin-action-logs-title">Journal des actions</h1>
+    <h2 class="fr-h1" data-testid="admin-action-logs-title">Journal des actions</h2>
     <p>Journal centralisé de toutes les requêtes mutantes de l'application (créations, modifications, suppressions).</p>
 
     <div class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
@@ -138,9 +144,17 @@ onActivated(fetchLogs);
       </div>
     </div>
 
-    <div v-if="errorMessage" class="fr-alert fr-alert--error fr-mb-2w" data-testid="admin-action-logs-error">
-      <p>{{ errorMessage }}</p>
+    <div
+      role="alert"
+      aria-live="assertive"
+      aria-atomic="true"
+      :class="errorMessage ? 'fr-alert fr-alert--error fr-mb-2w' : undefined"
+      data-testid="admin-action-logs-error"
+    >
+      <p v-if="errorMessage">{{ errorMessage }}</p>
     </div>
+
+    <output class="fr-sr-only" aria-live="polite" aria-atomic="true" data-testid="admin-action-logs-status">{{ statusMessage }}</output>
 
     <div v-if="isLoading && !hasLoadedOnce" class="fr-alert fr-alert--info" data-testid="admin-action-logs-loading">
       <p>Chargement du journal...</p>

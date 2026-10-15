@@ -46,7 +46,13 @@ test.describe("Application search — filtres sauvegardés", () => {
 
     // Supprime le filtre sauvegardé.
     const savedRow = page.getByTestId("saved-filters-list").locator("li", { hasText: filterName });
-    await savedRow.locator('[data-testid^="saved-filter-delete-"]').click();
+    const confirmation = page.waitForEvent("dialog");
+    const deletion = savedRow.locator('[data-testid^="saved-filter-delete-"]').click();
+    const dialog = await confirmation;
+    expect(dialog.type()).toBe("confirm");
+    expect(dialog.message()).toBe(`Supprimer définitivement le filtre sauvegardé « ${filterName} » ?`);
+    await dialog.accept();
+    await deletion;
     await expect(savedItem).toBeHidden();
   });
 });

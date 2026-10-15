@@ -9,7 +9,7 @@ const { filters, setFilter } = useApplicationSearch();
     <DsfrInput
       :model-value="filters.dataSourceName"
       label-visible
-      aria-describedby="data-source-name-tooltip-desc"
+      description-id="data-source-name-tooltip-desc"
       data-testid="application-filter-data-source-name"
       @update:model-value="setFilter({ dataSourceName: $event?.toString(), page: 0 })"
     >
@@ -17,6 +17,7 @@ const { filters, setFilter } = useApplicationSearch();
         <span style="display: inline-flex; align-items: center; gap: 0.25rem">
           Source de données
           <DsfrTooltip
+            aria-label="Afficher l’aide sur le filtre Source de données"
             id="data-source-name-tooltip-desc"
             content="Recherche les applications dont une source de données porte un nom contenant le texte saisi."
           />

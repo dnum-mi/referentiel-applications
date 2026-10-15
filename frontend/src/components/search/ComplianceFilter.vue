@@ -63,6 +63,7 @@ function setState(criterion: ComplianceFilterCriterion, state: string | number) 
       <span style="display: inline-flex; align-items: center; gap: 0.25rem">
         Conformité
         <DsfrTooltip
+          aria-label="Afficher l’aide sur les filtres de conformité"
           id="compliance-legend-tooltip-desc"
           content="Filtre les applications selon leurs critères de conformité (continuité d'activité, sécurité, accessibilité, protection des données…)."
         />
@@ -81,7 +82,11 @@ function setState(criterion: ComplianceFilterCriterion, state: string | number) 
       <template #label>
         <span style="display: inline-flex; align-items: center; gap: 0.25rem">
           {{ complianceFilterLabels[criterion] }}
-          <DsfrTooltip :id="`compliance-${criterion}-tooltip-desc`" :content="complianceFilterTooltips[criterion]" />
+          <DsfrTooltip
+            :aria-label="`Afficher l’aide sur le filtre ${complianceFilterLabels[criterion]}`"
+            :id="`compliance-${criterion}-tooltip-desc`"
+            :content="complianceFilterTooltips[criterion]"
+          />
         </span>
       </template>
     </DsfrSelect>

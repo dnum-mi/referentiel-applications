@@ -95,7 +95,11 @@ function maiaSuggestion(organizationId: string | null = "maia-org"): MaiaOrganiz
 
 const createdActor: ActorDto = { id: "actor-created", actorTypeId: "type-moa" };
 
-function setup(initialMode: ApplicationFormMode = "create", initialId: string | undefined = "app-existing") {
+function setup(
+  initialMode: ApplicationFormMode = "create",
+  initialId: string | undefined = "app-existing",
+  isFormVisible: () => boolean = () => false,
+) {
   const data = ref<ApplicationFormData>({
     application: {
       label: "Application saisie",
@@ -131,6 +135,7 @@ function setup(initialMode: ApplicationFormMode = "create", initialId: string | 
       () => data.value,
       () => mode.value,
       () => id.value,
+      isFormVisible,
     ),
   };
 }
@@ -146,6 +151,35 @@ beforeEach(() => {
 });
 
 describe("enregistrement d'une application", () => {
+  it("conserve un refus dans le formulaire visible sans toast concurrent et l'efface au réessai", async () => {
+    const { data, save, saveError, isSubmitting } = setup("edit", "app-existing", () => true);
+    mocks.patchApplication.mockRejectedValueOnce(new Error("Modification refusée"));
+    expect(await save()).toBeUndefined();
+    expect(saveError.value).toBe("Modification refusée");
+    expect(data.value.application.label).toBe("Application saisie");
+    expect(mocks.addErrorMessage).not.toHaveBeenCalled();
+    expect(mocks.addSuccessMessage).not.toHaveBeenCalled();
+    expect(isSubmitting.value).toBe(false);
+    await save();
+    expect(saveError.value).toBe("");
+    expect(mocks.addSuccessMessage).toHaveBeenCalledOnce();
+  });
+
+  it("utilise le toast si le formulaire est fermé pendant l'appel", async () => {
+    const visible = ref(true);
+    const pending = deferred<ApplicationWithPerms>();
+    mocks.patchApplication.mockReturnValueOnce(pending.promise);
+    const { save, saveError, isSubmitting } = setup("edit", "app-existing", () => visible.value);
+    const saving = save();
+    expect(isSubmitting.value).toBe(true);
+    visible.value = false;
+    pending.reject(new Error("Refus tardif"));
+    await saving;
+    expect(saveError.value).toBe("Refus tardif");
+    expect(mocks.addErrorMessage).toHaveBeenCalledExactlyOnceWith("Refus tardif");
+    expect(mocks.addSuccessMessage).not.toHaveBeenCalled();
+  });
+
   it("crée l'application puis ses deux contacts et retire les lignes vides sans muter la saisie", async () => {
     const { data, save, isSubmitting } = setup();
     const originalPurposes = [...data.value.application.purposes];

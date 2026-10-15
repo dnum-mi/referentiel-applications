@@ -10,9 +10,9 @@ const weak = {
   authLevel: { level: "weak", downgraded: true, reason: "weak-method" },
 };
 
-async function prepareSession(page: Page) {
+async function prepareSession(page: Page, profile: Record<string, string> = {}) {
   await page.addInitScript(
-    ({ storageKey }) => {
+    ({ storageKey, profile }) => {
       if (!sessionStorage.getItem(storageKey)) {
         sessionStorage.setItem(
           storageKey,
@@ -20,13 +20,13 @@ async function prepareSession(page: Page) {
             access_token: "test-session",
             token_type: "Bearer",
             scope: "openid profile email",
-            profile: { sub: "test-user" },
+            profile: { sub: "test-user", ...profile },
             expires_at: Math.floor(Date.now() / 1000) + 3600,
           }),
         );
       }
     },
-    { storageKey },
+    { storageKey, profile },
   );
 }
 
@@ -81,7 +81,7 @@ test("ne monte aucune vue protégée pendant la vérification, ni après le refu
 });
 
 test("retire les données déjà affichées au renouvellement vers une session faible", async ({ page }) => {
-  await prepareSession(page);
+  await prepareSession(page, { iss: authority, sid: "session-1" });
   let authenticationModuleUrl = "";
   page.on("request", (request) => {
     if (new URL(request.url()).pathname === "/src/services/authentication.ts") authenticationModuleUrl = request.url();
@@ -145,3 +145,96 @@ test("retire les données déjà affichées au renouvellement vers une session f
   await expect(page.getByTestId("user-profile-email")).toHaveText("donnee-privee@example.test");
   await expect(page.getByTestId("weak-auth-banner")).toHaveCount(0);
 });
+
+for (const changedIdentity of [false, true]) {
+  test(
+    changedIdentity
+      ? "abandonne la saisie si la revalidation renvoie une autre identité effective"
+      : "conserve la saisie et le focus pendant le renouvellement de la même session",
+    async ({ page }) => {
+      await prepareSession(page, { iss: authority, sid: "session-1" });
+      let authenticationModuleUrl = "";
+      let userStoreModuleUrl = "";
+      page.on("request", (request) => {
+        const path = new URL(request.url()).pathname;
+        if (path === "/src/services/authentication.ts") authenticationModuleUrl = request.url();
+        if (path === "/src/stores/userStore.ts") userStoreModuleUrl = request.url();
+      });
+      let renewing = false;
+      let meRequests = 0;
+      let release = () => {};
+      const pending = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      const writes: string[] = [];
+      await page.route("**/api/v2/**", async (route) => {
+        const request = route.request();
+        const path = new URL(request.url()).pathname;
+        if (request.method() !== "GET") {
+          writes.push(`${request.method()} ${path}`);
+          await route.abort();
+        } else if (path.endsWith("/config")) {
+          await route.fulfill({
+            json: {
+              oidcConfigUrl: `${authority}/.well-known/openid-configuration`,
+              oidcClientId: "refapp-test",
+              oidcScope: "openid profile email",
+              version: "test",
+            },
+          });
+        } else if (path.endsWith("/health-check")) {
+          await route.fulfill({ json: { etat: "OK", maintenance: false, version: "test" } });
+        } else if (path.endsWith("/users/me")) {
+          meRequests += 1;
+          if (renewing) await pending;
+          await route.fulfill({
+            json: {
+              id: renewing && changedIdentity ? "other-user" : "test-user",
+              email: "user@example.test",
+              role: renewing ? "READER" : "ADMIN",
+              type: "human",
+              permissions: [],
+              additionalPermissions: [],
+              followedApplications: [],
+              emailNotificationsEnabled: false,
+              authLevel: { level: "strong", downgraded: false, reason: "strong-method" },
+            },
+          });
+        } else {
+          await route.fulfill({ json: path.endsWith("/unread-count") ? { count: 0 } : [] });
+        }
+      });
+      await page.goto("/applications/creer");
+      const label = page.getByTestId("application-label");
+      const description = page.locator("textarea#application-description");
+      await label.fill("Saisie non enregistrée");
+      await description.fill("Description conservée pendant le renouvellement.");
+      const requestsBeforeRenew = meRequests;
+      renewing = true;
+      expect(authenticationModuleUrl).not.toBe("");
+      expect(userStoreModuleUrl).not.toBe("");
+      await page.evaluate(async (moduleUrl) => {
+        const { USER_MANAGER }: typeof import("../src/services/authentication") = await import(/* @vite-ignore */ moduleUrl);
+        const user = await USER_MANAGER.getUser();
+        if (!user) throw new Error("La session de test doit être chargée");
+        await USER_MANAGER.events.load(user);
+      }, authenticationModuleUrl);
+      await expect.poll(() => meRequests).toBeGreaterThan(requestsBeforeRenew);
+      await expect(label).toHaveValue("Saisie non enregistrée");
+      await expect(description).toBeFocused();
+      release();
+      await expect
+        .poll(() =>
+          page.evaluate(async (moduleUrl) => {
+            const { useUserStore }: typeof import("../src/stores/userStore") = await import(/* @vite-ignore */ moduleUrl);
+            return useUserStore().user?.role;
+          }, userStoreModuleUrl),
+        )
+        .toBe("READER");
+      await expect(label).toHaveValue(changedIdentity ? "" : "Saisie non enregistrée");
+      await expect(description).toHaveValue(changedIdentity ? "" : "Description conservée pendant le renouvellement.");
+      if (!changedIdentity) await expect(description).toBeFocused();
+      expect(writes).toEqual([]);
+    },
+  );
+}

@@ -8,11 +8,11 @@ const props = defineProps<{ permissions: Permission[]; label: string }>();
 <template>
   <div class="fr-mb-3w">
     <p class="fr-text--sm fr-text--bold fr-mb-1w">{{ props.label }}</p>
-    <div v-if="props.permissions.length" class="fr-tags-group">
-      <div v-for="perm in props.permissions" :key="perm" class="fr-flex fr-align-items-center" style="gap: 0.25rem">
+    <ul v-if="props.permissions.length" class="fr-tags-group">
+      <li v-for="perm in props.permissions" :key="perm" class="fr-flex fr-align-items-center" style="gap: 0.25rem">
         <DsfrTag small class="fr-tag--dismiss" :label="PERMISSIONS_LABELS[perm]" />
-      </div>
-    </div>
+      </li>
+    </ul>
     <p v-else class="fr-text--disabled">Aucune permission.</p>
   </div>
 </template>

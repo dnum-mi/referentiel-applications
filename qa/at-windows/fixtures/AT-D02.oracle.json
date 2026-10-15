@@ -1,0 +1,142 @@
+{
+  "id": "AT-D02",
+  "source": "inputs.json : données entièrement synthétiques + titres/étiquettes connus des générateurs ; aucune extraction du DOM pour construire ces attentes",
+  "requiredNativeText": [
+    "Portail synthétique RGAA",
+    "Description flash",
+    "Nom court",
+    "PORTAIL-TEST",
+    "Identifiant",
+    "app-synthetic-001",
+    "Directions métier",
+    "Direction de démonstration",
+    "Type",
+    "Application métier",
+    "Noms alternatifs",
+    "Nom alternatif fictif",
+    "Tags",
+    "Synthétique",
+    "Proposition de valeur",
+    "Application de démonstration",
+    "Deuxième ligne",
+    "Objectifs",
+    "Consulter un catalogue synthétique",
+    "Vérifier une alternative documentaire",
+    "Cibles",
+    "Agents fictifs",
+    "Auditeurs de démonstration",
+    "Données flash",
+    "Indice de qualité de la fiche",
+    "Nombre de clients",
+    "Non renseigné",
+    "Relation client",
+    "Coûts et revenus",
+    "Non renseignés dans RefApp",
+    "En production"
+  ],
+  "interpretation": "La lecture native doit atteindre le footer, chaque champ complet doit être annoncé dans son contexte, et les déplacements de cellules couvrent tous les tableaux. Les candidats vocaux spécifiques proviennent de vraies annonces ; aucune valeur manquante ne peut être compensée par un autre champ.",
+  "syntheticOnly": true,
+  "modelSource": "Données synthétiques inputs.json, modèle calculé par les vrais générateurs et libellés source ; aucune attente extraite du DOM HTML.",
+  "spokenEquivalenceSource": {
+    "run": 38420957659,
+    "file": "cases-results-native-observed.json",
+    "method": "Only complete, actually observed native phrases; literal source value is retained separately.",
+    "sourceSha256": "1e3eb9cb3abd75f9fd021cfbf1fafc7ca58d79267abad86c91889768a60d44b2"
+  },
+  "tables": [],
+  "emptySections": [],
+  "blocks": [
+    {
+      "label": "Statut",
+      "value": "En production",
+      "nativeTextCandidates": ["En production"],
+      "labelNativeCandidates": ["Statut"]
+    },
+    {
+      "label": "Nom court",
+      "value": "PORTAIL-TEST",
+      "nativeTextCandidates": ["PORTAIL-TEST"],
+      "labelNativeCandidates": ["Nom court"]
+    },
+    {
+      "label": "Identifiant",
+      "value": "app-synthetic-001",
+      "nativeTextCandidates": ["app-synthetic-001"],
+      "labelNativeCandidates": ["Identifiant"]
+    },
+    {
+      "label": "Directions métier",
+      "value": "Direction de démonstration",
+      "nativeTextCandidates": ["Direction de démonstration"],
+      "labelNativeCandidates": ["Directions métier"]
+    },
+    {
+      "label": "Type",
+      "value": "Application métier",
+      "nativeTextCandidates": ["Application métier"],
+      "labelNativeCandidates": ["Type"]
+    },
+    {
+      "label": "Noms alternatifs",
+      "value": "Nom alternatif fictif",
+      "nativeTextCandidates": ["Nom alternatif fictif"],
+      "labelNativeCandidates": ["Noms alternatifs"]
+    },
+    {
+      "label": "Tags",
+      "value": "Synthétique",
+      "nativeTextCandidates": ["Synthétique"],
+      "labelNativeCandidates": ["Tags"]
+    },
+    {
+      "label": "Proposition de valeur",
+      "value": "Application de démonstration ; aucune donnée réelle.\nDeuxième ligne avec & et <texte>.",
+      "nativeTextCandidates": [
+        "Application de démonstration ; aucune donnée réelle. Deuxième ligne avec et commercial et inférieur texte supérieur ."
+      ],
+      "labelNativeCandidates": ["Proposition de valeur"]
+    },
+    {
+      "label": "Objectifs",
+      "value": "Consulter un catalogue synthétique\nVérifier une alternative documentaire",
+      "nativeTextCandidates": [
+        "Consulter un catalogue synthétique\nVérifier une alternative documentaire"
+      ],
+      "labelNativeCandidates": ["Objectifs"]
+    },
+    {
+      "label": "Cibles & utilisateurs",
+      "value": "Agents fictifs\nAuditeurs de démonstration",
+      "nativeTextCandidates": ["Agents fictifs\nAuditeurs de démonstration"],
+      "labelNativeCandidates": ["Cibles et commercial utilisateurs"]
+    },
+    {
+      "label": "Indice de qualité de la fiche",
+      "value": "0 %",
+      "nativeTextCandidates": ["0 pour cent"],
+      "labelNativeCandidates": ["Indice de qualité de la fiche"]
+    },
+    {
+      "label": "Nombre de clients et d’utilisateurs",
+      "value": "Non renseigné",
+      "nativeTextCandidates": ["Non renseigné"],
+      "labelNativeCandidates": ["Nombre de clients et d’utilisateurs"]
+    },
+    {
+      "label": "Relation client",
+      "value": "Non renseigné",
+      "nativeTextCandidates": ["Non renseigné"],
+      "labelNativeCandidates": ["Relation client"]
+    },
+    {
+      "label": "Coûts et revenus",
+      "value": "Non renseignés dans RefApp",
+      "nativeTextCandidates": ["Non renseignés dans Ref App"],
+      "labelNativeCandidates": ["Coûts et revenus"]
+    }
+  ],
+  "modelCompleteness": {
+    "tables": 0,
+    "dataBlocks": 14
+  }
+}

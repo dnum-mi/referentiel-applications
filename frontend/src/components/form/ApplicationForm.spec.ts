@@ -4,6 +4,7 @@ import type { ApplicationFormInitialData } from "@/models/Application";
 import ApplicationForm from "./ApplicationForm.vue";
 
 const mocks = vi.hoisted(() => ({ save: vi.fn(), syncContact: vi.fn(), fetchActorTypes: vi.fn() }));
+const submission = { isSubmitting: ref(false), saveError: ref("") };
 vi.mock("@/stores/actorTypeStore", () => ({
   useActorTypeStore: () => ({
     actorTypes: [
@@ -25,7 +26,8 @@ vi.mock("./application/use-application-form-actions", () => ({
   useApplicationFormActions: () => ({
     save: mocks.save,
     syncContact: mocks.syncContact,
-    isSubmitting: ref(false),
+    isSubmitting: submission.isSubmitting,
+    saveError: submission.saveError,
     moaSyncing: ref(false),
     moeSyncing: ref(false),
     initialMoaOrganization: ref(null),
@@ -33,8 +35,9 @@ vi.mock("./application/use-application-form-actions", () => ({
   }),
 }));
 
-function renderForm(mode: "create" | "edit" = "create", initialData: ApplicationFormInitialData = {}) {
+function renderForm(mode: "create" | "edit" = "create", initialData: ApplicationFormInitialData = {}, container?: HTMLElement) {
   return render(ApplicationForm, {
+    container,
     props: { mode, initialData },
     global: {
       directives: { "use-mermaid": {} },
@@ -48,7 +51,12 @@ function renderForm(mode: "create" | "edit" = "create", initialData: Application
   });
 }
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.save.mockReset();
+  submission.isSubmitting.value = false;
+  submission.saveError.value = "";
+});
 afterEach(() => cleanup());
 
 async function next() {
@@ -113,6 +121,79 @@ describe("applicationForm — validation et navigation accessibles", () => {
 });
 
 describe("applicationForm — édition et annulation", () => {
+  it("garde l'erreur dans le dialogue, bloque un second envoi et restitue le focus perdu", async () => {
+    const dialog = document.createElement("dialog");
+    dialog.open = true;
+    const close = document.createElement("button");
+    close.className = "fr-btn--close";
+    close.textContent = "Fermer";
+    const content = document.createElement("div");
+    dialog.append(close, content);
+    document.body.append(dialog);
+    let release!: () => void;
+    mocks.save.mockImplementation(() => {
+      submission.isSubmitting.value = true;
+      return new Promise<undefined>((resolve) => {
+        release = () => {
+          submission.saveError.value = "Modification refusée";
+          submission.isSubmitting.value = false;
+          resolve(undefined);
+        };
+      });
+    });
+    const view = renderForm(
+      "edit",
+      { id: "app", label: "Application", description: "Description", myPerms: new Set(["AppWrite"]) },
+      content,
+    );
+    const alert = screen.getByTestId("application-save-error");
+    expect(alert).toHaveAttribute("role", "alert");
+    expect(alert).toBeEmptyDOMElement();
+    const submit = screen.getByTestId("application-submit-btn");
+    submit.focus();
+    await fireEvent.submit(screen.getByTestId("application-form"));
+    expect(submit).toBeDisabled();
+    // jsdom keeps focus on a disabled button and ignores its blur(). Reproduce
+    // the BODY focus that the browser witness observed before the correction.
+    document.body.setAttribute("tabindex", "-1");
+    document.body.focus();
+    document.body.removeAttribute("tabindex");
+    await waitFor(() => expect(close).toHaveFocus());
+    await fireEvent.submit(screen.getByTestId("application-form"));
+    expect(mocks.save).toHaveBeenCalledOnce();
+    release();
+    await waitFor(() => expect(submit).toHaveFocus());
+    expect(screen.getByTestId("application-save-error")).toBe(alert);
+    expect(alert).toHaveTextContent("Modification refusée");
+    expect(view.emitted().success).toBeUndefined();
+    expect(screen.getByTestId("application-label")).toHaveValue("Application");
+    dialog.remove();
+  });
+
+  it("respecte un déplacement volontaire vers un champ pendant l'enregistrement", async () => {
+    let release!: () => void;
+    mocks.save.mockImplementation(() => {
+      submission.isSubmitting.value = true;
+      return new Promise<undefined>((resolve) => {
+        release = () => {
+          submission.saveError.value = "Refus tardif";
+          submission.isSubmitting.value = false;
+          resolve(undefined);
+        };
+      });
+    });
+    renderForm("edit", { id: "app", label: "Application", description: "Description", myPerms: new Set(["AppWrite"]) });
+    screen.getByTestId("application-submit-btn").focus();
+    await fireEvent.submit(screen.getByTestId("application-form"));
+    const field = screen.getByTestId("application-shortname");
+    field.focus();
+    await fireEvent.update(field, "Brouillon conservé");
+    release();
+    await waitFor(() => expect(screen.getByTestId("application-save-error")).toHaveTextContent("Refus tardif"));
+    expect(field).toHaveFocus();
+    expect(field).toHaveValue("Brouillon conservé");
+  });
+
   it("respecte la permission dédiée à la priorité de redémarrage", async () => {
     renderForm("edit", { id: "app", label: "Application", description: "Description", myPerms: new Set(["AppWritePriority"]) });
     expect(screen.getByTestId("application-label")).toBeDisabled();

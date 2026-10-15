@@ -1,6 +1,8 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/vue";
+import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils";
 import type { HostingOptionWithUsageDto } from "@/client/types.gen";
 import HostingOptionActions from "./HostingOptionActions.vue";
+enableAutoUnmount(afterEach);
 
 const { createMock, updateMock, removeMock, addSuccessMessage, addErrorMessage } = vi.hoisted(() => ({
   createMock: vi.fn(),
@@ -54,6 +56,58 @@ afterEach(() => {
 });
 
 describe("hostingOptionActions (#2688)", () => {
+  it.each([
+    { action: "save", moveFocus: false },
+    { action: "save", moveFocus: true },
+    { action: "delete", moveFocus: false },
+    { action: "delete", moveFocus: true },
+  ] as const)("$action : conserve le contexte et le choix de focus ($moveFocus)", async ({ action, moveFocus }) => {
+    let finish = () => {};
+    const mutation = action === "save" ? updateMock : removeMock;
+    mutation.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = () => resolve({ response: { ok: false, status: 500 }, error: "refus fictif" });
+        }),
+    );
+    const wrapper = mount(HostingOptionActions, {
+      attachTo: document.body,
+      props: { hostingOption: option },
+      global: {
+        stubs: {
+          DsfrModal: {
+            props: ["opened"],
+            template:
+              '<section v-if="opened" role="dialog"><button class="fr-btn--close">Fermer</button><slot/><slot name="footer"/></section>',
+          },
+        },
+      },
+    });
+    await wrapper
+      .get(`[data-testid="${action === "save" ? "admin-hosting-option-edit-btn" : "admin-hosting-option-delete-btn"}"]`)
+      .trigger("click");
+    const button = wrapper.get<HTMLButtonElement>(
+      `[data-testid="${action === "save" ? "admin-save-hosting-option-btn" : "admin-delete-confirm-btn"}"]`,
+    );
+    button.element.focus();
+    await button.trigger("click");
+    expect(button.element).toBeDisabled();
+    const transient = document.createElement("button");
+    document.body.append(transient);
+    transient.focus();
+    transient.remove();
+    await flushPromises();
+    expect(wrapper.get(".fr-btn--close").element).toHaveFocus();
+    const cancel = wrapper.get<HTMLButtonElement>(`[data-testid="${action === "save" ? "admin-cancel-btn" : "admin-delete-cancel-btn"}"]`);
+    if (moveFocus) cancel.element.focus();
+    finish();
+    await flushPromises();
+    expect(moveFocus ? cancel.element : button.element).toHaveFocus();
+    expect(button.element).not.toBeDisabled();
+    if (action === "save")
+      expect(wrapper.get('[role="dialog"]').text()).toContain("Erreur lors de la sauvegarde de la plateforme d'hébergement.");
+    else expect(addErrorMessage).toHaveBeenCalledWith("Erreur lors de la suppression de la plateforme d'hébergement");
+  });
   it("crée une plateforme une fois les champs obligatoires renseignés", async () => {
     createMock.mockResolvedValue({ response: { ok: true, status: 201 } });
     const { emitted } = renderActions();

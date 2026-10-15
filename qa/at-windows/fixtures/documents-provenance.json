@@ -1,0 +1,107 @@
+{
+  "head": "19cbbc7f7f8abba9f6887b4ed06556853d78c5d9",
+  "runtime": "v24.21.0",
+  "typescriptVersion": "5.9.3",
+  "syntheticOnly": true,
+  "realGeneratorsUsed": true,
+  "sourceFixture": {
+    "file": "inputs.json",
+    "sha256": "1ca66b3fa08e746e50228cc38e878ab7e2a73f0d8f04cf38d44c5430bcdd5539"
+  },
+  "sources": [
+    {
+      "file": "backend/src/applications/usecases/application-export.usecase.ts",
+      "sha256": "44510d5a17e3ddc8d74e01e041eb77131d0b97b2c1257900654c0e11be29a908"
+    },
+    {
+      "file": "backend/src/applications/export-html.ts",
+      "sha256": "97b02d543b690b0c366af5a343b86c8b5624007436669a714fb56cd6936ceb8e"
+    },
+    {
+      "file": "backend/src/utils/escape-html.util.ts",
+      "sha256": "a2ab41a042dc7d1cc5a72ce4f2569296d0dbe765ba4ac7be2ab35803703affce"
+    },
+    {
+      "file": "backend/src/utils/export.util.ts",
+      "sha256": "48af4636a7a3018e0c8c8d3b384c1f7d0181aecf114f168ab402318537cb01a1"
+    },
+    {
+      "file": "backend/src/applications/constants/application-export.sheet-labels.ts",
+      "sha256": "a2b0ce51540bc2bd050d5a6218d9a919f77348817eacc7cd2bececb4eec6af56"
+    },
+    {
+      "file": "backend/src/applications/columnLabels/application-export.columnLabels.ts",
+      "sha256": "4433baeb8c2b349b4e8b9134265431fe2626c420cb93d612f26e5e75ed2f5e6c"
+    },
+    {
+      "file": "backend/src/applications/map/application-export.map.ts",
+      "sha256": "cf2fa1cbde0816a54976af9378dd248d042720158692ca33aa75bbdddbbd244b"
+    },
+    {
+      "file": "backend/src/common/utils/enum.utils.ts",
+      "sha256": "1aff759645c1b7bee2f0da4f99429ec996799c8a5a109dd5e1f6ec4a6eca9dbb"
+    },
+    {
+      "file": "backend/src/applications/constants/enum-label.ts",
+      "sha256": "fde3c8449f347aedde723cad30af74fd46e3fd0321fdeb1bd2b1b1a536ac4cf4"
+    },
+    {
+      "file": "backend/src/applications/constants/relation-type-labels.ts",
+      "sha256": "33cf8da905f7134e7e3c6457ccd6353a2a0a1d6497b104585c8c581f94d5d3e4"
+    },
+    {
+      "file": "backend/src/applications/product-html.ts",
+      "sha256": "bfefcb7bcb401545240f08e3c68010e91d29eb08604885c16768f8016d964558"
+    },
+    {
+      "file": "backend/src/applications/product-export.view.ts",
+      "sha256": "72560c78a99c29aad2948758386547cefc2139439eb4127716fb93a644e89b6a"
+    },
+    {
+      "file": "frontend/src/utils/import-report-export.ts",
+      "sha256": "06efd3fb9f68fcc5d89c78f24413e42a8eef6a2a6f781c6d0606aca28411457c"
+    }
+  ],
+  "documents": [
+    {
+      "id": "AT-D01",
+      "file": "AT-D01.html",
+      "sha256": "994cad7ba5f6553cb4cf7fe96777c7add5a69954d5617299109a7205a0802191"
+    },
+    {
+      "id": "AT-D02",
+      "file": "AT-D02.html",
+      "sha256": "5498518fd6464e2748cfd1d72400a98765cceeb2022f19956be6faefa6cfbd94"
+    },
+    {
+      "id": "AT-D03",
+      "file": "AT-D03.html",
+      "sha256": "af0d8e853f0f790aa6490044786d3a88baebba17c420413675d97387a09134b8"
+    }
+  ],
+  "oracles": [
+    {
+      "id": "AT-D01",
+      "file": "AT-D01.oracle.json",
+      "sha256": "94d9be9af2c94f7d7f188d79c6f48f619608d640342b4c150d48dc4fcf4e690e"
+    },
+    {
+      "id": "AT-D02",
+      "file": "AT-D02.oracle.json",
+      "sha256": "acdf68ee9e85d26e47b105337b764a0c74915d9fd35f36d3bc8f486b4216eaf6"
+    },
+    {
+      "id": "AT-D03",
+      "file": "AT-D03.oracle.json",
+      "sha256": "fff662f09224701855120baf160446854dd178f17999d55e8299e6d7d79e3d7a"
+    }
+  ],
+  "generationDetail": "provenance-generators.json",
+  "generatorScript": "generate-synthetic-documents.mjs",
+  "oldLocalHtmlReadOrCopied": false,
+  "databaseRead": false,
+  "networkAttempts": 0,
+  "postGenerationHtmlEdits": false,
+  "fixedClock": "2026-10-13T12:00:00.000Z",
+  "remainingQualification": "Ces contrôles de structure/parité ne constituent pas une restitution NVDA/JAWS."
+}

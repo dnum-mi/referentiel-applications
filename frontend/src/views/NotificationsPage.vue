@@ -4,7 +4,7 @@ import type { TableColumn } from "@/types/table";
 import type { DsfrDataTableHeaderCell } from "@gouvminint/vue-dsfr";
 import type { DataTablePageEvent } from "primevue/datatable";
 import type { TableSortEvent } from "@/types/table";
-import { onMounted, ref } from "vue";
+import { nextTick, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useNotificationStore } from "@/stores/notificationStore";
 import { formatRelativeDate } from "@/composables/use-date";
@@ -35,6 +35,32 @@ const selection = ref<NotificationDto[]>([]);
 const isDeleteModalOpen = ref(false);
 const pendingDeleteIds = ref<string[]>([]);
 const pendingDeleteLabel = ref("");
+const isDeleting = ref(false);
+const deleteError = ref("");
+const isMarkingAllAsRead = ref(false);
+const operationStatus = ref("");
+const pageTitle = ref<HTMLElement | null>(null);
+const notificationTable = ref<{ $el?: HTMLElement } | null>(null);
+let deleteTrigger: Element | null = null;
+let deleteIndex = 0;
+
+async function focusAfterOperation(origin: Element | null, target: HTMLElement | null, trigger?: Element | null) {
+  await nextTick();
+  if (document.activeElement === document.body || document.activeElement === origin || document.activeElement === trigger) {
+    target?.focus();
+  }
+}
+
+async function markAllAsRead() {
+  if (isMarkingAllAsRead.value) return;
+  const focusOrigin = document.activeElement;
+  isMarkingAllAsRead.value = true;
+  operationStatus.value = "Marquage des notifications en cours…";
+  const succeeded = await notificationStore.markAllAsRead();
+  isMarkingAllAsRead.value = false;
+  operationStatus.value = succeeded ? "Toutes les notifications ont été marquées comme lues." : "";
+  if (succeeded) await focusAfterOperation(focusOrigin, pageTitle.value);
+}
 
 async function load() {
   await notificationStore.fetchNotifications(currentPage.value, itemsPerPage.value, sortOrder.value === 1 ? "asc" : "desc");
@@ -70,27 +96,49 @@ async function onViewEmail(notification: NotificationDto) {
 }
 
 function requestDeleteOne(notification: NotificationDto) {
+  if (isDeleting.value) return;
+  deleteTrigger = document.activeElement;
+  deleteIndex = notificationStore.notifications.findIndex((item) => item.id === notification.id);
+  deleteError.value = "";
   pendingDeleteIds.value = [notification.id];
   pendingDeleteLabel.value = "cette notification";
   isDeleteModalOpen.value = true;
 }
 
 function requestDeleteSelection() {
+  if (isDeleting.value || selection.value.length === 0) return;
+  deleteTrigger = document.activeElement;
+  deleteIndex = 0;
+  deleteError.value = "";
   pendingDeleteIds.value = selection.value.map((n) => n.id);
   pendingDeleteLabel.value = `les ${selection.value.length} notifications sélectionnées`;
   isDeleteModalOpen.value = true;
 }
 
 async function confirmDelete() {
-  isDeleteModalOpen.value = false;
-  const ids = pendingDeleteIds.value;
-  pendingDeleteIds.value = [];
-  if (ids.length === 1) {
-    await notificationStore.deleteNotification(ids[0]);
-  } else if (ids.length > 1) {
-    await notificationStore.deleteNotifications(ids);
+  if (isDeleting.value || pendingDeleteIds.value.length === 0) return;
+  const focusOrigin = document.activeElement;
+  const trigger = deleteTrigger;
+  const ids = [...pendingDeleteIds.value];
+  isDeleting.value = true;
+  deleteError.value = "";
+  operationStatus.value = "Suppression des notifications en cours…";
+  const succeeded =
+    ids.length === 1 ? await notificationStore.deleteNotification(ids[0]) : await notificationStore.deleteNotifications(ids);
+  isDeleting.value = false;
+  if (!succeeded) {
+    operationStatus.value = "";
+    deleteError.value = "La suppression a échoué. Les notifications et votre sélection ont été conservées. Veuillez réessayer.";
+    return;
   }
-  selection.value = [];
+  isDeleteModalOpen.value = false;
+  pendingDeleteIds.value = [];
+  selection.value = selection.value.filter((notification) => !ids.includes(notification.id));
+  operationStatus.value = ids.length === 1 ? "La notification a été supprimée." : `${ids.length} notifications ont été supprimées.`;
+  await nextTick();
+  const buttons = notificationTable.value?.$el?.querySelectorAll<HTMLButtonElement>('[data-testid="notification-row-delete"]');
+  const nextButton = buttons?.[deleteIndex] ?? (buttons?.length ? buttons[buttons.length - 1] : null);
+  await focusAfterOperation(focusOrigin, nextButton ?? pageTitle.value, trigger);
 }
 
 function cancelDelete() {
@@ -104,7 +152,7 @@ onMounted(load);
 <template>
   <div class="fr-container--fluid fr-px-3w" data-testid="notifications-page">
     <div class="notifications-page__header">
-      <h1 class="fr-h1" data-testid="notifications-page-title">Notifications</h1>
+      <h1 ref="pageTitle" class="fr-h1" tabindex="-1" data-testid="notifications-page-title">Notifications</h1>
       <div class="notifications-page__header-actions">
         <button
           v-if="selection.length > 0"
@@ -120,14 +168,20 @@ onMounted(load);
           type="button"
           class="fr-btn fr-btn--secondary"
           data-testid="notifications-page-mark-all-read"
-          @click="notificationStore.markAllAsRead()"
+          :aria-disabled="isMarkingAllAsRead"
+          :aria-busy="isMarkingAllAsRead"
+          @click="markAllAsRead"
         >
           Tout marquer comme lu
         </button>
       </div>
     </div>
+    <output aria-live="polite" aria-atomic="true" class="fr-sr-only" data-testid="notifications-operation-status">{{
+      operationStatus
+    }}</output>
 
     <RefAppTable
+      ref="notificationTable"
       v-model:selection="selection"
       :items="notificationStore.notifications"
       :columns="tableColumns"
@@ -207,6 +261,8 @@ onMounted(load);
     <DeleteConfirmationModal
       :opened="isDeleteModalOpen"
       :item-name="pendingDeleteLabel"
+      :is-submitting="isDeleting"
+      :error-message="deleteError"
       data-testid="notifications-delete-modal"
       @confirm="confirmDelete"
       @cancel="cancelDelete"

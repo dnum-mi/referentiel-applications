@@ -35,4 +35,9 @@ describe("useGraphStyles — arête de corrélation (#2287)", () => {
     expect(isDirectedRelation("is_part_of")).toBe(true);
     expect(isDirectedRelation("use_sso_of")).toBe(true);
   });
+
+  it("distingue les six types sans dépendre de leur couleur", () => {
+    expect(new Set(Object.values(edge).map((style) => style.dasharray)).size).toBe(Object.keys(edge).length);
+    expect(Object.values(edge).every((style) => style.patternLabel.length > 0)).toBe(true);
+  });
 });

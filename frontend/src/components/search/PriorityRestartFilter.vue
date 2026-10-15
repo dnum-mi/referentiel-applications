@@ -25,6 +25,7 @@ const selectedPriorities = computed({
       <span style="display: inline-flex; align-items: center; gap: 0.25rem">
         Priorité de redémarrage
         <DsfrTooltip
+          aria-label="Afficher l’aide sur le filtre Priorité de redémarrage"
           content="Filtre les applications selon leur priorité de redémarrage en cas d’incident, de R0 (socle technique indispensable, relance immédiate) à R3 (indisponibilité sans conséquence opérationnelle)."
         />
       </span>

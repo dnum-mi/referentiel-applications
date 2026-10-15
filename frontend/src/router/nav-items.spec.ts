@@ -35,7 +35,10 @@ describe("navItems — menu principal", () => {
     expect(buildNavItems(canManageGlobalAdmin, false).map((item) => item.to.name)).not.toContain(routeNames.ENDOFLIFE);
   });
 
-  it("réduit le menu d'un visiteur non authentifié à l'accueil", () => {
-    expect(buildPublicNavItems()).toEqual([{ to: { name: routeNames.ACCUEIL }, text: "Accueil" }]);
+  it("limite le menu d'un visiteur aux pages publiques", () => {
+    expect(buildPublicNavItems()).toEqual([
+      { to: { name: routeNames.ACCUEIL }, text: "Accueil" },
+      { to: { name: routeNames.ACCESSIBILITE }, text: "Accessibilité" },
+    ]);
   });
 });

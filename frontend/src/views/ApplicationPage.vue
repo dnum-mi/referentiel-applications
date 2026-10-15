@@ -16,6 +16,7 @@ import { Permission, RelationType, Status } from "@/client";
 import type { MetadataDto } from "@/client/types.gen";
 import { useAppPermission } from "@/composables/use-app-permission";
 import { useRelationStore } from "@/stores/relationStore";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const userStore = useUserStore();
 const applicationStore = useApplicationStore();
@@ -37,7 +38,7 @@ const showMissingRightsAlert = computed(() => !hasFullReadRights.value && !missi
 
 const isSubscriptionLoading = ref(false);
 const isSubscribed = computed(() => userStore.isSubscribed(id));
-const subscribeBtn = ref<{ $el?: HTMLElement } | null>(null);
+const subscribeBtn = ref<{ focus: () => void } | null>(null);
 
 async function toggleSubscription() {
   isSubscriptionLoading.value = true;
@@ -53,12 +54,15 @@ async function toggleSubscription() {
     isSubscriptionLoading.value = false;
     // 12.8 : le bouton reste monté (seul le label change) → conserver le focus dessus après la bascule.
     await nextTick();
-    subscribeBtn.value?.$el?.querySelector("button")?.focus();
+    subscribeBtn.value?.focus();
   }
 }
 
 const deleteModalOpened = ref(false);
 const deleteConfirmationInput = ref("");
+const isDeleting = ref(false);
+const deletionError = ref("");
+useSubmissionFocus(isDeleting);
 const applicationLabel = computed(() => application.value?.label ?? "");
 
 // RGAA-007 : titre de page explicite reprenant le nom de l'application.
@@ -172,15 +176,28 @@ onMounted(async () => {
 function resetModal() {
   deleteModalOpened.value = false;
   deleteConfirmationInput.value = "";
+  deletionError.value = "";
 }
 
 const actions = computed(() => [
   {
     label: "Supprimer définitivement",
-    disabled: deleteConfirmationInput.value !== applicationLabel.value,
+    disabled: isDeleting.value || !applicationLabel.value || deleteConfirmationInput.value !== applicationLabel.value,
+    "aria-busy": isDeleting.value,
     async onClick() {
-      resetModal();
-      await applicationStore.deleteApplication(id);
+      if (isDeleting.value || !applicationLabel.value || deleteConfirmationInput.value !== applicationLabel.value) return;
+      deletionError.value = "";
+      isDeleting.value = true;
+      try {
+        await applicationStore.deleteApplication(id);
+        resetModal();
+      } catch (error) {
+        if (deleteModalOpened.value) {
+          deletionError.value = error instanceof Error ? error.message : "Erreur lors de la suppression définitive de l'application.";
+        }
+      } finally {
+        isDeleting.value = false;
+      }
     },
   },
   {
@@ -249,6 +266,7 @@ function formatMetadataAuthor(metadata: MetadataDto): string {
         class="fr-btn--tertiary-no-outline fr-btn--icon-left"
         :class="isSubscribed ? 'fr-icon-notification-3-fill' : 'fr-icon-notification-3-line'"
         :disabled="isSubscriptionLoading"
+        :aria-busy="isSubscriptionLoading"
         @click="toggleSubscription"
         :title="
           isSubscribed
@@ -261,8 +279,8 @@ function formatMetadataAuthor(metadata: MetadataDto): string {
       <DsfrButton
         class="fr-btn--tertiary-no-outline fr-btn--icon-left fr-icon-links-line"
         data-testid="application-copy-link-btn"
-        title="Copier le lien de cette application"
-        aria-label="Copier le lien de cette application"
+        title="Copier le lien de la fiche application"
+        aria-label="Copier le lien de la fiche application"
         @click="copyToClipboard"
       >
         Copier le lien de la fiche application
@@ -311,7 +329,6 @@ function formatMetadataAuthor(metadata: MetadataDto): string {
         class="application-delete-btn fr-btn--secondary fr-btn--icon-left fr-icon-delete-line"
         data-testid="application-delete-btn"
         title="Supprimer définitivement cette application"
-        aria-label="Supprimer définitivement cette application"
         @click="deleteModalOpened = true"
       >
         Supprimer l’application
@@ -324,8 +341,10 @@ function formatMetadataAuthor(metadata: MetadataDto): string {
       :actions="actions"
       data-testid="application-delete-modal"
       @close="resetModal"
-      aria-labelledby="application-delete-modal-title"
     >
+      <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="application-delete-error">
+        <p v-if="deletionError" class="fr-error-text">{{ deletionError }}</p>
+      </div>
       <DsfrAlert
         id="application-delete-alert"
         title="Cette action est irréversible"
@@ -342,7 +361,7 @@ function formatMetadataAuthor(metadata: MetadataDto): string {
         data-testid="application-delete-input"
         title="Entrez le nom de l’application pour confirmer"
         aria-label="Entrer le nom de l’application pour confirmer"
-        :aria-describedby="'application-delete-alert'"
+        description-id="application-delete-alert"
       ></DsfrInput>
     </DsfrModal>
   </div>
@@ -358,7 +377,7 @@ function formatMetadataAuthor(metadata: MetadataDto): string {
 .subtitle {
   font-weight: 600;
   font-size: 1rem;
-  color: #666;
+  color: var(--text-mention-grey);
   margin: 0.25rem 0;
 }
 

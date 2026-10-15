@@ -91,6 +91,7 @@ const resultsAnnouncement = ref("");
 const tableRegion = ref<HTMLElement | null>(null);
 
 async function applyFilters() {
+  if (isLoading.value) return;
   dateErrors.value = {};
   if (!isValidDateTime(createdAtGte.value)) {
     dateErrors.value.from = "Date de début – veuillez saisir une date et une heure valides, exemple : 23/05/2026 14:30";
@@ -100,14 +101,16 @@ async function applyFilters() {
   }
   if (dateErrors.value.from || dateErrors.value.to) return;
 
+  const origin = document.activeElement;
   currentPage.value = 0;
   await fetchData();
   resultsAnnouncement.value = `${data.value.total} résultat(s)`;
   await nextTick();
-  tableRegion.value?.focus();
+  if (document.activeElement === origin || document.activeElement === document.body) tableRegion.value?.focus();
 }
 
 function clearFilters() {
+  if (isLoading.value) return;
   createdAtGte.value = "";
   createdAtLte.value = "";
   sortField.value = "Date";
@@ -206,7 +209,7 @@ const metadataTableRows = computed(() =>
         <DsfrButton
           type="submit"
           label="Appliquer"
-          :disabled="isLoading"
+          :aria-disabled="isLoading"
           title="Appliquer les filtres"
           aria-label="Appliquer les filtres"
           data-testid="history-apply-filters"
@@ -215,7 +218,7 @@ const metadataTableRows = computed(() =>
           type="button"
           secondary
           label="Effacer"
-          :disabled="isLoading"
+          :aria-disabled="isLoading"
           data-testid="history-clear-filters"
           title="Effacer les filtres"
           aria-label="Effacer les filtres"

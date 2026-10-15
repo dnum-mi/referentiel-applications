@@ -79,7 +79,7 @@ onMounted(fetchTags);
 
 <template>
   <div class="header-row">
-    <h1 class="fr-h1" data-testid="admin-tags-title">Gestion des tags</h1>
+    <h2 class="fr-h1" data-testid="admin-tags-title">Gestion des tags</h2>
 
     <TagActions @fetch-tags="fetchTags" :is-creating="true" />
   </div>

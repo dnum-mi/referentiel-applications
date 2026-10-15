@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { nextTick, ref } from "vue";
 import type { QualityCampaignDto, UpdateQualityCampaignStatusDto } from "@/client/types.gen";
 import { useQualityCampaignStore } from "@/stores/qualityCampaignStore";
 import SponsorEmailsInput from "@/components/form/SponsorEmailsInput.vue";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps<{
   campaign: QualityCampaignDto;
@@ -17,7 +18,10 @@ const store = useQualityCampaignStore();
 const isEditModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
 const isSaving = ref(false);
+useSubmissionFocus(isSaving);
 const isDeleting = ref(false);
+useSubmissionFocus(isDeleting);
+const deleteErrorMessage = ref("");
 const isSendingReport = ref(false);
 const isChangingStatus = ref(false);
 const errorMessage = ref<string>("");
@@ -57,14 +61,17 @@ function closeEditModal() {
 }
 
 function openDeleteModal() {
+  deleteErrorMessage.value = "";
   isDeleteModalOpen.value = true;
 }
 
 function closeDeleteModal() {
   isDeleteModalOpen.value = false;
+  deleteErrorMessage.value = "";
 }
 
-async function saveCampaign() {
+async function saveCampaign(event: MouseEvent) {
+  if (isSaving.value) return;
   if (!editingName.value.trim()) {
     errorMessage.value = "Le nom de la campagne est requis.";
     return;
@@ -78,32 +85,62 @@ async function saveCampaign() {
     return;
   }
 
+  const sponsorEmails = editingSponsorEmails.value.map((email) => email.trim()).filter(Boolean);
+  const currentSponsorEmails = props.campaign.sponsorEmails.map((email) => email.trim()).filter(Boolean);
+  const trigger = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
+  if (
+    JSON.stringify(sponsorEmails) !== JSON.stringify(currentSponsorEmails) &&
+    !globalThis.confirm(
+      `Confirmer la modification des adresses email des sponsors de la campagne « ${editingName.value.trim()} » ?\nNouvelles adresses : ${sponsorEmails.join(", ") || "aucun sponsor"}.`,
+    )
+  ) {
+    trigger?.focus();
+    return;
+  }
+
   isSaving.value = true;
   errorMessage.value = "";
+  try {
+    const updated = await store.updateCampaign(props.campaign.id, {
+      name: editingName.value.trim(),
+      sponsorEmails,
+      message: editingMessage.value.trim() || null,
+      startDate: new Date(editingStartDate.value),
+      endDate: editingEndDate.value ? new Date(editingEndDate.value) : null,
+    });
 
-  const updated = await store.updateCampaign(props.campaign.id, {
-    name: editingName.value.trim(),
-    sponsorEmails: editingSponsorEmails.value.map((email) => email.trim()).filter(Boolean),
-    message: editingMessage.value.trim() || null,
-    startDate: new Date(editingStartDate.value),
-    endDate: editingEndDate.value ? new Date(editingEndDate.value) : null,
-  });
-
-  if (updated) {
-    closeEditModal();
-    emit("fetchCampaigns");
-  } else {
-    errorMessage.value = "Erreur lors de la sauvegarde de la campagne.";
+    if (updated) {
+      closeEditModal();
+      emit("fetchCampaigns");
+    } else {
+      errorMessage.value = "Erreur lors de la sauvegarde de la campagne.";
+    }
+  } finally {
+    isSaving.value = false;
   }
-  isSaving.value = false;
 }
 
 async function deleteCampaign() {
+  if (isDeleting.value) return;
+  const focusOrigin = document.activeElement;
   isDeleting.value = true;
-  await store.deleteCampaign(props.campaign.id);
-  closeDeleteModal();
-  emit("fetchCampaigns");
-  isDeleting.value = false;
+  deleteErrorMessage.value = "";
+  const contextTitle = document.querySelector<HTMLElement>("[data-testid=admin-quality-campaigns-title]");
+  try {
+    if (await store.deleteCampaign(props.campaign.id)) {
+      closeDeleteModal();
+      emit("fetchCampaigns");
+      await nextTick();
+      if (contextTitle?.isConnected && (document.activeElement === document.body || document.activeElement === focusOrigin)) {
+        contextTitle.tabIndex = -1;
+        contextTitle.focus();
+      }
+    } else {
+      deleteErrorMessage.value = "La campagne n’a pas été supprimée. Veuillez réessayer.";
+    }
+  } finally {
+    isDeleting.value = false;
+  }
 }
 
 async function sendSponsorReport() {
@@ -175,6 +212,7 @@ async function changeStatus(status: UpdateQualityCampaignStatusDto["status"]) {
     @close="closeEditModal"
   >
     <DsfrAlert
+      alert
       v-if="errorMessage"
       type="error"
       :description="errorMessage"
@@ -232,13 +270,15 @@ async function changeStatus(status: UpdateQualityCampaignStatusDto["status"]) {
 
     <template #footer>
       <DsfrButtonGroup :inline-layout-when="true" :reverse="true">
-        <DsfrButton label="Annuler" secondary data-testid="admin-quality-campaign-cancel-btn" @click="closeEditModal" />
-        <DsfrButton
-          :label="isSaving ? 'Enregistrement…' : 'Enregistrer'"
-          :disabled="isSaving"
-          data-testid="admin-quality-campaign-save-btn"
-          @click="saveCampaign"
-        />
+        <li><DsfrButton label="Annuler" secondary data-testid="admin-quality-campaign-cancel-btn" @click="closeEditModal" /></li>
+        <li>
+          <DsfrButton
+            :label="isSaving ? 'Enregistrement…' : 'Enregistrer'"
+            :disabled="isSaving"
+            data-testid="admin-quality-campaign-save-btn"
+            @click="saveCampaign"
+          />
+        </li>
       </DsfrButtonGroup>
     </template>
   </DsfrModal>
@@ -249,6 +289,7 @@ async function changeStatus(status: UpdateQualityCampaignStatusDto["status"]) {
     data-testid="admin-delete-quality-campaign-modal"
     @close="closeDeleteModal"
   >
+    <DsfrAlert v-if="deleteErrorMessage" alert type="error" :description="deleteErrorMessage" small class="fr-mb-3w" />
     <DsfrAlert
       title="Cette action est irréversible"
       :description="`Êtes-vous sûr de vouloir supprimer la campagne « ${campaign.name} » ?`"
@@ -259,14 +300,16 @@ async function changeStatus(status: UpdateQualityCampaignStatusDto["status"]) {
 
     <template #footer>
       <DsfrButtonGroup :inline-layout-when="true" :reverse="true">
-        <DsfrButton label="Annuler" secondary data-testid="admin-quality-campaign-delete-cancel-btn" @click="closeDeleteModal" />
-        <DsfrButton
-          label="Supprimer"
-          danger
-          :disabled="isDeleting"
-          data-testid="admin-quality-campaign-delete-confirm-btn"
-          @click="deleteCampaign"
-        />
+        <li><DsfrButton label="Annuler" secondary data-testid="admin-quality-campaign-delete-cancel-btn" @click="closeDeleteModal" /></li>
+        <li>
+          <DsfrButton
+            label="Supprimer"
+            danger
+            :disabled="isDeleting"
+            data-testid="admin-quality-campaign-delete-confirm-btn"
+            @click="deleteCampaign"
+          />
+        </li>
       </DsfrButtonGroup>
     </template>
   </DsfrModal>

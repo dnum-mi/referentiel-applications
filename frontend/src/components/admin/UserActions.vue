@@ -15,6 +15,7 @@ import { RolesOptions, RolesScopes } from "@/utils/roles-utils";
 import type { DsfrCheckboxProps } from "@gouvminint/vue-dsfr";
 import { computed, nextTick, ref } from "vue";
 import OrganizationSearchSelect from "../common/OrganizationSearchSelect.vue";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps<{ user: Required<UserEntity> }>();
 
@@ -39,9 +40,11 @@ const isImpersonating = ref(false);
 const canToggleBlock = computed(() => canEditUser.value && props.user.id !== userStore.user?.id);
 const isBlockModalOpen = ref(false);
 const isTogglingBlock = ref(false);
+const blockError = ref("");
 
 function openBlockModal() {
   if (!canToggleBlock.value) return;
+  blockError.value = "";
   isBlockModalOpen.value = true;
 }
 
@@ -50,6 +53,8 @@ function closeBlockModal() {
 }
 
 async function toggleBlock() {
+  if (isTogglingBlock.value || !canToggleBlock.value) return;
+  blockError.value = "";
   isTogglingBlock.value = true;
   try {
     const response = props.user.isBlocked
@@ -62,11 +67,13 @@ async function toggleBlock() {
       emit("userUpdated", response.data);
     } else {
       const errorMessage = (response.error as { message: string })?.message ?? "Une erreur est survenue";
-      toaster.addErrorMessage(errorMessage);
+      if (isBlockModalOpen.value) blockError.value = errorMessage;
+      else toaster.addErrorMessage(errorMessage);
       console.error(response.error);
     }
   } catch (err) {
-    toaster.addErrorMessage("Une erreur est survenue");
+    if (isBlockModalOpen.value) blockError.value = "Une erreur est survenue. Vous pouvez réessayer.";
+    else toaster.addErrorMessage("Une erreur est survenue");
     console.error(err);
   } finally {
     isTogglingBlock.value = false;
@@ -74,18 +81,22 @@ async function toggleBlock() {
 }
 
 async function impersonate() {
+  if (isImpersonating.value || !canImpersonate.value) return;
   isImpersonating.value = true;
   try {
     await userStore.startImpersonation(props.user);
   } catch (err) {
     toaster.addErrorMessage("Impossible d'impersonner cet utilisateur");
     console.error(err);
+  } finally {
     isImpersonating.value = false;
   }
 }
 
 const isEditModalOpen = ref(false);
 const isSaving = ref(false);
+useSubmissionFocus(isSaving);
+const editError = ref("");
 const isSyncingFromMaia = ref(false);
 // Snapshot de l'utilisateur au moment de l'ouverture : si l'instance est réutilisée par la
 // table avec un AUTRE utilisateur pendant que le modal est ouvert (refetch qui réordonne),
@@ -118,6 +129,7 @@ let maiaSuggestionRequest = 0;
 async function openEditModal() {
   if (!canEditUser.value) return;
 
+  editError.value = "";
   editingUser.value = props.user;
   editingUserRole.value = props.user.role;
   editingOrganizationId.value = props.user.organizationId || "";
@@ -153,6 +165,7 @@ async function fetchMaiaSuggestion() {
 }
 
 function closeEditModal() {
+  editError.value = "";
   maiaSuggestionRequest++;
   isEditModalOpen.value = false;
   editingUser.value = null;
@@ -176,7 +189,15 @@ function focusOpener() {
 
 async function saveUser() {
   const target = editingUser.value;
-  if (!target) return;
+  if (!target || isSaving.value) return;
+  if (
+    !window.confirm(
+      `Confirmer la modification de l'utilisateur « ${target.email} » ?\n\nLes organisations, le niveau de privilège et les capacités affichés seront enregistrés.`,
+    )
+  ) {
+    return;
+  }
+  editError.value = "";
   isSaving.value = true;
   try {
     const response = await api.userControllerUpdate({
@@ -204,11 +225,11 @@ async function saveUser() {
     } else {
       const errorMessage =
         (response.error as { message: string })?.message ?? "Une erreur est survenue lors de la mise à jour de l'utilisateur";
-      toaster.addErrorMessage(errorMessage);
+      editError.value = errorMessage;
       console.error(response.error);
     }
   } catch (err) {
-    toaster.addErrorMessage("Une erreur est survenue lors de la mise à jour de l'utilisateur");
+    editError.value = "Une erreur est survenue lors de la mise à jour de l'utilisateur";
     console.error(err);
   } finally {
     isSaving.value = false;
@@ -216,6 +237,14 @@ async function saveUser() {
 }
 
 async function syncFromMaia() {
+  if (isSyncingFromMaia.value) return;
+  if (
+    !window.confirm(
+      `Confirmer la synchronisation de l'organisation de l'utilisateur « ${props.user.email} » depuis MAIA ?\n\nSon organisation actuelle sera remplacée par celle renvoyée par MAIA.`,
+    )
+  ) {
+    return;
+  }
   isSyncingFromMaia.value = true;
   try {
     const response = await api.userControllerSyncOrganizationFromMaia({ path: { id: props.user.id } });
@@ -303,7 +332,8 @@ const isScopeDisabled = computed(() => {
         :label="isSyncingFromMaia ? 'MAIA...' : 'MAIA'"
         size="sm"
         tertiary
-        :disabled="isSyncingFromMaia"
+        :aria-disabled="isSyncingFromMaia"
+        :aria-busy="isSyncingFromMaia"
         data-testid="admin-user-sync-maia-btn"
         title="Synchroniser l'organisation depuis MAIA"
         aria-label="Synchroniser l'organisation depuis MAIA"
@@ -329,7 +359,8 @@ const isScopeDisabled = computed(() => {
         :label="isImpersonating ? '...' : 'Se connecter en tant que'"
         size="sm"
         tertiary
-        :disabled="isImpersonating"
+        :aria-disabled="isImpersonating"
+        :aria-busy="isImpersonating"
         data-testid="admin-user-impersonate-btn"
         title="Se connecter en tant que cet utilisateur"
         aria-label="Se connecter en tant que cet utilisateur"
@@ -343,7 +374,7 @@ const isScopeDisabled = computed(() => {
         :danger="!user.isBlocked"
         data-testid="admin-user-block-btn"
         :title="user.isBlocked ? `Rétablir l'accès de cet utilisateur` : `Bloquer l'accès de cet utilisateur`"
-        :aria-label="user.isBlocked ? `Rétablir l'accès de cet utilisateur` : `Bloquer l'accès de cet utilisateur`"
+        :aria-label="user.isBlocked ? `Débloquer l'accès de cet utilisateur` : `Bloquer l'accès de cet utilisateur`"
         @click="openBlockModal"
       />
     </div>
@@ -366,32 +397,43 @@ const isScopeDisabled = computed(() => {
       <p v-else class="alert-multiline" data-testid="user-unblock-confirm-text">
         Rétablir l'accès de <strong>{{ user.email }}</strong> ?
       </p>
+      <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="user-block-error">
+        <p v-if="blockError" class="fr-error-text">{{ blockError }}</p>
+      </div>
 
       <template #footer>
         <DsfrButtonGroup :inline-layout-when="true" :reverse="true">
-          <DsfrButton
-            label="Annuler"
-            secondary
-            data-testid="admin-block-user-cancel-btn"
-            title="Annuler"
-            aria-label="Annuler"
-            @click="closeBlockModal"
-          />
-          <DsfrButton
-            :label="user.isBlocked ? 'Rétablir' : 'Bloquer'"
-            :danger="!user.isBlocked"
-            :disabled="isTogglingBlock"
-            data-testid="admin-block-user-confirm-btn"
-            title="Confirmer"
-            aria-label="Confirmer"
-            @click="toggleBlock"
-          />
+          <li>
+            <DsfrButton
+              label="Annuler"
+              secondary
+              data-testid="admin-block-user-cancel-btn"
+              title="Annuler"
+              aria-label="Annuler"
+              @click="closeBlockModal"
+            />
+          </li>
+          <li>
+            <DsfrButton
+              :label="user.isBlocked ? 'Rétablir' : 'Bloquer'"
+              :danger="!user.isBlocked"
+              :aria-disabled="isTogglingBlock"
+              :aria-busy="isTogglingBlock"
+              data-testid="admin-block-user-confirm-btn"
+              title="Confirmer"
+              :aria-label="user.isBlocked ? `Rétablir l’accès de cet utilisateur` : `Bloquer l’accès de cet utilisateur`"
+              @click="toggleBlock"
+            />
+          </li>
         </DsfrButtonGroup>
       </template>
     </DsfrModal>
 
     <DsfrModal :opened="isEditModalOpen" title="Modifier l'utilisateur" data-testid="admin-edit-user-modal" @close="closeEditModal">
       <p><strong>Utilisateur :</strong> {{ editingUser?.email ?? user.email }}</p>
+      <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="user-edit-error">
+        <p v-if="editError" class="fr-error-text">{{ editError }}</p>
+      </div>
 
       <!-- RGAA-086 (11.5) : regroupement des champs organisation de même nature. -->
       <fieldset class="fr-fieldset">

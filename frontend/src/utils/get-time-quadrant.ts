@@ -5,9 +5,9 @@ export type TimeQuadrant = "Tolerate" | "Invest" | "Migrate" | "Eliminate";
 // Labels affichés pour chaque quadrant TIME, alignés sur ceux du diagramme (cf. TimeChartBuilder.drawQuadrants).
 export const TimeQuadrantWording: Record<TimeQuadrant, string> = {
   Tolerate: "Tolérer",
-  Invest: "A privilégier",
-  Eliminate: "A décommissionner",
-  Migrate: "A Migrer",
+  Invest: "À privilégier",
+  Eliminate: "À décommissionner",
+  Migrate: "À migrer",
 };
 
 export function getTimeQuadrant(technicalMaturity: number, businessMaturity: number) {

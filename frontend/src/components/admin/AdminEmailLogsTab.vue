@@ -13,6 +13,12 @@ const data = ref<PaginatedEmailLogDto>({ results: [], total: 0 });
 const isLoading = ref(false);
 const hasLoadedOnce = ref(false);
 const errorMessage = ref("");
+const statusMessage = computed(() => {
+  if (isLoading.value) return "Chargement de l'historique des e-mails…";
+  if (!hasLoadedOnce.value || errorMessage.value) return "";
+  if (data.value.total === 0) return "Aucun e-mail envoyé pour le moment.";
+  return `${data.value.total} e-mail${data.value.total > 1 ? "s" : ""} dans l'historique.`;
+});
 
 const columns: TableColumn[] = [
   { field: "sentAt", header: "Date d'envoi", sortable: false },
@@ -73,11 +79,19 @@ onActivated(fetchLogs);
 
 <template>
   <div>
-    <h1 class="fr-h1" data-testid="admin-email-logs-title">Historique des e-mails envoyés</h1>
+    <h2 class="fr-h1" data-testid="admin-email-logs-title">Historique des e-mails envoyés</h2>
 
-    <div v-if="errorMessage" class="fr-alert fr-alert--error fr-mb-2w" data-testid="admin-email-logs-error">
-      <p>{{ errorMessage }}</p>
+    <div
+      role="alert"
+      aria-live="assertive"
+      aria-atomic="true"
+      :class="errorMessage ? 'fr-alert fr-alert--error fr-mb-2w' : undefined"
+      data-testid="admin-email-logs-error"
+    >
+      <p v-if="errorMessage">{{ errorMessage }}</p>
     </div>
+
+    <output class="fr-sr-only" aria-live="polite" aria-atomic="true" data-testid="admin-email-logs-status">{{ statusMessage }}</output>
 
     <div v-if="isLoading && !hasLoadedOnce" class="fr-alert fr-alert--info" data-testid="admin-email-logs-loading">
       <p>Chargement de l'historique...</p>

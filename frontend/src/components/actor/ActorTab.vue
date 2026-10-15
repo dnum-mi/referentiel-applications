@@ -11,7 +11,7 @@ import { useToasterStore } from "@/stores/toasterStore";
 import type { TableColumn } from "@/types/table";
 import type { DsfrButtonProps } from "@gouvminint/vue-dsfr";
 import type { DataTablePageEvent } from "primevue/datatable";
-import { computed, nextTick, onBeforeMount, ref } from "vue";
+import { computed, nextTick, onBeforeMount, ref, watch } from "vue";
 import RefAppTable from "../RefAppTable.vue";
 import ActorForm from "./ActorForm.vue";
 import { useAppPermission } from "@/composables/use-app-permission";
@@ -32,7 +32,11 @@ const actors = ref<ActorDto[]>([]);
 const selectedActorIds = ref<string[]>([]);
 const currentPage = ref(0);
 const showDeleteConfirmation = ref(false);
+const deleteError = ref("");
+const isDeleting = ref(false);
 const loading = ref(false);
+const formError = ref("");
+watch([actorModal.isModalOpen, actorModal.isCreateModalOpen], () => (formError.value = ""));
 const canEdit = useAppPermission(() => props.application.myPerms, [Permission.ACTOR_WRITE]);
 
 const columns: TableColumn[] = [
@@ -58,9 +62,12 @@ function getActorTypeLabel(typeId: string): string {
 const tableRows = computed(() =>
   actors.value.map((actor) => {
     const org = actor.organizationId ? orgStore.organizations[actor.organizationId] : undefined;
+    const name = [actor.firstname, actor.lastname].filter(Boolean).join(" ").trim();
+    const identity = name && actor.email ? `${name} (${actor.email})` : name || actor.email || `Acteur ${actor.id}`;
     return {
       id: actor.id,
       Sélection: actor.id,
+      Identité: identity,
       organisationId: actor.organizationId ?? undefined,
       Organisation: org?.sigle || org?.path || "",
       Type: getActorTypeLabel(actor.actorTypeId),
@@ -95,9 +102,10 @@ async function updateActor({ id: _id, ...actor }: CreateActorDto & { id?: string
 }
 
 async function deleteActor(actorId: string, applicationId: string) {
-  return api.applicationActorsControllerDelete({
+  const response = await api.applicationActorsControllerDelete({
     path: { applicationId, id: actorId },
   });
+  if (!isApiSuccess(response)) throw new Error("Actor deletion failed");
 }
 
 onBeforeMount(async () => {
@@ -118,44 +126,74 @@ onBeforeMount(async () => {
 // RGAA-059 (7.5 / 12.8) : message de statut restitué aux TA + focus rendu au bouton déclencheur.
 const statusMessage = ref("");
 const lastTrigger = ref<HTMLElement | null>(null);
+const actorActions = ref<HTMLDivElement | null>(null);
+const actorTable = ref<HTMLDivElement | null>(null);
 function rememberTrigger(event: Event) {
   lastTrigger.value = (event.currentTarget as HTMLElement) ?? null;
 }
 
-async function handleSaveActors(actor: CreateActorDto & { id?: string }) {
-  loading.value = true;
+async function restoreActorFocus(actorId?: string) {
+  await nextTick();
+  const selectedRow = Array.from(actorTable.value?.querySelectorAll<HTMLInputElement>('input[type="checkbox"]') ?? [])
+    .find((input) => input.value === actorId)
+    ?.closest("tr");
+  const trigger =
+    lastTrigger.value?.isConnected && !lastTrigger.value.matches(":disabled")
+      ? lastTrigger.value
+      : selectedRow?.querySelector<HTMLElement>('[data-testid="actor-edit-btn"]') ||
+        actorActions.value?.querySelector<HTMLElement>('[data-testid="actor-add-btn"]');
+  trigger?.focus();
+}
+
+async function closeActorModal() {
+  const actorId = actorModal.selectedItem.value?.id;
   actorModal.closeModal();
+  // Une tentative de sauvegarde remonte la liste et peut remplacer le déclencheur.
+  await restoreActorFocus(actorId);
+}
+
+async function handleSaveActors(actor: CreateActorDto & { id?: string }) {
+  formError.value = "";
+  loading.value = true;
+  let saved = false;
 
   try {
     if (actor.id) {
       await updateActor(actor, props.application.id, actor.id);
     } else {
-      await api.applicationActorsControllerCreate({
+      const response = await api.applicationActorsControllerCreate({
         path: { applicationId: props.application.id },
         body: actor,
       });
+      if (!isApiSuccess(response)) throw new Error("Actor creation failed");
     }
+    actorModal.closeModal();
+    saved = true;
     await fetchActorsByApplication(props.application.id);
     statusMessage.value = "Acteur sauvegardé avec succès !";
     toaster.addSuccessMessage("Acteur sauvegardé avec succès !");
-    await nextTick();
-    lastTrigger.value?.focus();
   } catch {
-    toaster.addErrorMessage("Erreur lors de la sauvegarde de l’acteur.");
+    formError.value = "Erreur lors de la sauvegarde de l’acteur. Votre saisie est conservée.";
   } finally {
     loading.value = false;
   }
+  if (saved) {
+    await restoreActorFocus(actor.id);
+  }
 }
 
-function removeSelectedActors() {
+function removeSelectedActors(event: Event) {
   if (selectedActorIds.value.length === 0) {
     toaster.addErrorMessage("Aucune sélection.");
     return;
   }
+  rememberTrigger(event);
+  deleteError.value = "";
   showDeleteConfirmation.value = true;
 }
 
 async function confirmDelete() {
+  if (isDeleting.value) return;
   const actorsToDelete = actors.value.filter((actor) => selectedActorIds.value.includes(actor.id));
 
   if (actorsToDelete.length === 0) {
@@ -163,17 +201,26 @@ async function confirmDelete() {
     return;
   }
 
+  isDeleting.value = true;
+  deleteError.value = "";
   try {
-    const deletePromises = actorsToDelete.map((actor) => deleteActor(actor.id, props.application.id));
-
-    await Promise.all(deletePromises);
-
-    await fetchActorsByApplication(props.application.id);
+    const results = await Promise.allSettled(actorsToDelete.map((actor) => deleteActor(actor.id, props.application.id)));
+    const failedIds = actorsToDelete.filter((_, index) => results[index].status === "rejected").map((actor) => actor.id);
+    if (failedIds.length < actorsToDelete.length) await fetchActorsByApplication(props.application.id);
+    if (failedIds.length) {
+      selectedActorIds.value = failedIds;
+      throw new Error("Actor deletion failed");
+    }
     selectedActorIds.value = [];
     showDeleteConfirmation.value = false;
+    statusMessage.value = "Acteurs supprimés avec succès !";
     toaster.addSuccessMessage("Acteurs supprimés avec succès !");
+    await restoreActorFocus();
   } catch {
-    toaster.addErrorMessage("Erreur lors de la suppression d'un ou plusieurs acteurs.");
+    deleteError.value = "Erreur lors de la suppression d'un ou plusieurs acteurs. La sélection restante est conservée pour réessayer.";
+    if (!showDeleteConfirmation.value) toaster.addErrorMessage(deleteError.value);
+  } finally {
+    isDeleting.value = false;
   }
 }
 
@@ -196,6 +243,7 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
       disabled: !canEdit.value,
       onClick: (event?: Event) => {
         if (event && typeof event.stopPropagation === "function") event.stopPropagation();
+        if (event) rememberTrigger(event);
         actorModal.openModal(actor);
       },
     },
@@ -207,7 +255,9 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
       disabled: !canEdit.value,
       onClick: (event?: Event) => {
         if (event && typeof event.stopPropagation === "function") event.stopPropagation();
+        if (event) rememberTrigger(event);
         selectedActorIds.value = [actor.id];
+        deleteError.value = "";
         showDeleteConfirmation.value = true;
       },
     },
@@ -217,7 +267,7 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
 
 <template>
   <p class="fr-sr-only" aria-live="polite" aria-atomic="true" data-testid="actor-status">{{ statusMessage }}</p>
-  <div class="fr-grid-row fr-grid-row--middle fr-mb-3w" v-bind="$attrs" data-testid="actor-tab">
+  <div ref="actorActions" class="fr-grid-row fr-grid-row--middle fr-mb-3w" v-bind="$attrs" data-testid="actor-tab">
     <div class="fr-col">
       <h3 class="fr-mb-0">Gestion des acteurs</h3>
     </div>
@@ -245,7 +295,7 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
     <p>Aucun acteur enregistré.</p>
   </div>
 
-  <div v-else data-testid="actor-table">
+  <div v-else ref="actorTable" data-testid="actor-table">
     <div v-if="!props.isMobile" class="global-delete">
       <DsfrButton
         type="button"
@@ -276,7 +326,13 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
         @page="onPage"
       >
         <template #body-Sélection="{ data }">
-          <input v-model="selectedActorIds" type="checkbox" :value="data.Sélection" :data-testid="`actor-row-select-${data.Sélection}`" />
+          <input
+            v-model="selectedActorIds"
+            type="checkbox"
+            :value="data.Sélection"
+            :aria-label="`Sélectionner ${data.Identité} — ${data.Type}`"
+            :data-testid="`actor-row-select-${data.Sélection}`"
+          />
         </template>
 
         <template #body-Organisation="{ data }">
@@ -300,17 +356,17 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
 
         <template #header-Groupe>
           <DsfrTooltip
-            on-hover
+            aria-label="Afficher l’aide sur le rattachement des acteurs"
             content="Établir le lien entre une personne physique et une boîte e-mail fonctionnelle (ex: equipe, service)"
-          >
-            Rattaché(e)
-          </DsfrTooltip>
+            @keydown.enter.stop
+            @keydown.space.stop
+          />
         </template>
 
         <template #body-Actions="{ data }">
           <DsfrButton
-            title="Modifier les informations de l'acteur"
-            aria-label="Modifier l'acteur"
+            :title="`Modifier ${data.Identité}`"
+            :aria-label="`Modifier ${data.Identité}`"
             tertiary
             size="sm"
             icon="fr-icon-edit-line"
@@ -386,20 +442,23 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
     :opened="actorModal.isModalOpen.value || actorModal.isCreateModalOpen.value"
     :title="actorModal.isCreateModalOpen.value ? 'Ajouter un acteur' : 'Modifier l\'acteur'"
     data-testid="actor-modal"
-    @close="actorModal.closeModal"
+    @close="closeActorModal"
   >
     <ActorForm
       v-bind="{ application, initialData: actorModal.selectedItem.value ?? undefined }"
       :is-submitting="loading"
+      :error-message="formError"
       :actor-types="actorTypesList"
       data-testid="actor-form-container"
       @submit="handleSaveActors"
-      @cancel="actorModal.closeModal"
+      @cancel="closeActorModal"
     ></ActorForm>
   </DsfrModal>
 
   <DeleteConfirmationModal
     :opened="showDeleteConfirmation"
+    :error-message="deleteError"
+    :is-submitting="isDeleting"
     item-name="les acteurs sélectionnés"
     data-testid="actor-delete-modal"
     @confirm="confirmDelete"

@@ -3,6 +3,7 @@ import { ref, watch, onMounted, computed, nextTick } from "vue";
 import { useHostingStore } from "@/stores/hostingStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import type { CreateHostingDto, HostingDto, HostingOptionDto } from "@/client/types.gen";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps<{
   applicationId: string;
@@ -22,6 +23,8 @@ const hostingOptionsList = ref<HostingOptionDto[]>([]);
 const isLoadingOptions = ref(false);
 const hostingOptionSearch = ref("");
 const isSubmitting = ref(false);
+const submissionError = ref("");
+useSubmissionFocus(isSubmitting);
 const optionError = ref<string | undefined>(undefined);
 const hostingStore = useHostingStore();
 const toaster = useToasterStore();
@@ -87,6 +90,7 @@ watch(() => props.initialHosting, setInitialValues, { immediate: true });
 watch(hostingOptionsList, setInitialValues, { immediate: true });
 
 async function handleSubmit() {
+  submissionError.value = "";
   optionError.value = isFormValid.value ? undefined : "Veuillez compléter le champ : Option d'hébergement";
   if (optionError.value) return;
 
@@ -109,7 +113,7 @@ async function handleSubmit() {
     emit("close");
   } catch (err) {
     console.error("Error submitting hosting form:", err);
-    toaster.addErrorMessage("Une erreur est survenue lors de l'enregistrement de l'hébergement");
+    submissionError.value = "Une erreur est survenue lors de l'enregistrement de l'hébergement. Votre saisie est conservée.";
   } finally {
     isSubmitting.value = false;
   }
@@ -123,17 +127,20 @@ async function handleSubmit() {
     data-testid="hosting-modal"
     @close="$emit('close')"
   >
-    <DsfrAlert
-      v-show="props.initialHosting && props.errorMessage.length > 0"
-      class="mb-4"
-      tabindex="-1"
-      type="error"
-      role="alert"
-      aria-live="assertive"
-      title="Une erreur est survenue"
-      :description="props.errorMessage"
-    />
+    <div role="alert" aria-live="assertive" aria-atomic="true">
+      <DsfrAlert
+        v-if="props.initialHosting && props.errorMessage.length > 0"
+        class="mb-4"
+        tabindex="-1"
+        type="error"
+        title="Une erreur est survenue"
+        :description="props.errorMessage"
+      />
+    </div>
     <form data-testid="hosting-form" @submit.prevent="handleSubmit">
+      <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="hosting-form-error">
+        <p v-if="submissionError" class="fr-error-text">{{ submissionError }}</p>
+      </div>
       <p class="fr-text--sm fr-mb-2w" data-testid="required-fields-hint">Tous les champs avec un * sont obligatoires</p>
       <div v-if="isLoadingOptions" class="fr-text--center fr-mb-2w" data-testid="hosting-options-loading">
         <span class="fr-loading fr-loading--sm" data-testid="hosting-options-spinner">

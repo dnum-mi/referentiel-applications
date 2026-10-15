@@ -1,0 +1,567 @@
+{
+  "id": "AT-D01",
+  "source": "inputs.json : données entièrement synthétiques + titres/étiquettes connus des générateurs ; aucune extraction du DOM pour construire ces attentes",
+  "requiredNativeText": [
+    "Export des applications",
+    "Sommaire",
+    "Applications",
+    "Hébergements",
+    "Acteurs",
+    "Conformités",
+    "Labels",
+    "Ressources externes",
+    "Signalements",
+    "Relations sortantes",
+    "Relations entrantes",
+    "Statuts",
+    "Portail synthétique RGAA",
+    "Référentiel synthétique RGAA",
+    "PORTAIL-TEST",
+    "REFERENTIEL-TEST",
+    "Fournisseur fictif",
+    "Site synthétique",
+    "Plateforme test",
+    "Salle de démonstration",
+    "Agent",
+    "Synthétique",
+    "Maîtrise d’ouvrage de démonstration",
+    "agent-rgaa@example.invalid",
+    "Impact fictif limité",
+    "Solution de démonstration",
+    "Données synthétiques",
+    "Support fictif",
+    "Restauration synthétique réussie",
+    "Délégué fictif",
+    "Documentation de démonstration",
+    "Signalement fictif",
+    "Fait partie de",
+    "En production",
+    "Aucune ligne",
+    "Champ",
+    "Valeur"
+  ],
+  "interpretation": "La lecture native doit atteindre le footer, chaque champ complet doit être annoncé dans son contexte, et les déplacements de cellules couvrent tous les tableaux. Les candidats vocaux spécifiques proviennent de vraies annonces ; aucune valeur manquante ne peut être compensée par un autre champ.",
+  "syntheticOnly": true,
+  "modelSource": "Données synthétiques inputs.json, modèle calculé par les vrais générateurs et libellés source ; aucune attente extraite du DOM HTML.",
+  "spokenEquivalenceSource": {
+    "run": 38420957659,
+    "file": "cases-results-native-observed.json",
+    "method": "Only complete, actually observed native phrases; literal source value is retained separately.",
+    "sourceSha256": "1e3eb9cb3abd75f9fd021cfbf1fafc7ca58d79267abad86c91889768a60d44b2"
+  },
+  "tables": [
+    {
+      "caption": "Applications — ligne 1",
+      "columnHeaders": ["Champ", "Valeur"],
+      "columnHeaderNativeCandidates": [["Champ"], ["Valeur"]],
+      "rows": [
+        {
+          "label": "Identifiant",
+          "value": "app-synthetic-001",
+          "nativeTextCandidates": ["app-synthetic-001"]
+        },
+        {
+          "label": "Libellé",
+          "value": "Portail synthétique RGAA",
+          "nativeTextCandidates": ["Portail synthétique RGAA"]
+        },
+        {
+          "label": "Nom court",
+          "value": "PORTAIL-TEST",
+          "nativeTextCandidates": ["PORTAIL-TEST"]
+        },
+        {
+          "label": "Logo",
+          "value": "",
+          "nativeTextCandidates": [""]
+        },
+        {
+          "label": "Description",
+          "value": "Application de démonstration ; aucune donnée réelle.\nDeuxième ligne avec & et <texte>.",
+          "nativeTextCandidates": [
+            "Application de démonstration ; aucune donnée réelle. Deuxième ligne avec et commercial et inférieur texte supérieur ."
+          ]
+        },
+        {
+          "label": "Tags",
+          "value": "Synthétique",
+          "nativeTextCandidates": ["Synthétique"]
+        },
+        {
+          "label": "Finalités",
+          "value": "Consulter un catalogue synthétique, Vérifier une alternative documentaire",
+          "nativeTextCandidates": [
+            "Consulter un catalogue synthétique, Vérifier une alternative documentaire"
+          ]
+        },
+        {
+          "label": "Populations cibles",
+          "value": "Agents fictifs, Auditeurs de démonstration",
+          "nativeTextCandidates": ["Agents fictifs, Auditeurs de démonstration"]
+        },
+        {
+          "label": "Priorité de redémarrage",
+          "value": "R1 - Dès que le socle technique est rétabli (H24)",
+          "nativeTextCandidates": [
+            "R 1 - Dès que le socle technique est rétabli (H 24)"
+          ]
+        },
+        {
+          "label": "ID Statut actuel",
+          "value": "status-synthetic-001",
+          "nativeTextCandidates": ["status-synthetic-001"]
+        }
+      ]
+    },
+    {
+      "caption": "Applications — ligne 2",
+      "columnHeaders": ["Champ", "Valeur"],
+      "columnHeaderNativeCandidates": [["Champ"], ["Valeur"]],
+      "rows": [
+        {
+          "label": "Identifiant",
+          "value": "app-synthetic-002",
+          "nativeTextCandidates": ["app-synthetic-002"]
+        },
+        {
+          "label": "Libellé",
+          "value": "Référentiel synthétique RGAA",
+          "nativeTextCandidates": ["Référentiel synthétique RGAA"]
+        },
+        {
+          "label": "Nom court",
+          "value": "REFERENTIEL-TEST",
+          "nativeTextCandidates": ["REFERENTIEL-TEST"]
+        },
+        {
+          "label": "Logo",
+          "value": "",
+          "nativeTextCandidates": [""]
+        },
+        {
+          "label": "Description",
+          "value": "Seconde application entièrement synthétique.",
+          "nativeTextCandidates": [
+            "Seconde application entièrement synthétique."
+          ]
+        },
+        {
+          "label": "Tags",
+          "value": "",
+          "nativeTextCandidates": [""]
+        },
+        {
+          "label": "Finalités",
+          "value": "Fournir des valeurs fictives",
+          "nativeTextCandidates": ["Fournir des valeurs fictives"]
+        },
+        {
+          "label": "Populations cibles",
+          "value": "Agents fictifs",
+          "nativeTextCandidates": ["Agents fictifs"]
+        },
+        {
+          "label": "Priorité de redémarrage",
+          "value": "R3 - Quand le plus urgent est réalisé (H0)",
+          "nativeTextCandidates": [
+            "R 3 - Quand le plus urgent est réalisé (H 0)"
+          ]
+        },
+        {
+          "label": "ID Statut actuel",
+          "value": "",
+          "nativeTextCandidates": [""]
+        }
+      ]
+    },
+    {
+      "caption": "Hébergements — ligne 1",
+      "columnHeaders": ["Champ", "Valeur"],
+      "columnHeaderNativeCandidates": [["Champ"], ["Valeur"]],
+      "rows": [
+        {
+          "label": "ID Application",
+          "value": "app-synthetic-001",
+          "nativeTextCandidates": ["app-synthetic-001"]
+        },
+        {
+          "label": "Application",
+          "value": "Portail synthétique RGAA",
+          "nativeTextCandidates": ["Portail synthétique RGAA"]
+        },
+        {
+          "label": "ID Hébergement",
+          "value": "hosting-synthetic-001",
+          "nativeTextCandidates": ["hosting-synthetic-001"]
+        },
+        {
+          "label": "Label d’hébergement",
+          "value": "Environnement de démonstration",
+          "nativeTextCandidates": ["Environnement de démonstration"]
+        },
+        {
+          "label": "Fournisseur d’hébergement",
+          "value": "Fournisseur fictif",
+          "nativeTextCandidates": ["Fournisseur fictif"]
+        },
+        {
+          "label": "Site",
+          "value": "Site synthétique",
+          "nativeTextCandidates": ["Site synthétique"]
+        },
+        {
+          "label": "Plateforme",
+          "value": "Plateforme test",
+          "nativeTextCandidates": ["Plateforme test"]
+        },
+        {
+          "label": "Bâtiment",
+          "value": "Bâtiment A",
+          "nativeTextCandidates": ["Bâtiment A"]
+        },
+        {
+          "label": "Salle",
+          "value": "Salle de démonstration",
+          "nativeTextCandidates": ["Salle de démonstration"]
+        }
+      ]
+    },
+    {
+      "caption": "Acteurs — ligne 1",
+      "columnHeaders": ["Champ", "Valeur"],
+      "columnHeaderNativeCandidates": [["Champ"], ["Valeur"]],
+      "rows": [
+        {
+          "label": "ID Application",
+          "value": "app-synthetic-001",
+          "nativeTextCandidates": ["app-synthetic-001"]
+        },
+        {
+          "label": "Application",
+          "value": "Portail synthétique RGAA",
+          "nativeTextCandidates": ["Portail synthétique RGAA"]
+        },
+        {
+          "label": "ID Acteur",
+          "value": "actor-synthetic-001",
+          "nativeTextCandidates": ["actor-synthetic-001"]
+        },
+        {
+          "label": "Prénom de l’acteur",
+          "value": "Agent",
+          "nativeTextCandidates": ["Agent"]
+        },
+        {
+          "label": "Nom de l’acteur",
+          "value": "Synthétique",
+          "nativeTextCandidates": ["Synthétique"]
+        },
+        {
+          "label": "Rôle",
+          "value": "MOA",
+          "nativeTextCandidates": ["MOA"]
+        },
+        {
+          "label": "Type",
+          "value": "Maîtrise d’ouvrage de démonstration",
+          "nativeTextCandidates": ["Maîtrise d’ouvrage de démonstration"]
+        },
+        {
+          "label": "Adresse e-mail",
+          "value": "agent-rgaa@example.invalid",
+          "nativeTextCandidates": ["agent-rgaa arobase example point invalid"]
+        }
+      ]
+    },
+    {
+      "caption": "Conformités — ligne 1",
+      "columnHeaders": ["Champ", "Valeur"],
+      "columnHeaderNativeCandidates": [["Champ"], ["Valeur"]],
+      "rows": [
+        {
+          "label": "ID Application",
+          "value": "app-synthetic-001",
+          "nativeTextCandidates": ["app-synthetic-001"]
+        },
+        {
+          "label": "Application",
+          "value": "Portail synthétique RGAA",
+          "nativeTextCandidates": ["Portail synthétique RGAA"]
+        },
+        {
+          "label": "Identifiant",
+          "value": "compliance-synthetic-001",
+          "nativeTextCandidates": ["compliance-synthetic-001"]
+        },
+        {
+          "label": "DIMA Durée (heures)",
+          "value": "4",
+          "nativeTextCandidates": ["4"]
+        },
+        {
+          "label": "DIMA HNO",
+          "value": "Non",
+          "nativeTextCandidates": ["Non"]
+        },
+        {
+          "label": "DIMA Impact métier",
+          "value": "Impact fictif limité",
+          "nativeTextCandidates": ["Impact fictif limité"]
+        },
+        {
+          "label": "DIMA Plan de reprise",
+          "value": "Oui",
+          "nativeTextCandidates": ["Oui"]
+        },
+        {
+          "label": "DIMA Solutions de reprise",
+          "value": "Solution de démonstration",
+          "nativeTextCandidates": ["Solution de démonstration"]
+        },
+        {
+          "label": "DIMA Date dernier test",
+          "value": "2026-09-01T00:00:00.000Z",
+          "nativeTextCandidates": ["2026-09-01T 00:00:00 000Z"]
+        },
+        {
+          "label": "DIMA Résultat test",
+          "value": "Essai synthétique réussi",
+          "nativeTextCandidates": ["Essai synthétique réussi"]
+        },
+        {
+          "label": "DIMA Responsable reprise",
+          "value": "Responsable fictif",
+          "nativeTextCandidates": ["Responsable fictif"]
+        },
+        {
+          "label": "PDMA Durée (heures)",
+          "value": "2",
+          "nativeTextCandidates": ["2"]
+        },
+        {
+          "label": "PDMA Types de données",
+          "value": "Données synthétiques",
+          "nativeTextCandidates": ["Données synthétiques"]
+        },
+        {
+          "label": "PDMA Fréquence sauvegarde",
+          "value": "Quotidienne",
+          "nativeTextCandidates": ["Quotidienne"]
+        },
+        {
+          "label": "PDMA Méthode sauvegarde",
+          "value": "Copie de démonstration",
+          "nativeTextCandidates": ["Copie de démonstration"]
+        },
+        {
+          "label": "PDMA Stockage sauvegarde",
+          "value": "Support fictif",
+          "nativeTextCandidates": ["Support fictif"]
+        },
+        {
+          "label": "PDMA Date dernier test",
+          "value": "2026-09-02T00:00:00.000Z",
+          "nativeTextCandidates": ["2026-09-02T 00:00:00 000Z"]
+        },
+        {
+          "label": "PDMA Résultat test",
+          "value": "Restauration synthétique réussie",
+          "nativeTextCandidates": ["Restauration synthétique réussie"]
+        },
+        {
+          "label": "PDMA Responsable restauration",
+          "value": "Gestionnaire fictif",
+          "nativeTextCandidates": ["Gestionnaire fictif"]
+        },
+        {
+          "label": "Homologation Date Fin",
+          "value": "2027-01-01T00:00:00.000Z",
+          "nativeTextCandidates": ["2027-01-01T 00:00:00 000Z"]
+        },
+        {
+          "label": "Homologation RSSI ID",
+          "value": "rssi-synthetic-001",
+          "nativeTextCandidates": ["rssi-synthetic-001"]
+        },
+        {
+          "label": "DSFR Implémenté",
+          "value": "Oui",
+          "nativeTextCandidates": ["Oui"]
+        },
+        {
+          "label": "DSFR Version",
+          "value": "1.14.4",
+          "nativeTextCandidates": ["1 point 14 point 4"]
+        },
+        {
+          "label": "RGPD AIPD",
+          "value": "Non",
+          "nativeTextCandidates": ["Non"]
+        },
+        {
+          "label": "RGPD Nom DPO",
+          "value": "Délégué fictif",
+          "nativeTextCandidates": ["Délégué fictif"]
+        }
+      ]
+    },
+    {
+      "caption": "Ressources externes — ligne 1",
+      "columnHeaders": ["Champ", "Valeur"],
+      "columnHeaderNativeCandidates": [["Champ"], ["Valeur"]],
+      "rows": [
+        {
+          "label": "ID Application",
+          "value": "app-synthetic-001",
+          "nativeTextCandidates": ["app-synthetic-001"]
+        },
+        {
+          "label": "Application",
+          "value": "Portail synthétique RGAA",
+          "nativeTextCandidates": ["Portail synthétique RGAA"]
+        },
+        {
+          "label": "Lien",
+          "value": "https://example.invalid/documentation?fixture=synthetic&version=1",
+          "nativeTextCandidates": [
+            "https: barre oblique barre oblique example point invalid barre oblique documentation fixture égal synthetic et commercial version égal 1"
+          ]
+        },
+        {
+          "label": "Description ressource",
+          "value": "Documentation de démonstration ; lien fictif.",
+          "nativeTextCandidates": [
+            "Documentation de démonstration ; lien fictif."
+          ]
+        },
+        {
+          "label": "Type de ressource",
+          "value": "Documentation",
+          "nativeTextCandidates": ["Documentation"]
+        }
+      ]
+    },
+    {
+      "caption": "Signalements — ligne 1",
+      "columnHeaders": ["Champ", "Valeur"],
+      "columnHeaderNativeCandidates": [["Champ"], ["Valeur"]],
+      "rows": [
+        {
+          "label": "ID Application",
+          "value": "app-synthetic-001",
+          "nativeTextCandidates": ["app-synthetic-001"]
+        },
+        {
+          "label": "Application",
+          "value": "Portail synthétique RGAA",
+          "nativeTextCandidates": ["Portail synthétique RGAA"]
+        },
+        {
+          "label": "Description",
+          "value": "Signalement fictif avec \"guillemets\" et &.",
+          "nativeTextCandidates": [
+            "Signalement fictif avec guillemets et et commercial ."
+          ]
+        },
+        {
+          "label": "Statut du signalement",
+          "value": "En cours",
+          "nativeTextCandidates": ["En cours"]
+        }
+      ]
+    },
+    {
+      "caption": "Relations sortantes — ligne 1",
+      "columnHeaders": ["Champ", "Valeur"],
+      "columnHeaderNativeCandidates": [["Champ"], ["Valeur"]],
+      "rows": [
+        {
+          "label": "ID Application",
+          "value": "app-synthetic-001",
+          "nativeTextCandidates": ["app-synthetic-001"]
+        },
+        {
+          "label": "Application",
+          "value": "Portail synthétique RGAA",
+          "nativeTextCandidates": ["Portail synthétique RGAA"]
+        },
+        {
+          "label": "Identifiant source",
+          "value": "app-synthetic-001",
+          "nativeTextCandidates": ["app-synthetic-001"]
+        },
+        {
+          "label": "Identifiant cible",
+          "value": "app-synthetic-002",
+          "nativeTextCandidates": ["app-synthetic-002"]
+        },
+        {
+          "label": "Cibles liées (nom)",
+          "value": "Référentiel synthétique RGAA",
+          "nativeTextCandidates": ["Référentiel synthétique RGAA"]
+        },
+        {
+          "label": "Type de relation",
+          "value": "Fait partie de",
+          "nativeTextCandidates": ["Fait partie de"]
+        }
+      ]
+    },
+    {
+      "caption": "Statuts — ligne 1",
+      "columnHeaders": ["Champ", "Valeur"],
+      "columnHeaderNativeCandidates": [["Champ"], ["Valeur"]],
+      "rows": [
+        {
+          "label": "ID Application",
+          "value": "app-synthetic-001",
+          "nativeTextCandidates": ["app-synthetic-001"]
+        },
+        {
+          "label": "Application",
+          "value": "Portail synthétique RGAA",
+          "nativeTextCandidates": ["Portail synthétique RGAA"]
+        },
+        {
+          "label": "Statut",
+          "value": "En production",
+          "nativeTextCandidates": ["En production"]
+        },
+        {
+          "label": "Date du statut",
+          "value": "2026-09-03",
+          "nativeTextCandidates": ["2026-09-03"]
+        }
+      ]
+    }
+  ],
+  "blocks": [],
+  "emptySections": [
+    {
+      "title": "Labels",
+      "headers": [
+        "ID Application",
+        "Application",
+        "Valeur du label",
+        "Source du label"
+      ]
+    },
+    {
+      "title": "Relations entrantes",
+      "headers": [
+        "ID Application",
+        "Application",
+        "Identifiant cible",
+        "Identifiant source",
+        "Sources liées (nom)",
+        "Type de relation"
+      ]
+    }
+  ],
+  "modelCompleteness": {
+    "sections": 10,
+    "tables": 9,
+    "dataRows": 81,
+    "emptySections": 2
+  }
+}

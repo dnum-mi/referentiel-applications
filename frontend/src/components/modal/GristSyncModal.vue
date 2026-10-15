@@ -92,6 +92,7 @@ function announce(report: GristDocumentReportDto[]) {
 }
 
 async function confirmSync() {
+  if (isSyncing.value || isLoading.value) return;
   if (!targets.value.length) {
     errorMessage.value = "Aucun document lisible à synchroniser.";
     return;
@@ -121,10 +122,12 @@ async function confirmSync() {
         Une nouvelle table garde les autres intactes.
       </p>
 
-      <DsfrAlert v-if="errorMessage" type="error" :description="errorMessage" small class="fr-mb-3w" data-testid="grist-sync-error" />
+      <DsfrAlert v-if="errorMessage" alert type="error" :description="errorMessage" small class="fr-mb-3w" data-testid="grist-sync-error" />
 
-      <p v-if="isLoading" class="fr-text--sm" data-testid="grist-sync-loading">Lecture de vos documents Grist…</p>
-      <div v-for="document in documents" v-else :key="document.docId" class="fr-mb-2w" data-testid="grist-sync-document">
+      <output class="fr-text--sm" aria-live="polite" aria-atomic="true" data-testid="grist-sync-status">
+        {{ isLoading ? "Lecture de vos documents Grist…" : isSyncing ? "Synchronisation avec Grist en cours…" : "" }}
+      </output>
+      <div v-for="document in isLoading ? [] : documents" :key="document.docId" class="fr-mb-2w" data-testid="grist-sync-document">
         <DsfrSelect
           v-model="choices[document.docId]"
           :options="optionsFor(document)"
@@ -137,13 +140,16 @@ async function confirmSync() {
 
       <template #footer>
         <DsfrButtonGroup :inline-layout-when="true" :reverse="true">
-          <DsfrButton label="Annuler" secondary data-testid="grist-sync-cancel-btn" @click="emit('close')" />
-          <DsfrButton
-            :label="isSyncing ? 'Synchronisation…' : 'Synchroniser'"
-            :disabled="isSyncing || isLoading"
-            data-testid="grist-sync-confirm-btn"
-            @click="confirmSync"
-          />
+          <li><DsfrButton label="Annuler" secondary data-testid="grist-sync-cancel-btn" @click="emit('close')" /></li>
+          <li>
+            <DsfrButton
+              :label="isSyncing ? 'Synchronisation…' : 'Synchroniser'"
+              :aria-disabled="isSyncing || isLoading"
+              :aria-busy="isSyncing"
+              data-testid="grist-sync-confirm-btn"
+              @click="confirmSync"
+            />
+          </li>
         </DsfrButtonGroup>
       </template>
     </DsfrModal>

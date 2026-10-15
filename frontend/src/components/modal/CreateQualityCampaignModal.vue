@@ -3,6 +3,7 @@ import { ref } from "vue";
 import { useApplicationSearch } from "@/composables/use-application-search";
 import { useQualityCampaignStore } from "@/stores/qualityCampaignStore";
 import SponsorEmailsInput from "@/components/form/SponsorEmailsInput.vue";
+import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 defineProps<{
   opened: boolean;
@@ -22,6 +23,7 @@ const startDate = ref("");
 const endDate = ref("");
 const errorMessage = ref("");
 const isSaving = ref(false);
+useSubmissionFocus(isSaving);
 const areSponsorEmailsValid = ref(true);
 
 function reset() {
@@ -85,6 +87,7 @@ async function confirmCreate() {
       data-testid="create-quality-campaign-modal"
       @close="close"
     >
+      <p class="fr-text--sm fr-mb-3w" data-testid="required-fields-hint">* = champs obligatoires</p>
       <p class="fr-text--sm fr-hint-text fr-mb-3w" style="white-space: normal">
         La campagne ciblera les <strong>{{ total }}</strong> application(s) correspondant actuellement aux filtres du catalogue. Leurs
         acteurs (MOA/MOE) seront relancés par email à la date de début pour les inciter à améliorer l'indice de qualité.
@@ -93,6 +96,7 @@ async function confirmCreate() {
       <DsfrAlert
         v-if="errorMessage"
         type="error"
+        alert
         :description="errorMessage"
         small
         class="fr-mb-3w"
@@ -148,13 +152,15 @@ async function confirmCreate() {
 
       <template #footer>
         <DsfrButtonGroup :inline-layout-when="true" :reverse="true">
-          <DsfrButton label="Annuler" secondary data-testid="create-quality-campaign-cancel-btn" @click="close" />
-          <DsfrButton
-            :label="isSaving ? 'Création…' : 'Créer la campagne'"
-            :disabled="isSaving"
-            data-testid="create-quality-campaign-confirm-btn"
-            @click="confirmCreate"
-          />
+          <li><DsfrButton label="Annuler" secondary data-testid="create-quality-campaign-cancel-btn" @click="close" /></li>
+          <li>
+            <DsfrButton
+              :label="isSaving ? 'Création…' : 'Créer la campagne'"
+              :disabled="isSaving"
+              data-testid="create-quality-campaign-confirm-btn"
+              @click="confirmCreate"
+            />
+          </li>
         </DsfrButtonGroup>
       </template>
     </DsfrModal>

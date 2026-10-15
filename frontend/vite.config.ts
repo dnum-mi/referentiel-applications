@@ -18,15 +18,10 @@ export default defineConfig({
     vue(),
     vueJsx(),
     VitePWA({
-      // "autoUpdate" : dès qu'un nouveau service worker est activé, la page est
-      // rechargée automatiquement, sans action de l'utilisateur — voir #2149.
-      registerType: "autoUpdate",
+      // L'utilisateur choisit le moment du rechargement, après avoir enregistré.
+      registerType: "prompt",
       includeAssets: ["favicon.svg", "safari-pinned-tab.svg"],
       workbox: {
-        // Filet de sécurité #2306 : recharge depuis le service worker les pages
-        // restées sur un runtime antérieur à v1.86 (incapables de se recharger
-        // seules à l'activation d'une nouvelle version).
-        importScripts: ["sw-force-reload.js"],
         maximumFileSizeToCacheInBytes: 5000000, // Pour le CSS du DSFR :-/
         navigateFallbackDenylist: [/^\/api*/],
         runtimeCaching: [

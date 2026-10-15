@@ -49,11 +49,12 @@ async function updateStatus(newValue: ReportStatus) {
   emit("refresh");
 }
 
-watch(statusValue, (newVal, oldVal) => {
-  if (newVal !== oldVal) {
-    updateStatus(newVal);
-  }
-});
+async function selectStatus(value: unknown) {
+  const option = options.find((candidate) => candidate.value === value);
+  if (!option || option.value === statusValue.value) return;
+  statusValue.value = option.value;
+  await updateStatus(option.value);
+}
 
 watch(
   () => props.report.status,
@@ -71,7 +72,15 @@ watch(
     :label="statusDictionary[statusValue]"
     :data-testid="`issues-row-${report.id}-status`"
   />
-  <DsfrSelect v-else v-model="statusValue" :options="options" />
+  <DsfrSelect
+    v-else
+    :select-id="`report-status-${report.id}`"
+    :model-value="statusValue"
+    @update:model-value="selectStatus"
+    :label="`Statut du signalement : ${report.description || report.id}`"
+    hide-label
+    :options="options"
+  />
 </template>
 
 <style scoped>

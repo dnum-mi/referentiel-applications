@@ -57,7 +57,7 @@ onMounted(fetchCampaigns);
 
 <template>
   <div class="header-row">
-    <h1 class="fr-h1" data-testid="admin-campaigns-title">Gestion des campagnes dette IT</h1>
+    <h2 class="fr-h1" data-testid="admin-campaigns-title">Gestion des campagnes dette IT</h2>
 
     <MditCampaignActions @fetch-campaigns="fetchCampaigns" />
   </div>

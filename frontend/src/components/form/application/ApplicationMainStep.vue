@@ -60,12 +60,12 @@ Aucun espace en début ou en fin."
       v-if="isCreateMode"
       v-model="form.status.status"
       :options="statusOptions"
-      label="Status de l'application"
-      default-unselected-text="Sélectionner un status"
+      label="Statut de l'application"
+      default-unselected-text="Sélectionner un statut"
       data-testid="application-status"
     />
 
-    <BusinessDivisionSearch v-model:business-division-ids="form.businessDivisionIds" label="Rechercher une direction de metier" />
+    <BusinessDivisionSearch v-model:business-division-ids="form.businessDivisionIds" label="Rechercher une direction de métier" />
 
     <DsfrSelect
       v-model="form.type"
@@ -76,19 +76,17 @@ Aucun espace en début ou en fin."
       data-testid="application-type"
     />
 
-    <DsfrInputGroup
-      class="fr-mt-3w"
-      label="Description"
-      label-visible
-      required
-      description-id="application-description-error"
-      :error-message="errors.description"
-    >
+    <DsfrInputGroup class="fr-mt-3w" description-id="application-description-error" :error-message="errors.description">
+      <template #before-input>
+        <label for="application-description" class="fr-label">Description (obligatoire)</label>
+      </template>
       <MarkdownEditor
+        title="Description"
+        id="application-description"
         ref="descriptionEditor"
         v-model.trim="form.description"
         :disabled="!canEditBase"
-        aria-label="Description"
+        required
         :describedby="errors.description ? 'application-description-error' : undefined"
         :invalid="!!errors.description"
         data-testid="application-description"

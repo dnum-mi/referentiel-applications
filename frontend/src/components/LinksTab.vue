@@ -9,7 +9,7 @@ import { useToasterStore } from "@/stores/toasterStore.js";
 import type { TableColumn } from "@/types/table";
 import type { DsfrButtonProps } from "@gouvminint/vue-dsfr";
 import type { DataTablePageEvent } from "primevue/datatable";
-import { computed, onMounted, ref, type ButtonHTMLAttributes } from "vue";
+import { computed, onMounted, ref, watch, type ButtonHTMLAttributes } from "vue";
 import LinkForm from "./form/LinkForm.vue";
 import RefAppTable from "./RefAppTable.vue";
 import { useAppPermission } from "@/composables/use-app-permission";
@@ -33,6 +33,8 @@ const isLoading = ref(false);
 const toaster = useToasterStore();
 
 const isSubmitting = ref(false);
+const formError = ref("");
+watch([linkModal.isModalOpen, linkModal.isCreateModalOpen], () => (formError.value = ""));
 const linkToDelete = ref<string | null>(null);
 const showDeleteConfirmation = ref(false);
 const canEdit = useAppPermission(() => props.application.myPerms, [Permission.LINK_WRITE]);
@@ -95,6 +97,7 @@ const rows = computed(() =>
 );
 
 async function createLink(newLink: CreateLinkDto) {
+  formError.value = "";
   try {
     isSubmitting.value = true;
     const response = await api.applicationLinksControllerCreate({ path: { applicationId: props.application.id }, body: newLink });
@@ -104,12 +107,15 @@ async function createLink(newLink: CreateLinkDto) {
     toaster.addSuccessMessage("Lien créé avec succès !");
     linkModal.closeModal();
     await fetchLinks({ page: currentPage.value, pageSize: pageSize.value });
+  } catch {
+    formError.value = "Erreur lors de la création du lien. Votre saisie est conservée.";
   } finally {
     isSubmitting.value = false;
   }
 }
 
 async function editLink(updatedLink: UpdateLinkDto) {
+  formError.value = "";
   try {
     isSubmitting.value = true;
     const selectedItem = linkModal.selectedItem.value as LinkDto | null;
@@ -132,6 +138,8 @@ async function editLink(updatedLink: UpdateLinkDto) {
     toaster.addSuccessMessage("Lien modifié avec succès !");
     linkModal.closeModal();
     await fetchLinks({ page: currentPage.value, pageSize: pageSize.value });
+  } catch {
+    formError.value = "Erreur lors de la modification du lien. Votre saisie est conservée.";
   } finally {
     isSubmitting.value = false;
   }
@@ -313,6 +321,9 @@ onMounted(async () => {
     data-testid="link-modal"
     @close="linkModal.closeModal"
   >
+    <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="link-form-error">
+      <p v-if="formError" class="fr-error-text">{{ formError }}</p>
+    </div>
     <LinkForm
       :initial-data="linkModal.selectedItem.value ?? undefined"
       :is-submitting="isSubmitting"

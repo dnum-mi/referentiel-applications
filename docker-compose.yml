@@ -110,7 +110,7 @@ services:
     # avec toute modification de keycloak/realm-export.json : la configuration du service change,
     # et le prochain `docker compose up -d` recrée le conteneur (donc réimporte) sur chaque poste.
     labels:
-      - "refapp.realm-revision=1985-1"
+      - "refapp.realm-revision=rgaa-session-20261013-1"
     environment:
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin
       - KC_BOOTSTRAP_ADMIN_PASSWORD=password

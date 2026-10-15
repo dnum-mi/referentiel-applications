@@ -13,15 +13,22 @@ export function useApplicationFormActions(
   getData: () => ApplicationFormData,
   getMode: () => ApplicationFormMode,
   getId: () => string | undefined,
+  isFormVisible: () => boolean = () => false,
 ) {
   const toaster = useToasterStore();
   const applicationStore = useApplicationStore();
   const organizationStore = useOrganizationStore();
   const isSubmitting = ref(false);
+  const saveError = ref("");
   const moaSyncing = ref(false);
   const moeSyncing = ref(false);
   const initialMoaOrganization = ref<OrganizationDto | null>(null);
   const initialMoeOrganization = ref<OrganizationDto | null>(null);
+
+  function reportSaveError(message: string) {
+    saveError.value = message;
+    if (!isFormVisible()) toaster.addErrorMessage(message);
+  }
 
   async function createActor(applicationId: string, contact: CreateActorDto) {
     const response = await api.applicationActorsControllerCreate({
@@ -41,6 +48,7 @@ export function useApplicationFormActions(
 
   async function save(): Promise<ApplicationDto | undefined> {
     if (isSubmitting.value) return;
+    saveError.value = "";
     return withLoading(isSubmitting, async () => {
       const { application, moa, moe } = getData();
       const body = {
@@ -65,15 +73,13 @@ export function useApplicationFormActions(
           await createActor(created.id, moa);
           await createActor(created.id, moe);
         } catch {
-          toaster.addErrorMessage(
-            "Application créée mais erreur lors de l'ajout des acteurs MOA/MOE. Vous pouvez les ajouter manuellement.",
-          );
+          reportSaveError("Application créée mais erreur lors de l'ajout des acteurs MOA/MOE. Vous pouvez les ajouter manuellement.");
           return;
         }
         toaster.addSuccessMessage("Application créée avec succès !");
         return created;
       } catch (error) {
-        toaster.addErrorMessage(backendErrorMessage(error) ?? "Une erreur est survenue");
+        reportSaveError(backendErrorMessage(error) ?? "Une erreur est survenue");
       }
     });
   }
@@ -109,5 +115,5 @@ export function useApplicationFormActions(
     });
   }
 
-  return { save, isSubmitting, syncContact, moaSyncing, moeSyncing, initialMoaOrganization, initialMoeOrganization };
+  return { save, isSubmitting, saveError, syncContact, moaSyncing, moeSyncing, initialMoaOrganization, initialMoeOrganization };
 }

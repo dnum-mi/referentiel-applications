@@ -20,7 +20,9 @@ export class HistoryPage extends BasePage {
     this.table().getByRole("columnheader", { name });
   private pagination = () => this.byTestId("pagination-component");
   private pageLink = (n: string) =>
-    this.pagination().getByRole("link", { name: n, exact: true });
+    this.pagination().getByRole("button", {
+      name: new RegExp(`^Page ${n} sur `),
+    });
 
   async open(): Promise<void> {
     await this.goto("/historique");

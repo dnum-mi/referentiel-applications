@@ -15,9 +15,9 @@ test.describe("App.vue — Guest navigation", () => {
     await expect(page.getByRole("banner")).toBeVisible();
   });
 
-  test("should hide main navigation for guest", async ({ page }) => {
+  test("should show only public navigation for guest", async ({ page }) => {
     await page.goto(`${BASE_URL}/`);
-    await expect(page.getByTestId("main-navigation")).toHaveCount(0);
+    await expect(page.getByTestId("main-navigation").getByRole("link")).toHaveText(["Accueil", "Accessibilité"]);
   });
 
   test("should show Sign in link", async ({ page }) => {

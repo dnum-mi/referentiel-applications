@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch } from "vue";
+import { computed, nextTick, ref, useId, watch } from "vue";
 import { isEmailValid } from "@/utils/email";
 
 withDefaults(
@@ -14,6 +14,8 @@ const emit = defineEmits<{
 }>();
 
 const sponsorEmails = defineModel<string[]>({ default: () => [] });
+const groupTitleId = `sponsor-emails-${useId()}`;
+const group = ref<HTMLFieldSetElement | null>(null);
 
 // Un champ vide n'est pas une erreur (les sponsors sont optionnels, et une ligne vide peut être en
 // cours de saisie) : seule une valeur non vide et mal formée est signalée.
@@ -26,12 +28,19 @@ const isValid = computed(() => sponsorEmails.value.every((email) => !errorFor(em
 
 watch(isValid, (value) => emit("update:valid", value), { immediate: true });
 
-function addSponsor() {
+async function addSponsor() {
   sponsorEmails.value = [...sponsorEmails.value, ""];
+  await nextTick();
+  const fields = group.value?.querySelectorAll<HTMLInputElement>("input[type=email]");
+  fields?.[fields.length - 1]?.focus();
 }
 
-function removeSponsor(index: number) {
+async function removeSponsor(index: number) {
   sponsorEmails.value = sponsorEmails.value.filter((_, i) => i !== index);
+  await nextTick();
+  const fields = group.value?.querySelectorAll<HTMLInputElement>("input[type=email]");
+  if (fields?.length) fields[Math.min(index, fields.length - 1)]?.focus();
+  else group.value?.querySelector<HTMLButtonElement>("button")?.focus();
 }
 
 function updateSponsor(index: number, value: string | number | undefined) {
@@ -41,7 +50,8 @@ function updateSponsor(index: number, value: string | number | undefined) {
 </script>
 
 <template>
-  <div class="sponsor-emails">
+  <fieldset ref="group" class="sponsor-emails" :aria-labelledby="groupTitleId">
+    <legend :id="groupTitleId" class="fr-sr-only">Adresses email des sponsors (optionnel)</legend>
     <div v-for="(sponsorEmail, index) in sponsorEmails" :key="index" class="sponsor-email-row">
       <DsfrInputGroup
         :model-value="sponsorEmail"
@@ -72,12 +82,15 @@ function updateSponsor(index: number, value: string | number | undefined) {
       :data-testid="`${testidPrefix}-add`"
       @click="addSponsor"
     />
-  </div>
+  </fieldset>
 </template>
 
 <style scoped>
 .sponsor-emails {
-  margin-bottom: 1rem;
+  border: 0;
+  min-width: 0;
+  padding: 0;
+  margin: 0 0 1rem;
 }
 
 .sponsor-email-row {

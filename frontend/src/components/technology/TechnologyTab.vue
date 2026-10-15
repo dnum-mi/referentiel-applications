@@ -30,6 +30,8 @@ const showDeleteConfirmation = ref(false);
 const technologyToDelete = ref<TechnologyDto | null>(null);
 const statusMessage = ref("");
 const lastTrigger = ref<HTMLElement | null>(null);
+const technologyActions = ref<HTMLDivElement | null>(null);
+const technologyTable = ref<HTMLDivElement | null>(null);
 
 const canEdit = useAppPermission(() => props.application.myPerms, [Permission.TECHNOLOGY_WRITE]);
 
@@ -147,6 +149,19 @@ function rememberTrigger(event: Event) {
   lastTrigger.value = (event.currentTarget as HTMLElement) ?? null;
 }
 
+async function restoreTechnologyFocus(technologyId?: string) {
+  await nextTick();
+  if (document.activeElement !== document.body && document.activeElement !== lastTrigger.value) return;
+  const replacement = Array.from(technologyTable.value?.querySelectorAll<HTMLElement>('[data-testid="technology-edit-btn"]') ?? []).find(
+    (button) => button.dataset.technologyId === technologyId,
+  );
+  const target =
+    lastTrigger.value?.isConnected && !lastTrigger.value.matches(":disabled")
+      ? lastTrigger.value
+      : replacement || technologyActions.value?.querySelector<HTMLElement>('[data-testid="technology-add-btn"]');
+  target?.focus();
+}
+
 onBeforeMount(async () => {
   loading.value = true;
   try {
@@ -203,8 +218,7 @@ async function handleSave(technology: {
     loading.value = false;
     // #2521 : le focus revient sur le bouton d'origine sur TOUS les chemins, pas seulement
     // après un succès — un échec laissait le focus perdu à la fermeture de la modale.
-    await nextTick();
-    lastTrigger.value?.focus();
+    await restoreTechnologyFocus(technology.id);
   }
 }
 
@@ -247,7 +261,7 @@ function cancelDelete() {
 
 <template>
   <p class="fr-sr-only" aria-live="polite" aria-atomic="true" data-testid="technology-status">{{ statusMessage }}</p>
-  <div class="fr-grid-row fr-grid-row--middle fr-mb-3w" v-bind="$attrs" data-testid="technology-tab">
+  <div ref="technologyActions" class="fr-grid-row fr-grid-row--middle fr-mb-3w" v-bind="$attrs" data-testid="technology-tab">
     <div class="fr-col">
       <h3 class="fr-mb-0">Technologies</h3>
     </div>
@@ -285,7 +299,7 @@ function cancelDelete() {
     <p>Aucune technologie renseignée.</p>
   </div>
 
-  <template v-else>
+  <div v-else ref="technologyTable">
     <!-- Synthèse (#2528) : la même information que la pastille de la vue transverse. -->
     <p v-if="summary.eol || summary['eol-soon'] || summary['eoas-passed']" class="fr-mb-2w" data-testid="technology-summary">
       <DsfrBadge v-if="summary.eol" type="error" small :label="`${summary.eol} en fin de vie`" class="fr-mr-1w" />
@@ -294,6 +308,7 @@ function cancelDelete() {
     </p>
 
     <RefAppTable
+      caption="Technologies de l’application"
       :items="tableRows"
       :columns="columns"
       :total-records="tableRows.length"
@@ -414,6 +429,7 @@ function cancelDelete() {
           icon="fr-icon-edit-line"
           :disabled="!canEdit"
           data-testid="technology-edit-btn"
+          :data-technology-id="data.id"
           @click="
             (e) => {
               rememberTrigger(e);
@@ -442,7 +458,7 @@ function cancelDelete() {
         </DsfrButton>
       </template>
     </RefAppTable>
-  </template>
+  </div>
 
   <DsfrModal
     :opened="technologyModal.isModalOpen.value || technologyModal.isCreateModalOpen.value"

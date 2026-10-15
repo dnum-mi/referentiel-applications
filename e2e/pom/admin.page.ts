@@ -1,8 +1,31 @@
-import { expect } from "@playwright/test";
+import { expect, type Locator } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 /** Page Object — Administration & matrice de permissions (`/administration`). */
 export class AdminPage extends BasePage {
+  private editingUserEmail = "";
+
+  private async confirmPersonalEdit(
+    button: Locator,
+    message: string,
+    values: string[] = [],
+  ): Promise<void> {
+    const confirmation = this.page
+      .waitForEvent("dialog")
+      .then(async (dialog) => {
+        try {
+          expect(dialog.type()).toBe("confirm");
+          expect(dialog.message()).toContain(message);
+          for (const value of values) expect(dialog.message()).toContain(value);
+        } catch (error) {
+          await dialog.dismiss();
+          throw error;
+        }
+        await dialog.accept();
+      });
+    await Promise.all([confirmation, button.click()]);
+  }
+
   private adminTabs = () => this.byTestId("admin-tabs");
   private usersTable = () => this.byTestId("admin-users-table");
   private permsTable = () => this.byTestId("app-perms-table");
@@ -97,7 +120,7 @@ export class AdminPage extends BasePage {
 
   private async correlationRow(id: string) {
     const table = this.correlationsTable();
-    const first = table.locator(".p-paginator-first");
+    const first = table.getByRole("button", { name: /^Première page/ });
     if (await first.isEnabled())
       await this.waitForCorrelationList(() => first.click());
     const row = table.locator("tbody tr").filter({
@@ -110,7 +133,7 @@ export class AdminPage extends BasePage {
         await expect(row).toHaveCount(1);
         return row;
       }
-      const next = table.locator(".p-paginator-next");
+      const next = table.getByRole("button", { name: /^Page suivante/ });
       if (!(await next.isEnabled())) break;
       await this.waitForCorrelationList(() => next.click());
     }
@@ -222,6 +245,7 @@ export class AdminPage extends BasePage {
    * (On scope à la ligne pour ne jamais éditer un autre compte — ex. l'admin — par erreur.)
    */
   async openEditUser(email: string): Promise<void> {
+    this.editingUserEmail = email;
     await this.expectUserRow(email);
     const row = this.userRow(email);
     await row.getByTestId("admin-user-edit-btn").first().click();
@@ -295,7 +319,10 @@ export class AdminPage extends BasePage {
     const save = this.editModal().getByTestId("admin-save-perms-btn");
     await expect(save).toBeVisible();
     await expect(save).toBeEnabled();
-    await save.click();
+    await this.confirmPersonalEdit(
+      save,
+      `Confirmer la modification de l'utilisateur « ${this.editingUserEmail} » ?`,
+    );
     await this.expectToaster(/mis à jour avec succès/i);
   }
 
@@ -914,7 +941,11 @@ export class AdminPage extends BasePage {
     await row.getByTestId("admin-actor-edit-btn").first().click();
     await expect(this.byTestId("actor-form")).toBeVisible();
     await this.page.getByLabel("Nom", { exact: true }).fill(newLastname);
-    await this.page.getByRole("button", { name: /Enregistrer/i }).click();
+    await this.confirmPersonalEdit(
+      this.page.getByRole("button", { name: /Enregistrer/i }),
+      "Confirmer la modification des coordonnées de cet acteur ?",
+      [newLastname, email],
+    );
     await this.expectToaster(/mis à jour avec succès/i);
   }
 
@@ -940,7 +971,11 @@ export class AdminPage extends BasePage {
     const dialog = this.visibleDialog();
     await expect(dialog).toBeVisible();
     await dialog.getByLabel("Prénom").fill(newFirstname);
-    await dialog.getByTestId("admin-actor-save-all-btn").click();
+    await this.confirmPersonalEdit(
+      dialog.getByTestId("admin-actor-save-all-btn"),
+      "Confirmer la modification des acteurs avec l'email",
+      [email, newFirstname],
+    );
     await this.expectToaster(/acteur\(s\) mis à jour avec succès/i);
   }
 

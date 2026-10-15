@@ -18,6 +18,7 @@ import EmailPreviewModal from "./components/EmailPreviewModal.vue";
 import ImpersonationBanner from "./components/ImpersonationBanner.vue";
 import WeakAuthBanner from "./components/WeakAuthBanner.vue";
 import AppToaster from "./components/AppToaster.vue";
+import AppUpdateNotice from "./components/AppUpdateNotice.vue";
 import { useScheme } from "@gouvminint/vue-dsfr";
 import { useRgaaGlobalA11y } from "./composables/use-rgaa-a11y";
 import { accessibilityDeclaration } from "./constants/accessibility-declaration";
@@ -30,7 +31,7 @@ const route = useRoute();
 const router = useRouter();
 
 const pageTitleAnnouncer = ref<HTMLElement | null>(null);
-const currentPageTitle = ref("");
+const currentPageTitle = ref((route.meta.title as string) ?? document.title);
 
 // 12.8 / 7.1 : simuler un rechargement de page pour les TA après chaque navigation SPA.
 // On ignore les navigations qui ne changent que la query string (ex. filtres de recherche mis à jour
@@ -73,7 +74,6 @@ interface QuickLink {
   label: string;
   to: { name: string } | string;
   icon?: string;
-  iconAttrs?: Record<string, string>;
 }
 
 getConfig().then((config) => {
@@ -88,21 +88,18 @@ const authenticatedQuickLinks = computed<QuickLink[]>(() => {
       label: "Mon profil",
       to: { name: routeNames.PROFILE },
       icon: "ri-user-line",
-      iconAttrs: { title: "Accéder à mon profil" },
     },
     {
       label: "Déconnexion",
       to: { name: routeNames.LOGOUT },
       icon: "ri-logout-box-r-line",
-      iconAttrs: { title: "Déconnexion" },
     },
   ];
-  if (userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE])) {
+  if (userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE, Permission.QUALITY_CAMPAIGN_MANAGE, Permission.MDIT_CAMPAIGN_MANAGE])) {
     baseLinks.unshift({
       label: "Admin",
       to: { name: routeNames.ADMINPAGE },
       icon: "ri-user-settings-line",
-      iconAttrs: { title: "Admin" },
     });
   }
   return baseLinks;
@@ -120,7 +117,6 @@ const unauthenticatedQuickLinks = computed<QuickLink[]>(() => [
     label: "Se connecter",
     to: { name: routeNames.SIGNIN },
     icon: "ri-lock-line",
-    iconAttrs: { title: "Se connecter" },
   },
 ]);
 
@@ -139,10 +135,30 @@ const baseNavItems = computed(() =>
 );
 
 const publicNavItems = computed(() => buildPublicNavItems());
+const hasMainNavigation = computed(() => userStore.hasApplicationAccess || (userStore.sessionInitialized && !userStore.authenticated));
 
 const navItemsComputed = computed(() => {
   return userStore.authenticated ? baseNavItems.value : publicNavItems.value;
 });
+
+function focusSkipLinkTarget(event: MouseEvent) {
+  if (!(event.target instanceof Element)) return;
+  const href = event.target.closest("a")?.getAttribute("href");
+  if (href === "#app-search-shortcut") {
+    // DSFR donne déjà le focus à la cible, qui ouvre la recherche mobile.
+    // Le saut natif vers l'ancre reprendrait ensuite le focus hors du dialogue.
+    event.preventDefault();
+    return;
+  }
+  if (href !== "#header-nav") return;
+  // Sur mobile, le menu est masqué : rejoindre sa commande d'ouverture, plutôt
+  // que l'ancre invisible qui fait poursuivre la tabulation dans le contenu.
+  const menuButton = document.getElementById("button-menu");
+  const target = menuButton?.getClientRects().length ? menuButton : document.querySelector<HTMLElement>("#header-nav a[href]");
+  if (!target) return;
+  event.preventDefault();
+  target.focus();
+}
 
 const logoText = ["Ministère", "de l'intérieur"];
 const serviceDescription = "Une application pour les réunir toutes";
@@ -165,11 +181,15 @@ const ecosystemLinks = computed(() => {
   if (appConfig.value?.footerLinks) {
     links.push(...appConfig.value.footerLinks);
   }
-  // RGAA-015 : ces liens sont rendus par DSFR avec target="_blank" → l'indiquer dans l'intitulé.
-  return links.map((link) => ({
-    ...link,
-    title: link.title?.includes("nouvelle fenêtre") ? link.title : `${link.title ?? link.label} - nouvelle fenêtre`,
-  }));
+  // Une destination non renseignée ne doit pas ouvrir la page courante sous un autre intitulé.
+  return links
+    .map((link) => ({ ...link, href: link.href.trim() }))
+    .filter((link) => link.href && link.href !== "#")
+    .map((link) => ({
+      ...link,
+      // DSFR ouvre ces liens dans une nouvelle fenêtre.
+      title: link.title?.includes("nouvelle fenêtre") ? link.title : `${link.title ?? link.label} - nouvelle fenêtre`,
+    }));
 });
 const mandatoryLinks = computed(() => [
   { label: accessibilityDeclaration.complianceMention, title: "Aller à la page d'accessibilité", to: { name: routeNames.ACCESSIBILITE } },
@@ -209,27 +229,24 @@ const afterMandatoryLinks = computed(() => [
   {
     label: "Paramètres d'affichage",
     button: true,
-    title: themeButtonTitle.value,
+    "aria-label": themeButtonTitle.value,
+    type: "button",
     class: "fr-icon-theme-fill fr-link--icon-left fr-px-2v",
-    to: "/settings",
-    onclick: changeTheme,
+    onClick: changeTheme,
   },
 ]);
 
 useRgaaGlobalA11y();
 
-useAppUpdate();
+const { needRefresh, updateServiceWorker } = useAppUpdate();
 </script>
 
 <template>
-  <h1 ref="pageTitleAnnouncer" class="fr-sr-only" tabindex="-1" data-testid="page-title-announcer">
-    {{ currentPageTitle }}
-  </h1>
-
   <DsfrSkipLinks
+    @click="focusSkipLinkTarget"
     :links="[
-      { id: 'app-search', text: 'Aller à la recherche' },
-      { id: 'header-nav', text: 'Aller à la navigation' },
+      ...(userStore.hasApplicationAccess ? [{ id: 'app-search-shortcut', text: 'Aller à la recherche' }] : []),
+      ...(hasMainNavigation ? [{ id: 'header-nav', text: 'Aller à la navigation' }] : []),
       { id: 'main-content', text: 'Aller au contenu principal' },
       { id: 'footer', text: 'Aller au pied de page' },
     ]"
@@ -264,15 +281,18 @@ useAppUpdate();
     </template>
 
     <template #mainnav>
-      <DsfrNavigation v-if="userStore.hasApplicationAccess" :nav-items="navItemsComputed" id="header-nav" data-testid="main-navigation" />
-      <p v-else class="fr-sr-only" id="header-nav">Navigation non disponible</p>
+      <DsfrNavigation v-if="hasMainNavigation" :nav-items="navItemsComputed" id="header-nav" data-testid="main-navigation" />
     </template>
   </DsfrHeader>
+  <AppUpdateNotice :available="needRefresh" :update="() => updateServiceWorker(true)" />
   <main class="fr-mt-3w fr-mt-md-5w fr-mb-5w" id="main-content" role="main">
+    <h1 ref="pageTitleAnnouncer" class="fr-sr-only" tabindex="-1" data-testid="page-title-announcer">
+      {{ currentPageTitle }}
+    </h1>
     <WeakAuthBanner v-if="userStore.isAuthDowngraded" />
     <RouterView
       v-else-if="userStore.hasApplicationAccess || (userStore.sessionInitialized && !userStore.authenticated && !route.meta.requiresAuth)"
-      :key="String(route.params.id ?? '')"
+      :key="`${userStore.user?.id ?? 'public'}:${String(route.params.id ?? '')}`"
     />
     <div v-else class="fr-container" data-testid="access-verification">
       <p role="status">Vérification de votre accès au référentiel…</p>
@@ -281,6 +301,7 @@ useAppUpdate();
   </main>
 
   <DsfrFooter
+    id="footer"
     :logo-text="logoText"
     desc-text="Référentiel des applications du ministère de l'Intérieur : recensement des applications, de leurs données et de leurs relations."
     :operator-img-src="operatorImgSrc"

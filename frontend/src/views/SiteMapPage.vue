@@ -24,7 +24,14 @@ function getRouteTitle(currentRoute: RouteRecordNormalized): string {
 }
 
 function baseRouteFilter(currentRoute: RouteRecordNormalized): boolean {
-  const routesToExclude: string[] = [routeNames.NOTFOUND, routeNames.SITEMAP];
+  const routesToExclude: string[] = [
+    routeNames.NOTFOUND,
+    routeNames.SITEMAP,
+    routeNames.SIGNIN,
+    routeNames.LOGOUT,
+    routeNames.AUTH_CALLBACK,
+    routeNames.AUTH_SILENT_CALLBACK,
+  ];
   const routeName = currentRoute.name as string;
 
   if (!routeName) {
@@ -78,7 +85,11 @@ const protectedPages = computed(() => {
     const passesBaseFilter = baseRouteFilter(currentRoute);
     const isProtectedRoute = currentRoute.meta.requiresAuth === true;
     const isNotAdminPage = currentRoute.name !== routeNames.ADMINPAGE;
-    const hasManageAdminPanelPermissions = userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE]);
+    const hasManageAdminPanelPermissions = userStore.hasPermissions([
+      Permission.ADMIN_PANEL_MANAGE,
+      Permission.QUALITY_CAMPAIGN_MANAGE,
+      Permission.MDIT_CAMPAIGN_MANAGE,
+    ]);
     const passesAdminCheck = isNotAdminPage || hasManageAdminPanelPermissions;
     // #2446 : le plan du site ne propose pas une page que le garde de route refuserait —
     // l'historique global est réservé à l'administration globale.

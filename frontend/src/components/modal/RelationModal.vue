@@ -101,16 +101,16 @@ function submitRelation() {
 <template>
   <DsfrModal :opened="opened" :title="title" :data-testid="`${testIdPrefix}-modal`" @close="emit('close')">
     <template #default>
-      <DsfrAlert
-        v-show="errorMessage.length > 0"
-        class="mb-4"
-        tabindex="-1"
-        type="error"
-        role="alert"
-        aria-live="assertive"
-        title="Une erreur est survenue"
-        :description="errorMessage"
-      />
+      <div role="alert" aria-live="assertive" aria-atomic="true">
+        <DsfrAlert
+          v-if="errorMessage.length > 0"
+          class="mb-4"
+          tabindex="-1"
+          type="error"
+          title="Une erreur est survenue"
+          :description="errorMessage"
+        />
+      </div>
       <div class="relation-type">
         <DsfrSelect
           v-model="relationType"
@@ -133,7 +133,7 @@ function submitRelation() {
           data-testid="relation-suggestions-input"
           @update:selected-value="selectedApplication = $event ?? null"
         >
-          <template #application-label>
+          <template #application-label="{ clearSelection }">
             <DsfrTag
               v-if="mode === 'add' && selectedApplication?.label"
               :label="selectedApplication.label"
@@ -143,7 +143,7 @@ function submitRelation() {
               selectable
               class="fr-tag--dismiss"
               style="margin-top: 15px"
-              @select="selectedApplication = null"
+              @select="clearSelection(selectedApplication?.label)"
             />
             <DsfrTag v-else-if="selectedApplication?.label" :label="selectedApplication.label" :small="false" style="margin-top: 15px" />
           </template>
@@ -166,7 +166,7 @@ function submitRelation() {
           data-testid="relation-suggestions-mediation-service-input"
           @update:selected-value="selectedMediationService = $event ?? null"
         >
-          <template #application-label>
+          <template #application-label="{ clearSelection }">
             <DsfrTag
               v-if="selectedMediationService?.label"
               :label="selectedMediationService.label"
@@ -174,7 +174,7 @@ function submitRelation() {
               :selected="false"
               selectable
               style="margin-top: 15px"
-              @select="selectedMediationService = null"
+              @select="clearSelection(selectedMediationService?.label)"
               class="fr-tag--dismiss"
             />
           </template>

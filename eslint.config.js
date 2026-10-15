@@ -22,6 +22,7 @@ export default tseslint.config(
       "keycloak/**",
       "**/swagger.yaml",
       "**/realm-export.json",
+      "qa/at-windows/fixtures/**", // exact third-party bundles and generated audit fixtures
     ],
   },
 
@@ -29,6 +30,13 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   ...pluginVue.configs["flat/recommended"],
+
+  // Racine explicite lorsque des outils QA disposent de leur propre configuration.
+  {
+    languageOptions: {
+      parserOptions: { tsconfigRootDir: import.meta.dirname },
+    },
+  },
 
   // Les blocs <script> des composants Vue sont analysés par le parseur TypeScript.
   {

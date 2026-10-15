@@ -1,4 +1,5 @@
 import { mount } from "@vue/test-utils";
+import { DsfrTag } from "@gouvminint/vue-dsfr";
 import { defineComponent, h, nextTick, ref } from "vue";
 import SuggestionsInput from "./SuggestionsInput.vue";
 
@@ -18,6 +19,35 @@ function renderInput(search: (query: string) => Promise<{ id: string; label: str
 afterEach(() => vi.useRealTimers());
 
 describe("SuggestionsInput", () => {
+  it("retire la sélection avec le vrai tag DSFR, annonce le retrait et rend le focus à la recherche", async () => {
+    vi.useFakeTimers();
+    const wrapper = mount(SuggestionsInput, {
+      attachTo: document.body,
+      props: { label: "Application", placeholder: "Rechercher", searchData: [{ id: "a", label: "Application Alpha" }] },
+      global: { components: { DsfrTag }, stubs: { DsfrTooltip: true } },
+    });
+    try {
+      const input = wrapper.get("input");
+      await input.setValue("app");
+      await vi.advanceTimersByTimeAsync(300);
+      const option = wrapper.get('[role="option"]').element;
+      if (!(option instanceof HTMLElement)) throw new Error("Suggestion HTML absente.");
+      option.scrollIntoView = vi.fn();
+      await input.trigger("keydown", { key: "ArrowDown" });
+      await input.trigger("keydown", { key: "Enter" });
+      await wrapper.get("button.fr-tag").trigger("click");
+      await nextTick();
+      expect(wrapper.find("button.fr-tag").exists()).toBe(false);
+      expect(wrapper.emitted("update:selectedValue")?.at(-1)).toEqual([undefined]);
+      expect(document.activeElement).toBe(input.element);
+      expect(wrapper.get("output").text()).toBe("Sélection retirée : Application Alpha.");
+      await input.setValue("nouvelle recherche");
+      expect(wrapper.get("output").text()).not.toContain("retirée");
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
   it("réactive les filtres du parent après une réinitialisation du champ pendant une requête", async () => {
     vi.useFakeTimers();
     const componentKey = ref(0);
@@ -97,7 +127,7 @@ describe("SuggestionsInput", () => {
     expect(wrapper.get('[role="alert"]').text()).toBe("Erreur lors de la recherche.");
 
     await wrapper.get("input").setValue("second");
-    expect(wrapper.find('[role="alert"]').exists()).toBe(false);
+    expect(wrapper.get('[role="alert"]').text()).toBe("");
     await vi.advanceTimersByTimeAsync(300);
     await wrapper.get('[data-testid="suggestion-item-app-1"]').trigger("click");
     await nextTick();
@@ -106,6 +136,44 @@ describe("SuggestionsInput", () => {
     expect(wrapper.get("input").element.value).toBe("");
     await vi.advanceTimersByTimeAsync(300);
     expect(search).toHaveBeenCalledTimes(2);
+    wrapper.unmount();
+  });
+
+  it("permet de sélectionner au clavier et garde un descendant actif existant", async () => {
+    vi.useFakeTimers();
+    const items = [
+      { id: "a", label: "Alpha" },
+      { id: "b", label: "Beta" },
+    ];
+    const wrapper = renderInput(() => Promise.resolve(items));
+    const input = wrapper.get("input");
+    await input.setValue("app");
+    await vi.advanceTimersByTimeAsync(300);
+    await input.trigger("keydown", { key: "ArrowUp" });
+    const selected = wrapper.get('[role="option"][aria-selected="true"]');
+    expect(selected.text()).toBe("Beta");
+    expect(input.attributes("aria-activedescendant")).toBe(selected.attributes("id"));
+    await input.trigger("keydown", { key: "Enter" });
+    expect(wrapper.emitted("update:selectedValue")).toEqual([[items[1]]]);
+    expect(input.attributes("aria-expanded")).toBe("false");
+    expect(input.attributes("aria-activedescendant")).toBeUndefined();
+    wrapper.unmount();
+  });
+
+  it("ferme et rouvre les suggestions avec Échap et les flèches, sans perdre la saisie", async () => {
+    vi.useFakeTimers();
+    const wrapper = renderInput(() => Promise.resolve([{ id: "a", label: "Alpha" }]));
+    const input = wrapper.get("input");
+    await input.setValue("app");
+    await vi.advanceTimersByTimeAsync(300);
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "Escape" });
+    expect(input.element.value).toBe("app");
+    expect(input.attributes("aria-expanded")).toBe("false");
+    expect(input.attributes("aria-activedescendant")).toBeUndefined();
+    await input.trigger("keydown", { key: "ArrowDown" });
+    expect(input.attributes("aria-expanded")).toBe("true");
+    expect(wrapper.get('[role="option"][aria-selected="true"]').text()).toBe("Alpha");
     wrapper.unmount();
   });
 });

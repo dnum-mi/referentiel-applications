@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import api from "@/api";
+import { isApiSuccess } from "@/api/api-result";
 import { Permission, type PaginatedReportDto, type ReportDto } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
 import { formatDate } from "@/composables/use-date";
@@ -44,6 +45,8 @@ const currentPage = ref(0);
 const itemsPerPage = ref(15);
 const firstIndex = computed(() => currentPage.value * itemsPerPage.value);
 const searchReport = ref("");
+const errorMessage = ref("");
+let latestRequest = 0;
 const sortBy = ref<"application" | "description" | "date" | "status" | "notifier" | "notes">("date");
 const sortedDesc = ref<boolean>(true);
 
@@ -71,7 +74,9 @@ const rows = computed(() =>
 );
 
 async function fetchAllReportsDirect() {
+  const request = ++latestRequest;
   isLoading.value = true;
+  errorMessage.value = "";
   try {
     const query = {
       all: isAllReport.value,
@@ -82,13 +87,15 @@ async function fetchAllReportsDirect() {
       order: (sortedDesc.value ? "desc" : "asc") as "desc" | "asc",
     };
     const response = await api.reportsControllerFindAll({ query });
-    if (!response.data) {
-      data.value = { results: [], total: 0 };
-      return;
+    if (request !== latestRequest) return;
+    if (!isApiSuccess(response) || !response.data) {
+      throw new Error("Les signalements n’ont pas pu être chargés.");
     }
     data.value = response.data;
+  } catch {
+    if (request === latestRequest) errorMessage.value = "Les signalements n’ont pas pu être chargés. Réessayez.";
   } finally {
-    isLoading.value = false;
+    if (request === latestRequest) isLoading.value = false;
   }
 }
 
@@ -125,14 +132,13 @@ watch(
 </script>
 
 <template>
-  <AppLoader v-if="isLoading" />
-  <div v-else>
+  <div>
     <div v-if="userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE])">
       <div v-if="!isEditing && rows.length" class="toRight">
         <DsfrButton label="Modifier" class="fr-mb-1w" @click="isEditing = true" />
       </div>
       <div v-else-if="rows.length" class="toRight">
-        <DsfrButton label="Arreter de modifier" @click="isEditing = false" />
+        <DsfrButton label="Arrêter de modifier" @click="isEditing = false" />
       </div>
     </div>
     <div class="fr-mb-4w">
@@ -145,12 +151,26 @@ watch(
         data-testid="issues-search-bar"
       />
     </div>
-    <div v-if="!rows.length" class="text-center">
+    <output class="fr-sr-only" aria-live="polite" aria-atomic="true">
+      {{
+        isLoading
+          ? "Chargement des signalements…"
+          : `${data.total} signalement${data.total > 1 ? "s" : ""} trouvé${data.total > 1 ? "s" : ""}.`
+      }}
+    </output>
+    <div v-if="errorMessage" role="alert" class="fr-error-text">
+      <p>{{ errorMessage }}</p>
+      <button class="fr-btn fr-btn--secondary" type="button" @click="fetchAllReportsDirect">Réessayer</button>
+    </div>
+    <div v-else-if="!rows.length && !isLoading" class="text-center">
       <p>Aucun signalement recensé.</p>
     </div>
     <RefAppTable
-      v-else
+      v-if="rows.length"
       :items="rows"
+      data-key="id"
+      :loading="isLoading"
+      caption="Liste des signalements"
       :columns="tableColumns"
       :paginator="true"
       :lazy="true"
@@ -177,14 +197,15 @@ watch(
       </template>
 
       <template #body-notes="{ data: row }">
-        <p class="text-wrap">
+        <div class="text-wrap">
           <Notes
             :notes="row.notes"
+            :report-description="row.description"
             :report-id="row.status.report.id"
             :is-editing="row.status.isEditing"
             @refresh="fetchAllReportsDirect()"
           />
-        </p>
+        </div>
       </template>
 
       <template #body-status="{ data: row }">

@@ -39,6 +39,7 @@ const includeNullIq = computed({
       <span style="display: inline-flex; align-items: center; gap: 0.25rem">
         Indice de qualité
         <DsfrTooltip
+          aria-label="Afficher l’aide sur le filtre Indice de qualité"
           id="quality-legend-tooltip-desc"
           content="Filtre les applications selon leur indice de qualité (IQ), un score global de 0 à 100 %. Les applications sans IQ calculé (décommissionnées ou supprimées) peuvent être incluses en plus de cette plage grâce à l'option ci-dessous."
         />

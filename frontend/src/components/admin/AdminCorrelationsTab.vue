@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { CorrelationSuggestionStatus, type CorrelationSuggestionDto } from "@/client/types.gen";
 import {
@@ -20,6 +20,8 @@ import type { TableColumn, TableSortEvent } from "@/types/table";
  * (ADMIN_PANEL_MANAGE), alignée sur la permission des endpoints.
  */
 const correlationStore = useCorrelationStore();
+const reviewHeading = ref<HTMLElement | null>(null);
+const reviewResults = ref<HTMLElement | null>(null);
 const { suggestions, total, isLoading, isDetectionRunning } = storeToRefs(correlationStore);
 
 const statusOptions = [
@@ -134,7 +136,8 @@ function cancelAction() {
 const actionInProgressId = ref<string | null>(null);
 
 async function confirmAction() {
-  if (!pendingAction.value) return;
+  if (!pendingAction.value || actionInProgressId.value) return;
+  const focusOrigin = document.activeElement;
   const { type, suggestion } = pendingAction.value;
   pendingAction.value = null;
   actionInProgressId.value = suggestion.id;
@@ -148,10 +151,20 @@ async function confirmAction() {
     return result;
   } finally {
     actionInProgressId.value = null;
+    await nextTick();
+    if (document.activeElement === document.body || document.activeElement === focusOrigin) {
+      const actionId = `${type}-suggestion-${suggestion.id}`;
+      const retryButton = [...(reviewResults.value?.querySelectorAll<HTMLButtonElement>("button[data-testid]") ?? [])].find(
+        (button) => button.dataset.testid === actionId,
+      );
+      if (retryButton) retryButton.focus();
+      else reviewHeading.value?.focus();
+    }
   }
 }
 
 async function launchDetection() {
+  if (isDetectionRunning.value) return;
   const result = await correlationStore.runDetection();
   if (result) await fetchSuggestions();
 }
@@ -161,13 +174,14 @@ onMounted(fetchSuggestions);
 
 <template>
   <div class="header-row">
-    <h1 class="fr-h1" data-testid="admin-correlations-title">Revue datasteward</h1>
+    <h2 ref="reviewHeading" tabindex="-1" class="fr-h1" data-testid="admin-correlations-title">Revue datasteward</h2>
 
     <DsfrButton
       type="button"
       secondary
       icon="ri-radar-line"
-      :disabled="isDetectionRunning"
+      :aria-disabled="isDetectionRunning"
+      :aria-busy="isDetectionRunning"
       data-testid="run-detection-button"
       @click="launchDetection"
     >
@@ -192,7 +206,7 @@ onMounted(fetchSuggestions);
     <p>Chargement des suggestions de corrélation...</p>
   </div>
 
-  <div v-else>
+  <div v-else ref="reviewResults">
     <RefAppTable
       :items="tableRows"
       :columns="columns"

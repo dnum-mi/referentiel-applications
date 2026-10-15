@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useToasterStore } from "@/stores/toasterStore";
 import { useUserStore } from "@/stores/userStore";
-import { computed, ref, watch } from "vue";
+import { computed, nextTick, ref, useId } from "vue";
 
 // Mêmes règles que UpdateUserPreferencesDto (backend) : un identifiant de document, pas une URL.
 const GRIST_DOC_ID_PATTERN = /^[A-Za-z0-9_-]{6,64}$/;
@@ -14,22 +14,40 @@ const toaster = useToasterStore();
 const docIds = computed(() => userStore.user?.gristDocIds ?? []);
 const hasApiKey = computed(() => !!userStore.user?.hasGristApiKey);
 const isUpdating = ref(false);
+const id = useId();
+const urlInputId = `${id}-grist-url`;
+const apiKeyInputId = `${id}-grist-api-key`;
+const docIdInputId = `${id}-grist-document`;
 
 // --- Connexion : instance et clé d'API ---
-const url = ref(userStore.user?.gristUrl ?? DEFAULT_GRIST_URL);
-watch(
-  () => userStore.user?.gristUrl,
-  (saved) => {
-    if (saved) url.value = saved;
+const urlDraft = ref<string>();
+const url = computed({
+  get: () => urlDraft.value ?? userStore.user?.gristUrl ?? DEFAULT_GRIST_URL,
+  set: (value) => {
+    urlDraft.value = value;
   },
-);
+});
 // La clé enregistrée n'est jamais relue : le champ ne sert qu'à en saisir une nouvelle. Quand une
 // clé existe, des points en placeholder le montrent rempli, sans valeur factice à envoyer.
 const API_KEY_MASK = "••••••••••••••••";
 const apiKey = ref("");
-const connectionError = ref("");
+const urlError = ref("");
+const apiKeyError = ref("");
+
+async function focusInput(inputId: string) {
+  await nextTick();
+  document.getElementById(inputId)?.focus();
+}
+
+async function restoreFocusAfterRemoval(origin: Element | null, inputId: string) {
+  await nextTick();
+  if (origin && !origin.isConnected && document.activeElement === document.body) {
+    document.getElementById(inputId)?.focus();
+  }
+}
 
 async function save(settings: Parameters<typeof userStore.updateGristSettings>[0], successMessage: string): Promise<boolean> {
+  if (isUpdating.value) return false;
   isUpdating.value = true;
   try {
     await userStore.updateGristSettings(settings);
@@ -45,23 +63,29 @@ async function save(settings: Parameters<typeof userStore.updateGristSettings>[0
 }
 
 async function saveConnection() {
-  const gristUrl = url.value.trim();
-  const gristApiKey = apiKey.value.trim();
-  if (!/^https:\/\/\S+$/.test(gristUrl)) {
-    connectionError.value = "Saisissez l'adresse HTTPS de l'instance Grist.";
+  if (isUpdating.value) return;
+  const submittedUrl = url.value;
+  const submittedApiKey = apiKey.value;
+  const gristUrl = submittedUrl.trim();
+  const gristApiKey = submittedApiKey.trim();
+  urlError.value = /^https:\/\/\S+$/.test(gristUrl) ? "" : "Saisissez l'adresse HTTPS de l'instance Grist.";
+  apiKeyError.value = gristApiKey || hasApiKey.value ? "" : "Saisissez votre clé d'API Grist.";
+  if (urlError.value || apiKeyError.value) {
+    await focusInput(urlError.value ? urlInputId : apiKeyInputId);
     return;
   }
-  if (!gristApiKey && !hasApiKey.value) {
-    connectionError.value = "Saisissez votre clé d'API Grist.";
-    return;
-  }
-  connectionError.value = "";
   const saved = await save({ gristUrl, ...(gristApiKey && { gristApiKey }) }, "Votre connexion Grist a été enregistrée.");
-  if (saved) apiKey.value = "";
+  if (saved) {
+    if (url.value === submittedUrl) urlDraft.value = undefined;
+    if (apiKey.value === submittedApiKey) apiKey.value = "";
+  }
 }
 
-function removeApiKey() {
-  return save({ gristApiKey: null }, "Votre clé d'API Grist a été supprimée.");
+async function removeApiKey() {
+  const origin = document.activeElement;
+  if (await save({ gristApiKey: null }, "Votre clé d'API Grist a été supprimée.")) {
+    await restoreFocusAfterRemoval(origin, apiKeyInputId);
+  }
 }
 
 // --- Documents ---
@@ -69,27 +93,35 @@ const newDocId = ref("");
 const docIdError = ref("");
 
 async function addDocument() {
-  const docId = newDocId.value.trim();
+  if (isUpdating.value) return;
+  const submittedDocId = newDocId.value;
+  const docId = submittedDocId.trim();
   if (!GRIST_DOC_ID_PATTERN.test(docId)) {
-    docIdError.value = "Saisissez l'identifiant du document (lettres, chiffres, - et _), pas son URL.";
+    docIdError.value = "Saisissez l'identifiant du document (6 à 64 lettres, chiffres, - ou _), pas son URL.";
+    await focusInput(docIdInputId);
     return;
   }
   if (docIds.value.includes(docId)) {
     docIdError.value = "Ce document est déjà dans la liste.";
+    await focusInput(docIdInputId);
     return;
   }
   if (docIds.value.length >= GRIST_DOC_IDS_MAX) {
     docIdError.value = `Vous ne pouvez pas synchroniser plus de ${GRIST_DOC_IDS_MAX} documents.`;
+    await focusInput(docIdInputId);
     return;
   }
   docIdError.value = "";
-  if (await save({ gristDocIds: [...docIds.value, docId] }, `Le document ${docId} a été ajouté.`)) {
+  if ((await save({ gristDocIds: [...docIds.value, docId] }, `Le document ${docId} a été ajouté.`)) && newDocId.value === submittedDocId) {
     newDocId.value = "";
   }
 }
 
-function removeDocument(docId: string) {
-  return save({ gristDocIds: docIds.value.filter((id) => id !== docId) }, `Le document ${docId} a été retiré.`);
+async function removeDocument(docId: string) {
+  const origin = document.activeElement;
+  if (await save({ gristDocIds: docIds.value.filter((id) => id !== docId) }, `Le document ${docId} a été retiré.`)) {
+    await restoreFocusAfterRemoval(origin, docIdInputId);
+  }
 }
 </script>
 
@@ -102,14 +134,29 @@ function removeDocument(docId: string) {
     </p>
 
     <h3 class="fr-text--md fr-text--bold fr-mb-1w">Connexion</h3>
-    <form class="user-grist-form fr-mb-3w" data-testid="user-grist-connection" @submit.prevent="saveConnection">
-      <DsfrInputGroup v-model="url" label="Adresse de l'instance Grist" label-visible data-testid="user-grist-url-input" />
+    <form class="user-grist-form fr-mb-3w" novalidate data-testid="user-grist-connection" @submit.prevent="saveConnection">
       <DsfrInputGroup
+        :id="urlInputId"
+        v-model="url"
+        type="url"
+        label="Adresse de l'instance Grist (obligatoire)"
+        label-visible
+        hint="Adresse HTTPS, par exemple https://grist.numerique.gouv.fr."
+        aria-required="true"
+        :aria-invalid="!!urlError"
+        :error-message="urlError"
+        data-testid="user-grist-url-input"
+      />
+      <DsfrInputGroup
+        :id="apiKeyInputId"
         v-model="apiKey"
         type="password"
         autocomplete="off"
-        label="Clé d'API"
+        :label="hasApiKey ? 'Clé d’API' : 'Clé d’API (obligatoire)'"
         label-visible
+        :aria-required="!hasApiKey"
+        :aria-invalid="!!apiKeyError"
+        :error-message="apiKeyError"
         :placeholder="hasApiKey ? API_KEY_MASK : undefined"
         :class="{ 'user-grist-api-key--saved': hasApiKey }"
         :hint="
@@ -119,23 +166,28 @@ function removeDocument(docId: string) {
         "
         data-testid="user-grist-api-key-input"
       />
-      <DsfrButton type="submit" class="fr-btn--secondary" :disabled="isUpdating" data-testid="user-grist-connection-save">
+      <DsfrButton
+        type="submit"
+        class="fr-btn--secondary"
+        :aria-disabled="isUpdating"
+        :aria-busy="isUpdating"
+        data-testid="user-grist-connection-save"
+      >
         Enregistrer
       </DsfrButton>
       <DsfrButton
         v-if="hasApiKey"
         type="button"
         class="fr-btn--tertiary"
-        :disabled="isUpdating"
+        :aria-disabled="isUpdating"
+        :aria-busy="isUpdating"
         data-testid="user-grist-api-key-remove"
         @click="removeApiKey"
       >
         Supprimer la clé
       </DsfrButton>
     </form>
-    <p v-if="connectionError" class="fr-error-text fr-mt-n2w fr-mb-3w" role="alert" data-testid="user-grist-connection-error">
-      {{ connectionError }}
-    </p>
+    <p role="status" class="fr-sr-only">{{ isUpdating ? "Enregistrement de votre configuration Grist…" : "" }}</p>
 
     <h3 class="fr-text--md fr-text--bold fr-mb-1w">Documents</h3>
     <ul v-if="docIds.length" class="fr-raw-list fr-mb-2w" data-testid="user-grist-documents-list">
@@ -143,8 +195,10 @@ function removeDocument(docId: string) {
         <code>{{ docId }}</code>
         <DsfrButton
           class="fr-btn--tertiary fr-btn--sm fr-ml-2w"
-          :disabled="isUpdating"
+          :aria-disabled="isUpdating"
+          :aria-busy="isUpdating"
           :title="`Retirer le document ${docId}`"
+          :aria-label="`Retirer le document ${docId}`"
           data-testid="user-grist-document-remove"
           @click="removeDocument(docId)"
         >
@@ -155,14 +209,23 @@ function removeDocument(docId: string) {
     <p v-else class="fr-text--sm" data-testid="user-grist-documents-empty">Aucun document : la synchronisation est désactivée.</p>
     <form class="user-grist-form" @submit.prevent="addDocument">
       <DsfrInputGroup
+        :id="docIdInputId"
         v-model="newDocId"
-        label="Identifiant du document"
+        label="Identifiant du document (obligatoire)"
         label-visible
-        hint="Dans l'URL du document, juste après l'adresse de l'instance."
+        hint="Dans l'URL du document, juste après l'adresse de l'instance : 6 à 64 lettres, chiffres, - ou _."
+        aria-required="true"
+        :aria-invalid="!!docIdError"
         :error-message="docIdError"
         data-testid="user-grist-document-input"
       />
-      <DsfrButton type="submit" class="fr-btn--secondary" :disabled="isUpdating || !newDocId.trim()" data-testid="user-grist-document-add">
+      <DsfrButton
+        type="submit"
+        class="fr-btn--secondary"
+        :aria-disabled="isUpdating"
+        :aria-busy="isUpdating"
+        data-testid="user-grist-document-add"
+      >
         Ajouter
       </DsfrButton>
     </form>
