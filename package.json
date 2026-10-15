@@ -1,7 +1,7 @@
 {
   "name": "referentiel-applications",
   "type": "module",
-  "version": "1.99.0",
+  "version": "1.100.0",
   "packageManager": "pnpm@10.34.7",
   "engines": {
     "node": "^22.18.0 || ^24.0.0"

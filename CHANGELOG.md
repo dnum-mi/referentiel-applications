@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.100.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.99.0...v1.100.0) (2026-10-15)
+
+
+### Features
+
+* **technologies:** export stacks and filter by end of life ([#2921](https://github.com/dnum-mi/referentiel-applications/issues/2921)) ([705cef1](https://github.com/dnum-mi/referentiel-applications/commit/705cef1016df3952eb0665f427efbc6cf4fbe694))
+
+
+### Bug Fixes
+
+* **actor-types:** empêcher la suppression des types utilisés ([#2923](https://github.com/dnum-mi/referentiel-applications/issues/2923)) ([2a902fa](https://github.com/dnum-mi/referentiel-applications/commit/2a902fa2b8c53df288466c0f2e70b879b679131b))
+* improve RGAA accessibility across application workflows ([#2875](https://github.com/dnum-mi/referentiel-applications/issues/2875)) ([a9750e3](https://github.com/dnum-mi/referentiel-applications/commit/a9750e3a85483668e192e0aa6d0e4e74888b91eb))
+
 ## [1.99.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.98.0...v1.99.0) (2026-10-14)
 
 
