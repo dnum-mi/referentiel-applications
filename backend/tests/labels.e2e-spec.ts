@@ -48,6 +48,7 @@ describe("application guard", () => {
   let appActor: UserFakerReturnType;
   let TOKEN: string;
   let actorType: AsyncReturnType<typeof ActorTypeFaker.create>;
+  let actor: AsyncReturnType<typeof ActorFaker.link>;
 
   beforeAll(async () => {
     actorType = await ActorTypeFaker.create(["AppRead"]);
@@ -57,13 +58,14 @@ describe("application guard", () => {
   });
 
   afterAll(async () => {
+    await actor.delete();
     await actorType.delete();
   });
 
   it("permissions testing", async () => {
     // read and write labels are parts of AppRead and AppWrite permissions
     const application = await ApplicationFaker.create(appOwner);
-    await ActorFaker.link({
+    actor = await ActorFaker.link({
       userEmail: appActor.email,
       actorTypeId: actorType.id,
       applicationId: application.id,

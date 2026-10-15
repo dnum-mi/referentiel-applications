@@ -507,6 +507,7 @@ describe("application guard", () => {
   let appActor: UserFakerReturnType;
   let TOKEN: string;
   let actorType: AsyncReturnType<typeof ActorTypeFaker.create>;
+  let actor: AsyncReturnType<typeof ActorFaker.link>;
   let application: AsyncReturnType<typeof ApplicationFaker.create>;
 
   beforeAll(async () => {
@@ -514,7 +515,7 @@ describe("application guard", () => {
     appActor = await UserFaker.create();
     application = await ApplicationFaker.create(appOwner);
     actorType = await ActorTypeFaker.create([]);
-    await ActorFaker.link({
+    actor = await ActorFaker.link({
       userEmail: appActor.email,
       actorTypeId: actorType.id,
       applicationId: application.id,
@@ -523,6 +524,7 @@ describe("application guard", () => {
   });
 
   afterAll(async () => {
+    await actor.delete();
     await actorType.delete();
   });
 

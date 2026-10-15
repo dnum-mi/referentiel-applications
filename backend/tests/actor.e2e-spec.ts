@@ -60,7 +60,7 @@ describe("application guard", () => {
   it("permissions testing", async () => {
     const actorType = await ActorTypeFaker.create(["ActorRead"]);
     const application = await ApplicationFaker.create(appOwner);
-    await ActorFaker.link({
+    const linkedActor = await ActorFaker.link({
       userEmail: appActor.email,
       actorTypeId: actorType.id,
       applicationId: application.id,
@@ -157,6 +157,7 @@ describe("application guard", () => {
       .expect(204);
 
     // Finally delete the actor type
+    await linkedActor.delete();
     await actorType.delete();
   });
 });

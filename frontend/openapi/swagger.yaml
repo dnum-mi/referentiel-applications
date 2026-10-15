@@ -4448,6 +4448,9 @@ paths:
       responses:
         "204":
           description: Type d’acteur supprimé avec succès
+        "409":
+          description: "Type d'acteur encore utilisé : réaffecter ou retirer les acteurs
+            concernés avant de réessayer"
       summary: Supprimer un type d’acteur
       tags: *a23
   /api/v2/applications/{applicationId}/compliances:
