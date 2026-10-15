@@ -249,6 +249,15 @@ La sélection exportée se limite aux informations générales, aux noms alterna
 elle exclut la dette technique et les contacts pour tous les rôles. Chaque demande est tracée
 dans `ActionLog`, y compris l'identité réelle en cas d'impersonation.
 
+**Revue des corrélations.** Consulter les suggestions, lancer la détection, accepter ou rejeter
+une paire exige `GlobalAdminManage` sur chacune des quatre routes `/correlation-suggestions`
+(`CorrelationSuggestionController`). L'onglet d'administration applique le même contrôle.
+Cette permission est réservée aux administrateurs sans périmètre ; les droits d'acteur et
+`RelationWrite` sur une fiche n'ouvrent pas cette revue transverse. `GlobalAdminManage` ne fait
+pas partie des capacités déléguables. Activer `CORRELATION_CRON_ENABLED` ne change pas les
+droits des utilisateurs. L'acceptation conserve l'identifiant du relecteur et la date, et crée
+les métadonnées de relation sur les deux fiches ; aucune fusion de données n'est effectuée.
+
 ### 4.2. Permissions applicatives (par application)
 
 | Permission (lecture) | Permission (écriture) | Domaine                                                                                                                                                                             |
@@ -302,6 +311,12 @@ Le périmètre fonctionnel est `scopeOrganization`, distinct de l'organisation d
 Le menu, le plan du site et l'accès direct à `/fins-de-vie` appliquent le contrôle de capacité et de profil. L'API `GET /technologies/end-of-life` impose la même autorisation puis filtre les données côté serveur avant pagination et calcul du total. Les recherches, filtres d'organisation et de statut ne peuvent élargir cette sélection. Un changement d'utilisateur, de capacité ou de périmètre invalide les données de la page et ses réponses en attente.
 
 La page s'ouvre avec **Toutes les technologies (y compris à jour)** sélectionné. Les filtres de fin de vie restent disponibles. Pour les clients API existants, l'absence de filtre `status` conserve le comportement historique centré sur les échéances ; la page transmet explicitement `status=all` par défaut.
+
+Le filtre `technologyEolStatus` du catalogue exige les mêmes droits et le même périmètre que cette
+vue. L'export Excel transverse exige en plus `DataExport` et reprend les filtres sans pagination.
+Dans l'export du catalogue, la feuille **Technologies** ne contient que les technologies des
+applications pour lesquelles le demandeur dispose de `TechnologyRead` ; la capacité `DataExport`
+ne donne pas à elle seule un nouveau droit de lecture sur la stack technique.
 
 Cette première version ne prend pas en charge la vue pour les utilisateurs standards (`VISITOR`) et n'ajoute pas les applications hors périmètre accessibles par un droit d'acteur. Les droits `TechnologyRead` et `TechnologyWrite` des fiches applications gardent leur fonctionnement : la nouvelle capacité n'accorde aucun droit d'écriture et son absence ne retire pas un droit existant sur une fiche.
 

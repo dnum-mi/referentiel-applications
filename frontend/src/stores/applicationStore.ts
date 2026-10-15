@@ -15,6 +15,7 @@ import api from "@/api/index";
 import router from "@/router";
 import { routeNames } from "@/router/route-names";
 import { useToasterStore } from "@/stores/toasterStore";
+import { downloadBlob } from "@/utils/download-blob";
 
 /// Délai de la synchronisation Grist, bien au-delà du délai par défaut des appels d'API.
 const GRIST_SYNC_TIMEOUT_MS = 5 * 60_000;
@@ -191,16 +192,6 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     downloadProductPowerpoint,
   };
 });
-
-function downloadBlob(blob: Blob, filename: string = "applications_export.csv"): void {
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(link.href);
-}
 
 function cleanFilters(filters: Filters = {}) {
   return Object.fromEntries(

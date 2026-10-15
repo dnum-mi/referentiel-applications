@@ -10,6 +10,7 @@ import QualityFilter from "@/components/search/QualityFilter.vue";
 import ApplicationFilter from "@/components/search/ApplicationFilter.vue";
 import PriorityRestartFilter from "@/components/search/PriorityRestartFilter.vue";
 import DataFilter from "@/components/search/DataFilter.vue";
+import TechnologyFilter from "@/components/search/TechnologyFilter.vue";
 import { useAccordionManager } from "@/composables/use-accordion-manager";
 import { useStatisticsStore } from "@/stores/statisticsStore";
 import { useUserStore } from "@/stores/userStore";
@@ -43,7 +44,7 @@ function handleReset() {
 const statsStore = useStatisticsStore();
 const userStore = useUserStore();
 
-const { openAccordions, toggle } = useAccordionManager(10, true);
+const { openAccordions, toggle } = useAccordionManager(11, true);
 
 const isMyAppsFilterActive = computed(() => {
   return !!(userStore.user?.email && filters.value.myApplications);
@@ -181,6 +182,16 @@ const total = computed(() => {
 
         <DsfrAccordion :selected="openAccordions.includes(8)" title="Qualité" data-testid="sidebar-accordion-quality" @click="toggle(8)">
           <QualityFilter />
+        </DsfrAccordion>
+
+        <DsfrAccordion
+          v-if="userStore.canListTechnologies"
+          :selected="openAccordions.includes(10)"
+          title="Technologies"
+          data-testid="sidebar-accordion-technologies"
+          @click="toggle(10)"
+        >
+          <TechnologyFilter />
         </DsfrAccordion>
       </div>
     </aside>

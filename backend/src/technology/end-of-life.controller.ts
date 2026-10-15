@@ -1,4 +1,11 @@
-import { Controller, Get, Query, UseGuards } from "@nestjs/common";
+import {
+  Controller,
+  ForbiddenException,
+  Get,
+  Query,
+  StreamableFile,
+  UseGuards,
+} from "@nestjs/common";
 import {
   ApiForbiddenResponse,
   ApiOkResponse,
@@ -10,6 +17,7 @@ import { RequiredPermissions } from "src/common/decorators/required-permissions.
 import { User } from "src/common/decorators/user.decorator";
 import { PaginatedResponseDto } from "src/common/dto";
 import { PermissionGuard } from "src/common/guards/permission.guard";
+import { CheckPermissions } from "src/common/service/check-permissions.service";
 import type { Requestor } from "src/user/entities/user.entity";
 import {
   EndOfLifeApplicationDto,
@@ -26,7 +34,50 @@ import { EndOfLifeService } from "./end-of-life.service";
 @Controller("technologies")
 @UseGuards(PermissionGuard)
 export class EndOfLifeController {
-  constructor(private readonly endOfLifeService: EndOfLifeService) {}
+  constructor(
+    private readonly endOfLifeService: EndOfLifeService,
+    private readonly checkPermissions: CheckPermissions,
+  ) {}
+
+  @Get("end-of-life/export")
+  @RequiredPermissions([Permission.TechnologyList])
+  @ApiOperation({
+    summary: "Exporter la vue Technologies en Excel",
+    description:
+      "Exige les deux capacités TechnologyList et DataExport. Applique les mêmes filtres, recherche, tri et périmètre que la vue transverse. Toutes les applications correspondantes sont exportées : page et pageSize sont ignorés. Les dates proviennent des données déjà enregistrées.",
+  })
+  @ApiOkResponse({
+    description: "Export Excel des technologies",
+    content: {
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+        schema: { type: "string", format: "binary" },
+      },
+    },
+  })
+  @ApiForbiddenResponse({
+    description:
+      "Capacité TechnologyList ou DataExport absente, rôle ou périmètre non autorisé",
+  })
+  async exportEndOfLifeApplications(
+    @Query() filters: EndOfLifeFiltersDto,
+    @User() requestor: Requestor,
+  ): Promise<StreamableFile> {
+    // PermissionGuard accepte une permission parmi celles de son décorateur.
+    // Le contrôle distinct impose DataExport EN PLUS de TechnologyList.
+    if (
+      !(await this.checkPermissions.can([Permission.DataExport], requestor))
+    ) {
+      throw new ForbiddenException("La capacité DataExport est nécessaire.");
+    }
+    const buffer = await this.endOfLifeService.exportApplications(
+      filters,
+      requestor,
+    );
+    return new StreamableFile(buffer, {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      disposition: 'attachment; filename="technologies_export.xlsx"',
+    });
+  }
 
   @Get("end-of-life")
   @RequiredPermissions([Permission.TechnologyList])

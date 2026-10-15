@@ -11,6 +11,14 @@ export const columnLabels: Record<string, string> = {
   currentStatusId: "ID Statut actuel",
   applicationId: "ID Application",
   applicationLabel: "Application",
+  "technologies.technology": "Technologie",
+  "technologies.product": "Produit",
+  "technologies.version": "Version",
+  "technologies.eolDate": "Fin de vie (EOL)",
+  "technologies.eoasDate": "Fin de support actif (EOAS)",
+  "technologies.latestVersion": "Dernière version",
+  "technologies.eolSource": "Source",
+  "technologies.status": "Statut",
 
   relationsAsSource: "Relations sortantes",
   "relationsAsSource.targetApplication.label": "Cibles liées (nom)",
@@ -84,3 +92,17 @@ export const columnLabels: Record<string, string> = {
   "report.description": "Description",
   "report.status": "Statut du signalement",
 };
+
+/** Colonnes communes aux exports du catalogue et de la vue Technologies. */
+export const technologyExportColumns = [
+  { key: "applicationId", width: 38 },
+  { key: "applicationLabel", width: 40 },
+  { key: "technologies.technology", width: 30 },
+  { key: "technologies.product", width: 30 },
+  { key: "technologies.version", width: 20 },
+  { key: "technologies.eolDate", width: 22 },
+  { key: "technologies.eoasDate", width: 30 },
+  { key: "technologies.latestVersion", width: 22 },
+  { key: "technologies.eolSource", width: 24 },
+  { key: "technologies.status", width: 35 },
+].map((column) => ({ ...column, header: columnLabels[column.key] }));

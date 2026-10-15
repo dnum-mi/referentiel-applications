@@ -5,6 +5,7 @@ import { delegateToService } from "src/permissions/delegated-auth";
 import type { Requestor } from "src/user/entities/user.entity";
 import { EndOfLifeService } from "./end-of-life.service";
 import { EOL_SOON_MS } from "./utils/eol-status";
+import { ExcelBuilderService } from "src/common/service/excel-builder.service";
 
 const day = 24 * 60 * 60 * 1000;
 const past = new Date(Date.now() - 10 * day);
@@ -45,7 +46,10 @@ const scopedRequestor = (role: Roles, path: string) => {
 const makeService = () => {
   const paginate = jest.fn().mockResolvedValue({ results: [], total: 0 });
   const prisma = { application: { paginate } } as unknown as PrismaService;
-  return { service: new EndOfLifeService(prisma), paginate };
+  return {
+    service: new EndOfLifeService(prisma, new ExcelBuilderService()),
+    paginate,
+  };
 };
 
 describe("EndOfLifeService — construction de la requête", () => {

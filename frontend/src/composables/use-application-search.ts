@@ -51,6 +51,7 @@ export const DEFAULT_FILTERS: Filters = {
   missingMoa: undefined,
   missingMoe: undefined,
   missingHosting: undefined,
+  technologyEolStatus: undefined,
   ...NEUTRAL_RELATION_FILTERS,
   relationAppId: undefined,
   businessDivisionId: [],
@@ -223,6 +224,9 @@ function queryToFilters(query: Record<string, LocationQueryValue | LocationQuery
     missingMoa: parseQueryParamBoolean(query.missingMoa),
     missingMoe: parseQueryParamBoolean(query.missingMoe),
     missingHosting: parseQueryParamBoolean(query.missingHosting),
+    technologyEolStatus: ["eol", "eol-soon", "eoas-passed"].includes(parseQueryParam(query.technologyEolStatus) ?? "")
+      ? (parseQueryParam(query.technologyEolStatus) as Filters["technologyEolStatus"])
+      : undefined,
     is_part_of: parseQueryParamsEnum(query.is_part_of) ?? DEFAULT_FILTERS.is_part_of,
     in_replacement_of: parseQueryParamsEnum(query.in_replacement_of) ?? DEFAULT_FILTERS.in_replacement_of,
     is_service_user_of: parseQueryParamsEnum(query.is_service_user_of) ?? DEFAULT_FILTERS.is_service_user_of,
