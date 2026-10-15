@@ -9,4 +9,5 @@ export const sheetLabels: Record<string, string> = {
   RelationsAsSource: "Relations sortantes",
   RelationsAsTarget: "Relations entrantes",
   Statuses: "Statuts",
+  Technologies: "Technologies",
 };

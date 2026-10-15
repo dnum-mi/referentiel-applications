@@ -3,9 +3,16 @@ import { reactive } from "vue";
 import { Roles, type EndOfLifeApplicationDto } from "@/client/types.gen";
 import { useEndOfLifeStore } from "./endOfLifeStore";
 
-const { findApplicationsMock, addErrorMessage } = vi.hoisted(() => ({ findApplicationsMock: vi.fn(), addErrorMessage: vi.fn() }));
+const { findApplicationsMock, exportApplicationsMock, downloadBlob, addErrorMessage } = vi.hoisted(() => ({
+  findApplicationsMock: vi.fn(),
+  exportApplicationsMock: vi.fn(),
+  downloadBlob: vi.fn(),
+  addErrorMessage: vi.fn(),
+}));
 const userStore = reactive({
   canListTechnologies: true,
+  dataExport: true,
+  hasPermissions: () => userStore.dataExport,
   user: {
     id: "user-1",
     role: Roles.ADMIN as Roles,
@@ -14,7 +21,13 @@ const userStore = reactive({
   },
 });
 
-vi.mock("@/api/index", () => ({ default: { endOfLifeControllerFindEndOfLifeApplications: findApplicationsMock } }));
+vi.mock("@/api/index", () => ({
+  default: {
+    endOfLifeControllerFindEndOfLifeApplications: findApplicationsMock,
+    endOfLifeControllerExportEndOfLifeApplications: exportApplicationsMock,
+  },
+}));
+vi.mock("@/utils/download-blob", () => ({ downloadBlob }));
 vi.mock("@/stores/toasterStore", () => ({ useToasterStore: () => ({ addErrorMessage }) }));
 vi.mock("@/stores/userStore", () => ({ useUserStore: () => userStore }));
 
@@ -36,8 +49,11 @@ describe("endOfLifeStore — capacité, identité et périmètre", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     userStore.canListTechnologies = true;
+    userStore.dataExport = true;
     userStore.user = { id: "user-1", role: Roles.ADMIN, scopeOrganizationId: null, scopeOrganization: null };
     findApplicationsMock.mockReset();
+    exportApplicationsMock.mockReset();
+    downloadBlob.mockReset();
     addErrorMessage.mockReset();
     vi.spyOn(console, "error").mockImplementation(() => {});
   });
@@ -126,5 +142,85 @@ describe("endOfLifeStore — capacité, identité et périmètre", () => {
     expect(store.isLoading).toBe(false);
     expect(store.applications).toEqual([]);
     expect(addErrorMessage).toHaveBeenCalledOnce();
+  });
+
+  it.each(["TechnologyList", "DataExport"])("n'exporte pas sans %s", async (permission) => {
+    if (permission === "TechnologyList") userStore.canListTechnologies = false;
+    else userStore.dataExport = false;
+    const store = useEndOfLifeStore();
+    expect(store.canExport).toBe(false);
+    await store.downloadExcel();
+    expect(exportApplicationsMock).not.toHaveBeenCalled();
+    expect(downloadBlob).not.toHaveBeenCalled();
+  });
+
+  it("exporte toutes les pages avec les filtres et le tri courants", async () => {
+    exportApplicationsMock.mockResolvedValueOnce({ response: { ok: true }, data: new Blob(["xlsx"]) });
+    const store = useEndOfLifeStore();
+    await store.downloadExcel({
+      page: 3,
+      pageSize: 15,
+      status: "eol-soon",
+      organization: "MI/DNUM",
+      search: "Node",
+      sortBy: "label",
+      order: "desc",
+    });
+    expect(exportApplicationsMock).toHaveBeenCalledExactlyOnceWith({
+      query: { status: "eol-soon", organization: "MI/DNUM", search: "Node", sortBy: "label", order: "desc" },
+      parseAs: "blob",
+    });
+    expect(downloadBlob).toHaveBeenCalledExactlyOnceWith(
+      expect.any(Blob),
+      expect.stringMatching(/^technologies_export_\d{4}-\d{2}-\d{2}\.xlsx$/),
+    );
+    expect(store.isExporting).toBe(false);
+  });
+
+  it("ignore les clics répétés pendant la préparation du fichier", async () => {
+    const pending = deferred<{ response: { ok: boolean }; data: Blob }>();
+    exportApplicationsMock.mockReturnValueOnce(pending.promise);
+    const store = useEndOfLifeStore();
+    const download = store.downloadExcel();
+    expect(store.isExporting).toBe(true);
+    await store.downloadExcel();
+    expect(exportApplicationsMock).toHaveBeenCalledTimes(1);
+    pending.resolve({ response: { ok: true }, data: new Blob(["xlsx"]) });
+    await download;
+    expect(downloadBlob).toHaveBeenCalledTimes(1);
+    expect(store.isExporting).toBe(false);
+  });
+
+  it.each(["identité", "rôle", "périmètre", "TechnologyList", "DataExport"])(
+    "ne télécharge pas une réponse devenue obsolète après changement de %s",
+    async (change) => {
+      const pending = deferred<{ response: { ok: boolean }; data: Blob }>();
+      exportApplicationsMock.mockReturnValueOnce(pending.promise);
+      const store = useEndOfLifeStore();
+      const download = store.downloadExcel();
+      if (change === "identité") userStore.user.id = "user-2";
+      if (change === "rôle") userStore.user.role = Roles.READER;
+      if (change === "périmètre") userStore.user.scopeOrganizationId = "org-2";
+      if (change === "TechnologyList") userStore.canListTechnologies = false;
+      if (change === "DataExport") userStore.dataExport = false;
+      pending.resolve({ response: { ok: true }, data: new Blob(["ancien-contexte"]) });
+      await download;
+      expect(downloadBlob).not.toHaveBeenCalled();
+      expect(store.isExporting).toBe(false);
+    },
+  );
+
+  it.each([
+    ["HTTP", () => exportApplicationsMock.mockResolvedValueOnce({ response: { ok: false }, error: {} })],
+    ["réseau", () => exportApplicationsMock.mockRejectedValueOnce(new TypeError("Failed to fetch"))],
+  ])("libère l'export après une erreur %s et permet de réessayer", async (_, setup) => {
+    setup();
+    const store = useEndOfLifeStore();
+    await expect(store.downloadExcel()).rejects.toThrow();
+    expect(store.isExporting).toBe(false);
+    expect(downloadBlob).not.toHaveBeenCalled();
+    exportApplicationsMock.mockResolvedValueOnce({ response: { ok: true }, data: new Blob(["xlsx"]) });
+    await store.downloadExcel();
+    expect(downloadBlob).toHaveBeenCalledTimes(1);
   });
 });

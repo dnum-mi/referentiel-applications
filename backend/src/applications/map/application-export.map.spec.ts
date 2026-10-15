@@ -1,4 +1,8 @@
-import { mapRelationsIn, mapRelationsOut } from "./application-export.map";
+import {
+  mapRelationsIn,
+  mapRelationsOut,
+  mapTechnologies,
+} from "./application-export.map";
 import type { ApplicationWithAllRelations } from "src/applications/types/application.type";
 
 /**
@@ -61,5 +65,52 @@ describe("export des relations", () => {
     const [, partOf] = mapRelationsOut(app);
 
     expect(partOf.type).toBe("Fait partie de");
+  });
+});
+
+describe("export des technologies", () => {
+  it("traduit les trois statuts partitionnants et la source manuelle à date fixe", () => {
+    const now = new Date("2026-01-15T12:00:00Z");
+    const app = {
+      id: "app-tech",
+      label: "Application technique",
+      technologies: [
+        { eolDate: new Date("2025-01-01"), eoasDate: new Date("2024-01-01") },
+        { eolDate: new Date("2026-02-01"), eoasDate: new Date("2024-01-01") },
+        { eolDate: new Date("2030-01-01"), eoasDate: new Date("2024-01-01") },
+        { eolDate: null, eoasDate: null },
+      ].map((dates) => ({
+        technology: "Runtime",
+        product: "Produit",
+        version: null,
+        latestVersion: null,
+        eolSource: "manual" as const,
+        ...dates,
+      })),
+    };
+    const rows = mapTechnologies(app, now);
+
+    expect(rows.map((row) => row["technologies.status"])).toEqual([
+      "Fin de vie dépassée",
+      "Fin de vie proche",
+      "Fin de support actif dépassée",
+      "Sans alerte de fin de vie",
+    ]);
+    expect(rows[0]).toMatchObject({
+      applicationId: "app-tech",
+      applicationLabel: "Application technique",
+      "technologies.eolDate": "2025-01-01",
+      "technologies.eoasDate": "2024-01-01",
+      "technologies.eolSource": "Saisie manuelle",
+      "technologies.version": "",
+      "technologies.latestVersion": "",
+    });
+    expect(rows[3]["technologies.eolDate"]).toBe("");
+  });
+
+  it("ne crée aucune ligne pour une application sans technologie", () => {
+    expect(
+      mapTechnologies({ id: "app", label: "Application", technologies: [] }),
+    ).toEqual([]);
   });
 });

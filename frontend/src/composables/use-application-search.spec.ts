@@ -1,8 +1,12 @@
 import { effectScope, nextTick } from "vue";
 
-const { searchMock, replaceMock } = vi.hoisted(() => ({ searchMock: vi.fn(), replaceMock: vi.fn() }));
+const { searchMock, replaceMock, routeMock } = vi.hoisted(() => ({
+  searchMock: vi.fn(),
+  replaceMock: vi.fn(),
+  routeMock: { query: {} as Record<string, string> },
+}));
 vi.mock("@/api/index.js", () => ({ default: { applicationControllerSearch: searchMock } }));
-vi.mock("vue-router", () => ({ useRoute: () => ({ query: {} }), useRouter: () => ({ replace: replaceMock }) }));
+vi.mock("vue-router", () => ({ useRoute: () => routeMock, useRouter: () => ({ replace: replaceMock }) }));
 vi.mock("@/stores/statisticsStore", () => ({
   useStatisticsStore: () => ({ countApplications: vi.fn().mockResolvedValue(0), countTechnicalDebtPoints: vi.fn() }),
 }));
@@ -14,6 +18,7 @@ describe("useApplicationSearch — debounce partagé", () => {
   beforeEach(async () => {
     vi.useFakeTimers();
     vi.resetModules();
+    routeMock.query = {};
     scope = effectScope();
     ({ useApplicationSearch } = await import("./use-application-search"));
     searchMock.mockReset().mockResolvedValue({
@@ -68,5 +73,48 @@ describe("useApplicationSearch — debounce partagé", () => {
     expect(searchMock.mock.calls[0][0].query.search).toBeUndefined();
     await vi.advanceTimersByTimeAsync(300);
     expect(searchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(["eol", "eol-soon", "eoas-passed"] as const)("rétablit le filtre technologies %s depuis l'URL", async (status) => {
+    routeMock.query = { technologyEolStatus: status };
+    const search = scope.run(() => useApplicationSearch())!;
+    expect(search.filters.value.technologyEolStatus).toBe(status);
+    await search.searchApplications();
+    expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ query: expect.objectContaining({ technologyEolStatus: status }) }));
+  });
+
+  it("envoie immédiatement le filtre technologies et le conserve dans l'URL", async () => {
+    const search = scope.run(() => useApplicationSearch())!;
+    search.setFilter({ technologyEolStatus: "eol", page: 0 });
+    await nextTick();
+    expect(replaceMock).toHaveBeenCalledWith({ query: { technologyEolStatus: "eol" } });
+    expect(searchMock).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ query: expect.objectContaining({ technologyEolStatus: "eol" }) }),
+    );
+  });
+
+  it("retire le filtre technologies de l'URL et de l'API lors de la réinitialisation", async () => {
+    routeMock.query = { technologyEolStatus: "eol" };
+    const search = scope.run(() => useApplicationSearch())!;
+    search.resetFilters();
+    await nextTick();
+    expect(search.filters.value.technologyEolStatus).toBeUndefined();
+    expect(replaceMock).toHaveBeenCalledWith({ query: {} });
+    expect(searchMock.mock.calls[0][0].query).not.toHaveProperty("technologyEolStatus");
+  });
+
+  it("omet le filtre technologies quand « Tous les statuts » est sélectionné", async () => {
+    routeMock.query = { technologyEolStatus: "eol" };
+    const search = scope.run(() => useApplicationSearch())!;
+    search.setFilter({ technologyEolStatus: undefined, page: 0 });
+    await nextTick();
+    expect(replaceMock).toHaveBeenCalledWith({ query: {} });
+    expect(searchMock.mock.calls[0][0].query).not.toHaveProperty("technologyEolStatus");
+  });
+
+  it("ignore un statut technologies invalide dans l'URL", () => {
+    routeMock.query = { technologyEolStatus: "all" };
+    const search = scope.run(() => useApplicationSearch())!;
+    expect(search.filters.value.technologyEolStatus).toBeUndefined();
   });
 });

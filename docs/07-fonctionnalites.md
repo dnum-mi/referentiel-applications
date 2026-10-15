@@ -345,9 +345,20 @@ globales. Un constat, pas une note.
 
 **Ce que ça fait.** Export au format Excel des résultats de recherche (avec les filtres en cours) ou de l'intégralité du référentiel.
 
+La feuille **Technologies** restitue une ligne par technologie accessible : application, produit,
+version, fin de vie, fin de support actif, dernière version connue, source des dates et statut.
+Le filtre **Fin de vie** de la recherche utilise le même classement que la fiche et la vue
+Technologies ; il reste présent dans les recherches enregistrées et l'export filtré.
+
+Depuis la vue **Technologies**, l'export Excel reprend la recherche, l'organisation, le statut et
+le tri courants sur toutes les pages. Il nécessite `TechnologyList` et `DataExport` et reste
+limité au périmètre autorisé. Les dates proviennent des données déjà enregistrées, sans nouvel
+appel à endoflife.date.
+
 **Où c'est dans le code.** `GET /applications/export/excel` (`backend/src/applications/application.controller.ts`) ; services `ApplicationExportService` (export filtré, `exportSearchResultsToExcel`) et `ExportApplicationsUseCase` (export total). Le fichier est renvoyé en pièce jointe `applications_export.xlsx`. Déclenchement depuis `ApplicationSearchActions.vue`.
 
-**Permission.** `DataExport` (**administrateurs**).
+**Permission.** `DataExport` (administrateurs, ou attribution explicite). La feuille Technologies
+respecte en plus le droit `TechnologyRead` du demandeur sur chaque application.
 
 ### Fiche produit PowerPoint
 

@@ -7,6 +7,59 @@ import {
   PriorityRestartLabels,
 } from "src/applications/constants/enum-label";
 import { RelationTypeLabelsBidirectional } from "src/applications/constants/relation-type-labels";
+import {
+  computeEolStatus,
+  type EolStatus,
+} from "src/technology/utils/eol-status";
+import type { TechnologyEolSource } from "@prisma/client";
+
+const eolStatusLabels: Record<EolStatus, string> = {
+  eol: "Fin de vie dépassée",
+  "eol-soon": "Fin de vie proche",
+  "eoas-passed": "Fin de support actif dépassée",
+};
+
+type ApplicationWithExportTechnologies = {
+  id: string;
+  label: string;
+  technologies?: {
+    technology: string;
+    product: string;
+    version: string | null;
+    eolDate: Date | null;
+    eoasDate: Date | null;
+    latestVersion: string | null;
+    eolSource: TechnologyEolSource;
+  }[];
+};
+
+export function mapTechnologies(
+  app: ApplicationWithExportTechnologies,
+  now = new Date(),
+) {
+  return (app.technologies ?? []).map((technology) => {
+    const status = computeEolStatus(technology, now);
+    return {
+      applicationId: app.id,
+      applicationLabel: app.label,
+      "technologies.technology": technology.technology,
+      "technologies.product": technology.product,
+      "technologies.version": technology.version ?? "",
+      "technologies.eolDate":
+        technology.eolDate?.toISOString().split("T")[0] ?? "",
+      "technologies.eoasDate":
+        technology.eoasDate?.toISOString().split("T")[0] ?? "",
+      "technologies.latestVersion": technology.latestVersion ?? "",
+      "technologies.eolSource":
+        technology.eolSource === "manual"
+          ? "Saisie manuelle"
+          : "endoflife.date",
+      "technologies.status": status
+        ? eolStatusLabels[status]
+        : "Sans alerte de fin de vie",
+    };
+  });
+}
 
 export function getFullField(
   app: ApplicationWithAllRelations,
