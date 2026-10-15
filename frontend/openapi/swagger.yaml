@@ -2420,6 +2420,20 @@ paths:
           schema:
             example: Salle 101
             type: string
+        - name: technologyEolStatus
+          required: false
+          in: query
+          description: Ne retenir que les applications utilisant au moins une technologie
+            portant ce statut de fin de vie. Sans ce filtre, les technologies ne
+            restreignent pas la recherche. Nécessite la capacité globale
+            TechnologyList et un rôle lecteur, contributeur ou administrateur ;
+            le périmètre de l'utilisateur s'applique.
+          schema:
+            type: string
+            enum:
+              - eol
+              - eol-soon
+              - eoas-passed
         - name: compliance__in
           required: false
           in: query
