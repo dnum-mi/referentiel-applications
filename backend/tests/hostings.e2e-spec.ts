@@ -120,7 +120,7 @@ describe("application guard", () => {
   it("permissions testing", async () => {
     const actorType = await ActorTypeFaker.create(["HostingRead"]);
     const application = await ApplicationFaker.create(appOwner);
-    await ActorFaker.link({
+    const actor = await ActorFaker.link({
       userEmail: appActor.email,
       actorTypeId: actorType.id,
       applicationId: application.id,
@@ -219,7 +219,8 @@ describe("application guard", () => {
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(204);
 
-    // Finally delete the actor type
+    // Nettoyer l'acteur avant son type : la FK protège les types encore utilisés.
+    await actor.delete();
     await actorType.delete();
   });
 });

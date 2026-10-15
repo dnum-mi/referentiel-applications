@@ -309,6 +309,13 @@ Cette première version ne prend pas en charge la vue pour les utilisateurs stan
 
 La matrice `AppPermissions` (`backend/prisma/schema/permissions.prisma:5-52`) est en relation **1:1** avec `ActorType` (champ `actorTypeId @unique`, `onDelete: Cascade`). Chaque type d'acteur (MOA, MOE, RSSI, Architecte applicatif/technique, TMA, Exploitation, RSIMM, CPD, ProductOwner, ProductManager, Hébergement, Autre…) porte ainsi son propre jeu de booléens : `AppRead`, `AppWrite`, `AppWritePriority`, `ActorRead`/`ActorWrite`, `ComplianceRead`/`ComplianceWrite`, `HostingRead`/`HostingWrite`, `MetadataRead`, `RelationRead`/`RelationWrite`, `LinkRead`/`LinkWrite`, `ReportRead`/`ReportPost`/`ReportManage`.
 
+La suppression d'un type d'acteur encore utilisé est refusée avec `409 Conflict`, même pour
+un acteur de groupe ou sans application. Il faut d'abord réaffecter ou retirer les acteurs
+concernés. La clé étrangère `Actor.actorTypeId` est restrictive pour empêcher également un
+détachement lors d'un rattachement concurrent. Le refus conserve les acteurs et la matrice
+de permissions du type. Un type inutilisé reste supprimable avec `ActorTypeDelete` et sa
+ligne `AppPermissions` est supprimée en cascade ; le type système `isDefault` reste protégé.
+
 Ces permissions ne s'appliquent **qu'à l'application** dont l'utilisateur est acteur, via les deux canaux décrits en [couche 3](#couche-3--permissions-par-type-dacteur-sur-une-application) :
 
 - **Canal email** — l'utilisateur est directement nommé acteur de l'application (`Actor.email` égal à l'e-mail de l'utilisateur, insensible à la casse depuis #2501, `isGroup = false`).

@@ -142,8 +142,8 @@ model Actor {
   application    Application?  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   /// id du type de cet acteur
   actorTypeId    String?
-  /// Rôle/type de cet acteur
-  actorType      ActorType?    @relation(fields: [actorTypeId], references: [id])
+  /// Rôle/type de cet acteur : suppression du type interdite tant qu'il est utilisé
+  actorType      ActorType?    @relation(fields: [actorTypeId], references: [id], onDelete: Restrict)
   /// Entrées de métadonnées pour cet acteur
   metadatas      Metadata[]
   /// Enregistrements de conformité
