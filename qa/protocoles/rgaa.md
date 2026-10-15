@@ -15,6 +15,12 @@
 Ces contrôles de comportement ne constituent pas une validation intégrale des critères RGAA.
 La restitution effective avec les lecteurs d'écran de l'environnement de test reste à qualifier.
 
+La campagne Windows NVDA/JAWS était un dispositif ponctuel de qualification. Son workflow
+GitHub Actions a été retiré ; elle n'est plus exécutée automatiquement en CI. Les tests,
+fixtures et outils restent versionnés dans `qa/at-windows/`, dont le README décrit le
+dispositif historique. Ce retrait ne change ni les résultats obtenus ni les limites de
+qualification ci-dessus. Les contrôles habituels de `Main CI` restent en place.
+
 Des contrôles complémentaires versionnés couvrent les modifications de données personnelles
 (11.12) : les tests des formulaires acteurs/utilisateurs, campagnes et filtres sauvegardés
 vérifient le refus sans écriture, la confirmation des valeurs courantes et la reprise après erreur.
