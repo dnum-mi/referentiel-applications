@@ -249,6 +249,15 @@ La sélection exportée se limite aux informations générales, aux noms alterna
 elle exclut la dette technique et les contacts pour tous les rôles. Chaque demande est tracée
 dans `ActionLog`, y compris l'identité réelle en cas d'impersonation.
 
+**Revue des corrélations.** Consulter les suggestions, lancer la détection, accepter ou rejeter
+une paire exige `GlobalAdminManage` sur chacune des quatre routes `/correlation-suggestions`
+(`CorrelationSuggestionController`). L'onglet d'administration applique le même contrôle.
+Cette permission est réservée aux administrateurs sans périmètre ; les droits d'acteur et
+`RelationWrite` sur une fiche n'ouvrent pas cette revue transverse. `GlobalAdminManage` ne fait
+pas partie des capacités déléguables. Activer `CORRELATION_CRON_ENABLED` ne change pas les
+droits des utilisateurs. L'acceptation conserve l'identifiant du relecteur et la date, et crée
+les métadonnées de relation sur les deux fiches ; aucune fusion de données n'est effectuée.
+
 ### 4.2. Permissions applicatives (par application)
 
 | Permission (lecture) | Permission (écriture) | Domaine                                                                                                                                                                             |

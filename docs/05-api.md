@@ -317,6 +317,24 @@ Inventaire **par module / ressource** (résumé : verbes et chemins principaux, 
 
 > Ces quatre routes exigent la permission `GlobalAdminManage` (#2446 — administration transverse, réservée aux administrateurs sans périmètre) et n'attendent aucun corps de requête.
 
+Les chemins sont relatifs au préfixe `/api/v2`. La liste accepte `status=PENDING|ACCEPTED|REJECTED`
+(sans filtre, tous les statuts), `page` (base 0), `pageSize` (15 par défaut, 0 sans pagination,
+100 au maximum), `sortBy=score|createdAt|status` et `order=asc|desc`. Le tri par défaut est
+`score desc` ; un champ de tri non pris en charge retombe sur `score`. La réponse contient
+`results` et `total`. Chaque suggestion expose les identifiants et les libellés des deux
+applications, `score`, `signals`, `status`, `createdAt`, `reviewedById` et `reviewedAt`.
+
+Les trois `POST` renvoient `200` en cas de succès. `run` attend la fin du passage et renvoie
+`{ candidateCount, createdCount, updatedCount }` : candidats avant seuil, suggestions créées
+et suggestions `PENDING` rafraîchies. Il fonctionne même lorsque le cron est désactivé et
+renvoie `409` si une détection est déjà en cours sur la même instance.
+
+`accept` et `reject` renvoient la suggestion mise à jour, `404` si elle n'existe pas, ou `409`
+si elle a déjà été revue. Seules les transitions depuis `PENDING` sont proposées. L'acceptation
+crée la relation `is_correlated_with` et trace les deux fiches ; si cette relation existe déjà,
+la revue peut être finalisée sans créer de doublon. Le rejet ne crée aucune relation.
+Aucun de ces endpoints ne fusionne les fiches.
+
 ### Suivi des fins de vie
 
 | Verbe & chemin                         | Rôle                                                                        |
