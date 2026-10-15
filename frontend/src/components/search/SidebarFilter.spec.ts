@@ -2,13 +2,25 @@ import { enableAutoUnmount, mount } from "@vue/test-utils";
 import { ref } from "vue";
 import SidebarFilter from "./SidebarFilter.vue";
 
+const canListTechnologies = ref(false);
+beforeEach(() => {
+  canListTechnologies.value = false;
+});
+
 vi.mock("@/composables/use-application-search", () => ({
   DEFAULT_FILTERS: {},
   useApplicationSearch: () => ({ filters: ref({}), total: ref(45), resetFilters: vi.fn(), setFilter: vi.fn() }),
 }));
 vi.mock("@/composables/use-mdit-campaigns", () => ({ useMditCampaigns: () => ({ latestYear: ref(2026) }) }));
 vi.mock("@/stores/statisticsStore", () => ({ useStatisticsStore: () => ({ totalApplications: 45, technicalDebtPointTotal: 0 }) }));
-vi.mock("@/stores/userStore", () => ({ useUserStore: () => ({ user: { email: "synthetique@example.test" } }) }));
+vi.mock("@/stores/userStore", () => ({
+  useUserStore: () => ({
+    user: { email: "synthetique@example.test" },
+    get canListTechnologies() {
+      return canListTechnologies.value;
+    },
+  }),
+}));
 vi.mock("vue-router", () => ({ useRoute: () => ({ path: "/recherche-application" }) }));
 
 enableAutoUnmount(afterEach);
@@ -67,6 +79,24 @@ describe("SidebarFilter — vrais accordéons DSFR", () => {
     expect(general.element).toHaveFocus();
     await general.trigger("click");
     expect(general.attributes("aria-expanded")).toBe("true");
+    expect(quality.attributes("aria-expanded")).toBe("true");
+  });
+
+  it("applique au filtre Technologies le même état DSFR sans refermer un autre panneau", async () => {
+    canListTechnologies.value = true;
+    const wrapper = renderSidebar();
+    const technology = wrapper.get<HTMLButtonElement>('[data-testid="sidebar-accordion-technologies"] button');
+    const quality = wrapper.get('[data-testid="sidebar-accordion-quality"] button');
+    expect(technology.attributes("aria-expanded")).toBe("false");
+    technology.element.focus();
+    await technology.trigger("click");
+    expect(technology.attributes("aria-expanded")).toBe("true");
+    expect(technology.element).toHaveFocus();
+    await quality.trigger("click");
+    expect(quality.attributes("aria-expanded")).toBe("true");
+    expect(technology.attributes("aria-expanded")).toBe("true");
+    await technology.trigger("click");
+    expect(technology.attributes("aria-expanded")).toBe("false");
     expect(quality.attributes("aria-expanded")).toBe("true");
   });
 });

@@ -1,10 +1,12 @@
 import { createPinia, setActivePinia } from "pinia";
 import type { GristColumnField } from "@/client/types.gen";
 import { useApplicationStore } from "./applicationStore";
+import * as downloadUtils from "@/utils/download-blob";
 
 const {
   removeMock,
   exportPowerpointMock,
+  exportExcelMock,
   exportHtmlMock,
   exportProductHtmlMock,
   gristSetupMock,
@@ -16,6 +18,7 @@ const {
 } = vi.hoisted(() => ({
   removeMock: vi.fn(),
   exportPowerpointMock: vi.fn(),
+  exportExcelMock: vi.fn(),
   exportHtmlMock: vi.fn(),
   exportProductHtmlMock: vi.fn(),
   gristSetupMock: vi.fn(),
@@ -32,6 +35,7 @@ vi.mock("@/api/index", () => ({
   default: {
     applicationControllerRemove: removeMock,
     applicationControllerExportProductPowerpoint: exportPowerpointMock,
+    applicationControllerExportExcel: exportExcelMock,
     applicationControllerExportHtml: exportHtmlMock,
     applicationControllerExportProductHtml: exportProductHtmlMock,
     gristControllerSetup: gristSetupMock,
@@ -216,5 +220,27 @@ describe("applicationStore — synchronisation Grist", () => {
     gristTablesMock.mockResolvedValueOnce({ response, error });
     await expect(useApplicationStore().syncWithGrist()).rejects.toThrow("Erreur lors de la synchronisation avec Grist.");
     await expect(useApplicationStore().listGristTables()).rejects.toThrow("Erreur lors de la lecture des documents Grist.");
+  });
+});
+
+describe("applicationStore.downloadExcel — filtres technologies", () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    exportExcelMock.mockReset();
+    vi.spyOn(downloadUtils, "downloadBlob").mockImplementation(() => {});
+  });
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it("conserve le statut technologies et les autres filtres pour exporter toutes les pages", async () => {
+    exportExcelMock.mockResolvedValueOnce({ response: { ok: true }, data: new Blob(["xlsx"]) });
+    await useApplicationStore().downloadExcel({ technologyEolStatus: "eol", search: "portail", page: 2, pageSize: 15, order: "desc" });
+    expect(exportExcelMock).toHaveBeenCalledExactlyOnceWith({
+      query: { technologyEolStatus: "eol", search: "portail", page: 2, pageSize: 0, order: "desc" },
+    });
+    expect(downloadUtils.downloadBlob).toHaveBeenCalledExactlyOnceWith(
+      expect.any(Blob),
+      expect.stringMatching(/^applications_export_.*\.xlsx$/),
+    );
   });
 });

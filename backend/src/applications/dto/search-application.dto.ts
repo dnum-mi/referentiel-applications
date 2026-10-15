@@ -5,6 +5,7 @@ import {
   IsArray,
   IsBoolean,
   IsEnum,
+  IsIn,
   IsNumber,
   IsOptional,
   IsString,
@@ -15,6 +16,7 @@ import {
 import { PaginationDto } from "src/common/dto";
 import { RelationTypeFilter } from "src/relationship/application/dto/relation-type.dto";
 import { stringToBoolean } from "src/utils/functions";
+import { EOL_STATUSES, type EolStatus } from "src/technology/utils/eol-status";
 
 /**
  * Critères de conformité filtrables. `pra` (Plan de Reprise d'Activité) s'appuie
@@ -248,6 +250,15 @@ export class ApplicationSearchDto extends PaginationDto {
   @IsOptional()
   @IsString()
   hostingRoom?: string;
+
+  @ApiPropertyOptional({
+    description:
+      "Ne retenir que les applications utilisant au moins une technologie portant ce statut de fin de vie. Sans ce filtre, les technologies ne restreignent pas la recherche. Nécessite la capacité globale TechnologyList et un rôle lecteur, contributeur ou administrateur ; le périmètre de l'utilisateur s'applique.",
+    enum: EOL_STATUSES,
+  })
+  @IsOptional()
+  @IsIn(EOL_STATUSES as unknown as string[])
+  technologyEolStatus?: EolStatus;
 
   @ApiPropertyOptional({
     description:

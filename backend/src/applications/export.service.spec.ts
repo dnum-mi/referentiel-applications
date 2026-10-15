@@ -1,6 +1,7 @@
 import { Permission } from "@prisma/client";
 import type { CheckPermissions } from "src/common/service/check-permissions.service";
 import type { Requestor } from "src/user/entities/user.entity";
+import type { ApplicationWithAllRelations } from "./types/application.type";
 import { ApplicationSearchDto } from "./dto/search-application.dto";
 import { ApplicationExportService } from "./export.service";
 import type { ApplicationRepository } from "./infrastructure/repository/application.repository";
@@ -242,6 +243,88 @@ describe("Même recherche et même périmètre dans les exports HTML et Excel", 
       const exporter =
         format === "Excel" ? executeWithApps : executeHtmlWithApps;
       expect(exporter).toHaveBeenCalledWith([]);
+    },
+  );
+});
+
+describe("ApplicationExportService — lecture des technologies par fiche", () => {
+  it.each(["Excel", "Html"] as const)(
+    "contrôle TechnologyRead sur chaque application pour l’export %s sans modifier les données du dépôt",
+    async (format) => {
+      const technology = { product: "Produit privé" };
+      const applications = [
+        { id: "visible", label: "Visible", technologies: [technology] },
+        { id: "hidden", label: "Masquée", technologies: [technology] },
+        { id: "empty", label: "Vide", technologies: [] },
+      ] as unknown as ApplicationWithAllRelations[];
+      const executeWithApps = jest.fn().mockResolvedValue(Buffer.from("xlsx"));
+      const executeHtmlWithApps = jest
+        .fn()
+        .mockResolvedValue(Buffer.from("html"));
+      const can = jest.fn(
+        async (permissions: Permission[], _: Requestor, id?: string) =>
+          permissions.includes(Permission.TechnologyRead)
+            ? id === "visible"
+            : true,
+      );
+      const findAllWithFullRelations = jest
+        .fn()
+        .mockResolvedValue(applications);
+      const sut = new ApplicationExportService(
+        { findAllWithFullRelations } as unknown as ApplicationRepository,
+        {
+          executeWithApps,
+          executeHtmlWithApps,
+        } as unknown as ExportApplicationsUseCase,
+        {
+          buildSearchWhere: jest.fn().mockResolvedValue({ AND: [] }),
+          buildOrderBy: jest.fn().mockReturnValue({ label: "desc" }),
+        } as unknown as PrismaQueryBuilder,
+        { can } as unknown as CheckPermissions,
+        {} as ApplicationSearchService,
+      );
+
+      const filters = Object.assign(new ApplicationSearchDto(), {
+        page: 2,
+        pageSize: 1,
+        sortBy: "label",
+        order: "desc",
+      });
+      if (format === "Excel") {
+        await sut.exportSearchResultsToExcel(filters, requestor);
+      } else {
+        await sut.exportSearchResultsToHtml(filters, requestor);
+      }
+
+      expect(findAllWithFullRelations).toHaveBeenCalledWith(
+        { AND: [] },
+        { label: "desc" },
+      );
+      expect(can).toHaveBeenCalledWith(
+        [Permission.TechnologyRead],
+        requestor,
+        "visible",
+      );
+      expect(can).toHaveBeenCalledWith(
+        [Permission.TechnologyRead],
+        requestor,
+        "hidden",
+      );
+      const exporter =
+        format === "Excel" ? executeWithApps : executeHtmlWithApps;
+      const exported = exporter.mock
+        .calls[0][0] as ApplicationWithAllRelations[];
+      expect(exported.map((app) => app.technologies)).toEqual([
+        [technology],
+        [],
+        [],
+      ]);
+      expect(applications[1].technologies).toEqual([technology]);
+      expect(can).not.toHaveBeenCalledWith(
+        [Permission.TechnologyRead],
+        requestor,
+        "empty",
+      );
     },
   );
 });

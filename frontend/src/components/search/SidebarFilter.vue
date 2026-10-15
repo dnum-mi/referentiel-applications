@@ -11,6 +11,7 @@ import QualityFilter from "@/components/search/QualityFilter.vue";
 import ApplicationFilter from "@/components/search/ApplicationFilter.vue";
 import PriorityRestartFilter from "@/components/search/PriorityRestartFilter.vue";
 import DataFilter from "@/components/search/DataFilter.vue";
+import TechnologyFilter from "@/components/search/TechnologyFilter.vue";
 import { useStatisticsStore } from "@/stores/statisticsStore";
 import { useUserStore } from "@/stores/userStore";
 import SavedFiltersPanel from "./SavedFiltersPanel.vue";
@@ -196,6 +197,10 @@ const total = computed(() => {
 
         <DsfrAccordion title="Qualité" data-testid="sidebar-accordion-quality">
           <QualityFilter />
+        </DsfrAccordion>
+
+        <DsfrAccordion v-if="userStore.canListTechnologies" title="Technologies" data-testid="sidebar-accordion-technologies">
+          <TechnologyFilter />
         </DsfrAccordion>
       </div>
     </aside>

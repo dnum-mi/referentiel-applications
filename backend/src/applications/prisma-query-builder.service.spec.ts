@@ -4,6 +4,154 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { QueryBuilderGroupActor } from "src/common/service/prisma-query-builder.service";
 import { Requestor } from "src/user/entities/user.entity";
 import { DIMA_FILLED_FIELDS } from "src/common/utils/compliance-presence.utils";
+import { ForbiddenException } from "@nestjs/common";
+import { Permission, Roles } from "@prisma/client";
+import { EOL_SOON_MS } from "src/technology/utils/eol-status";
+
+describe("PrismaQueryBuilder — filtre de fin de vie des technologies (#2524)", () => {
+  const prisma = {
+    $queryRaw: jest.fn().mockResolvedValue([]),
+  } as unknown as PrismaService;
+  const groupActor = {
+    buildApplicationIds: jest.fn().mockReturnValue(""),
+  } as unknown as QueryBuilderGroupActor;
+  const builder = new PrismaQueryBuilder(prisma, groupActor);
+  const requestor = {
+    email: "reader@example.com",
+    role: Roles.READER,
+    permissions: [Permission.AppList],
+    additionalPermissions: [Permission.TechnologyList],
+  } as Requestor;
+  const now = new Date("2026-10-15T12:00:00.000Z");
+  const soon = new Date(now.getTime() + EOL_SOON_MS);
+
+  beforeAll(() => jest.useFakeTimers({ now }));
+  afterAll(() => jest.useRealTimers());
+
+  it.each([
+    ["eol", { eolDate: { lt: now } }],
+    ["eol-soon", { eolDate: { gte: now, lt: soon } }],
+    [
+      "eoas-passed",
+      {
+        eoasDate: { lt: now },
+        OR: [{ eolDate: null }, { eolDate: { gte: soon } }],
+      },
+    ],
+  ] as const)(
+    "%s applique en base les mêmes frontières exclusives que la vue transverse",
+    async (technologyEolStatus, technologyWhere) => {
+      const where = await builder.buildSearchWhere(
+        { technologyEolStatus },
+        requestor,
+      );
+      expect(where.AND).toContainEqual({
+        technologies: { some: technologyWhere },
+      });
+    },
+  );
+
+  it("sans filtre, ne restreint pas les technologies et ne demande pas TechnologyList", async () => {
+    const where = await builder.buildSearchWhere(
+      {},
+      {
+        ...requestor,
+        role: Roles.VISITOR,
+        additionalPermissions: [],
+      },
+    );
+    expect(where.AND).not.toContainEqual(
+      expect.objectContaining({ technologies: expect.anything() }),
+    );
+  });
+
+  it.each([Roles.READER, Roles.CONTRIBUTOR, Roles.ADMIN])(
+    "%s doit posséder la capacité globale TechnologyList",
+    async (role) => {
+      await expect(
+        builder.buildSearchWhere(
+          { technologyEolStatus: "eol" },
+          {
+            ...requestor,
+            role,
+            additionalPermissions: [Permission.TechnologyRead],
+          },
+        ),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    },
+  );
+
+  it("accepte la capacité issue des permissions globales du rôle", async () => {
+    await expect(
+      builder.buildSearchWhere(
+        { technologyEolStatus: "eol" },
+        {
+          ...requestor,
+          role: Roles.ADMIN,
+          permissions: [Permission.AppList, Permission.TechnologyList],
+          additionalPermissions: [],
+        },
+      ),
+    ).resolves.toHaveProperty("AND");
+  });
+
+  it("refuse VISITOR même avec TechnologyList", async () => {
+    await expect(
+      builder.buildSearchWhere(
+        { technologyEolStatus: "eol" },
+        { ...requestor, role: Roles.VISITOR },
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it("refuse un périmètre sans chemin au lieu de le convertir en accès global", async () => {
+    await expect(
+      builder.buildSearchWhere(
+        { technologyEolStatus: "eol" },
+        { ...requestor, scopeOrganizationId: "scope-invalide" },
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it("combine le périmètre serveur avec tous les filtres du client et les restrictions habituelles", async () => {
+    const organization = {
+      OR: [
+        { path: { equals: "MI/DNUM", mode: "insensitive" } },
+        { path: { startsWith: "MI/DNUM/", mode: "insensitive" } },
+      ],
+    };
+    const where = await builder.buildSearchWhere(
+      { technologyEolStatus: "eol", search: "hors périmètre" },
+      {
+        ...requestor,
+        scopeOrganizationId: "scope-dnum",
+        scopeOrganization: { path: "MI/DNUM/" },
+      } as Requestor,
+      { actorEmail: requestor.email },
+    );
+    expect(where.AND).toContainEqual({
+      OR: [
+        { actors: { some: { organization } } },
+        {
+          businessDivisions: {
+            some: { organizations: { some: organization } },
+          },
+        },
+      ],
+    });
+    expect(where.AND).toContainEqual({
+      OR: [
+        {
+          actors: {
+            some: {
+              email: { equals: requestor.email, mode: "insensitive" },
+            },
+          },
+        },
+      ],
+    });
+  });
+});
 
 describe("PrismaQueryBuilder — filtres de conformité", () => {
   const prisma = {

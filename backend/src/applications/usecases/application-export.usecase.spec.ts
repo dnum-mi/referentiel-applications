@@ -14,6 +14,17 @@ const application = {
   targetPopulations: ["Population"],
   logo: "https://example.test/logo?a=1&b=2",
   tags: [],
+  technologies: [
+    {
+      technology: "Serveur d’application",
+      product: "Produit <historique>",
+      version: "1.0",
+      eolDate: new Date("2020-01-01T00:00:00.000Z"),
+      eoasDate: new Date("2019-01-01T00:00:00.000Z"),
+      latestVersion: "2.0",
+      eolSource: "manual",
+    },
+  ],
   relationsAsSource: [
     {
       type: "is_part_of",
@@ -43,11 +54,26 @@ const application = {
 describe("Export des applications en XLSX et HTML", () => {
   const useCase = new ExportApplicationsUseCase(new ExcelBuilderService());
 
-  it("conserve les dix feuilles et associe correctement les relations entrantes et sortantes", async () => {
+  it("conserve les onze feuilles, les technologies et le sens des relations dans les deux formats", async () => {
     const buffer = await useCase.executeWithApps([application]);
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(buffer as unknown as ExcelJS.Buffer);
-    expect(workbook.worksheets).toHaveLength(10);
+    expect(workbook.worksheets).toHaveLength(11);
+    const technologies = workbook.getWorksheet("Technologies");
+    expect(technologies.getRow(2).values).toEqual(
+      expect.arrayContaining([
+        "application-centre",
+        "Application centrale",
+        "Serveur d’application",
+        "Produit <historique>",
+        "1.0",
+        "2020-01-01",
+        "2019-01-01",
+        "2.0",
+        "Saisie manuelle",
+        "Fin de vie dépassée",
+      ]),
+    );
     const incoming = workbook.getWorksheet("Relations entrantes");
     const outgoing = workbook.getWorksheet("Relations sortantes");
     expect(incoming.getRow(2).values).toEqual(
@@ -70,7 +96,7 @@ describe("Export des applications en XLSX et HTML", () => {
       "utf-8",
     );
     const incomingSection = html
-      .split('id="section-9"')[1]
+      .split('id="section-10"')[1]
       .split("</section>")[0];
     expect(incomingSection).toContain("Source entrante");
     expect(incomingSection).not.toContain("Cible sortante");
@@ -91,7 +117,7 @@ describe("Export des applications en XLSX et HTML", () => {
     const tables = Object.keys(zip.files).filter((path) =>
       /^xl\/tables\/table\d+\.xml$/.test(path),
     );
-    expect(tables).toHaveLength(10);
+    expect(tables).toHaveLength(11);
     for (const path of tables) {
       const xml = await zip.file(path).async("string");
       expect(xml).toContain("<tableColumns");
@@ -117,9 +143,9 @@ describe("Export des applications en XLSX et HTML", () => {
       Object.keys(zip.files).filter((path) =>
         /^xl\/tables\/table\d+\.xml$/.test(path),
       ),
-    ).toHaveLength(10);
+    ).toHaveLength(11);
     const html = (await useCase.executeHtmlWithApps([])).toString("utf-8");
-    expect(html.match(/<section /g)).toHaveLength(10);
-    expect(html.match(/Aucune ligne\./g)).toHaveLength(10);
+    expect(html.match(/<section /g)).toHaveLength(11);
+    expect(html.match(/Aucune ligne\./g)).toHaveLength(11);
   });
 });

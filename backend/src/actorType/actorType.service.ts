@@ -1,5 +1,9 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
-import { ActorType, AppPermissions } from "@prisma/client";
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from "@nestjs/common";
+import { ActorType, AppPermissions, Prisma } from "@prisma/client";
 import { BaseService } from "src/common/base.service";
 import { PaginatedResponseDto } from "src/common/dto";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -31,6 +35,9 @@ const DEFAULT_APP_PERMISSIONS = {
 // celles qui journalisent une modification de la matrice des droits.
 const MATRIX_HISTORY_DESCRIPTION_PREFIX =
   "Modification de la matrice des droits";
+
+const ACTOR_TYPE_IN_USE_MESSAGE =
+  "Impossible de supprimer un type d'acteur encore utilisé. Réaffectez ou retirez les acteurs concernés avant de réessayer.";
 
 // Le libellé du type d'acteur est une donnée admin (éditable librement) : on l'échappe avant de
 // l'insérer dans une description affichée en `<b>` (rendue en v-html côté front) pour éviter
@@ -101,8 +108,8 @@ export class ActorTypeService extends BaseService<
     });
   }
 
-  // Surcharge de BaseService.delete : protège le type d'acteur système (isDefault) requis par
-  // le fallback non-acteur de CheckPermissions.getUserAppPermissions.
+  // Le type système et les types utilisés restent nécessaires à la résolution
+  // des droits ; supprimer un type utilisé ne doit jamais détacher ses acteurs.
   public async delete(id: string): Promise<ActorType> {
     const actorType = await this.findOne(id);
     if (actorType.isDefault) {
@@ -110,7 +117,29 @@ export class ActorTypeService extends BaseService<
         "Impossible de supprimer le type d'acteur par défaut (utilisé comme fallback pour les utilisateurs non-acteurs).",
       );
     }
-    return super.delete(id);
+    if (await this.prisma.actor.count({ where: { actorTypeId: id } })) {
+      throw new ConflictException(ACTOR_TYPE_IN_USE_MESSAGE);
+    }
+
+    try {
+      return await super.delete(id);
+    } catch (error) {
+      // La FK restrictive couvre aussi un acteur rattaché après le contrôle.
+      // PostgreSQL 18 renvoie SQLSTATE 23001 pour RESTRICT ; Prisma 6 ne le
+      // normalise pas en P2003. Limiter ce repli à la contrainte des acteurs.
+      const isActorRestriction =
+        error instanceof Prisma.PrismaClientUnknownRequestError &&
+        error.message.includes('PostgresError { code: "23001"') &&
+        /\bActor_actorTypeId_fkey\b/.test(error.message);
+      if (
+        (error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2003") ||
+        isActorRestriction
+      ) {
+        throw new ConflictException(ACTOR_TYPE_IN_USE_MESSAGE);
+      }
+      throw error;
+    }
   }
 
   public async getPermsMatrix(): Promise<AppPermissions[]> {

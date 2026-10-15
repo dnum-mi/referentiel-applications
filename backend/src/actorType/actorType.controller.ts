@@ -14,6 +14,7 @@ import {
 } from "@nestjs/common";
 import {
   ApiBody,
+  ApiConflictResponse,
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiOkResponse,
@@ -219,6 +220,10 @@ Les données de mise à jour doivent correspondre aux champs
   @HttpCode(204)
   @ApiNoContentResponse({
     description: "Type d’acteur supprimé avec succès",
+  })
+  @ApiConflictResponse({
+    description:
+      "Type d'acteur encore utilisé : réaffecter ou retirer les acteurs concernés avant de réessayer",
   })
   public async delete(@Param("id") id: string) {
     return this.actorTypeService.delete(id);

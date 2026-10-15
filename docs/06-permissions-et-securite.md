@@ -249,6 +249,15 @@ La sélection exportée se limite aux informations générales, aux noms alterna
 elle exclut la dette technique et les contacts pour tous les rôles. Chaque demande est tracée
 dans `ActionLog`, y compris l'identité réelle en cas d'impersonation.
 
+**Revue des corrélations.** Consulter les suggestions, lancer la détection, accepter ou rejeter
+une paire exige `GlobalAdminManage` sur chacune des quatre routes `/correlation-suggestions`
+(`CorrelationSuggestionController`). L'onglet d'administration applique le même contrôle.
+Cette permission est réservée aux administrateurs sans périmètre ; les droits d'acteur et
+`RelationWrite` sur une fiche n'ouvrent pas cette revue transverse. `GlobalAdminManage` ne fait
+pas partie des capacités déléguables. Activer `CORRELATION_CRON_ENABLED` ne change pas les
+droits des utilisateurs. L'acceptation conserve l'identifiant du relecteur et la date, et crée
+les métadonnées de relation sur les deux fiches ; aucune fusion de données n'est effectuée.
+
 ### 4.2. Permissions applicatives (par application)
 
 | Permission (lecture) | Permission (écriture) | Domaine                                                                                                                                                                             |
@@ -303,11 +312,24 @@ Le menu, le plan du site et l'accès direct à `/fins-de-vie` appliquent le cont
 
 La page s'ouvre avec **Toutes les technologies (y compris à jour)** sélectionné. Les filtres de fin de vie restent disponibles. Pour les clients API existants, l'absence de filtre `status` conserve le comportement historique centré sur les échéances ; la page transmet explicitement `status=all` par défaut.
 
+Le filtre `technologyEolStatus` du catalogue exige les mêmes droits et le même périmètre que cette
+vue. L'export Excel transverse exige en plus `DataExport` et reprend les filtres sans pagination.
+Dans l'export du catalogue, la feuille **Technologies** ne contient que les technologies des
+applications pour lesquelles le demandeur dispose de `TechnologyRead` ; la capacité `DataExport`
+ne donne pas à elle seule un nouveau droit de lecture sur la stack technique.
+
 Cette première version ne prend pas en charge la vue pour les utilisateurs standards (`VISITOR`) et n'ajoute pas les applications hors périmètre accessibles par un droit d'acteur. Les droits `TechnologyRead` et `TechnologyWrite` des fiches applications gardent leur fonctionnement : la nouvelle capacité n'accorde aucun droit d'écriture et son absence ne retire pas un droit existant sur une fiche.
 
 ## 5. Permissions par type d'acteur
 
 La matrice `AppPermissions` (`backend/prisma/schema/permissions.prisma:5-52`) est en relation **1:1** avec `ActorType` (champ `actorTypeId @unique`, `onDelete: Cascade`). Chaque type d'acteur (MOA, MOE, RSSI, Architecte applicatif/technique, TMA, Exploitation, RSIMM, CPD, ProductOwner, ProductManager, Hébergement, Autre…) porte ainsi son propre jeu de booléens : `AppRead`, `AppWrite`, `AppWritePriority`, `ActorRead`/`ActorWrite`, `ComplianceRead`/`ComplianceWrite`, `HostingRead`/`HostingWrite`, `MetadataRead`, `RelationRead`/`RelationWrite`, `LinkRead`/`LinkWrite`, `ReportRead`/`ReportPost`/`ReportManage`.
+
+La suppression d'un type d'acteur encore utilisé est refusée avec `409 Conflict`, même pour
+un acteur de groupe ou sans application. Il faut d'abord réaffecter ou retirer les acteurs
+concernés. La clé étrangère `Actor.actorTypeId` est restrictive pour empêcher également un
+détachement lors d'un rattachement concurrent. Le refus conserve les acteurs et la matrice
+de permissions du type. Un type inutilisé reste supprimable avec `ActorTypeDelete` et sa
+ligne `AppPermissions` est supprimée en cascade ; le type système `isDefault` reste protégé.
 
 Ces permissions ne s'appliquent **qu'à l'application** dont l'utilisateur est acteur, via les deux canaux décrits en [couche 3](#couche-3--permissions-par-type-dacteur-sur-une-application) :
 

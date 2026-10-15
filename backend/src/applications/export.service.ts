@@ -46,7 +46,28 @@ export class ApplicationExportService {
 
     const { sortBy = "shortName", order = "asc" } = searchParams;
     const orderBy = this.prismaQueryBuilder.buildOrderBy(sortBy, order);
-    return this.repository.findAllWithFullRelations(where, orderBy);
+    const applications = await this.repository.findAllWithFullRelations(
+      where,
+      orderBy,
+    );
+
+    // DataExport est une capacité délégable, y compris aux visiteurs : elle
+    // n'accorde pas la lecture de la stack de toutes les fiches exportées.
+    const authorizedApplications = await Promise.all(
+      applications.map(async (application) => {
+        if (application.technologies.length === 0) return application;
+        const canReadTechnologies = await this.checkPermissions.can(
+          [Permission.TechnologyRead],
+          requestor,
+          application.id,
+        );
+        return canReadTechnologies
+          ? application
+          : { ...application, technologies: [] };
+      }),
+    );
+
+    return authorizedApplications;
   }
 
   /// Filtre de recherche restreint au périmètre du demandeur, sans pagination : toutes les

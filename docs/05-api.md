@@ -143,6 +143,11 @@ Paramètres de requête associés :
 
 `GET /applications` accepte en outre des **filtres riches** de type ORM (par ex. `search`, `label`, `tag`, `actorType`, `actorEmail`, `organization`, `hostingSite`, `priorityRestart`, `missingMoa`, `missingMoe`, `missingHosting`, `myApplications`), avec suffixes `__in` / `__isNull` (par ex. `currentStatus__in`, `currentStatus__isNull`) et bornes de dates (`createdAtGte`, `createdAtLte`).
 
+Le filtre `technologyEolStatus` accepte `eol`, `eol-soon` ou `eoas-passed` : il retient les applications
+ayant au moins une technologie dans cet état. Son absence ne filtre pas les technologies. Il exige
+la capacité `TechnologyList` et le même profil et périmètre que la vue Technologies. Il est conservé
+dans les filtres enregistrés et appliqué à l'export Excel des résultats.
+
 ## Documentation interactive (Swagger)
 
 La documentation OpenAPI est générée automatiquement à partir des contrôleurs et DTO décorés (`@nestjs/swagger`), dans `backend/src/swagger-config.ts`. Trois routes sont exposées (sous le préfixe global, donc `/api/v2/…`) :
@@ -312,17 +317,42 @@ Inventaire **par module / ressource** (résumé : verbes et chemins principaux, 
 
 > Ces quatre routes exigent la permission `GlobalAdminManage` (#2446 — administration transverse, réservée aux administrateurs sans périmètre) et n'attendent aucun corps de requête.
 
+Les chemins sont relatifs au préfixe `/api/v2`. La liste accepte `status=PENDING|ACCEPTED|REJECTED`
+(sans filtre, tous les statuts), `page` (base 0), `pageSize` (15 par défaut, 0 sans pagination,
+100 au maximum), `sortBy=score|createdAt|status` et `order=asc|desc`. Le tri par défaut est
+`score desc` ; un champ de tri non pris en charge retombe sur `score`. La réponse contient
+`results` et `total`. Chaque suggestion expose les identifiants et les libellés des deux
+applications, `score`, `signals`, `status`, `createdAt`, `reviewedById` et `reviewedAt`.
+
+Les trois `POST` renvoient `200` en cas de succès. `run` attend la fin du passage et renvoie
+`{ candidateCount, createdCount, updatedCount }` : candidats avant seuil, suggestions créées
+et suggestions `PENDING` rafraîchies. Il fonctionne même lorsque le cron est désactivé et
+renvoie `409` si une détection est déjà en cours sur la même instance.
+
+`accept` et `reject` renvoient la suggestion mise à jour, `404` si elle n'existe pas, ou `409`
+si elle a déjà été revue. Seules les transitions depuis `PENDING` sont proposées. L'acceptation
+crée la relation `is_correlated_with` et trace les deux fiches ; si cette relation existe déjà,
+la revue peut être finalisée sans créer de doublon. Le rejet ne crée aucune relation.
+Aucun de ces endpoints ne fusionne les fiches.
+
 ### Suivi des fins de vie
 
-| Verbe & chemin                  | Rôle                                                                             |
-| ------------------------------- | -------------------------------------------------------------------------------- |
-| `GET /technologies/end-of-life` | Applications portant une technologie en fin de vie, proche ou hors support actif |
+| Verbe & chemin                         | Rôle                                                                        |
+| -------------------------------------- | --------------------------------------------------------------------------- |
+| `GET /technologies/end-of-life`        | Technologies par application, filtrables par fin de vie                     |
+| `GET /technologies/end-of-life/export` | Export Excel de toutes les applications correspondant aux filtres autorisés |
 
-Filtres : `status` (`eol`, `eol-soon`, `eoas-passed` — les trois partitionnent la liste),
+Filtres : `status` (`eol`, `eol-soon`, `eoas-passed` — les trois partitionnent la liste — ou `all` pour inclure les technologies saines),
 `organization` (chemin ou sigle d'un acteur, correspondance partielle), `search` (libellé
 d'application ou produit), plus la pagination usuelle (`page`, `pageSize`) et un tri limité à
 `sortBy=label` (défaut) ou `sortBy=shortName`, `order=asc|desc` — pas de tri par gravité, qui
 supposerait d'ordonner sur un agrégat de la relation.
+
+L'export accepte les mêmes filtres et le même tri, dont `status=all` pour inclure les technologies
+saines. Il ignore `page` et `pageSize`, exige **à la fois** `TechnologyList` et `DataExport` et conserve
+le périmètre du demandeur. Chaque technologie occupe une ligne de la feuille **Technologies**,
+avec son application, son produit, sa version, ses échéances et son statut calculé. Aucune
+résolution externe des dates n'est déclenchée par l'export.
 Seules les technologies retenues par le filtre sont restituées, triées par gravité décroissante.
 
 > Route accessible à tout utilisateur authentifié, comme `GET /metadatas` : `TechnologyRead`

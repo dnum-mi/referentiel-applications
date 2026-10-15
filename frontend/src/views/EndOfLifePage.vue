@@ -10,6 +10,7 @@ import type { TableColumn, TableSortEvent } from "@/types/table";
 import type { EndOfLifeApplicationDto, EndOfLifeTechnologyDto } from "@/client/types.gen";
 import { EOL_STATUS_BADGE_TYPE, EOL_STATUS_LABELS } from "@/utils/eol-status";
 import { useUserStore } from "@/stores/userStore";
+import { useToasterStore } from "@/stores/toasterStore";
 import { useRouter } from "vue-router";
 
 type EolStatus = EndOfLifeTechnologyDto["status"];
@@ -32,7 +33,8 @@ type EolStatus = EndOfLifeTechnologyDto["status"];
 const store = useEndOfLifeStore();
 const userStore = useUserStore();
 const router = useRouter();
-const { applications, total, isLoading } = storeToRefs(store);
+const toaster = useToasterStore();
+const { applications, total, isLoading, isExporting, canExport } = storeToRefs(store);
 
 const statusFilter = ref<EolStatus | "all" | "">("all");
 const organizationFilter = ref("");
@@ -75,8 +77,7 @@ const statusMessage = computed(() => {
   return `Résultat ${from} à ${to} sur ${total.value}`;
 });
 
-function fetchApplications() {
-  if (!userStore.canListTechnologies) return;
+function currentQuery(): EndOfLifeQuery {
   const query: EndOfLifeQuery = {
     page: currentPage.value,
     pageSize: pageSize.value,
@@ -88,7 +89,22 @@ function fetchApplications() {
   if (statusFilter.value) query.status = statusFilter.value;
   if (organizationFilter.value.trim()) query.organization = organizationFilter.value.trim();
   if (searchFilter.value.trim()) query.search = searchFilter.value.trim();
-  return store.fetchApplications(query);
+  return query;
+}
+
+function fetchApplications() {
+  if (!userStore.canListTechnologies) return;
+  return store.fetchApplications(currentQuery());
+}
+
+async function exportToExcel() {
+  if (!canExport.value || isExporting.value) return;
+  try {
+    await store.downloadExcel(currentQuery());
+  } catch (error) {
+    console.error("Erreur lors de l'exportation Excel des technologies", error);
+    toaster.addErrorMessage("Une erreur est survenue lors de l'exportation Excel. Veuillez réessayer.");
+  }
 }
 
 // Tout changement de filtre ramène en page 0 : rester page 3 d'un résultat qui
@@ -218,6 +234,18 @@ watch(
           title="Effacer les filtres"
           data-testid="end-of-life-clear-filters"
           @click="clearFilters"
+        />
+        <DsfrButton
+          v-if="canExport"
+          type="button"
+          secondary
+          icon="ri-download-line"
+          :label="isExporting ? 'Préparation de l’export…' : 'Exporter en Excel'"
+          :disabled="isExporting"
+          :aria-busy="isExporting"
+          title="Exporter toutes les applications correspondant aux filtres et au tri actuels"
+          data-testid="end-of-life-export-excel"
+          @click="exportToExcel"
         />
       </div>
     </form>

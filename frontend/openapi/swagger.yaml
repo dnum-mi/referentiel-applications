@@ -1373,6 +1373,20 @@ paths:
           schema:
             example: Salle 101
             type: string
+        - name: technologyEolStatus
+          required: false
+          in: query
+          description: Ne retenir que les applications utilisant au moins une technologie
+            portant ce statut de fin de vie. Sans ce filtre, les technologies ne
+            restreignent pas la recherche. Nécessite la capacité globale
+            TechnologyList et un rôle lecteur, contributeur ou administrateur ;
+            le périmètre de l'utilisateur s'applique.
+          schema:
+            type: string
+            enum:
+              - eol
+              - eol-soon
+              - eoas-passed
         - name: compliance__in
           required: false
           in: query
@@ -1930,6 +1944,20 @@ paths:
           schema:
             example: Salle 101
             type: string
+        - name: technologyEolStatus
+          required: false
+          in: query
+          description: Ne retenir que les applications utilisant au moins une technologie
+            portant ce statut de fin de vie. Sans ce filtre, les technologies ne
+            restreignent pas la recherche. Nécessite la capacité globale
+            TechnologyList et un rôle lecteur, contributeur ou administrateur ;
+            le périmètre de l'utilisateur s'applique.
+          schema:
+            type: string
+            enum:
+              - eol
+              - eol-soon
+              - eoas-passed
         - name: compliance__in
           required: false
           in: query
@@ -4909,6 +4937,9 @@ paths:
       responses:
         "204":
           description: Type d’acteur supprimé avec succès
+        "409":
+          description: "Type d'acteur encore utilisé : réaffecter ou retirer les acteurs
+            concernés avant de réessayer"
       summary: Supprimer un type d’acteur
       tags: *a23
   /api/v2/applications/{applicationId}/compliances:
@@ -5483,6 +5514,20 @@ paths:
           schema:
             example: Salle 101
             type: string
+        - name: technologyEolStatus
+          required: false
+          in: query
+          description: Ne retenir que les applications utilisant au moins une technologie
+            portant ce statut de fin de vie. Sans ce filtre, les technologies ne
+            restreignent pas la recherche. Nécessite la capacité globale
+            TechnologyList et un rôle lecteur, contributeur ou administrateur ;
+            le périmètre de l'utilisateur s'applique.
+          schema:
+            type: string
+            enum:
+              - eol
+              - eol-soon
+              - eoas-passed
         - name: compliance__in
           required: false
           in: query
@@ -6727,6 +6772,20 @@ paths:
           schema:
             example: Salle 101
             type: string
+        - name: technologyEolStatus
+          required: false
+          in: query
+          description: Ne retenir que les applications utilisant au moins une technologie
+            portant ce statut de fin de vie. Sans ce filtre, les technologies ne
+            restreignent pas la recherche. Nécessite la capacité globale
+            TechnologyList et un rôle lecteur, contributeur ou administrateur ;
+            le périmètre de l'utilisateur s'applique.
+          schema:
+            type: string
+            enum:
+              - eol
+              - eol-soon
+              - eoas-passed
         - name: compliance__in
           required: false
           in: query
@@ -7201,6 +7260,95 @@ paths:
           description: Technologie supprimée
       summary: Supprimer une technologie
       tags: *a35
+  /api/v2/technologies/end-of-life/export:
+    get:
+      description: "Exige les deux capacités TechnologyList et DataExport. Applique
+        les mêmes filtres, recherche, tri et périmètre que la vue transverse.
+        Toutes les applications correspondantes sont exportées : page et
+        pageSize sont ignorés. Les dates proviennent des données déjà
+        enregistrées."
+      operationId: EndOfLifeController_exportEndOfLifeApplications
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            maximum: 100
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            type: string
+            enum:
+              - asc
+              - desc
+        - name: status
+          required: false
+          in: query
+          description: "Ne retenir que les technologies portant ce statut de fin de vie.
+            Les trois statuts partitionnent la liste : une technologie déjà en
+            fin de vie n'apparaît pas sous « fin de support actif ». `all` est
+            un 4ᵉ filtre, non partitionnant : il lève la restriction et retourne
+            aussi les technologies saines."
+          schema:
+            type: string
+            enum:
+              - eol
+              - eol-soon
+              - eoas-passed
+              - all
+        - name: organization
+          required: false
+          in: query
+          description: "Filtre sur l'organisation d'un acteur de l'application : chemin ou
+            sigle, en correspondance partielle et insensible à la casse. Un
+            chemin de direction ramène donc aussi ses organisations filles."
+          schema:
+            example: MI/DNUM
+            type: string
+        - name: search
+          required: false
+          in: query
+          description: Recherche libre sur le libellé de l'application ou le produit
+            concerné (ex. « PostgreSQL »)
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Export Excel des technologies
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+        "403":
+          description: Capacité TechnologyList ou DataExport absente, rôle ou périmètre
+            non autorisé
+      summary: Exporter la vue Technologies en Excel
+      tags: &a36
+        - Technologies
   /api/v2/technologies/end-of-life:
     get:
       description: Vue transverse accessible avec la capacité TechnologyList aux
@@ -7292,8 +7440,7 @@ paths:
         "403":
           description: Capacité Technologie absente, rôle ou périmètre non autorisé
       summary: Technologies utilisées par les applications, fins de vie ou non
-      tags:
-        - Technologies
+      tags: *a36
   /api/v2/stats/iq-avg/period:
     get:
       description: "
@@ -7424,7 +7571,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/PaginatedReportDto"
       summary: Récupérer tous les signalements
-      tags: &a36
+      tags: &a37
         - Reports
     post:
       operationId: ReportsController_create
@@ -7443,7 +7590,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReportDto"
       summary: Créer un signalement
-      tags: *a36
+      tags: *a37
   /api/v2/reports/{id}:
     patch:
       operationId: ReportsController_update
@@ -7474,7 +7621,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReportDto"
       summary: Mettre à jour un signalement
-      tags: *a36
+      tags: *a37
   /api/v2/applications/{applicationId}/reports:
     post:
       operationId: ApplicationReportsController_create
@@ -7499,7 +7646,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReportDto"
       summary: Demande de modification pour une fiche application
-      tags: &a37
+      tags: &a38
         - ApplicationReports
     get:
       description: Renvoie la liste paginée des signalements pour une application donnée.
@@ -7563,7 +7710,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/PaginatedReportDto"
       summary: Récupérer tous les signalements pour une application
-      tags: *a37
+      tags: *a38
   /api/v2/applications/{applicationId}/reports/{id}:
     get:
       operationId: ApplicationReportsController_findOne
@@ -7587,7 +7734,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReportDto"
       summary: Récupérer un signalement spécifique par ID
-      tags: *a37
+      tags: *a38
     patch:
       operationId: ApplicationReportsController_update
       parameters:
@@ -7623,7 +7770,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReportDto"
       summary: Mettre à jour un signalement
-      tags: *a37
+      tags: *a38
     delete:
       operationId: ApplicationReportsController_remove
       parameters:
@@ -7642,7 +7789,7 @@ paths:
         "204":
           description: Signalement supprimé avec succès
       summary: Supprimer un signalement
-      tags: *a37
+      tags: *a38
   /api/v2/saved-filters:
     get:
       description: Renvoie les filtres de recherche d'applications sauvegardés par
@@ -7659,7 +7806,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/SavedFilterDto"
       summary: Lister ses filtres sauvegardés
-      tags: &a38
+      tags: &a39
         - SavedFilters
     post:
       description: Sauvegarde les filtres courants sous un nom. Si un filtre du même
@@ -7680,7 +7827,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/SavedFilterDto"
       summary: Sauvegarder un filtre
-      tags: *a38
+      tags: *a39
   /api/v2/saved-filters/{id}:
     delete:
       operationId: SavedFilterController_remove
@@ -7697,7 +7844,7 @@ paths:
         "404":
           description: Filtre sauvegardé non trouvé
       summary: Supprimer un filtre sauvegardé
-      tags: *a38
+      tags: *a39
   /api/v2/quality-campaigns:
     post:
       operationId: QualityCampaignController_create
@@ -7716,7 +7863,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/QualityCampaignDto"
       summary: Créer une campagne de mise en qualité
-      tags: &a39
+      tags: &a40
         - Quality Campaigns
     get:
       operationId: QualityCampaignController_findAll
@@ -7764,7 +7911,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/PaginatedQualityCampaignDto"
       summary: Lister les campagnes de mise en qualité
-      tags: *a39
+      tags: *a40
   /api/v2/quality-campaigns/{id}:
     get:
       operationId: QualityCampaignController_findOne
@@ -7784,7 +7931,7 @@ paths:
         "404":
           description: Campagne non trouvée
       summary: Détail d'une campagne de mise en qualité, avec son impact
-      tags: *a39
+      tags: *a40
     patch:
       operationId: QualityCampaignController_update
       parameters:
@@ -7809,7 +7956,7 @@ paths:
         "404":
           description: Campagne non trouvée
       summary: Modifier une campagne de mise en qualité
-      tags: *a39
+      tags: *a40
     delete:
       operationId: QualityCampaignController_remove
       parameters:
@@ -7824,7 +7971,7 @@ paths:
         "404":
           description: Campagne non trouvée
       summary: Supprimer une campagne de mise en qualité
-      tags: *a39
+      tags: *a40
   /api/v2/quality-campaigns/{id}/preview:
     get:
       operationId: QualityCampaignController_preview
@@ -7845,7 +7992,7 @@ paths:
           description: Campagne non trouvée
       summary: Aperçu à la volée des applications actuellement matchées par le filtre
         de la campagne
-      tags: *a39
+      tags: *a40
   /api/v2/quality-campaigns/{id}/status:
     patch:
       operationId: QualityCampaignController_updateStatus
@@ -7872,7 +8019,7 @@ paths:
           description: Campagne non trouvée
       summary: Changer librement le statut de la campagne (planifiée / en cours /
         terminée), dans n'importe quel sens
-      tags: *a39
+      tags: *a40
   /api/v2/quality-campaigns/{id}/send:
     post:
       operationId: QualityCampaignController_send
@@ -7893,7 +8040,7 @@ paths:
           description: Campagne non trouvée
       summary: Déclencher immédiatement l'envoi de la campagne aux acteurs des
         applications ciblées
-      tags: *a39
+      tags: *a40
   /api/v2/quality-campaigns/{id}/send-sponsor-report:
     post:
       operationId: QualityCampaignController_sendSponsorReport
@@ -7914,7 +8061,7 @@ paths:
           description: Campagne non trouvée
       summary: Envoyer au sponsor de la campagne un email récapitulatif de l'impact
         courant
-      tags: *a39
+      tags: *a40
   /api/v2/health-check:
     get:
       description: Exécute une requête basique vers la base de données pour vérifier
@@ -8291,7 +8438,7 @@ components:
           description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
             le futur
         status:
-          enum: &a40
+          enum: &a41
             - active
             - expired
             - revoked
@@ -8411,7 +8558,7 @@ components:
           description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
             le futur
         status:
-          enum: *a40
+          enum: *a41
           type: string
           example: active
           description: Statut du token
@@ -9371,7 +9518,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: &a41
+          example: &a42
             - population 1
             - population 2
           description: population associated with the application
@@ -9382,7 +9529,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: &a42
+          example: &a43
             - finance
             - HR
           description: Purposes of the application
@@ -9395,7 +9542,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: &a43
+          example: &a44
             - tag1
             - tag2
           type: array
@@ -9732,7 +9879,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: &a44
+          enum: &a45
             - 96
             - 72
             - 48
@@ -9763,7 +9910,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: &a45
+          enum: &a46
             - OK
             - KO
           type: string
@@ -9774,7 +9921,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: &a46
+          enum: &a47
             - 48
             - 24
             - 2
@@ -9794,7 +9941,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: &a47
+          enum: &a48
             - S3
             - LOCAL
             - EXTERNE
@@ -9805,7 +9952,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: &a48
+          enum: &a49
             - OK
             - KO
           type: string
@@ -9815,7 +9962,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: &a49
+          enum: &a50
             - homologuee
             - en_cours
             - dispensee
@@ -10110,7 +10257,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: *a41
+          example: *a42
           description: population associated with the application
           type: array
           items:
@@ -10119,7 +10266,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: *a42
+          example: *a43
           description: Purposes of the application
           type: array
           items:
@@ -10130,7 +10277,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: *a43
+          example: *a44
           type: array
           items:
             type: string
@@ -11304,7 +11451,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: *a44
+          enum: *a45
           example: 4
           description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
         dima_is_hno:
@@ -11328,7 +11475,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a45
+          enum: *a46
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -11337,7 +11484,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: *a46
+          enum: *a47
           example: 24
           description: PDMA duration in hours (one of 48, 24, 2, 0)
         pdma_data_types:
@@ -11353,7 +11500,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a47
+          enum: *a48
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -11361,7 +11508,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a48
+          enum: *a49
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -11369,7 +11516,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a49
+          enum: *a50
           type: string
           description: Homologation status
         homologation_date_end:
@@ -11405,7 +11552,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: *a44
+          enum: *a45
           example: 4
           description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
         dima_is_hno:
@@ -11429,7 +11576,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a45
+          enum: *a46
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -11438,7 +11585,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: *a46
+          enum: *a47
           example: 24
           description: PDMA duration in hours (one of 48, 24, 2, 0)
         pdma_data_types:
@@ -11454,7 +11601,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a47
+          enum: *a48
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -11462,7 +11609,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a48
+          enum: *a49
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -11470,7 +11617,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a49
+          enum: *a50
           type: string
           description: Homologation status
         homologation_date_end:
@@ -12457,7 +12604,7 @@ components:
             - $ref: "#/components/schemas/TechnologyEolSource"
         eolStatus:
           nullable: true
-          enum: &a50
+          enum: &a51
             - eol
             - eol-soon
             - eoas-passed
@@ -12613,7 +12760,7 @@ components:
             - $ref: "#/components/schemas/TechnologyEolSource"
         status:
           nullable: true
-          enum: *a50
+          enum: *a51
           type: string
           description: Statut calculé côté serveur, pour que la fiche et la vue transverse
             classent une technologie de la même façon. null si la technologie ne
@@ -12657,7 +12804,7 @@ components:
             $ref: "#/components/schemas/EndOfLifeTechnologyDto"
         worstStatus:
           nullable: true
-          enum: *a50
+          enum: *a51
           type: string
           description: Statut le plus grave parmi les technologies retenues — sert au tri
             et à la pastille de synthèse. null si aucune des technologies
@@ -13062,7 +13209,7 @@ components:
           description: Version du backend
           example: v1.86.0
         etat:
-          enum: &a51
+          enum: &a52
             - OK
             - KO
           type: string
@@ -13084,7 +13231,7 @@ components:
           description: Version du backend
           example: v1.86.0
         etat:
-          enum: *a51
+          enum: *a52
           type: string
           description: État de la connexion à la base de données
           example: OK

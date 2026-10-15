@@ -139,7 +139,7 @@ describe("application guard", () => {
 
   it("permissions testing", async () => {
     const actorType = await ActorTypeFaker.create(["ComplianceRead"]);
-    await ActorFaker.link({
+    const actor = await ActorFaker.link({
       userEmail: appActor.email,
       actorTypeId: actorType.id,
       applicationId: application.id,
@@ -216,7 +216,8 @@ describe("application guard", () => {
       .expect(200);
     expect(newCompliance.body.dima_recovery_manager).toEqual("newName");
 
-    // Finally delete the actor type
+    // Nettoyer l'acteur avant son type : la FK protège les types encore utilisés.
+    await actor.delete();
     await actorType.delete();
   });
 });
