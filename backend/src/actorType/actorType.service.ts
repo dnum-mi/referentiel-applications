@@ -125,9 +125,16 @@ export class ActorTypeService extends BaseService<
       return await super.delete(id);
     } catch (error) {
       // La FK restrictive couvre aussi un acteur rattaché après le contrôle.
+      // PostgreSQL 18 renvoie SQLSTATE 23001 pour RESTRICT ; Prisma 6 ne le
+      // normalise pas en P2003. Limiter ce repli à la contrainte des acteurs.
+      const isActorRestriction =
+        error instanceof Prisma.PrismaClientUnknownRequestError &&
+        error.message.includes('PostgresError { code: "23001"') &&
+        /\bActor_actorTypeId_fkey\b/.test(error.message);
       if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2003"
+        (error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2003") ||
+        isActorRestriction
       ) {
         throw new ConflictException(ACTOR_TYPE_IN_USE_MESSAGE);
       }

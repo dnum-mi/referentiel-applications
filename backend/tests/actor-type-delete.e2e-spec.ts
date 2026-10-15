@@ -225,7 +225,11 @@ describe("DELETE /actorTypes/:id — préserver les types utilisés (#2503)", ()
 
       await expect(
         prisma.actorType.delete({ where: { id: fixture.actorType.id } }),
-      ).rejects.toMatchObject({ code: "P2003" });
+      ).rejects.toMatchObject({
+        // Prisma normalise ce refus en P2003 avant PostgreSQL 18 ; sa variante
+        // SQLSTATE 23001 reste une UnknownRequestError. La même FK doit refuser.
+        message: expect.stringMatching(/\bActor_actorTypeId_fkey\b/),
+      });
 
       expect(await snapshot(fixture.actorType.id, fixture.actor.id)).toEqual(
         before,
