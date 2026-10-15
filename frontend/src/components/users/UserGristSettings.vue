@@ -27,7 +27,9 @@ const url = computed({
     urlDraft.value = value;
   },
 });
-// La clé enregistrée n'est jamais relue : le champ ne sert qu'à en saisir une nouvelle.
+// La clé enregistrée n'est jamais relue : le champ ne sert qu'à en saisir une nouvelle. Quand une
+// clé existe, des points en placeholder le montrent rempli, sans valeur factice à envoyer.
+const API_KEY_MASK = "••••••••••••••••";
 const apiKey = ref("");
 const urlError = ref("");
 const apiKeyError = ref("");
@@ -155,8 +157,12 @@ async function removeDocument(docId: string) {
         :aria-required="!hasApiKey"
         :aria-invalid="!!apiKeyError"
         :error-message="apiKeyError"
+        :placeholder="hasApiKey ? API_KEY_MASK : undefined"
+        :class="{ 'user-grist-api-key--saved': hasApiKey }"
         :hint="
-          hasApiKey ? 'Une clé est enregistrée. Laissez vide pour la conserver.' : 'À créer dans Grist : Paramètres du profil → Clé d\'API.'
+          hasApiKey
+            ? 'Une clé est enregistrée. Saisissez-en une nouvelle pour la remplacer.'
+            : 'À créer dans Grist : Paramètres du profil → Clé d\'API.'
         "
         data-testid="user-grist-api-key-input"
       />
@@ -243,6 +249,12 @@ async function removeDocument(docId: string) {
 
 /* Le champ porte lui aussi une marge basse, et la zone de messages (live region des erreurs) est
    toujours rendue : vides, elles ne doivent pas décaler les boutons. */
+/* Les points d'une clé enregistrée ont la couleur d'une saisie, pas celle d'un placeholder. */
+.user-grist-form :deep(.user-grist-api-key--saved::placeholder) {
+  color: var(--text-default-grey);
+  opacity: 1;
+}
+
 .user-grist-form :deep(.fr-input),
 .user-grist-form :deep(.fr-messages-group:empty) {
   margin-bottom: 0;

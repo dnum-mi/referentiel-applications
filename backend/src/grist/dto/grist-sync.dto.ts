@@ -3,14 +3,20 @@ import { Type } from "class-transformer";
 import {
   ArrayMaxSize,
   ArrayMinSize,
+  ArrayUnique,
   IsArray,
   IsBoolean,
+  IsIn,
   IsOptional,
   IsString,
   Matches,
   ValidateNested,
 } from "class-validator";
 import { GRIST_DOC_ID_PATTERN } from "src/user/dto/update-user.dto";
+import {
+  DEFAULT_GRIST_COLUMN_FIELDS,
+  GRIST_COLUMN_FIELDS,
+} from "../grist-columns";
 
 /// Nom des tables écrites par la synchronisation : RefApp, RefApp2, RefApp3…
 export const GRIST_TABLE_ID_PATTERN = /^RefApp([2-9]|[1-9]\d+)?$/;
@@ -59,6 +65,22 @@ export class GristSyncDto {
   @ValidateNested({ each: true })
   @Type(() => GristSyncTargetDto)
   targets?: GristSyncTargetDto[];
+
+  @ApiProperty({
+    required: false,
+    type: [String],
+    enum: GRIST_COLUMN_FIELDS,
+    enumName: "GristColumnField",
+    example: DEFAULT_GRIST_COLUMN_FIELDS,
+    description:
+      "Colonnes visibles de la page de recherche, dans l'ordre affiché. Celles que le demandeur ne peut pas voir (ColumnRead) sont ignorées. Sans cette liste : les colonnes affichées par défaut.",
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayUnique()
+  @IsIn(GRIST_COLUMN_FIELDS, { each: true })
+  columns?: string[];
 }
 
 export class GristDocumentTablesDto {

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import type { GristDocumentReportDto, GristDocumentTablesDto, GristSyncTargetDto } from "@/client/types.gen";
+import type { GristColumnField, GristDocumentReportDto, GristDocumentTablesDto, GristSyncTargetDto } from "@/client/types.gen";
 import { useApplicationSearch } from "@/composables/use-application-search";
+import { useColumnPreferences } from "@/composables/use-column-preferences";
 import { useApplicationStore } from "@/stores/applicationStore";
 import { useToasterStore } from "@/stores/toasterStore";
 
@@ -18,6 +19,9 @@ const emit = defineEmits<{
 }>();
 
 const { filters, total } = useApplicationSearch();
+// Grist reçoit les colonnes du tableau, telles qu'affichées (déjà filtrées par permission).
+const { visibleColumns } = useColumnPreferences();
+const columns = computed(() => visibleColumns.value.map(({ field }) => field as GristColumnField));
 const applicationStore = useApplicationStore();
 const toaster = useToasterStore();
 
@@ -68,10 +72,16 @@ function announce(report: GristDocumentReportDto[]) {
   const synced = report.filter((document) => document.status === "ok");
   const failed = report.filter((document) => document.status === "error");
   if (synced.length) {
-    // La sélection est la même pour toutes les tables : seuls grisés et retirés varient.
-    const sum = (key: "rowsGreyed" | "rowsDeleted") => synced.reduce((count, document) => count + (document[key] ?? 0), 0);
+    // La sélection est la même pour toutes les tables : seules les lignes conservées et retirées varient.
+    const sum = (key: "rowsKept" | "rowsDeleted") => synced.reduce((count, document) => count + (document[key] ?? 0), 0);
+    const changed = (key: "columnsAdded" | "columnsRemoved", text: string) => {
+      const ids = [...new Set(synced.flatMap((document) => document[key] ?? []))];
+      return ids.length ? ` ${text} : ${ids.join(", ")}.` : "";
+    };
     toaster.addSuccessMessage(
-      `Grist synchronisé (${synced.map(label).join(", ")}) : ${synced[0].rowsWritten ?? 0} applications, ${sum("rowsGreyed")} grisées, ${sum("rowsDeleted")} retirées.`,
+      `Grist synchronisé (${synced.map(label).join(", ")}) : ${synced[0].rowsWritten ?? 0} applications, ${sum("rowsKept")} conservées hors sélection, ${sum("rowsDeleted")} retirées.` +
+        changed("columnsAdded", "Colonnes ajoutées") +
+        changed("columnsRemoved", "Colonnes retirées"),
     );
   }
   if (failed.length) {
@@ -90,7 +100,7 @@ async function confirmSync() {
   isSyncing.value = true;
   errorMessage.value = "";
   try {
-    const { documents: report } = await applicationStore.syncWithGrist(filters.value, targets.value);
+    const { documents: report } = await applicationStore.syncWithGrist(filters.value, targets.value, columns.value);
     announce(report);
     emit("close");
   } catch (error) {
@@ -107,8 +117,9 @@ async function confirmSync() {
     <DsfrModal :opened="opened" title="Synchroniser avec Grist" data-testid="grist-sync-modal" @close="emit('close')">
       <p class="fr-text--sm fr-hint-text fr-mb-3w" style="white-space: normal">
         Les <strong>{{ total }}</strong> application(s) correspondant aux filtres actuels seront écrites dans la table choisie pour chaque
-        document. Une table existante prend cette sélection : les lignes qui n'en font plus partie sont grisées ou retirées. Une nouvelle
-        table garde les autres intactes.
+        document, avec les <strong>{{ columns.length }}</strong> colonne(s) affichée(s) dans le tableau. Une table existante prend cette
+        sélection et ces colonnes : les lignes qui n'en font plus partie sont retirées, sauf si vous y avez saisi des données dans Grist.
+        Une nouvelle table garde les autres intactes.
       </p>
 
       <DsfrAlert v-if="errorMessage" alert type="error" :description="errorMessage" small class="fr-mb-3w" data-testid="grist-sync-error" />

@@ -1,8 +1,10 @@
 import { isApiSuccess } from "@/api/api-result";
+import { fetchWithTimeout } from "@/api/fetch-with-timeout";
 import type {
   ContactAdminDto,
   GristDocumentTablesDto,
   GristSyncReportDto,
+  GristColumnField,
   GristSyncTargetDto,
   PatchApplicationDto,
 } from "@/client/types.gen";
@@ -13,6 +15,9 @@ import api from "@/api/index";
 import router from "@/router";
 import { routeNames } from "@/router/route-names";
 import { useToasterStore } from "@/stores/toasterStore";
+
+/// Délai de la synchronisation Grist, bien au-delà du délai par défaut des appels d'API.
+const GRIST_SYNC_TIMEOUT_MS = 5 * 60_000;
 
 export const useApplicationStore = defineStore("applicationStore", () => {
   const applicationsById = ref<Record<string, ApplicationWithPerms>>({});
@@ -137,10 +142,21 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     downloadBlob(new Blob([response.data], { type: "text/html;charset=utf-8" }), `applications_export_${date}.html`);
   };
 
-  // Écrit dans le document Grist configuré côté backend les applications correspondant aux filtres.
+  // Écrit dans les documents Grist du profil les applications correspondant aux filtres, avec les
+  // colonnes `columns` (champs des colonnes visibles du tableau, dans leur ordre).
   /// Sans `targets`, chaque document du profil est synchronisé dans sa première table RefApp.
-  const syncWithGrist = async (filters: Filters = {}, targets?: GristSyncTargetDto[]): Promise<GristSyncReportDto> => {
-    const response = await api.gristControllerSetup({ query: cleanFilters(filters), body: { targets } });
+  const syncWithGrist = async (
+    filters: Filters = {},
+    targets?: GristSyncTargetDto[],
+    columns?: GristColumnField[],
+  ): Promise<GristSyncReportDto> => {
+    const response = await api.gristControllerSetup({
+      query: cleanFilters(filters),
+      body: { targets, columns },
+      // Les documents sont écrits l'un après l'autre, en plusieurs appels à Grist chacun : la
+      // synchronisation dépasse souvent le délai par défaut, et l'abandonner ne l'arrête pas.
+      fetch: (request) => fetchWithTimeout(request, undefined, GRIST_SYNC_TIMEOUT_MS),
+    });
     if (!isApiSuccess(response) || !response.data) {
       throw new Error("Erreur lors de la synchronisation avec Grist.");
     }

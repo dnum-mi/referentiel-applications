@@ -38,15 +38,32 @@ export class GristDocumentReportDto {
   @ApiProperty({
     required: false,
     description:
-      "Lignes hors sélection conservées et grisées car elles portent des métadonnées",
+      "Lignes hors sélection conservées telles quelles car une colonne ajoutée dans Grist y a une valeur",
   })
-  rowsGreyed?: number;
+  rowsKept?: number;
 
   @ApiProperty({
     required: false,
-    description: "Lignes hors sélection supprimées car sans métadonnées",
+    description:
+      "Lignes hors sélection supprimées car sans valeur dans les colonnes ajoutées dans Grist",
   })
   rowsDeleted?: number;
+
+  @ApiProperty({
+    required: false,
+    type: [String],
+    description:
+      "Colonnes ajoutées à la table par cet appel (affichées dans la page de recherche mais absentes de la table)",
+  })
+  columnsAdded?: string[];
+
+  @ApiProperty({
+    required: false,
+    type: [String],
+    description:
+      "Colonnes RefApp retirées de la table par cet appel (plus affichées dans la page de recherche, ou d'une version précédente)",
+  })
+  columnsRemoved?: string[];
 }
 
 export class GristSyncReportDto {

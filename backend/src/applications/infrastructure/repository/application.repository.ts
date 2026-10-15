@@ -127,6 +127,25 @@ export class ApplicationRepository implements IApplicationRepository {
     };
   }
 
+  /**
+   * Toutes les lignes de liste correspondant au filtre, sans pagination, avec
+   * le nombre de consultations à plat comme dans la réponse de la recherche.
+   */
+  public async findSearchItems(
+    where: Prisma.ApplicationWhereInput,
+    orderBy: Prisma.ApplicationOrderByWithRelationInput,
+  ) {
+    const applications = await this.prisma.application.findMany({
+      where,
+      orderBy,
+      include: this.buildListInclude(),
+    });
+    return applications.map((app) => {
+      const { _count, ...rest } = this.toSearchItem(app);
+      return { ...rest, applicationViews: _count.applicationViews };
+    });
+  }
+
   public async findApplications(
     filters: ApplicationSearchFilters,
     where: Prisma.ApplicationWhereInput,

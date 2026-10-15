@@ -1,4 +1,5 @@
 import { createPinia, setActivePinia } from "pinia";
+import type { GristColumnField } from "@/client/types.gen";
 import { useApplicationStore } from "./applicationStore";
 
 const {
@@ -8,6 +9,7 @@ const {
   exportProductHtmlMock,
   gristSetupMock,
   gristTablesMock,
+  fetchWithTimeoutMock,
   addErrorMessage,
   addSuccessMessage,
   push,
@@ -18,10 +20,13 @@ const {
   exportProductHtmlMock: vi.fn(),
   gristSetupMock: vi.fn(),
   gristTablesMock: vi.fn(),
+  fetchWithTimeoutMock: vi.fn(),
   addErrorMessage: vi.fn(),
   addSuccessMessage: vi.fn(),
   push: vi.fn(),
 }));
+
+vi.mock("@/api/fetch-with-timeout", () => ({ fetchWithTimeout: fetchWithTimeoutMock }));
 
 vi.mock("@/api/index", () => ({
   default: {
@@ -159,6 +164,7 @@ describe("applicationStore — synchronisation Grist", () => {
     setActivePinia(createPinia());
     gristSetupMock.mockReset();
     gristTablesMock.mockReset();
+    fetchWithTimeoutMock.mockReset().mockResolvedValue(new Response());
   });
 
   it("conserve les filtres et les cibles Grist sans modifier le contrat des exports", async () => {
@@ -168,15 +174,31 @@ describe("applicationStore — synchronisation Grist", () => {
       { docId: "doc1", tableId: "RefApp" },
       { docId: "doc2", newTable: true },
     ];
-    const result = await useApplicationStore().syncWithGrist({ shortName: "Portail", page: 2, tag: [], hostingSite: undefined }, targets);
-    expect(gristSetupMock).toHaveBeenCalledExactlyOnceWith({ query: { shortName: "Portail", page: 2 }, body: { targets } });
+    const columns: GristColumnField[] = ["label", "status"];
+    const result = await useApplicationStore().syncWithGrist(
+      { shortName: "Portail", page: 2, tag: [], hostingSite: undefined },
+      targets,
+      columns,
+    );
+    expect(gristSetupMock).toHaveBeenCalledExactlyOnceWith({
+      query: { shortName: "Portail", page: 2 },
+      body: { targets, columns },
+      fetch: expect.any(Function),
+    });
+    const request = new Request("https://refapp.test/api/v2/grist/setup");
+    await gristSetupMock.mock.calls[0][0].fetch(request);
+    expect(fetchWithTimeoutMock).toHaveBeenCalledExactlyOnceWith(request, undefined, 5 * 60_000);
     expect(result).toEqual(report);
   });
 
   it("laisse le backend choisir les tables par défaut quand aucune cible n'est fournie", async () => {
     gristSetupMock.mockResolvedValueOnce({ response: { ok: true, status: 200 }, data: { documents: [] } });
     await useApplicationStore().syncWithGrist();
-    expect(gristSetupMock).toHaveBeenCalledExactlyOnceWith({ query: {}, body: { targets: undefined } });
+    expect(gristSetupMock).toHaveBeenCalledExactlyOnceWith({
+      query: {},
+      body: { targets: undefined, columns: undefined },
+      fetch: expect.any(Function),
+    });
   });
 
   it("rend les documents et tables disponibles dans le profil", async () => {

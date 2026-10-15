@@ -9,7 +9,7 @@ RUN apt-get update \
     && apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/*
 RUN npm install --ignore-scripts -g npm@12.2.0 \
-    && npm install --ignore-scripts -g pnpm@10.34.6
+    && npm install --ignore-scripts -g pnpm@10.34.7
 
 # Copy necessary files
 # pnpm-workspace.yaml porte les overrides de sécurité (pnpm 10 ne les lit plus
