@@ -1,7 +1,7 @@
 import type { Permission, Prisma, Roles as RolesType } from "@prisma/client";
 import { Roles } from "@prisma/client";
 import type { AsyncReturnType } from "src/utils/types.util";
-import { faker } from "@faker-js/faker";
+import { randomUUID } from "node:crypto";
 import { getPrismaClient } from "./prisma";
 
 export type UserFakerReturnType = AsyncReturnType<typeof UserFaker.create>;
@@ -12,7 +12,7 @@ interface UserFakerParams {
 }
 export class UserFaker {
   static async create({
-    email = faker.internet.email(),
+    email = `${randomUUID()}@example.test`,
     role = Roles.VISITOR,
     additionalPermissions = [],
   }: UserFakerParams = {}) {
