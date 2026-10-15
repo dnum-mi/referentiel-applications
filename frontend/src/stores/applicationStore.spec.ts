@@ -1,17 +1,24 @@
 import { createPinia, setActivePinia } from "pinia";
 import { useApplicationStore } from "./applicationStore";
 
-const { removeMock, exportPowerpointMock, addErrorMessage, addSuccessMessage, push } = vi.hoisted(() => ({
+const { removeMock, exportPowerpointMock, exportExcelMock, downloadBlob, addErrorMessage, addSuccessMessage, push } = vi.hoisted(() => ({
   removeMock: vi.fn(),
   exportPowerpointMock: vi.fn(),
+  exportExcelMock: vi.fn(),
+  downloadBlob: vi.fn(),
   addErrorMessage: vi.fn(),
   addSuccessMessage: vi.fn(),
   push: vi.fn(),
 }));
 
 vi.mock("@/api/index", () => ({
-  default: { applicationControllerRemove: removeMock, applicationControllerExportProductPowerpoint: exportPowerpointMock },
+  default: {
+    applicationControllerRemove: removeMock,
+    applicationControllerExportProductPowerpoint: exportPowerpointMock,
+    applicationControllerExportExcel: exportExcelMock,
+  },
 }));
+vi.mock("@/utils/download-blob", () => ({ downloadBlob }));
 
 vi.mock("@/router", () => ({
   default: { push },
@@ -90,5 +97,22 @@ describe("applicationStore.downloadProductPowerpoint — erreurs du client API",
 
     await expect(useApplicationStore().downloadProductPowerpoint("app-1")).rejects.toThrow("Erreur lors de l'export PowerPoint.");
     expect(exportPowerpointMock).toHaveBeenCalledExactlyOnceWith({ path: { applicationId: "app-1" }, parseAs: "blob" });
+  });
+});
+
+describe("applicationStore.downloadExcel — filtres technologies", () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    exportExcelMock.mockReset();
+    downloadBlob.mockReset();
+  });
+
+  it("conserve le statut technologies et les autres filtres pour exporter toutes les pages", async () => {
+    exportExcelMock.mockResolvedValueOnce({ response: { ok: true }, data: new Blob(["xlsx"]) });
+    await useApplicationStore().downloadExcel({ technologyEolStatus: "eol", search: "portail", page: 2, pageSize: 15, order: "desc" });
+    expect(exportExcelMock).toHaveBeenCalledExactlyOnceWith({
+      query: { technologyEolStatus: "eol", search: "portail", page: 2, pageSize: 0, order: "desc" },
+    });
+    expect(downloadBlob).toHaveBeenCalledExactlyOnceWith(expect.any(Blob), expect.stringMatching(/^applications_export_.*\.xlsx$/));
   });
 });

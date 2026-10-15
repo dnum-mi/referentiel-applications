@@ -21,19 +21,28 @@ const storeMock = {
   applications: ref<EndOfLifeApplicationDto[]>([]),
   total: ref(0),
   isLoading: ref(false),
+  isExporting: ref(false),
+  canExport: ref(true),
   fetchApplications: vi.fn(),
+  downloadExcel: vi.fn(),
   get accessContext() {
     return JSON.stringify([userStoreMock.user.id, userStoreMock.canListTechnologies]);
   },
 };
 
 const userStoreMock = reactive({ canListTechnologies: true, user: { id: "user-1" } });
+const { addErrorMessage } = vi.hoisted(() => ({ addErrorMessage: vi.fn() }));
 
 vi.mock("@/stores/userStore", () => ({ useUserStore: () => userStoreMock }));
+vi.mock("@/stores/toasterStore", () => ({ useToasterStore: () => ({ addErrorMessage }) }));
 
 beforeEach(() => {
   userStoreMock.canListTechnologies = true;
   userStoreMock.user.id = "user-1";
+  storeMock.isExporting.value = false;
+  storeMock.canExport.value = true;
+  storeMock.downloadExcel.mockReset().mockResolvedValue(undefined);
+  addErrorMessage.mockReset();
 });
 
 vi.mock("@/stores/endOfLifeStore", () => ({
@@ -278,6 +287,55 @@ describe("EndOfLifePage", () => {
     await waitFor(() => expect(storeMock.fetchApplications).toHaveBeenCalledTimes(3));
     const query = storeMock.fetchApplications.mock.calls[2][0];
     expect(query.status).toBe("all");
+  });
+
+  it("masque l'export sans la permission DataExport", () => {
+    storeMock.canExport.value = false;
+    render_();
+    expect(screen.queryByTestId("end-of-life-export-excel")).not.toBeInTheDocument();
+  });
+
+  it("exporte avec les filtres saisis et le tri affiché", async () => {
+    storeMock.applications.value = [applicationFixture()];
+    storeMock.total.value = 100;
+    render_();
+    await screen.findByTestId("end-of-life-table");
+    await fireEvent.update(screen.getByTestId("end-of-life-filter-status"), "eol-soon");
+    await fireEvent.update(screen.getByTestId("end-of-life-filter-organization"), " MI/DNUM ");
+    await fireEvent.update(screen.getByTestId("end-of-life-filter-search"), " PostgreSQL ");
+    await fireEvent.click(screen.getByRole("button", { name: "Application" }));
+    await fireEvent.click(screen.getByTestId("end-of-life-export-excel"));
+    expect(storeMock.downloadExcel).toHaveBeenCalledExactlyOnceWith({
+      status: "eol-soon",
+      organization: "MI/DNUM",
+      search: "PostgreSQL",
+      sortBy: "label",
+      order: "desc",
+      page: 0,
+      pageSize: 15,
+    });
+  });
+
+  it("désactive l'export et annonce sa préparation pendant l'envoi", async () => {
+    render_();
+    storeMock.isExporting.value = true;
+    await waitFor(() => expect(screen.getByTestId("end-of-life-export-excel")).toBeDisabled());
+    const button = screen.getByTestId("end-of-life-export-excel");
+    expect(button).toHaveAttribute("aria-busy", "true");
+    expect(button).toHaveTextContent("Préparation de l’export…");
+    await fireEvent.click(button);
+    expect(storeMock.downloadExcel).not.toHaveBeenCalled();
+  });
+
+  it("affiche l'erreur d'export avec la notification habituelle", async () => {
+    storeMock.downloadExcel.mockRejectedValueOnce(new Error("Échec serveur"));
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    render_();
+    await fireEvent.click(screen.getByTestId("end-of-life-export-excel"));
+    await waitFor(() =>
+      expect(addErrorMessage).toHaveBeenCalledExactlyOnceWith("Une erreur est survenue lors de l'exportation Excel. Veuillez réessayer."),
+    );
+    consoleError.mockRestore();
   });
 
   it("affiche la date de fin de support actif pour une technologie sortie du support", async () => {

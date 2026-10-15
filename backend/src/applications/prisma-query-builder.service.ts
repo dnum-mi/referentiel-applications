@@ -1,5 +1,5 @@
-import { Injectable } from "@nestjs/common";
-import { Prisma } from "@prisma/client";
+import { ForbiddenException, Injectable } from "@nestjs/common";
+import { Permission, Prisma, Roles } from "@prisma/client";
 import type { RelationType } from "@prisma/client";
 import { RelationTypeFilter } from "../relationship/application/dto/relation-type.dto";
 import { ApplicationSearchFilters } from "src/applications/infrastructure/repository/application.repository.interface";
@@ -10,6 +10,9 @@ import {
   dimaFilledWhereClause,
   pdmaFilledWhereClause,
 } from "src/common/utils/compliance-presence.utils";
+import { organizationWithinScope } from "src/common/utils/organization-scope.utils";
+import { globalPermissions } from "src/permissions/delegated-auth";
+import { eolStatusWhere } from "src/technology/utils/eol-status";
 
 /**
  * Clauses Prisma par critère de conformité et par état de filtre :
@@ -73,6 +76,16 @@ export class PrismaQueryBuilder {
 
     // Build a single comprehensive where clause with all filters
     const where: { AND: Prisma.ApplicationWhereInput[] } = { AND: [] };
+
+    if (filters.technologyEolStatus) {
+      // Un filtre sur les technologies constitue une lecture transverse, même
+      // lorsqu'aucune colonne de technologie n'est retournée par la recherche.
+      const technologyScope = this.buildTechnologyScopeWhere(requestor);
+      where.AND.push({
+        technologies: { some: eolStatusWhere(filters.technologyEolStatus) },
+      });
+      if (technologyScope) where.AND.push(technologyScope);
+    }
 
     // Applications couvertes par un acteur groupe d'une organisation ancêtre. On résout
     // des applicationId, et non des types d'acteur : cf. QueryBuilderGroupActor.
@@ -526,6 +539,45 @@ export class PrismaQueryBuilder {
     where.AND.push(this.buildRelationsQuery(filters));
 
     return where;
+  }
+
+  private buildTechnologyScopeWhere(
+    requestor: Requestor,
+  ): Prisma.ApplicationWhereInput | undefined {
+    if (!globalPermissions(requestor).includes(Permission.TechnologyList)) {
+      throw new ForbiddenException(
+        "La capacité TechnologyList est requise pour filtrer les technologies.",
+      );
+    }
+    if (
+      requestor.role !== Roles.READER &&
+      requestor.role !== Roles.CONTRIBUTOR &&
+      requestor.role !== Roles.ADMIN
+    ) {
+      throw new ForbiddenException(
+        "L'accès aux technologies nécessite un rôle lecteur, contributeur ou administrateur.",
+      );
+    }
+
+    // Même périmètre que la vue transverse ; AuthMiddleware fournit déjà le
+    // principal effectif (intersection utilisateur/service en délégation).
+    const scope = requestor.scopeOrganization?.path;
+    if (requestor.scopeOrganizationId && !scope) {
+      throw new ForbiddenException("Périmètre d'authentification invalide.");
+    }
+    if (!scope) return undefined;
+
+    const organization = organizationWithinScope(scope);
+    return {
+      OR: [
+        { actors: { some: { organization } } },
+        {
+          businessDivisions: {
+            some: { organizations: { some: organization } },
+          },
+        },
+      ],
+    };
   }
 
   private buildRelationsQuery(

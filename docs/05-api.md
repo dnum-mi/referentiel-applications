@@ -143,6 +143,11 @@ Paramètres de requête associés :
 
 `GET /applications` accepte en outre des **filtres riches** de type ORM (par ex. `search`, `label`, `tag`, `actorType`, `actorEmail`, `organization`, `hostingSite`, `priorityRestart`, `missingMoa`, `missingMoe`, `missingHosting`, `myApplications`), avec suffixes `__in` / `__isNull` (par ex. `currentStatus__in`, `currentStatus__isNull`) et bornes de dates (`createdAtGte`, `createdAtLte`).
 
+Le filtre `technologyEolStatus` accepte `eol`, `eol-soon` ou `eoas-passed` : il retient les applications
+ayant au moins une technologie dans cet état. Son absence ne filtre pas les technologies. Il exige
+la capacité `TechnologyList` et le même profil et périmètre que la vue Technologies. Il est conservé
+dans les filtres enregistrés et appliqué à l'export Excel des résultats.
+
 ## Documentation interactive (Swagger)
 
 La documentation OpenAPI est générée automatiquement à partir des contrôleurs et DTO décorés (`@nestjs/swagger`), dans `backend/src/swagger-config.ts`. Trois routes sont exposées (sous le préfixe global, donc `/api/v2/…`) :
@@ -332,15 +337,22 @@ Aucun de ces endpoints ne fusionne les fiches.
 
 ### Suivi des fins de vie
 
-| Verbe & chemin                  | Rôle                                                                             |
-| ------------------------------- | -------------------------------------------------------------------------------- |
-| `GET /technologies/end-of-life` | Applications portant une technologie en fin de vie, proche ou hors support actif |
+| Verbe & chemin                         | Rôle                                                                        |
+| -------------------------------------- | --------------------------------------------------------------------------- |
+| `GET /technologies/end-of-life`        | Technologies par application, filtrables par fin de vie                     |
+| `GET /technologies/end-of-life/export` | Export Excel de toutes les applications correspondant aux filtres autorisés |
 
-Filtres : `status` (`eol`, `eol-soon`, `eoas-passed` — les trois partitionnent la liste),
+Filtres : `status` (`eol`, `eol-soon`, `eoas-passed` — les trois partitionnent la liste — ou `all` pour inclure les technologies saines),
 `organization` (chemin ou sigle d'un acteur, correspondance partielle), `search` (libellé
 d'application ou produit), plus la pagination usuelle (`page`, `pageSize`) et un tri limité à
 `sortBy=label` (défaut) ou `sortBy=shortName`, `order=asc|desc` — pas de tri par gravité, qui
 supposerait d'ordonner sur un agrégat de la relation.
+
+L'export accepte les mêmes filtres et le même tri, dont `status=all` pour inclure les technologies
+saines. Il ignore `page` et `pageSize`, exige **à la fois** `TechnologyList` et `DataExport` et conserve
+le périmètre du demandeur. Chaque technologie occupe une ligne de la feuille **Technologies**,
+avec son application, son produit, sa version, ses échéances et son statut calculé. Aucune
+résolution externe des dates n'est déclenchée par l'export.
 Seules les technologies retenues par le filtre sont restituées, triées par gravité décroissante.
 
 > Route accessible à tout utilisateur authentifié, comme `GET /metadatas` : `TechnologyRead`

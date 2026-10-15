@@ -32,7 +32,25 @@ export class ApplicationExportService {
       orderBy,
     );
 
-    return this.exportApplicationsUseCase.executeWithApps(applications);
+    // DataExport est une capacité délégable, y compris aux visiteurs : elle
+    // n'accorde pas la lecture de la stack de toutes les fiches exportées.
+    const authorizedApplications = await Promise.all(
+      applications.map(async (application) => {
+        if (application.technologies.length === 0) return application;
+        const canReadTechnologies = await this.checkPermissions.can(
+          [Permission.TechnologyRead],
+          requestor,
+          application.id,
+        );
+        return canReadTechnologies
+          ? application
+          : { ...application, technologies: [] };
+      }),
+    );
+
+    return this.exportApplicationsUseCase.executeWithApps(
+      authorizedApplications,
+    );
   }
 
   /// Filtre de recherche restreint au périmètre du demandeur, sans pagination : toutes les

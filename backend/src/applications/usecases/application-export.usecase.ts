@@ -2,7 +2,10 @@ import { Injectable } from "@nestjs/common";
 import { ExcelBuilderService } from "src/common/service/excel-builder.service";
 import { sheetLabels } from "src/applications/constants/application-export.sheet-labels";
 import { ApplicationWithAllRelations } from "src/applications/types/application.type";
-import { columnLabels } from "src/applications/columnLabels/application-export.columnLabels";
+import {
+  columnLabels,
+  technologyExportColumns,
+} from "src/applications/columnLabels/application-export.columnLabels";
 import {
   mapActors,
   mapReports,
@@ -14,6 +17,7 @@ import {
   mapRelationsIn,
   mapRelationsOut,
   mapStatuses,
+  mapTechnologies,
 } from "../map/application-export.map";
 
 @Injectable()
@@ -21,6 +25,7 @@ export class ExportApplicationsUseCase {
   constructor(private readonly excelBuilder: ExcelBuilderService) {}
 
   async executeWithApps(apps: ApplicationWithAllRelations[]): Promise<Buffer> {
+    const now = new Date();
     const col = (key: string, width: number) => ({
       header: columnLabels[key],
       key,
@@ -43,6 +48,11 @@ export class ExportApplicationsUseCase {
           col("currentStatusId", 30),
         ],
         rows: mapApplications(apps),
+      },
+      {
+        name: sheetLabels.Technologies,
+        columns: technologyExportColumns,
+        rows: apps.flatMap((app) => mapTechnologies(app, now)),
       },
       {
         name: sheetLabels.Hostings,

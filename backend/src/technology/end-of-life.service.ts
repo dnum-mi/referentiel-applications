@@ -3,6 +3,10 @@ import { Prisma, Roles, type TechnologyEolSource } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { PaginatedResponseDto } from "src/common/dto";
 import { organizationWithinScope } from "src/common/utils/organization-scope.utils";
+import { ExcelBuilderService } from "src/common/service/excel-builder.service";
+import { technologyExportColumns } from "src/applications/columnLabels/application-export.columnLabels";
+import { sheetLabels } from "src/applications/constants/application-export.sheet-labels";
+import { mapTechnologies } from "src/applications/map/application-export.map";
 import type { Requestor } from "src/user/entities/user.entity";
 import {
   EndOfLifeApplicationDto,
@@ -43,14 +47,55 @@ function severityOf(status: EolStatus | null): number {
  */
 @Injectable()
 export class EndOfLifeService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly excelBuilder: ExcelBuilderService,
+  ) {}
 
   async findApplications(
     filters: EndOfLifeFiltersDto,
     requestor: Requestor,
   ): Promise<PaginatedResponseDto<EndOfLifeApplicationDto>> {
-    const scopeWhere = this.buildScopeWhere(requestor);
     const now = new Date();
+    const paginated = await this.prisma.application.paginate({
+      ...this.buildQuery(filters, requestor, now),
+      page: filters.page,
+      pageSize: filters.pageSize,
+    });
+
+    return {
+      total: paginated.total,
+      results: paginated.results.map((application) =>
+        this.toDto(application, now),
+      ),
+    };
+  }
+
+  async exportApplications(
+    filters: EndOfLifeFiltersDto,
+    requestor: Requestor,
+  ): Promise<Buffer> {
+    const now = new Date();
+    // La même requête que la vue transverse, sans pagination. Seules les
+    // données déjà persistées sont lues, aucun appel à endoflife.date.
+    const applications = await this.prisma.application.findMany(
+      this.buildQuery(filters, requestor, now),
+    );
+    return this.excelBuilder.buildWorkbook([
+      {
+        name: sheetLabels.Technologies,
+        columns: technologyExportColumns,
+        rows: applications.flatMap((app) => mapTechnologies(app, now)),
+      },
+    ]);
+  }
+
+  private buildQuery(
+    filters: EndOfLifeFiltersDto,
+    requestor: Requestor,
+    now: Date,
+  ) {
+    const scopeWhere = this.buildScopeWhere(requestor);
     const technologyWhere = eolStatusWhere(filters.status, now);
 
     const where: Prisma.ApplicationWhereInput = {
@@ -101,23 +146,14 @@ export class EndOfLifeService {
       ];
     }
 
-    const paginated = await this.prisma.application.paginate({
+    return {
       where,
       include: {
         technologies: { where: technologyWhere },
         actors: { select: { organization: { select: { path: true } } } },
       },
       orderBy: this.buildOrderBy(filters),
-      page: filters.page,
-      pageSize: filters.pageSize,
-    });
-
-    return {
-      total: paginated.total,
-      results: paginated.results.map((application) =>
-        this.toDto(application, now),
-      ),
-    };
+    } satisfies Prisma.ApplicationFindManyArgs;
   }
 
   private buildScopeWhere(

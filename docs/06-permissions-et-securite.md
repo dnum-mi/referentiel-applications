@@ -312,6 +312,12 @@ Le menu, le plan du site et l'accès direct à `/fins-de-vie` appliquent le cont
 
 La page s'ouvre avec **Toutes les technologies (y compris à jour)** sélectionné. Les filtres de fin de vie restent disponibles. Pour les clients API existants, l'absence de filtre `status` conserve le comportement historique centré sur les échéances ; la page transmet explicitement `status=all` par défaut.
 
+Le filtre `technologyEolStatus` du catalogue exige les mêmes droits et le même périmètre que cette
+vue. L'export Excel transverse exige en plus `DataExport` et reprend les filtres sans pagination.
+Dans l'export du catalogue, la feuille **Technologies** ne contient que les technologies des
+applications pour lesquelles le demandeur dispose de `TechnologyRead` ; la capacité `DataExport`
+ne donne pas à elle seule un nouveau droit de lecture sur la stack technique.
+
 Cette première version ne prend pas en charge la vue pour les utilisateurs standards (`VISITOR`) et n'ajoute pas les applications hors périmètre accessibles par un droit d'acteur. Les droits `TechnologyRead` et `TechnologyWrite` des fiches applications gardent leur fonctionnement : la nouvelle capacité n'accorde aucun droit d'écriture et son absence ne retire pas un droit existant sur une fiche.
 
 ## 5. Permissions par type d'acteur

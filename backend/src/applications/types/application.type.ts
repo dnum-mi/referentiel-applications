@@ -12,6 +12,7 @@ export type ApplicationWithAllRelations = Prisma.ApplicationGetPayload<{
     };
     tags: true;
     statuses: true;
+    technologies: true;
     actors: {
       include: {
         actorType: true;
