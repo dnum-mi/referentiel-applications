@@ -380,7 +380,6 @@ export async function prepareSupplement(page: Page, kind: SupplementKind) {
       method === "PATCH" &&
       path === `/api/v2/data-catalog/descriptions/${appFixtureIds.description}`
     ) {
-      key = "data";
       started.push({ method, path, body });
       const submitted = bodyObject(body);
       dataDescription = {
