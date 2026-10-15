@@ -141,6 +141,38 @@ La corrélation (« est corrélée à ») signale un **doublon potentiel** ou un
 
 **Permission.** Lecture : `RelationRead`. Écriture : `RelationWrite`.
 
+#### Détection et revue des corrélations
+
+Le moteur (`backend/src/relationship/correlation/correlation-detection.service.ts`) propose
+des paires à examiner dans l'onglet **Revue datasteward** de l'administration. Il croise
+en SQL trois signaux :
+
+- **Nom** : présélection par l'opérateur `%` de `pg_trgm`, entre libellés ou entre noms courts.
+  Pour ces paires, le signal retient le maximum entre la similarité des libellés et `0.8` fois
+  celle des noms courts. Pour les paires candidates uniquement par données ou acteurs, ce
+  signal vaut zéro.
+- **Données** : nombre de descriptions distinctes utilisées par les deux applications ou
+  produites par les deux. Le signal sature à trois descriptions communes.
+- **Acteurs** : nombre d'adresses e-mail distinctes communes, comparées sans tenir compte de
+  la casse et en excluant les valeurs vides. Le signal sature à deux adresses communes.
+
+Avec les valeurs par défaut, le score vaut
+`0.6 × nameSimilarity + 0.25 × min(sharedDataCount / 3, 1) + 0.15 × min(sharedActorCount / 2, 1)`.
+Une paire candidate atteignant **au moins `0.6`** devient une suggestion `PENDING` : des libellés
+identiques suffisent à atteindre ce seuil ; des noms courts identiques seuls valent `0.48`.
+Les applications marquées supprimées, les paires déjà reliées (quel que soit le type de relation)
+et les paires déjà acceptées ou rejetées sont exclues.
+
+L'administrateur global consulte le score et ses signaux, puis accepte ou rejette la suggestion.
+L'acceptation crée une relation symétrique `is_correlated_with`, visible depuis les deux fiches ;
+le rejet conserve la décision et empêche de reproposer la paire. **Aucune fusion automatique
+de fiches n'a lieu**, y compris après acceptation. Le score aide à prioriser la revue humaine.
+
+Le lancement manuel fonctionne indépendamment du cron, désactivé par défaut. La revue et le
+lancement exigent `GlobalAdminManage`. Voir les [routes de l'API](./05-api.md#revue-des-corrélations),
+le [modèle des suggestions](./04-modele-de-donnees.md#suggestions-de-corrélation) et le
+[calibrage du moteur](./12-exploitation-deploiement.md#calibrer-la-détection-des-corrélations).
+
 ### 2.7 Liens externes
 
 **Ce que ça fait.** Associe à une application plusieurs URLs catégorisées (documentation technique, supervision, URL du service principal, mesure d'audience, autres services), chacune avec une description et un type. Le lien de supervision (Snapvisu) participe au calcul de l'IQ.
@@ -385,7 +417,7 @@ Le panneau d'administration (`frontend/src/views/AdminPage.vue`) est organisé e
 - **Gestion des tags** (`admin/AdminTagsTab.vue`) : tags libres attachables aux applications. Module `backend/src/tag/`.
 - **Gestion des sources** (`admin/AdminLabelSourcesTab.vue`) : sources contextualisant les noms alternatifs (labels). Modules `backend/src/labels/`, `backend/src/label-source/`.
 - **Indice de qualité** (`admin/AdminQualityTab.vue`) : recalcul global de l'IQ (voir [section 3](#3-indice-de-qualité-iq)).
-- **Revue des corrélations** (`admin/AdminCorrelationsTab.vue`) : suggestions de rapprochement entre applications proches (doublons potentiels), détectées automatiquement à partir de la similarité des noms, des données partagées et des acteurs communs. Chaque suggestion affiche la paire, le score et le détail des signaux ; l'administrateur accepte (la relation `is_correlated_with` apparaît alors sur les deux fiches) ou rejette (la paire n'est plus proposée). La détection peut aussi être lancée à la demande. Permission `GlobalAdminManage`. Module `backend/src/relationship/correlation/`.
+- **Revue datasteward** (`admin/AdminCorrelationsTab.vue`) : suggestions de rapprochement entre applications proches (doublons potentiels), détectées automatiquement à partir de la similarité des noms, des données partagées et des acteurs communs. Chaque suggestion affiche la paire, le score et le détail des signaux ; l'administrateur accepte (la relation `is_correlated_with` apparaît alors sur les deux fiches) ou rejette (la paire n'est plus proposée). La détection peut aussi être lancée à la demande. Permission `GlobalAdminManage`. Module `backend/src/relationship/correlation/`.
 - **Matrice des permissions** (`admin/AdminPermsMatrixTab.vue`) : pour chaque **type d'acteur** (MOA, MOE, TMA, RSSI, etc.), définition des droits de lecture/écriture conférés sur la fiche (informations générales, hébergements, conformités, acteurs, relations, liens, historique, priorité de redémarrage). C'est la **couche 3** du système de permissions ; voir [Permissions et sécurité](./06-permissions-et-securite.md).
 
 **Permission.** Le panneau requiert `AdminPanelManage` (utilisateurs, acteurs) ou `GlobalAdminManage` (tout le reste, #2446). La suppression d'application (`DELETE /applications/:applicationId`) et certaines actions (création de type d'acteur) relèvent également de droits administrateurs.

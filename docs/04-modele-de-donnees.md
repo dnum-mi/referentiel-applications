@@ -184,6 +184,27 @@ erDiagram
     Application ||--o{ Relation : "médiation (MediationService, nullable)"
 ```
 
+### Suggestions de corrélation
+
+`CorrelationSuggestion` (`backend/prisma/schema/correlation.prisma`) conserve une proposition
+du moteur avant sa revue humaine. Elle contient les deux identifiants d'application, le
+`score` pondéré, le JSON `signals` (`nameSimilarity`, `sharedDataCount`, `sharedActorCount`),
+`createdAt`, ainsi que `reviewedById` et `reviewedAt`, nuls avant la revue.
+La contrainte `@@unique([applicationSourceId, applicationTargetId])` porte sur la paire
+canonique, indépendamment de son statut ; l'index `[status, score]` sert à la consultation.
+
+| Statut     | Transition et effet                                                                                                                                                                 |
+| :--------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PENDING`  | Proposition créée par la détection, en attente de décision. Un nouveau passage peut rafraîchir son score et ses signaux si elle reste éligible et atteint le seuil.                 |
+| `ACCEPTED` | Depuis `PENDING`, la revue crée une relation `is_correlated_with` et renseigne le relecteur et la date. La création de la relation est tracée dans les métadonnées des deux fiches. |
+| `REJECTED` | Depuis `PENDING`, la revue écarte la paire et renseigne le relecteur et la date, sans créer de relation.                                                                            |
+
+Les paires déjà `ACCEPTED` ou `REJECTED` sont exclues des passages suivants, sans réouverture
+automatique. Une ancienne `PENDING` devenue inéligible ou passée sous le seuil n'est pas
+supprimée automatiquement. La suppression physique d'une application supprime ses suggestions
+en cascade ; celle du compte relecteur met seulement `reviewedById` à `null`.
+Aucune fusion automatique de fiches n'a lieu : les deux applications restent distinctes.
+
 ## 6. Acteurs
 
 Les acteurs (`Actor`, `backend/prisma/schema/users.prisma`) sont les personnes ou entités impliquées avec une application. Champs principaux : `firstname`, `lastname`, `email`, `isGroup` (distingue groupe et personne physique). Un acteur est rattaché à une `Application` (`onDelete: Cascade`), à une `Organization` (optionnelle) et à un `ActorType` (optionnel).
