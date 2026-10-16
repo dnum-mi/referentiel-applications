@@ -62,12 +62,15 @@ onMounted(fetchCampaigns);
     <MditCampaignActions @fetch-campaigns="fetchCampaigns" />
   </div>
 
-  <div v-if="isLoading" class="fr-alert fr-alert--info" data-testid="admin-campaigns-loading">
+  <!-- #2864 : le chargement ne remplace le tableau qu'au premier affichage. Le démonter à chaque changement
+       de page détruisait le bouton de pagination focalisé : le focus repartait sur l'en-tête du tableau. -->
+  <div v-if="isLoading && tableRows.length === 0" class="fr-alert fr-alert--info" data-testid="admin-campaigns-loading">
     <p>Chargement des campagnes...</p>
   </div>
 
   <div v-else>
     <RefAppTable
+      :loading="isLoading"
       :items="tableRows"
       :columns="tableColumns"
       :paginator="true"
