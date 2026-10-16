@@ -118,6 +118,30 @@ describe.each(cases)("tableau admin $name", ({ component, name, method, filter, 
     });
   });
 
+  it("garde la même table montée pendant le chargement d'une autre page (#2864)", async () => {
+    const wrapper = mountTab(component);
+    await flushPromises();
+    const table = wrapper.findComponent({ name: "RefAppTable" }).vm;
+    let resolveRequest!: (value: unknown) => void;
+    apiMock[method].mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveRequest = resolve;
+        }),
+    );
+
+    table.$emit("page", { page: 1, rows: 15 });
+    await nextTick();
+    // Démonter la table détruirait le bouton de pagination focalisé : le focus repartirait sur l'en-tête.
+    expect(wrapper.findComponent({ name: "RefAppTable" }).vm).toBe(table);
+    expect(wrapper.findComponent({ name: "RefAppTable" }).props("loading")).toBe(true);
+    expect(wrapper.find(`[data-testid="admin-${name}-loading"]`).exists()).toBe(false);
+
+    resolveRequest({ response: { ok: true }, data: { results: [], total: 0 } });
+    await flushPromises();
+    expect(wrapper.findComponent({ name: "RefAppTable" }).vm).toBe(table);
+  });
+
   it("conserve le filtre propre à l'onglet et attend 300 ms avant de revenir en première page", async () => {
     const wrapper = mountTab(component);
     await flushPromises();
