@@ -51,6 +51,7 @@ const FIELDS: { key: keyof CreateComplianceDto; coerce: Coercion }[] = [
   { key: "dsfr_version", coerce: "string" },
   { key: "rgpd_has_aipd", coerce: "boolean" },
   { key: "rgpd_dpo_name", coerce: "string" },
+  { key: "eco_index_target_url", coerce: "string" },
 ];
 
 @Injectable()

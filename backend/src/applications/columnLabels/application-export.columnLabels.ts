@@ -83,6 +83,7 @@ export const columnLabels: Record<string, string> = {
   dsfr_version: "DSFR Version",
   rgpd_has_aipd: "RGPD AIPD",
   rgpd_dpo_name: "RGPD Nom DPO",
+  eco_index_target_url: "EcoIndex URL cible",
 
   // Statuses
   status: "Statut",
