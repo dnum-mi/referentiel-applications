@@ -21,6 +21,7 @@ import {
  *  - 12.8 : gestion du focus après navigation SPA (page-title-announcer)
  *  - 12.9 : Tab/Maj+Tab quittent le champ, y compris avec une sélection
  *  - 7.1  : titre de page annoncé correctement après navigation SPA
+ *  - 9.1  : un seul titre de niveau 1 par page
  */
 test.describe("RGAA — accessibilité", () => {
   // RGA-01 — RGAA 12.9 : Tab sans sélection quitte le champ de description
@@ -185,5 +186,53 @@ test.describe("RGAA — accessibilité", () => {
     const app = new ApplicationPage(page);
     await app.open(application.id);
     await app.expectProductExportKeepsFocus();
+  });
+
+  // RGA-14 — RGAA 9.1 : seul le titre de la vue est un titre de niveau 1, au chargement et après navigation
+  test("RGA-14 — chaque page n'expose qu'un titre de niveau 1", async ({
+    page,
+  }) => {
+    await loginAs(page, "admin");
+    const chrome = new ChromePage(page);
+    await chrome.open();
+    await chrome.navigateViaSpaToSearch();
+    await chrome.expectSingleLevelOneHeading("Recherche d'applications");
+    await chrome.reloadPage();
+    await chrome.expectSingleLevelOneHeading("Recherche d'applications");
+  });
+
+  // RGA-15 — RGAA 9.1 : au premier chargement d'une fiche, un seul h1 et un annonceur non vide qui n'est pas un titre
+  test("RGA-15 — le premier chargement d'une fiche n'expose qu'un titre de niveau 1", async ({
+    page,
+    data,
+  }) => {
+    const application = await data.applicationByLabel("QA-GROUP-PARENT");
+    if (!application) throw new Error("Fixture QA-GROUP-PARENT absente");
+    const app = new ApplicationPage(page);
+    await app.open(application.id);
+    const chrome = new ChromePage(page);
+    await chrome.expectSingleLevelOneHeading(application.label);
+    await chrome.expectAnnouncerIsNotAnEmptyHeading();
+  });
+
+  // RGA-16 — RGAA 9.1 / 7.1 : après navigation SPA vers une fiche, l'annonceur reprend le titre dynamique
+  test("RGA-16 — la navigation vers une fiche annonce son titre sans ajouter de titre de niveau 1", async ({
+    page,
+    data,
+  }) => {
+    const application = await data.applicationByLabel("QA-GROUP-PARENT");
+    if (!application) throw new Error("Fixture QA-GROUP-PARENT absente");
+    const search = new SearchPage(page);
+    await search.open();
+    await search.searchByLabel(application.label);
+    await search.expectSearchApplied(application.label);
+    await search.openFirstApplication();
+    const chrome = new ChromePage(page);
+    await chrome.expectAnnouncerFocused();
+    await chrome.expectAnnouncerText(
+      `Profil d'application : ${application.label}`,
+    );
+    await chrome.expectAnnouncerIsNotAnEmptyHeading();
+    await chrome.expectSingleLevelOneHeading(application.label);
   });
 });

@@ -107,6 +107,24 @@ modifient pas la durée maximale de session du fournisseur d'identité.
 - **Action** : lancer l’export HTML avec Entrée, tenter une seconde activation pendant l’attente, recevoir une erreur simulée, puis réessayer avec un téléchargement simulé réussi.
 - **Résultat attendu** : la commande expose son indisponibilité et garde le focus pendant l’attente et après la réponse ; aucun export concurrent ne part. L’erreur est visible, puis la nouvelle tentative télécharge le fichier HTML attendu en conservant le focus.
 
+### RGA-14 — Un seul titre de niveau 1 par page ✅
+
+- **Datafeature** : aucune (chrome global, session `admin`).
+- **Action** : connecté depuis la page d'accueil, naviguer vers Recherche d'applications, puis recharger la page.
+- **Résultat attendu** : la page n'expose qu'un titre de niveau 1, « Recherche d'applications ». Ni le titre de service du bandeau ni l'annonceur de navigation ne sont des titres (RGAA 9.1).
+
+### RGA-15 — Un seul titre de niveau 1 au premier chargement d'une fiche ✅
+
+- **Datafeature** : fixture `QA-GROUP-PARENT` (seed QA), session `admin`.
+- **Action** : ouvrir directement l'URL de la fiche de l'application, sans navigation préalable.
+- **Résultat attendu** : la page n'expose qu'un titre de niveau 1, le nom de l'application. L'annonceur de navigation n'est pas un titre et n'est pas vide (RGAA 9.1).
+
+### RGA-16 — Titre dynamique annoncé après navigation vers une fiche ✅
+
+- **Datafeature** : fixture `QA-GROUP-PARENT` (seed QA), session `admin`.
+- **Action** : depuis Recherche d'applications, rechercher l'application puis ouvrir sa fiche depuis la liste.
+- **Résultat attendu** : l'annonceur reçoit le focus et annonce « Profil d'application : <nom> ». Il n'est pas un titre. La page n'expose qu'un titre de niveau 1, le nom de l'application (RGAA 9.1, 7.1, 12.8).
+
 ### Parcours complémentaires — Configuration et synchronisation Grist
 
 Ces parcours complètent les 19 scénarios automatisés ci-dessus. Les régressions des composants
