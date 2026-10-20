@@ -12,6 +12,8 @@ export const useMetadataStore = defineStore("metadataStore", () => {
   const lastMetadata = ref<MetadataDto | null>(null);
   /// Application à laquelle se rapportent `firstMetadata` / `lastMetadata`.
   const metadataApplicationId = ref<string | null>(null);
+  /// Application à laquelle se rapporte la liste paginée `metadatas` (fiche).
+  let metadatasApplicationId: string | null = null;
   const total = ref(0);
   const isLoading = ref(false);
   const toaster = useToasterStore();
@@ -51,8 +53,13 @@ export const useMetadataStore = defineStore("metadataStore", () => {
     applicationId: string,
     query: { page?: number; pageSize?: number; sortBy?: string; order?: "asc" | "desc"; createdAtGte?: string; createdAtLte?: string } = {},
   ) => {
-    metadatas.value = [];
-    total.value = 0;
+    // Purge seulement en changeant de fiche : sur un changement de page, garder les lignes affichées
+    // pendant le chargement, sinon le tableau se vide et son bouton de pagination focalisé disparaît (#2864).
+    if (metadatasApplicationId !== applicationId) {
+      metadatas.value = [];
+      total.value = 0;
+    }
+    metadatasApplicationId = applicationId;
     const data = await callApi(() => api.applicationMetadatasControllerFind({ path: { applicationId }, query }), {
       isLoading,
       toaster,

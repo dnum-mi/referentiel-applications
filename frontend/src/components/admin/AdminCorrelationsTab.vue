@@ -202,12 +202,15 @@ onMounted(fetchSuggestions);
     <p>{{ statusMessage }}</p>
   </div>
 
-  <div v-if="isLoading" class="fr-alert fr-alert--info" data-testid="admin-correlations-loading">
+  <!-- #2864 : le chargement ne remplace le tableau qu'au premier affichage. Le démonter à chaque changement
+       de page détruisait le bouton de pagination focalisé : le focus repartait sur l'en-tête du tableau. -->
+  <div v-if="isLoading && tableRows.length === 0" class="fr-alert fr-alert--info" data-testid="admin-correlations-loading">
     <p>Chargement des suggestions de corrélation...</p>
   </div>
 
   <div v-else ref="reviewResults">
     <RefAppTable
+      :loading="isLoading"
       :items="tableRows"
       :columns="columns"
       data-key="id"
