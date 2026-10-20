@@ -6,21 +6,14 @@ const OPERATOR_LINK_TITLE = "Accueil - Ministère de l'intérieur - Référentie
 /**
  * Corrections d'accessibilité RGAA appliquées au gabarit global (header / footer)
  * pour les points que `@gouvminint/vue-dsfr` n'expose ni via props ni via slots.
- * Réf. issue #1775 (lot E) : RGAA-008, RGAA-009, RGAA-013, RGAA-014.
+ * Réf. issue #1775 (lot E) : RGAA-008, RGAA-013, RGAA-014.
+ * RGAA 9.1 : le titre de service n'est pas un titre de niveau 1, seul le h1 de la page l'est.
  *
  * Le header et le footer ne sont montés qu'une fois et leurs blocs marque /
  * titre de service ne sont pas re-rendus (logoText / serviceTitle constants),
  * donc ces retouches DOM restent stables. Les opérations sont idempotentes.
  */
 function applyRgaaEnhancements() {
-  // RGAA-009 — le titre de service du header doit être un vrai titre de niveau 1.
-  document.querySelectorAll<HTMLElement>(".fr-header__service-title").forEach((el) => {
-    if (!el.getAttribute("role")) {
-      el.setAttribute("role", "heading");
-      el.setAttribute("aria-level", "1");
-    }
-  });
-
   // RGAA-008 / RGAA-013 — restituer la devise « Liberté, égalité, fraternité »,
   // rendue par DSFR via des pseudo-éléments CSS et donc muette pour les lecteurs d'écran.
   document.querySelectorAll<HTMLElement>(".fr-logo").forEach((logo) => {
