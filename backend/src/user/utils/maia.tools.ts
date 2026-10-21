@@ -1,3 +1,4 @@
+import { Logger } from "@nestjs/common";
 import { getMaiaTimeoutMs } from "src/config/configs/maia.config";
 import { MaiaUnavailableException } from "../errors/maia-unavailable.exception";
 
@@ -15,6 +16,10 @@ type MaiaFinderResponse = {
     } | null;
   }>;
 };
+
+const logger = new Logger("Maia");
+
+type MaiaOperation = "organization" | "fullName";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -82,13 +87,46 @@ export async function getOrganizationPathFromMaia(
     return process.env.MOCK_MAIA_ORGANIZATION?.trim() || "ORGANISATION";
   }
 
-  const payload = await callMaia(email);
+  const payload = await callMaia(email, "organization");
   return extractOrganizationPath(payload);
 }
 
-async function callMaia(email: string): Promise<MaiaFinderResponse> {
+/**
+ * #3021 : une ligne `maia_api_call` par appel réellement envoyé à l'annuaire MAIA, comptée
+ * dans Grafana (Loki). `outcome` vaut `success` ou la raison de l'échec. L'email
+ * recherché n'est jamais journalisé.
+ */
+async function callMaia(
+  email: string,
+  operation: MaiaOperation,
+): Promise<MaiaFinderResponse> {
   const maiaUrl = process.env.MAIA_API_URL?.trim();
   if (!maiaUrl) throw new MaiaUnavailableException("configuration");
+  const started = Date.now();
+  let outcome = "success";
+  let upstreamStatus: number | undefined;
+  try {
+    return await requestMaia(maiaUrl, email);
+  } catch (error) {
+    const unavailable = error instanceof MaiaUnavailableException;
+    outcome = unavailable ? error.reason : "error";
+    upstreamStatus = unavailable ? error.upstreamStatus : undefined;
+    throw error;
+  } finally {
+    logger.log({
+      msg: "maia_api_call",
+      operation,
+      outcome,
+      upstreamStatus,
+      durationMs: Date.now() - started,
+    });
+  }
+}
+
+async function requestMaia(
+  maiaUrl: string,
+  email: string,
+): Promise<MaiaFinderResponse> {
   const signal = AbortSignal.timeout(getMaiaTimeoutMs());
 
   const headers: Record<string, string> = {
@@ -171,6 +209,6 @@ export async function getFullNameFromMaia(email: string) {
     };
   }
 
-  const payload = await callMaia(email);
+  const payload = await callMaia(email, "fullName");
   return extractFirstAndLastname(payload);
 }

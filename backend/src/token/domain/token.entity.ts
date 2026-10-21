@@ -5,8 +5,12 @@ import { Roles, ServiceTokenMode } from "@prisma/client";
 /** Mode lu en base : interne à l'authentification, jamais sérialisé dans users/me. */
 export const SERVICE_TOKEN_MODE = Symbol("service-token-mode");
 
+/** Jeton reconnu (#3021) : sert au log `api_token_call`, jamais sérialisé. */
+export const API_TOKEN = Symbol("api-token");
+
 export type TokenPrincipal = UserEntity & {
   [SERVICE_TOKEN_MODE]: ServiceTokenMode;
+  [API_TOKEN]: { id: string; name: string };
 };
 
 export class TokenEntity {

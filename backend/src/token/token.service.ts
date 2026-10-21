@@ -21,6 +21,7 @@ import { ScopedPermissionService } from "src/user/scope-permission/scoped-permis
 import { generateRandomPassword, stringToSlug } from "src/utils/functions";
 import { TokenStatus } from "./domain/token-status.entity";
 import {
+  API_TOKEN,
   NewTokenEntity,
   SERVICE_TOKEN_MODE,
   TokenPrincipal,
@@ -287,6 +288,7 @@ export class TokenService {
         ? []
         : (userImpersonate?.additionalPermissions ?? []),
       [SERVICE_TOKEN_MODE]: token.serviceMode,
+      [API_TOKEN]: { id: token.id, name: token.name },
     };
   }
 
