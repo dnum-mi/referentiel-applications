@@ -1,5 +1,5 @@
 import { Permission, Roles, ServiceTokenMode, UserType } from "@prisma/client";
-import { SERVICE_TOKEN_MODE } from "./domain/token.entity";
+import { API_TOKEN, SERVICE_TOKEN_MODE } from "./domain/token.entity";
 import { StepDownException } from "src/auth-level/step-down.exception";
 import type { Requestor } from "src/user/entities/user.entity";
 import { TokenStatus } from "./domain/token-status.entity";
@@ -15,6 +15,7 @@ describe("TokenService.findUserByToken — plafonnement", () => {
   function tokenRow(tokenRole: Roles, userRole: Roles) {
     return {
       id: "token-1",
+      name: "Mon token",
       role: tokenRole,
       serviceMode: ServiceTokenMode.machine,
       status: TokenStatus.active,
@@ -52,6 +53,14 @@ describe("TokenService.findUserByToken — plafonnement", () => {
     const user = await service.findUserByToken("clear");
     expect(user?.role).toBe(Roles.READER);
     expect(user?.additionalPermissions).toEqual([Permission.DataExport]);
+  });
+
+  // #3021 : l'id et le nom servent au log `api_token_call`, sans sortir en JSON.
+  it("remonte l'id et le nom du jeton", async () => {
+    findUnique.mockResolvedValue(tokenRow(Roles.READER, Roles.READER));
+    const user = await service.findUserByToken("clear");
+    expect(user?.[API_TOKEN]).toEqual({ id: "token-1", name: "Mon token" });
+    expect(JSON.stringify(user)).not.toContain("Mon token");
   });
 
   it("retourne null pour un jeton inconnu", async () => {

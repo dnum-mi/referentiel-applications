@@ -9,6 +9,11 @@ export class LoggerService {
     this.logger.info(message);
   }
 
+  /** Log structuré : les champs restent à plat dans le JSON, exploitables par `| json` dans Loki. */
+  info(fields: Record<string, unknown>, message: string) {
+    this.logger.info(fields, message);
+  }
+
   error(message: unknown, error?: unknown) {
     this.logger.error(
       { trace: this.formatTrace(error) },

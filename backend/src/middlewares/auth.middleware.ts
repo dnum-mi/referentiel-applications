@@ -25,7 +25,7 @@ import {
 import { principalToPermissions } from "src/permissions/role-to-permissions";
 import { delegateToService } from "src/permissions/delegated-auth";
 import { TokenService } from "src/token/token.service";
-import { SERVICE_TOKEN_MODE } from "src/token/domain/token.entity";
+import { API_TOKEN, SERVICE_TOKEN_MODE } from "src/token/domain/token.entity";
 import { Requestor, UserEntity, UserType } from "src/user/entities/user.entity";
 import { ScopePermissionsException } from "src/user/errors/scope-permissions.exception";
 import { ScopedPermissionService } from "src/user/scope-permission/scoped-permission.service";
@@ -105,6 +105,8 @@ export class AuthMiddleware implements NestMiddleware {
         const tokenUser = await this.tokenService.findUserByToken(token, {
           readOnly: maintenanceMode,
         });
+        const apiToken = tokenUser?.[API_TOKEN];
+        if (apiToken) this.logApiTokenCall(req, res, apiToken);
         user = tokenUser;
         if (
           user?.type === UserType.bot &&
@@ -286,6 +288,30 @@ export class AuthMiddleware implements NestMiddleware {
     }
     if (!filled) return evaluation;
     return { ...evaluateAuthLevel(merged, this.authLevel), source: "userinfo" };
+  }
+
+  /**
+   * #3021 : une ligne par appel fait avec un token reconnu, comptée dans Grafana (Loki).
+   * Écrite à la fin de la réponse pour connaître le statut, refus compris. L'id distingue
+   * deux tokens de même nom ; la valeur du token n'est jamais journalisée.
+   */
+  private logApiTokenCall(
+    req: Request,
+    res: Response,
+    apiToken: { id: string; name: string },
+  ) {
+    res.once("finish", () =>
+      this.logger.info(
+        {
+          tokenId: apiToken.id,
+          tokenName: apiToken.name,
+          method: req.method,
+          url: req.originalUrl,
+          statusCode: res.statusCode,
+        },
+        "api_token_call",
+      ),
+    );
   }
 
   /**
