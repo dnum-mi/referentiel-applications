@@ -114,6 +114,8 @@ describe("Export de fiche produit PowerPoint", () => {
     const wrapper = await render();
     expect(wrapper.get('[data-testid="application-export-html-btn"]').element).toHaveAccessibleName(/HTML.*Bêta/);
     expect(wrapper.get('[data-testid="application-export-powerpoint-btn"]').element).toHaveAccessibleName(/PowerPoint.*Bêta/);
+    expect(wrapper.get('[data-testid="application-export-html-btn"] .fr-badge').element.tagName).toBe("SPAN");
+    expect(wrapper.get('[data-testid="application-export-powerpoint-btn"] .fr-badge').element.tagName).toBe("SPAN");
     wrapper.unmount();
   });
 

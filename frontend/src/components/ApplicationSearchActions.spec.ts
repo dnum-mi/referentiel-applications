@@ -174,6 +174,8 @@ describe("ApplicationSearchActions — accès bêta de l'export Excel", () => {
       const button = screen.getByTestId(testId);
       expect(button).toHaveTextContent("Bêta");
       expect(button).toHaveAccessibleName(/fonctionnalité bêta/);
+      expect(button.querySelector(".fr-badge")?.tagName).toBe("SPAN");
+      expect(button.querySelector(".fr-badge")).toHaveAttribute("aria-hidden", "true");
     }
     await fireEvent.click(screen.getByTestId("application-export-btn-mobile"));
     await vi.waitFor(() => expect(downloadExcel).toHaveBeenCalledExactlyOnceWith({ shortName: "app" }));

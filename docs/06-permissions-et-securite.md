@@ -483,7 +483,7 @@ La capacité s'ajoute aux droits métier : **les deux contrôles doivent réussi
 
 L'export HTML du catalogue et l'export Excel de la vue Technologies restent soumis à leurs droits habituels, sans capacité bêta.
 
-**Ajouter une fonctionnalité.** Déclarer son identifiant dans `FeatureId`, l'inscrire dans `BETA_FEATURES`, ajouter `@RequiresBetaFeature(FeatureId.…)` à son endpoint en conservant son garde métier, puis utiliser `useBetaFeatures()` et le badge DSFR « Bêta » sur son action dans l'interface. Régénérer le contrat OpenAPI et le client. Le registre est publié par `GET /api/v2/config` ; l'interface n'en maintient aucune copie de production.
+**Ajouter une fonctionnalité.** Déclarer son identifiant dans `FeatureId`, l'inscrire dans `BETA_FEATURES`, ajouter `@RequiresBetaFeature(FeatureId.…)` à son endpoint en conservant son garde métier, puis utiliser `useBetaFeatures()` et le composant commun `BetaBadge` sur son action dans l'interface. Régénérer le contrat OpenAPI et le client. Le registre est publié par `GET /api/v2/config` ; l'interface n'en maintient aucune copie de production.
 
 **Sortir une fonctionnalité de bêta.** Retirer uniquement son identifiant de `BETA_FEATURES`, en gardant l'identifiant stable et les contrôles métier. L'API cesse d'exiger `BetaFeatures` pour cet élément ; après actualisation de la configuration, l'interface l'ouvre selon ses droits habituels et retire le badge. Les autres éléments restent en bêta.
 

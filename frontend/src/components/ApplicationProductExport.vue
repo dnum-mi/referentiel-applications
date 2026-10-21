@@ -4,6 +4,7 @@ import { useApplicationStore } from "@/stores/applicationStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import { useBetaFeatures } from "@/composables/use-beta-features";
 import { FeatureId, Permission } from "@/client";
+import BetaBadge from "@/components/BetaBadge.vue";
 
 const props = defineProps<{ applicationId: string }>();
 const applicationStore = useApplicationStore();
@@ -49,7 +50,7 @@ async function exportProduct(format: "PowerPoint" | "HTML") {
       @click="exportProduct('PowerPoint')"
     >
       Exporter la fiche produit en PowerPoint
-      <DsfrBadge v-if="isBeta(FeatureId.PRODUCT_POWERPOINT_EXPORT)" label="Bêta" type="info" small />
+      <BetaBadge v-if="isBeta(FeatureId.PRODUCT_POWERPOINT_EXPORT)" />
     </DsfrButton>
     <DsfrButton
       v-if="canAccess(FeatureId.PRODUCT_HTML_EXPORT)"
@@ -61,7 +62,7 @@ async function exportProduct(format: "PowerPoint" | "HTML") {
       @click="exportProduct('HTML')"
     >
       Exporter la fiche produit en HTML
-      <DsfrBadge v-if="isBeta(FeatureId.PRODUCT_HTML_EXPORT)" label="Bêta" type="info" small />
+      <BetaBadge v-if="isBeta(FeatureId.PRODUCT_HTML_EXPORT)" />
     </DsfrButton>
     <output class="fr-sr-only" aria-live="polite">
       {{ exportingFormat ? `Préparation ${exportingFormat === "PowerPoint" ? "du PowerPoint" : "de la fiche HTML"}…` : "" }}

@@ -13,6 +13,7 @@ import GristSyncModal from "@/components/modal/GristSyncModal.vue";
 import ColumnCustomization from "@/components/ColumnCustomization.vue";
 import { FeatureId, Permission } from "@/client";
 import { useBetaFeatures } from "@/composables/use-beta-features";
+import BetaBadge from "@/components/BetaBadge.vue";
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -161,7 +162,7 @@ const hasQualityCampaignPermissions = computed(() => {
         :title="excelExportLabel"
       >
         Exporter en Excel
-        <DsfrBadge v-if="isBeta(FeatureId.CATALOGUE_EXCEL_EXPORT)" label="Bêta" type="info" small aria-hidden="true" />
+        <BetaBadge v-if="isBeta(FeatureId.CATALOGUE_EXCEL_EXPORT)" aria-hidden="true" />
       </DsfrButton>
 
       <DsfrButton
@@ -177,7 +178,7 @@ const hasQualityCampaignPermissions = computed(() => {
         :title="excelExportLabel"
       >
         Exporter en Excel
-        <DsfrBadge v-if="isBeta(FeatureId.CATALOGUE_EXCEL_EXPORT)" label="Bêta" type="info" small aria-hidden="true" />
+        <BetaBadge v-if="isBeta(FeatureId.CATALOGUE_EXCEL_EXPORT)" aria-hidden="true" />
       </DsfrButton>
 
       <DsfrButton
