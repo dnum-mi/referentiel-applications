@@ -1068,6 +1068,11 @@ describe("AuthMiddleware", () => {
     it("still lets a strong administrator impersonate", async () => {
       const { middleware, userService, scopedPermissionService } =
         buildMiddleware({ authLevel: authLevelEnforce, user: adminUser });
+      userService.findByIdWithRelations.mockResolvedValue({
+        ...existingUser,
+        organizationId: adminUser.organizationId,
+        organization: adminUser.organization,
+      });
       const request = bearerRequest(
         { email: adminUser.email, auth_mode: "CARD" },
         { "x-impersonate-user-id": existingUser.id },
@@ -1089,6 +1094,11 @@ describe("AuthMiddleware", () => {
       const { middleware, userService } = buildMiddleware({
         authLevel: authLevelObserve,
         user: adminUser,
+      });
+      userService.findByIdWithRelations.mockResolvedValue({
+        ...existingUser,
+        organizationId: adminUser.organizationId,
+        organization: adminUser.organization,
       });
       const request = bearerRequest(
         { email: adminUser.email, auth_mode: "PASSWORD" },
