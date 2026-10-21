@@ -1,5 +1,6 @@
 import appConfig from "./configs/app.config";
 import { ConfigService } from "./config.service";
+import { BETA_FEATURES, FeatureId } from "src/features/beta-features";
 
 describe("public configuration", () => {
   it("never exposes the userinfo signing secret or algorithm to the frontend", () => {
@@ -26,6 +27,13 @@ describe("public configuration", () => {
       },
     );
     const frontend = service.getFrontendConfig();
+    expect(frontend.betaFeatures).toEqual(BETA_FEATURES);
+    expect(frontend.betaFeatures).not.toBe(BETA_FEATURES);
+    frontend.betaFeatures.pop();
+    expect(service.getFrontendConfig().betaFeatures).toEqual(BETA_FEATURES);
+    expect(service.getFrontendConfig().betaFeatures).toContain(
+      FeatureId.CatalogueExcelExport,
+    );
     expect(frontend.authLevel).toEqual({
       reauth: { strategy: "prompt", prompt: "login" },
       helpUrl: undefined,

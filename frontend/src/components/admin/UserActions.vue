@@ -280,6 +280,13 @@ const additionalPermissionsOptions = computed<Omit<DsfrCheckboxProps, "modelValu
     name: "capability-create-data-export",
   },
   {
+    label: "Accéder aux fonctionnalités bêta",
+    value: Permission.BETA_FEATURES,
+    name: "capability-beta-features",
+    disabled: !userStore.hasPermissions([Permission.GLOBAL_ADMIN_MANAGE]),
+    hint: "Accès accordé explicitement, y compris pour les administrateurs. Les droits habituels de chaque fonctionnalité restent nécessaires.",
+  },
+  {
     label: "Voir les données MDIT",
     value: Permission.MDIT_LIST,
     name: "capability-mdit-view",

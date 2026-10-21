@@ -2,21 +2,27 @@
 import { ref } from "vue";
 import { useApplicationStore } from "@/stores/applicationStore";
 import { useToasterStore } from "@/stores/toasterStore";
+import { useBetaFeatures } from "@/composables/use-beta-features";
+import { FeatureId, Permission } from "@/client";
 
 const props = defineProps<{ applicationId: string }>();
 const applicationStore = useApplicationStore();
 const toaster = useToasterStore();
+const { canAccess, isBeta, authorize, refreshAccess } = useBetaFeatures();
 const isExporting = ref(false);
 const exportingFormat = ref<"PowerPoint" | "HTML" | null>(null);
 
 async function exportProduct(format: "PowerPoint" | "HTML") {
-  if (isExporting.value) return;
+  const feature = format === "PowerPoint" ? FeatureId.PRODUCT_POWERPOINT_EXPORT : FeatureId.PRODUCT_HTML_EXPORT;
+  if (isExporting.value || !canAccess(feature)) return;
   isExporting.value = true;
   exportingFormat.value = format;
   try {
+    if (!(await authorize(feature, [Permission.APP_READ]))) return;
     if (format === "PowerPoint") await applicationStore.downloadProductPowerpoint(props.applicationId);
     else await applicationStore.downloadProductHtml(props.applicationId);
   } catch (error) {
+    await refreshAccess();
     console.error("Erreur lors de l'export de la fiche produit", error);
     toaster.addErrorMessage(`Impossible d'exporter la fiche produit en ${format}. Veuillez réessayer.`);
   } finally {
@@ -27,8 +33,14 @@ async function exportProduct(format: "PowerPoint" | "HTML") {
 </script>
 
 <template>
-  <div class="product-exports" role="group" aria-label="Exporter la fiche produit">
+  <div
+    v-if="canAccess(FeatureId.PRODUCT_POWERPOINT_EXPORT) || canAccess(FeatureId.PRODUCT_HTML_EXPORT)"
+    class="product-exports"
+    role="group"
+    aria-label="Exporter la fiche produit"
+  >
     <DsfrButton
+      v-if="canAccess(FeatureId.PRODUCT_POWERPOINT_EXPORT)"
       type="button"
       class="fr-btn--tertiary-no-outline fr-btn--icon-left fr-icon-download-line"
       data-testid="application-export-powerpoint-btn"
@@ -37,8 +49,10 @@ async function exportProduct(format: "PowerPoint" | "HTML") {
       @click="exportProduct('PowerPoint')"
     >
       Exporter la fiche produit en PowerPoint
+      <DsfrBadge v-if="isBeta(FeatureId.PRODUCT_POWERPOINT_EXPORT)" label="Bêta" type="info" small />
     </DsfrButton>
     <DsfrButton
+      v-if="canAccess(FeatureId.PRODUCT_HTML_EXPORT)"
       type="button"
       class="fr-btn--tertiary-no-outline fr-btn--icon-left fr-icon-download-line"
       data-testid="application-export-html-btn"
@@ -47,6 +61,7 @@ async function exportProduct(format: "PowerPoint" | "HTML") {
       @click="exportProduct('HTML')"
     >
       Exporter la fiche produit en HTML
+      <DsfrBadge v-if="isBeta(FeatureId.PRODUCT_HTML_EXPORT)" label="Bêta" type="info" small />
     </DsfrButton>
     <output class="fr-sr-only" aria-live="polite">
       {{ exportingFormat ? `Préparation ${exportingFormat === "PowerPoint" ? "du PowerPoint" : "de la fiche HTML"}…` : "" }}

@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { FeatureId } from "src/features/beta-features";
 import {
   AuthLevelFrontendConfig,
   AuthLevelReauthFrontendConfig,
@@ -70,6 +71,15 @@ export class AuthLevelConfigDto implements AuthLevelFrontendConfig {
 }
 
 export class ConfigDto implements FrontendConfig {
+  @ApiProperty({
+    description:
+      "Fonctionnalités actuellement en bêta nécessitant la permission BetaFeatures",
+    enum: FeatureId,
+    enumName: "FeatureId",
+    isArray: true,
+  })
+  betaFeatures: FeatureId[];
+
   @ApiProperty({
     description: "OIDC configuration URL",
     example:

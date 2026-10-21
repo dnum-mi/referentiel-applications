@@ -159,11 +159,16 @@ test.describe("Administration des référentiels", () => {
     // #2608 : `MditCampaignManage` n'est plus accordée par défaut à un ADMIN, même global —
     // elle doit être déléguée explicitement (couche 2) pour que l'onglet « Campagnes dette IT »
     // apparaisse dans le panneau admin.
-    await data.setUserAdditionalPermissionsKeepRole("admin@example.com", [
-      "MditCampaignManage",
-    ]);
-
+    const initialAdmin = await data.getUser("admin@example.com");
+    expect(
+      initialAdmin,
+      "Compte administrateur de campagne absent",
+    ).toBeTruthy();
+    const initialPermissions = [...initialAdmin!.additionalPermissions];
     try {
+      await data.setUserAdditionalPermissionsKeepRole("admin@example.com", [
+        ...new Set([...initialPermissions, "MditCampaignManage"]),
+      ]);
       const admin = new AdminPage(page);
       await admin.open();
       await admin.openCampaignsTab();
@@ -171,9 +176,13 @@ test.describe("Administration des référentiels", () => {
       await admin.expectCampaignRow(year);
       await admin.deleteCampaign(year);
     } finally {
-      await data
-        .setUserAdditionalPermissionsKeepRole("admin@example.com", [])
-        .catch(() => {});
+      await data.setUserAdditionalPermissionsKeepRole(
+        "admin@example.com",
+        initialPermissions,
+      );
+      expect(
+        (await data.getUser("admin@example.com"))?.additionalPermissions.sort(),
+      ).toEqual([...initialPermissions].sort());
     }
   });
 

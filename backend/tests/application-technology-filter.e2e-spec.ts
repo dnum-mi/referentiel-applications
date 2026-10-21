@@ -121,7 +121,11 @@ describe("Applications — filtre de fin de vie des technologies (#2524)", () =>
     }
     scopedToken = await createUser(
       Roles.READER,
-      [Permission.TechnologyList, Permission.DataExport],
+      [
+        Permission.TechnologyList,
+        Permission.DataExport,
+        Permission.BetaFeatures,
+      ],
       organizations[0].id,
     );
     const division = await prisma.businessDivision.create({

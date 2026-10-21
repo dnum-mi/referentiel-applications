@@ -6,6 +6,30 @@ import {
   roleToPermissions,
 } from "./role-to-permissions";
 
+describe("BetaFeatures — délégation explicite sans rôle implicite (#3033)", () => {
+  it.each(Object.values(Roles))(
+    "%s ne reçoit jamais BetaFeatures par son rôle",
+    (role) => {
+      for (const scoped of [false, true]) {
+        expect(roleToPermissions(role, { scoped })).not.toContain(
+          Permission.BetaFeatures,
+        );
+        expect(
+          principalToPermissions({
+            role,
+            scopeOrganizationId: scoped ? "scope-1" : null,
+          }),
+        ).not.toContain(Permission.BetaFeatures);
+      }
+      expect(roleToAppPermissions(role)).not.toContain(Permission.BetaFeatures);
+    },
+  );
+
+  it("permet une attribution individuelle", () => {
+    expect(DELEGABLE_PERMISSIONS).toContain(Permission.BetaFeatures);
+  });
+});
+
 describe("TechnologyList — rôle administrateur et délégation (#2801)", () => {
   it.each([false, true])(
     "ADMIN reçoit la capacité par son rôle (périmètre : %s)",

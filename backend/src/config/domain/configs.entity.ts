@@ -1,3 +1,5 @@
+import type { FeatureId } from "src/features/beta-features";
+
 export interface FooterLink {
   label: string;
   title: string;
@@ -25,6 +27,7 @@ export interface AuthLevelFrontendConfig {
 }
 
 export interface FrontendConfig {
+  betaFeatures: FeatureId[];
   oidcConfigUrl: string;
   oidcClientId: string;
   oidcScope: string;

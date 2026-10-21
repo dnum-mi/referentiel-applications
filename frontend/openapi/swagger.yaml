@@ -8195,6 +8195,14 @@ components:
       name: x-refapp-token
       description: Token authentication
   schemas:
+    FeatureId:
+      type: string
+      enum:
+        - catalogue-excel-export
+        - product-html-export
+        - product-powerpoint-export
+      description: Fonctionnalités actuellement en bêta nécessitant la permission
+        BetaFeatures
     FooterLinkDto:
       type: object
       properties:
@@ -8262,6 +8270,12 @@ components:
     ConfigDto:
       type: object
       properties:
+        betaFeatures:
+          type: array
+          items:
+            $ref: "#/components/schemas/FeatureId"
+          description: Fonctionnalités actuellement en bêta nécessitant la permission
+            BetaFeatures
         oidcConfigUrl:
           type: string
           description: OIDC configuration URL
@@ -8293,6 +8307,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/AuthLevelConfigDto"
       required:
+        - betaFeatures
         - oidcConfigUrl
         - oidcClientId
         - oidcScope
@@ -8673,6 +8688,7 @@ components:
         - MDITList
         - AppList
         - DataExport
+        - BetaFeatures
         - AdminPanelManage
         - GlobalAdminManage
         - ActorTypePost

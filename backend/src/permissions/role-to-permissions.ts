@@ -89,6 +89,7 @@ export const DELEGABLE_PERMISSIONS: readonly Permission[] = [
   Permission.TechnologyList,
   // Écrit dans un outil externe (Grist) : jamais accordée par le rôle, comme les campagnes.
   Permission.GristSync,
+  Permission.BetaFeatures,
 ];
 
 /**

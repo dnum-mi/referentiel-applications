@@ -11,13 +11,15 @@ import ReportModal from "@/components/modal/ReportModal.vue";
 import CreateQualityCampaignModal from "@/components/modal/CreateQualityCampaignModal.vue";
 import GristSyncModal from "@/components/modal/GristSyncModal.vue";
 import ColumnCustomization from "@/components/ColumnCustomization.vue";
-import { Permission } from "@/client";
+import { FeatureId, Permission } from "@/client";
+import { useBetaFeatures } from "@/composables/use-beta-features";
 
 const router = useRouter();
 const userStore = useUserStore();
 const applicationStore = useApplicationStore();
 const { filters } = useApplicationSearch();
 const toaster = useToasterStore();
+const { canAccess, isBeta, authorize, refreshAccess } = useBetaFeatures();
 
 const isReportMissingOpen = ref(false);
 const isCreateCampaignOpen = ref(false);
@@ -47,12 +49,15 @@ const { open: openCreateCampaign, close: closeCreateCampaign } = createModalHand
 const { open: openGristSync, close: closeGristSync } = createModalHandlers(isGristSyncOpen);
 
 async function exportApplications(format: "Excel" | "HTML") {
-  if (exportFormat.value) return;
+  if (exportFormat.value || !hasExportPermissions.value || (format === "Excel" && !canAccess(FeatureId.CATALOGUE_EXCEL_EXPORT))) return;
   exportFormat.value = format;
   try {
-    if (format === "Excel") await applicationStore.downloadExcel(filters.value);
-    else await applicationStore.downloadHtml(filters.value);
+    if (format === "Excel") {
+      if (!(await authorize(FeatureId.CATALOGUE_EXCEL_EXPORT, [Permission.DATA_EXPORT]))) return;
+      await applicationStore.downloadExcel(filters.value);
+    } else await applicationStore.downloadHtml(filters.value);
   } catch (error) {
+    if (format === "Excel") await refreshAccess();
     console.error("Erreur lors de l'exportation Excel", error);
     toaster.addErrorMessage(`Une erreur est survenue lors de l'exportation ${format}. Veuillez réessayer.`);
   } finally {
@@ -63,6 +68,11 @@ async function exportApplications(format: "Excel" | "HTML") {
 const hasExportPermissions = computed(() => {
   return userStore.hasPermissions([Permission.DATA_EXPORT]);
 });
+const hasExcelExportPermissions = computed(() => hasExportPermissions.value && canAccess(FeatureId.CATALOGUE_EXCEL_EXPORT));
+const excelExportLabel = computed(
+  () =>
+    `Exporter en Excel les applications correspondant aux filtres actuels${isBeta(FeatureId.CATALOGUE_EXCEL_EXPORT) ? " — fonctionnalité bêta" : ""}`,
+);
 
 const hasGristSyncPermissions = computed(() => {
   return userStore.hasPermissions([Permission.GRIST_SYNC]);
@@ -139,8 +149,7 @@ const hasQualityCampaignPermissions = computed(() => {
       </DsfrButton>
 
       <DsfrButton
-        v-if="hasExportPermissions"
-        label="Exporter en Excel"
+        v-if="hasExcelExportPermissions"
         icon="ri-file-excel-2-line"
         secondary
         data-testid="application-export-btn"
@@ -148,13 +157,15 @@ const hasQualityCampaignPermissions = computed(() => {
         :aria-disabled="!!exportFormat"
         :aria-busy="!!exportFormat"
         @click="exportApplications('Excel')"
-        aria-label="Exporter en Excel les applications correspondant aux filtres actuels"
-        title="Exporter en excel les applications correspondant aux filtres actuels"
-      ></DsfrButton>
+        :aria-label="excelExportLabel"
+        :title="excelExportLabel"
+      >
+        Exporter en Excel
+        <DsfrBadge v-if="isBeta(FeatureId.CATALOGUE_EXCEL_EXPORT)" label="Bêta" type="info" small aria-hidden="true" />
+      </DsfrButton>
 
       <DsfrButton
-        v-if="hasExportPermissions"
-        label="Exporter en Excel"
+        v-if="hasExcelExportPermissions"
         icon="ri-file-excel-2-line"
         secondary
         data-testid="application-export-btn-mobile"
@@ -162,9 +173,12 @@ const hasQualityCampaignPermissions = computed(() => {
         :aria-disabled="!!exportFormat"
         :aria-busy="!!exportFormat"
         @click="exportApplications('Excel')"
-        aria-label="Exporter en Excel les applications correspondant aux filtres actuels"
-        title="Exporter en excel les applications correspondant aux filtres actuels"
-      ></DsfrButton>
+        :aria-label="excelExportLabel"
+        :title="excelExportLabel"
+      >
+        Exporter en Excel
+        <DsfrBadge v-if="isBeta(FeatureId.CATALOGUE_EXCEL_EXPORT)" label="Bêta" type="info" small aria-hidden="true" />
+      </DsfrButton>
 
       <DsfrButton
         v-if="hasExportPermissions"

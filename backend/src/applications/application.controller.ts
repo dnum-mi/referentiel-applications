@@ -29,6 +29,8 @@ import {
 import { Response } from "express";
 
 import { Permission } from "@prisma/client";
+import { RequiresBetaFeature } from "src/common/decorators/requires-beta-feature.decorator";
+import { FeatureId } from "src/features/beta-features";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 import { User } from "src/common/decorators/user.decorator";
 import { PermissionGuard } from "src/common/guards/permission.guard";
@@ -206,6 +208,7 @@ Vous devez fournir les informations suivantes :
 
   @Get("export/excel")
   @UseGuards(PermissionGuard)
+  @RequiresBetaFeature(FeatureId.CatalogueExcelExport)
   @RequiredPermissions([Permission.DataExport])
   @ApiOperation({
     summary: "Exporter les applications en Excel",
@@ -305,6 +308,7 @@ Vous devez fournir les informations suivantes :
   @Post(":applicationId/export/powerpoint")
   @HttpCode(HttpStatus.OK)
   @UseGuards(PermissionGuard)
+  @RequiresBetaFeature(FeatureId.ProductPowerpointExport)
   @RequiredPermissions([Permission.AppRead])
   @ApiOperation({
     summary: "Exporter la fiche produit en PowerPoint",
@@ -350,6 +354,7 @@ Vous devez fournir les informations suivantes :
   @Post(":applicationId/export/html")
   @HttpCode(HttpStatus.OK)
   @UseGuards(PermissionGuard)
+  @RequiresBetaFeature(FeatureId.ProductHtmlExport)
   @RequiredPermissions([Permission.AppRead])
   @ApiOperation({
     summary: "Exporter la fiche produit en HTML",

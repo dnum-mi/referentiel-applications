@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { BetaFeatureGuard } from "./guards/beta-feature.guard";
 import { ExcelBuilderService } from "./service/excel-builder.service";
 import { CheckPermissions } from "./service/check-permissions.service";
 import { ContactAdminService } from "./service/contact-admin.service";
@@ -7,6 +8,7 @@ import { PrismaQueryBuilder } from "src/applications/prisma-query-builder.servic
 
 @Module({
   providers: [
+    BetaFeatureGuard,
     ExcelBuilderService,
     CheckPermissions,
     ContactAdminService,
@@ -14,6 +16,7 @@ import { PrismaQueryBuilder } from "src/applications/prisma-query-builder.servic
     PrismaQueryBuilder,
   ],
   exports: [
+    BetaFeatureGuard,
     ExcelBuilderService,
     CheckPermissions,
     ContactAdminService,
