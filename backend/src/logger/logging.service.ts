@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { decodeJwt } from "jose";
 import { LoggerService } from "./logger.service";
+import { sanitizeHeaders } from "../utils/sanitize-headers.util";
 
 export interface RequestLogContext {
   correlationId: string;
@@ -19,10 +20,12 @@ export class LoggingService {
       headers.authorization,
       correlationId,
     );
-    context.user = userInfo;
-
     this.logger.debug(
-      `[${correlationId}] Request complete: ${JSON.stringify(context)}`,
+      `[${correlationId}] Request complete: ${JSON.stringify({
+        ...context,
+        headers: sanitizeHeaders(headers),
+        user: userInfo,
+      })}`,
     );
   }
 
