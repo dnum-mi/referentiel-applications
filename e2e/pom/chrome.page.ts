@@ -487,8 +487,8 @@ export class ChromePage extends BasePage {
   }
 
   /**
-   * RGA-03 (RGAA 12.8) : le `page-title-announcer` (h1 hors-écran, `tabindex="-1"`) doit recevoir
-   * le focus après une navigation SPA. On attend l'état DOM avant l'assertion Playwright pour
+   * RGA-03 (RGAA 12.8) : le `page-title-announcer` (paragraphe hors-écran, `tabindex="-1"`) doit
+   * recevoir le focus après une navigation SPA. On attend l'état DOM avant l'assertion Playwright pour
    * absorber le délai introduit par `nextTick()` dans `router.afterEach`.
    */
   async expectAnnouncerFocused(): Promise<void> {
@@ -501,8 +501,32 @@ export class ChromePage extends BasePage {
   }
 
   /**
+   * RGA-14 (RGAA 9.1) : un seul titre de niveau 1 par page, celui de la vue. Ni l'annonceur
+   * ni le titre de service du bandeau ne sont exposés comme titres de niveau 1.
+   */
+  async reloadPage(): Promise<void> {
+    await this.page.reload();
+  }
+
+  async expectSingleLevelOneHeading(name: string | RegExp): Promise<void> {
+    const levelOne = this.page.getByRole("heading", { level: 1 });
+    await expect(levelOne).toHaveCount(1);
+    await expect(levelOne).toHaveText(name);
+  }
+
+  /**
+   * RGA-15 / RGA-16 (RGAA 9.1) : l'annonceur reste un paragraphe hors-écran, jamais un titre,
+   * et n'est pas vide, y compris au premier chargement.
+   */
+  async expectAnnouncerIsNotAnEmptyHeading(): Promise<void> {
+    const announcer = this.byTestId("page-title-announcer");
+    await expect(announcer).not.toHaveRole("heading");
+    await expect(announcer).toHaveText(/\S/);
+  }
+
+  /**
    * RGA-04 (RGAA 7.1) : le texte du `page-title-announcer` doit contenir le titre de page attendu
-   * (ex. `"Recherche d'applications"`), fourni via `to.meta.title` par le routeur.
+   * (ex. `"Recherche d'applications"`), repris de `document.title` une fois la vue montée.
    */
   async expectAnnouncerText(text: string | RegExp): Promise<void> {
     await expect(this.byTestId("page-title-announcer")).toContainText(text);

@@ -31,15 +31,18 @@ const route = useRoute();
 const router = useRouter();
 
 const pageTitleAnnouncer = ref<HTMLElement | null>(null);
-const currentPageTitle = ref((route.meta.title as string) ?? document.title);
+const currentPageTitle = ref(document.title);
 
 // 12.8 / 7.1 : simuler un rechargement de page pour les TA après chaque navigation SPA.
+// RGAA 9.1 : l'annonceur n'est pas un titre, pour garder un seul h1 (celui de la page).
+// Il reprend le titre réel du document, que la vue a pu préciser au montage (setPageTitle).
 // On ignore les navigations qui ne changent que la query string (ex. filtres de recherche mis à jour
-// via router.replace) : sinon le focus est repris au h1 pendant que l'utilisateur saisit dans un champ.
+// via router.replace) : sinon le focus est repris pendant que l'utilisateur saisit dans un champ.
 // Idem pour un changement d'onglet : le focus doit rester sur la liste d'onglets.
 router.afterEach(async (to, from) => {
   if (to.path === from.path || isTabNavigation(to, from)) return;
-  currentPageTitle.value = (to.meta.title as string) ?? document.title;
+  await nextTick();
+  currentPageTitle.value = document.title;
   await nextTick();
   pageTitleAnnouncer.value?.focus();
 });
@@ -286,9 +289,9 @@ const { needRefresh, updateServiceWorker } = useAppUpdate();
   </DsfrHeader>
   <AppUpdateNotice :available="needRefresh" :update="() => updateServiceWorker(true)" />
   <main class="fr-mt-3w fr-mt-md-5w fr-mb-5w" id="main-content" role="main">
-    <h1 ref="pageTitleAnnouncer" class="fr-sr-only" tabindex="-1" data-testid="page-title-announcer">
+    <p ref="pageTitleAnnouncer" class="fr-sr-only" tabindex="-1" data-testid="page-title-announcer">
       {{ currentPageTitle }}
-    </h1>
+    </p>
     <WeakAuthBanner v-if="userStore.isAuthDowngraded" />
     <RouterView
       v-else-if="userStore.hasApplicationAccess || (userStore.sessionInitialized && !userStore.authenticated && !route.meta.requiresAuth)"

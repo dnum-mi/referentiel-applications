@@ -81,10 +81,13 @@ const loading = computed(() => metadataStore.isLoading);
 </script>
 
 <template>
-  <AppLoader v-if="loading" data-testid="modifications-loader" />
+  <!-- #2864 : le chargement ne remplace le tableau qu'au premier affichage. Le démonter à chaque changement
+       de page détruisait le bouton de pagination focalisé : le focus repartait sur l'en-tête du tableau. -->
+  <AppLoader v-if="loading && metadataRows.length === 0" data-testid="modifications-loader" />
   <div v-else>
     <p>Nombre de consultations de l'application sur les 12 derniers mois : {{ application?.views }}</p>
     <RefAppTable
+      :loading="loading"
       :items="metadataRows"
       :columns="tableColumns"
       :paginator="true"

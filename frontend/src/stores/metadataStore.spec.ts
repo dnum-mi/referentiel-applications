@@ -137,4 +137,32 @@ describe("metadataStore — metadatas de fiche", () => {
     expect(store.firstMetadata).toStrictEqual(current);
     expect(store.lastMetadata).toStrictEqual(current);
   });
+
+  it("garde la page affichée pendant le chargement de la page suivante de la même fiche (#2864)", async () => {
+    const page1 = metadataOf("agent.a@example.gouv.fr");
+    findByApplicationMock.mockResolvedValueOnce({ response: { ok: true }, data: { results: [page1], total: 20 } });
+    const store = useMetadataStore();
+    await store.fetchMetadatasByApplication("app-1", { page: 0 });
+
+    findByApplicationMock.mockReturnValueOnce(new Promise(() => {}));
+    void store.fetchMetadatasByApplication("app-1", { page: 1 });
+
+    expect(store.metadatas).toStrictEqual([page1]);
+    expect(store.total).toBe(20);
+  });
+
+  it("purge la liste dès le chargement d'une autre fiche", async () => {
+    findByApplicationMock.mockResolvedValueOnce({
+      response: { ok: true },
+      data: { results: [metadataOf("agent.a@example.gouv.fr")], total: 20 },
+    });
+    const store = useMetadataStore();
+    await store.fetchMetadatasByApplication("app-1");
+
+    findByApplicationMock.mockReturnValueOnce(new Promise(() => {}));
+    void store.fetchMetadatasByApplication("app-2");
+
+    expect(store.metadatas).toStrictEqual([]);
+    expect(store.total).toBe(0);
+  });
 });
