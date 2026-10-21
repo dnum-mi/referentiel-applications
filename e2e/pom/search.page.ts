@@ -363,6 +363,23 @@ export class SearchPage extends BasePage {
   }
 
   // --- Navigation vers la fiche ---
+  /** Attend la fiche demandée plutôt que la première ligne encore issue de l'ancienne recherche. */
+  async openApplication(applicationId: string, label: string): Promise<void> {
+    const link = this.table().getByRole("link", { name: label, exact: true });
+    await expect(link).toHaveAttribute(
+      "href",
+      `/applications/${applicationId}`,
+    );
+    await Promise.all([
+      this.page.waitForURL(
+        (url) =>
+          url.pathname === `/applications/${applicationId}` ||
+          url.pathname.startsWith(`/applications/${applicationId}/`),
+      ),
+      link.click(),
+    ]);
+  }
+
   async openFirstApplication(): Promise<void> {
     const link = this.table().locator("tbody tr:first-child a").first();
     await expect(link).toBeVisible();

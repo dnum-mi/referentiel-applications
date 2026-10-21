@@ -75,7 +75,14 @@ const close = (id: string) => emit("closeMessage", id);
 .app-alert {
   background-color: var(--grey-1000-50);
   width: 90%;
-  pointer-events: all;
+  pointer-events: none;
+}
+
+/* Le texte ne bloque pas les commandes sous-jacentes ; les actions du
+   message restent utilisables, notamment sa fermeture. */
+.app-alert :deep(button),
+.app-alert :deep(a) {
+  pointer-events: auto;
 }
 
 .list-enter-from,

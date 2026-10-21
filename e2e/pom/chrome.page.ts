@@ -190,10 +190,14 @@ export class ChromePage extends BasePage {
       await expect
         .poll(() => new URL(this.page.url()).pathname)
         .toBe(destination.href);
-      // Certaines vues précisent leur titre après chargement (historique →
-      // « Modifications - page 1 »). Le titre de navigation conserve la rubrique.
+      // Le plan nomme la rubrique « Historique global », tandis que la vue
+      // annonce « Modifications - page N » une fois les données chargées.
+      const expectedTitle =
+        destination.href === "/historique"
+          ? /^Modifications - page \d+ - Référentiel des applications$/
+          : destination.name;
       await expect(this.byTestId("page-title-announcer")).toContainText(
-        destination.name,
+        expectedTitle,
       );
       await expect(this.mainNav().getByRole("link")).toHaveText(expectedMenu);
       await expect(this.quickSearch()).toBeVisible();
@@ -315,13 +319,20 @@ export class ChromePage extends BasePage {
 
   /**
    * ACC-13 : un terme sans correspondance affiche « Aucun résultat » (état vide de l'autocomplete).
-   * On cible le message dans la liste, pas la région `aria-live` (qui porte le même texte).
+   * L'état vide est un message visible hors listbox, annoncé également dans un output.
    */
   async expectQuickSearchNoResult(query: string): Promise<void> {
     await this.fillQuickSearch(query);
     await expect(
-      this.quickSearchListbox().getByText("Aucun résultat"),
+      this.header()
+        .locator("p")
+        .filter({ hasText: /^Aucun résultat$/ }),
     ).toBeVisible();
+    await expect(this.quickSearchListbox()).toHaveCount(0);
+    await expect(this.quickSearch()).toHaveAttribute("aria-expanded", "false");
+    await expect(
+      this.header().getByRole("status").filter({ hasText: "Aucun résultat" }),
+    ).toHaveText("Aucun résultat");
   }
 
   /** ACC-14 : après saisie, la liste est déployée (`aria-expanded=true`) et visible. */
