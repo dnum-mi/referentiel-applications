@@ -14,6 +14,10 @@ const application = {
   targetPopulations: ["Population"],
   logo: "https://example.test/logo?a=1&b=2",
   tags: [],
+  compliance: {
+    id: "compliance-centre",
+    eco_index_target_url: "https://service.example.test",
+  },
   technologies: [
     {
       technology: "Serveur d’application",
@@ -59,6 +63,15 @@ describe("Export des applications en XLSX et HTML", () => {
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(buffer as unknown as ExcelJS.Buffer);
     expect(workbook.worksheets).toHaveLength(11);
+    const compliances = workbook.getWorksheet("Conformités");
+    let ecoIndexColumn = 0;
+    compliances.getRow(1).eachCell((cell, columnNumber) => {
+      if (cell.text === "EcoIndex URL cible") ecoIndexColumn = columnNumber;
+    });
+    expect(ecoIndexColumn).toBeGreaterThan(0);
+    expect(compliances.getRow(2).getCell(ecoIndexColumn).text).toBe(
+      "https://service.example.test",
+    );
     const technologies = workbook.getWorksheet("Technologies");
     expect(technologies.getRow(2).values).toEqual(
       expect.arrayContaining([
