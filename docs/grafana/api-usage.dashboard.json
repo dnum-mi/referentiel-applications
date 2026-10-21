@@ -37,8 +37,15 @@
         "definition": "label_values(namespace)",
         "refresh": 1,
         "sort": 1,
-        "current": {},
-        "hide": 0
+        "current": {
+          "selected": true,
+          "text": ["All"],
+          "value": ["$__all"]
+        },
+        "hide": 0,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".+"
       },
       {
         "name": "tokenName",
@@ -89,8 +96,8 @@
             "uid": "${datasource}"
           },
           "queryType": "range",
-          "expr": "sum by (tokenId, tokenName) (count_over_time({namespace=\"$namespace\"} |= \"api_token_call\" | json | msg=\"api_token_call\" | tokenName=~\"$tokenName\" | tokenId=~\"$tokenId\" [$__auto]))",
-          "legendFormat": "{{tokenName}} ({{tokenId}})"
+          "expr": "sum by (namespace, tokenId, tokenName) (count_over_time({namespace=~\"$namespace\"} |= \"api_token_call\" | regexp `(?P<payload>\\{.*\\})` | line_format \"{{.payload}}\" | json | tokenId!=\"\" | tokenName=~\"$tokenName\" | tokenId=~\"$tokenId\" [$__auto]))",
+          "legendFormat": "{{tokenName}} ({{tokenId}}) · {{namespace}}"
         }
       ],
       "fieldConfig": {
@@ -137,7 +144,7 @@
             "uid": "${datasource}"
           },
           "queryType": "instant",
-          "expr": "sum by (tokenId, tokenName) (count_over_time({namespace=\"$namespace\"} |= \"api_token_call\" | json | msg=\"api_token_call\" | tokenName=~\"$tokenName\" | tokenId=~\"$tokenId\" [$__range]))"
+          "expr": "sum by (namespace, tokenId, tokenName) (count_over_time({namespace=~\"$namespace\"} |= \"api_token_call\" | regexp `(?P<payload>\\{.*\\})` | line_format \"{{.payload}}\" | json | tokenId!=\"\" | tokenName=~\"$tokenName\" | tokenId=~\"$tokenId\" [$__range]))"
         }
       ],
       "transformations": [
@@ -154,14 +161,16 @@
               "Time": true
             },
             "indexByName": {
-              "tokenName": 0,
-              "tokenId": 1,
-              "Value": 2
+              "namespace": 0,
+              "tokenName": 1,
+              "tokenId": 2,
+              "Value": 3
             },
             "renameByName": {
               "tokenName": "Nom du token",
               "tokenId": "Id du token",
-              "Value": "Appels"
+              "Value": "Appels",
+              "namespace": "Namespace"
             }
           }
         },
@@ -206,7 +215,7 @@
             "uid": "${datasource}"
           },
           "queryType": "instant",
-          "expr": "sum by (tokenId, tokenName, statusCode) (count_over_time({namespace=\"$namespace\"} |= \"api_token_call\" | json | msg=\"api_token_call\" | tokenName=~\"$tokenName\" | tokenId=~\"$tokenId\" [$__range]))"
+          "expr": "sum by (namespace, tokenId, tokenName, statusCode) (count_over_time({namespace=~\"$namespace\"} |= \"api_token_call\" | regexp `(?P<payload>\\{.*\\})` | line_format \"{{.payload}}\" | json | tokenId!=\"\" | tokenName=~\"$tokenName\" | tokenId=~\"$tokenId\" [$__range]))"
         }
       ],
       "transformations": [
@@ -223,16 +232,18 @@
               "Time": true
             },
             "indexByName": {
-              "tokenName": 0,
-              "tokenId": 1,
-              "statusCode": 2,
-              "Value": 3
+              "namespace": 0,
+              "tokenName": 1,
+              "tokenId": 2,
+              "statusCode": 3,
+              "Value": 4
             },
             "renameByName": {
               "tokenName": "Nom du token",
               "tokenId": "Id du token",
               "statusCode": "Code HTTP",
-              "Value": "Appels"
+              "Value": "Appels",
+              "namespace": "Namespace"
             }
           }
         },
@@ -290,8 +301,8 @@
             "uid": "${datasource}"
           },
           "queryType": "range",
-          "expr": "sum by (outcome) (count_over_time({namespace=\"$namespace\"} |= \"maia_api_call\" | json | msg=\"maia_api_call\" [$__auto]))",
-          "legendFormat": "{{outcome}}"
+          "expr": "sum by (namespace, outcome) (count_over_time({namespace=~\"$namespace\"} |= \"maia_api_call\" | regexp `(?P<payload>\\{.*\\})` | line_format \"{{.payload}}\" | json | operation!=\"\" [$__auto]))",
+          "legendFormat": "{{outcome}} · {{namespace}}"
         }
       ],
       "fieldConfig": {
@@ -338,7 +349,7 @@
             "uid": "${datasource}"
           },
           "queryType": "instant",
-          "expr": "sum by (operation, outcome) (count_over_time({namespace=\"$namespace\"} |= \"maia_api_call\" | json | msg=\"maia_api_call\" [$__range]))"
+          "expr": "sum by (namespace, operation, outcome) (count_over_time({namespace=~\"$namespace\"} |= \"maia_api_call\" | regexp `(?P<payload>\\{.*\\})` | line_format \"{{.payload}}\" | json | operation!=\"\" [$__range]))"
         }
       ],
       "transformations": [
@@ -355,14 +366,16 @@
               "Time": true
             },
             "indexByName": {
-              "operation": 0,
-              "outcome": 1,
-              "Value": 2
+              "namespace": 0,
+              "operation": 1,
+              "outcome": 2,
+              "Value": 3
             },
             "renameByName": {
               "operation": "Opération",
               "outcome": "Résultat",
-              "Value": "Appels"
+              "Value": "Appels",
+              "namespace": "Namespace"
             }
           }
         },
@@ -407,8 +420,8 @@
             "uid": "${datasource}"
           },
           "queryType": "range",
-          "expr": "quantile_over_time(0.95, {namespace=\"$namespace\"} |= \"maia_api_call\" | json | msg=\"maia_api_call\" | unwrap durationMs [$__auto]) by (operation)",
-          "legendFormat": "p95 {{operation}}"
+          "expr": "quantile_over_time(0.95, {namespace=~\"$namespace\"} |= \"maia_api_call\" | regexp `(?P<payload>\\{.*\\})` | line_format \"{{.payload}}\" | json | operation!=\"\" | unwrap durationMs [$__auto]) by (namespace, operation)",
+          "legendFormat": "p95 {{operation}} · {{namespace}}"
         }
       ],
       "fieldConfig": {
