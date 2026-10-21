@@ -236,11 +236,14 @@ onMounted(async () => {
   </div>
 
   <div v-else>
-    <AppLoader v-if="isLoading" data-testid="links-loader" />
+    <!-- #2864 : le chargement ne remplace le tableau qu'au premier affichage. Le démonter à chaque changement
+         de page détruisait le bouton de pagination focalisé : le focus repartait sur l'en-tête du tableau. -->
+    <AppLoader v-if="isLoading && rows.length === 0" data-testid="links-loader" />
 
     <div v-else>
       <template v-if="!props.isMobile">
         <RefAppTable
+          :loading="isLoading"
           :items="rows"
           :columns="tableColumns"
           :paginator="true"

@@ -91,8 +91,6 @@ export class HistoryPage extends BasePage {
 /** Page Object — Détail d'une modification (`/metadatas/:id`). */
 export class MetadataDetailPage extends BasePage {
   private heading = () =>
-    // exact: true exclut le `page-title-announcer` sr-only (RGAA 7.1), dont le nom accessible
-    // "Détails de la modification - Référentiel des applications" contient ce titre en préfixe.
     this.page.getByRole("heading", {
       name: "Détails de la modification",
       level: 1,

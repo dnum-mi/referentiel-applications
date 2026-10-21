@@ -42,6 +42,7 @@ const searchQuery = ref("");
 const {
   data,
   isLoading,
+  hasLoadedOnce,
   itemsPerPage,
   firstIndex,
   sortColumn,
@@ -97,12 +98,15 @@ onMounted(fetchBusinessDivisions);
     <p>{{ statusMessage }}</p>
   </div>
 
-  <div v-if="isLoading" class="fr-alert fr-alert--info" data-testid="admin-business-divisions-loading">
+  <!-- #2864 : le chargement ne remplace le tableau qu'au premier affichage. Le démonter à chaque changement
+       de page détruisait le bouton de pagination focalisé : le focus repartait sur l'en-tête du tableau. -->
+  <div v-if="isLoading && !hasLoadedOnce" class="fr-alert fr-alert--info" data-testid="admin-business-divisions-loading">
     <p>Chargement des directions métier...</p>
   </div>
 
   <div v-else>
     <RefAppTable
+      :loading="isLoading"
       :items="tableRows"
       :columns="tableColumns"
       :paginator="true"
