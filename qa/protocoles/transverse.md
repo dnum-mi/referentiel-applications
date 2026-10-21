@@ -41,11 +41,11 @@
 - **Action** : ouvrir une URL inexistante.
 - **Résultat attendu** : la page « 404 » s'affiche (texte « 404 » / « introuvable »).
 
-### TRV-06 — La page 404 ramène au catalogue (connecté) ✅
+### TRV-06 — La page 404 ramène à l’accueil (connecté) ✅
 
 - **Datafeature** : session `admin`.
 - **Action** : sur la page 404, cliquer « Retour à l'accueil ».
-- **Résultat attendu** : navigation vers `/recherche-application`.
+- **Résultat attendu** : navigation vers `/` ; le titre « Le référentiel des applications » est visible.
 
 ### TRV-07 — La page Accessibilité affiche ses sections ✅
 

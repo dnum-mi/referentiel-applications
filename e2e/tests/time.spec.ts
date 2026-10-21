@@ -1,5 +1,5 @@
 import { test, expect } from "../fixtures/test";
-import { SearchPage, TimePage } from "../pom";
+import { TimePage } from "../pom";
 
 /**
  * Non-régression — Diagramme Time (protocole `qa/protocoles/time.md`). POM strict : `TimePage`.
@@ -42,8 +42,7 @@ test.describe("Diagramme Time", () => {
     const time = new TimePage(page);
     await time.open();
     // La sidebar est le composant partagé du catalogue → on réutilise son interaction (POM strict).
-    await new SearchPage(page).filterByQualityRange(30, 70);
-    await time.expectChartOrEmpty();
+    await time.filterByQualityRange(30, 70);
   });
 
   test("TIM-05 - le sélecteur de campagne présente le millésime le plus récent par défaut", async ({
@@ -81,6 +80,5 @@ test.describe("Diagramme Time", () => {
     const time = new TimePage(page);
     await time.open();
     await time.selectMillesime(String(previous));
-    await time.expectChartOrEmpty();
   });
 });

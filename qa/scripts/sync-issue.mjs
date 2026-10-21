@@ -214,15 +214,25 @@ function setVerdict(body, verdict) {
 /** Prépare le corps et le label à publier, sans confondre erreur globale et étape échouée. */
 export function prepareIssueUpdate(body, report, screenshots = null) {
   const steps = applyStatuses(body, statusesFromReport(report), screenshots);
+  // Les cases du protocole identifient ses domaines. Les anciens diagnostics
+  // « Bugs liés » peuvent contenir des IDs étrangers : ils ne doivent pas élargir
+  // cette sélection. Garder aussi les nouveaux tests du domaine absents du protocole.
+  const prefixes = new Set(
+    [...body.matchAll(/^\s*-\s*\[[ xX]\]\s*\*\*([A-Z]{3})-\d+\*\*/gm)].map(
+      (match) => match[1],
+    ),
+  );
+  const failures = Object.fromEntries(
+    Object.entries(failuresFromReport(report)).filter(
+      ([id]) => prefixes.size === 0 || prefixes.has(id.split("-")[0]),
+    ),
+  );
   const runErrors = report.errors ?? [];
   const verdict =
-    steps.failed > 0 || runErrors.length > 0 ? "qa:fail" : "qa:pass";
-  const withBugs = setBugsSection(
-    steps.body,
-    failuresFromReport(report),
-    screenshots,
-    runErrors,
-  );
+    steps.failed > 0 || Object.keys(failures).length > 0 || runErrors.length > 0
+      ? "qa:fail"
+      : "qa:pass";
+  const withBugs = setBugsSection(steps.body, failures, screenshots, runErrors);
   return {
     ...steps,
     body: setVerdict(withBugs, verdict),

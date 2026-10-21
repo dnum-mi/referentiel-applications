@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Permission, type ConfigDto } from "@/client";
 import { ref, computed, nextTick } from "vue";
+import { useTitle } from "@vueuse/core";
 import { useAppUpdate } from "./composables/use-app-update";
 import { useToasterStore } from "./stores/toasterStore";
 import { routeNames } from "./router/route-names";
@@ -31,11 +32,12 @@ const route = useRoute();
 const router = useRouter();
 
 const pageTitleAnnouncer = ref<HTMLElement | null>(null);
-const currentPageTitle = ref(document.title);
+// Le nom d'une fiche peut arriver après le montage et la reprise du focus.
+const currentPageTitle = useTitle(undefined, { observe: true });
 
 // 12.8 / 7.1 : simuler un rechargement de page pour les TA après chaque navigation SPA.
 // RGAA 9.1 : l'annonceur n'est pas un titre, pour garder un seul h1 (celui de la page).
-// Il reprend le titre réel du document, que la vue a pu préciser au montage (setPageTitle).
+// Il reste synchronisé avec le titre réel, même lorsque la vue charge ses données après le montage.
 // On ignore les navigations qui ne changent que la query string (ex. filtres de recherche mis à jour
 // via router.replace) : sinon le focus est repris pendant que l'utilisateur saisit dans un champ.
 // Idem pour un changement d'onglet : le focus doit rester sur la liste d'onglets.

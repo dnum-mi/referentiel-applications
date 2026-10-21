@@ -155,3 +155,143 @@ test("a final Bugs section receives literal diagnostics without replacement-stri
   assert.match(update.body, /Variable \$1, capture \$&/);
   assert.doesNotMatch(update.body, /Ancien diagnostic/);
 });
+
+test("a shared report publishes only failures from the issue protocol domain", () => {
+  const body = issueBody
+    .replaceAll("SCP", "RGA")
+    .replace(
+      "Ancien diagnostic",
+      "- **ACC-13** — ancien échec étranger\n- **ADM-08** — ancien échec étranger",
+    );
+  const update = prepareIssueUpdate(
+    body,
+    {
+      suites: [
+        {
+          specs: [
+            spec("RGA-01", "passed"),
+            spec("RGA-02", "failed"),
+            spec("RGA-03", "skipped"),
+            spec("ACC-13", "failed"),
+            spec("ADM-08", "failed"),
+            spec("TIM-02", "failed"),
+          ],
+        },
+      ],
+    },
+    {
+      ids: new Set(["RGA-02", "ACC-13", "TIM-02"]),
+      baseUrl: "https://example.test/captures",
+    },
+  );
+
+  assert.equal(update.verdict, "qa:fail");
+  assert.equal(update.passed, 1);
+  assert.equal(update.failed, 1);
+  assert.equal(update.notTested, 1);
+  assert.equal(update.total, 3);
+  assert.match(update.body, /\*\*RGA-02\*\* — échec Playwright/);
+  assert.match(update.body, /https:\/\/example\.test\/captures\/RGA-02\.png/);
+  assert.doesNotMatch(update.body, /ACC-13|ADM-08|TIM-02/);
+});
+
+test("foreign failures do not make a successful domain fail", () => {
+  const update = prepareIssueUpdate(issueBody, {
+    suites: [
+      {
+        specs: [
+          spec("SCP-01", "passed"),
+          spec("SCP-02", "passed"),
+          spec("SCP-03", "passed"),
+          spec("ACC-13", "failed"),
+          spec("TIM-04", "failed"),
+        ],
+      },
+    ],
+  });
+
+  assert.equal(update.verdict, "qa:pass");
+  assert.equal(update.passed, 3);
+  assert.equal(update.failed, 0);
+  assert.match(update.body, /- \[x\] `qa:pass`/);
+  assert.match(update.body, /Aucune régression constatée/);
+  assert.doesNotMatch(update.body, /ACC-13|TIM-04/);
+});
+
+test("an unlisted failure of the same domain keeps qa:fail without inventing protocol counts", () => {
+  const body = issueBody.replaceAll("SCP", "RGA");
+  const update = prepareIssueUpdate(body, {
+    suites: [
+      {
+        specs: [
+          spec("RGA-01", "passed"),
+          spec("RGA-02", "passed"),
+          spec("RGA-03", "passed"),
+          spec("RGA-16", "failed"),
+          spec("ADM-23", "failed"),
+        ],
+      },
+    ],
+  });
+
+  assert.equal(update.verdict, "qa:fail");
+  assert.equal(update.total, 3);
+  assert.equal(update.passed, 3);
+  assert.equal(update.failed, 0);
+  assert.equal(update.notTested, 0);
+  assert.match(update.body, /\| 3 \| 3 \| 0 \| 0 \|/);
+  assert.match(update.body, /\*\*RGA-16\*\* — échec Playwright/);
+  assert.match(update.body, /- \[x\] `qa:fail`/);
+  assert.doesNotMatch(update.body, /ADM-23|Aucune régression constatée/);
+});
+
+test("a protocol containing several domains retains failures from each represented prefix", () => {
+  const body = issueBody.replace("**SCP-03**", "**ACC-01**");
+  const update = prepareIssueUpdate(body, {
+    suites: [
+      {
+        specs: [
+          spec("SCP-01", "passed"),
+          spec("SCP-02", "failed"),
+          spec("ACC-01", "passed"),
+          spec("ACC-13", "failed"),
+          spec("TIM-06", "failed"),
+        ],
+      },
+    ],
+  });
+
+  assert.equal(update.verdict, "qa:fail");
+  assert.equal(update.total, 3);
+  assert.equal(update.passed, 2);
+  assert.equal(update.failed, 1);
+  assert.match(update.body, /\*\*SCP-02\*\* — échec Playwright/);
+  assert.match(update.body, /\*\*ACC-13\*\* — échec Playwright/);
+  assert.doesNotMatch(update.body, /TIM-06/);
+});
+
+test("global run errors remain visible when all scenario failures belong to other domains", () => {
+  const update = prepareIssueUpdate(issueBody, {
+    suites: [
+      {
+        specs: [
+          spec("SCP-01", "passed"),
+          spec("SCP-02", "passed"),
+          spec("SCP-03", "passed"),
+          spec("TIM-06", "failed"),
+        ],
+      },
+    ],
+    errors: [{ message: "Worker interrompu après les scénarios du domaine" }],
+  });
+
+  assert.equal(update.verdict, "qa:fail");
+  assert.equal(update.failed, 0);
+  assert.equal(update.runErrors, 1);
+  assert.match(update.body, /Worker interrompu après les scénarios du domaine/);
+  assert.match(
+    update.body,
+    /Erreurs de préparation ou d'exécution hors scénario/,
+  );
+  assert.doesNotMatch(update.body, /TIM-06|Aucune régression constatée/);
+});
