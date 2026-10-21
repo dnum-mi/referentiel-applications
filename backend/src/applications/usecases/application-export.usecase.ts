@@ -132,6 +132,7 @@ export class ExportApplicationsUseCase {
           // RGPD fields
           col("rgpd_has_aipd", 15),
           col("rgpd_dpo_name", 25),
+          col("eco_index_target_url", 40),
         ],
         rows: apps.flatMap(mapCompliances),
       },

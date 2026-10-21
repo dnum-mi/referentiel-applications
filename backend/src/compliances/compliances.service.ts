@@ -73,30 +73,19 @@ export class CompliancesService extends BaseService<
       Object.prototype.hasOwnProperty.call(data, "eco_index_target_url") &&
       existing.eco_index_target_url !== data.eco_index_target_url;
     if (hasUpdatedUrl) {
-      // if we update a new url, we need to reset eco-index score
-      return this.resetEcoIndexScore(
+      return this.update(
         existing.id,
-        data.eco_index_target_url,
+        {
+          ...data,
+          eco_index_score: null,
+          eco_index_ges: null,
+          eco_index_water: null,
+          eco_index_last_calculated_at: null,
+        },
         options,
       );
     }
     return this.update(existing.id, data, options);
-  }
-
-  async resetEcoIndexScore(
-    complianceId: Compliance["id"],
-    targetUrl: Compliance["eco_index_target_url"],
-    options?: ServiceOptions<Compliance, PrismaService["compliance"]>,
-  ) {
-    // if we update a new url, we need to reset eco-index score
-    const resetEcoIndexScores = {
-      eco_index_score: null,
-      eco_index_ges: null,
-      eco_index_water: null,
-      eco_index_last_calculated_at: null,
-      eco_index_target_url: targetUrl,
-    };
-    return this.update(complianceId, resetEcoIndexScores, options);
   }
 
   async calculateAndStoreLatestEcoIndex(
