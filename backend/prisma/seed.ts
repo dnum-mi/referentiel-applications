@@ -1,4 +1,4 @@
-import { PrismaClient, Roles } from "@prisma/client";
+import { Permission, PrismaClient, Roles } from "@prisma/client";
 import { faker } from "@faker-js/faker";
 import { ApplicationFaker } from "../tests/fakers/application.faker";
 import { UserFaker } from "../tests/fakers/user.faker";
@@ -234,6 +234,8 @@ async function seed({
   const adminUser = await UserFaker.create({
     email: "admin@example.com",
     role: Roles.ADMIN,
+    // Compte synthétique de développement/QA : accès bêta explicitement consenti.
+    additionalPermissions: [Permission.BetaFeatures],
   });
   // #1985 : compte Keycloak `admin-weak` (attribut auth_mode=PASSWORD). ADMIN en base pour que
   // la rétrogradation en session faible soit démontrable ; créé VISITOR à la première connexion

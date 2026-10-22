@@ -4,6 +4,8 @@ Cette page décrit le **modèle d'authentification et d'autorisation** du **Réf
 
 Le principe directeur est un modèle d'autorisation **à trois couches cumulatives** : les droits d'un utilisateur sont l'**union** de ses droits de rôle, de ses permissions individuelles et des permissions héritées de son statut d'acteur sur une application donnée. La décision finale suit une **sémantique OU** : il suffit de posséder _l'une_ des permissions requises pour qu'un accès soit accordé.
 
+Les gardes indépendants se cumulent : une fonctionnalité en bêta exige sa capacité dédiée **et** son autorisation métier (voir §7.5).
+
 > Pour les entités manipulées ici (`Actor`, `ActorType`, `Organization`, `User`), se reporter au [Modèle de données](./04-modele-de-donnees.md). L'architecture générale est décrite dans [Architecture](./02-architecture.md) et [Architecture backend](./08-architecture-backend.md), l'API dans [API](./05-api.md).
 
 ## Sommaire
@@ -380,6 +382,12 @@ La même règle de périmètre s'applique à l'impersonation (#2217, `assertCanI
 
 Côté interface, le bouton « Se connecter en tant que » n'est pas proposé hors périmètre (`UserActions.vue`, `canImpersonate`, alignée sur `canEditUser`).
 
+Depuis #2925, les deux entrées refusent également une cible dont les permissions globales (rôle et permissions additionnelles) dépassent celles de l'administrateur de périmètre, ainsi qu'un périmètre cible explicite plus large ou extérieur. Un périmètre renseigné mais non résolu est refusé. Cela interdit notamment de récupérer les capacités d'un administrateur global simplement rattaché à une organisation du périmètre.
+
+Une cible ordinaire sans périmètre explicite reste impersonnable : la session reçoit alors le périmètre de l'administrateur réel. Si la cible possède un périmètre descendant, la session conserve ce périmètre plus étroit. À chaque application demandée, `CheckPermissions` intersecte les droits effectifs des deux identités, y compris les droits issus des acteurs, des groupes et du type d'acteur par défaut. Un rôle ou un acteur de la cible ne peut ainsi ouvrir une écriture que l'administrateur réel ne possède pas. Ce plafond interne n'est pas sérialisé dans les réponses JSON et ne modifie aucun rôle ou périmètre en base.
+
+La création et la régénération de jetons sont refusées dans une session ainsi plafonnée : un secret durable pourrait être réutilisé sans le contexte d'impersonation. L'administrateur global conserve son parcours existant. Les identités cible et réelle restent distinctes dans les journaux d'impersonation et les traces métier.
+
 En mode `enforce` du niveau d'authentification (#1985, [§1.4](#14-niveau-dauthentification--carte-agent-ou-double-authentification-1985)), l'impersonation exige en outre une **session forte** : le middleware refuse le header `x-impersonate-user-id` d'une session rétrogradée par un 403 `strongAuthRequired` et clôt la session `ImpersonationLog` ouverte.
 
 ### 6.4. Effet sur les onglets d'administration
@@ -472,6 +480,28 @@ Cette résolution n'est déclenchée qu'à l'ouverture de la fiche application, 
 **Profil utilisateur.** La même règle sert la page « Mon profil » : `GET /users/me/contact-admin` (`user.controller.ts`, sans permission applicative, comme `GET /users/me`) la déroule à partir de l'organisation de l'utilisateur courant (aucune organisation : admin global, puis support). `UserInfoTab.vue` affiche le résultat en lien `mailto:` et masque la ligne pour un administrateur **global** seulement. Un administrateur scopé voit la ligne ; l'appelant est exclu de la résolution (`excludeUserId`), il obtient donc l'admin scopé le plus proche autre que lui, sinon l'admin global.
 
 > Pour le détail de l'architecture backend (modules, middleware, services), se reporter à [Architecture backend](./08-architecture-backend.md).
+
+### 7.5. Fonctionnalités en bêta
+
+La capacité globale `BetaFeatures` autorise l'accès aux fonctionnalités inscrites dans le registre `backend/src/features/beta-features.ts`. Elle est attribuée et retirée explicitement dans les permissions supplémentaires du compte, par un administrateur global, selon les règles et la journalisation existantes. Aucun rôle ne la possède par défaut, y compris `ADMIN`. Un administrateur de périmètre ne peut pas la déléguer.
+
+La capacité s'ajoute aux droits métier : **les deux contrôles doivent réussir**. Elle ne donne aucun droit de lecture, d'export ou d'administration à elle seule.
+
+| Fonctionnalité            | Identifiant stable          | Droit métier conservé |
+| ------------------------- | --------------------------- | --------------------- |
+| Export Excel du catalogue | `catalogue-excel-export`    | `DataExport`          |
+| Fiche produit HTML        | `product-html-export`       | `AppRead`             |
+| Fiche produit PowerPoint  | `product-powerpoint-export` | `AppRead`             |
+
+L'export HTML du catalogue et l'export Excel de la vue Technologies restent soumis à leurs droits habituels, sans capacité bêta.
+
+**Ajouter une fonctionnalité.** Déclarer son identifiant dans `FeatureId`, l'inscrire dans `BETA_FEATURES`, ajouter `@RequiresBetaFeature(FeatureId.…)` à son endpoint en conservant son garde métier, puis utiliser `useBetaFeatures()` et le composant commun `BetaBadge` sur son action dans l'interface. Régénérer le contrat OpenAPI et le client. Le registre est publié par `GET /api/v2/config` ; l'interface n'en maintient aucune copie de production.
+
+**Sortir une fonctionnalité de bêta.** Retirer uniquement son identifiant de `BETA_FEATURES`, en gardant l'identifiant stable et les contrôles métier. L'API cesse d'exiger `BetaFeatures` pour cet élément ; après actualisation de la configuration, l'interface l'ouvre selon ses droits habituels et retire le badge. Les autres éléments restent en bêta.
+
+**Retirer l'accès d'un compte.** Décocher « Accéder aux fonctionnalités bêta » dans ses permissions supplémentaires. Le backend relit les droits en base à chaque requête, même avec un jeton déjà émis. Il refuse tout appel direct non autorisé avec `403`, `betaFeatureRequired: true` et l'identifiant `featureId`, avant toute génération de fichier. L'interface masque les actions après actualisation des droits et revalide les droits et le registre avant un téléchargement. Tant que la configuration n'est pas disponible, les actions concernées restent masquées.
+
+La migration ajoute uniquement la valeur à l'énumération : aucun compte existant ne reçoit la capacité. Le compte synthétique `admin@example.com` du seed de développement/QA la reçoit explicitement pour les scénarios d'export ; cette fixture ne constitue pas une règle d'attribution en production.
 
 ## 8. Bonnes pratiques de sécurité
 

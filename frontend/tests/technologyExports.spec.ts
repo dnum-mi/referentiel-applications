@@ -7,7 +7,7 @@ const excelContentType = "application/vnd.openxmlformats-officedocument.spreadsh
 // que la réponse binaire HTTP arrive intacte dans le téléchargement navigateur.
 const excelBytes = Buffer.from([0x50, 0x4b, 0x03, 0x04, 0x00, 0xff, 0x80, 0x01]);
 
-async function prepareSession(page: Page, canExport = true) {
+async function prepareSession(page: Page, canExport = true, beta = false) {
   await page.addInitScript(
     ({ authority }) => {
       sessionStorage.setItem(
@@ -40,6 +40,7 @@ async function prepareSession(page: Page, canExport = true) {
           oidcClientId: "refapp-test",
           oidcScope: "openid profile email",
           version: "test",
+          betaFeatures: ["catalogue-excel-export", "product-html-export", "product-powerpoint-export"],
         },
       });
     } else if (url.pathname.endsWith("/users/me")) {
@@ -50,7 +51,7 @@ async function prepareSession(page: Page, canExport = true) {
           role: "READER",
           type: "human",
           permissions: ["AppRead", "AppList"],
-          additionalPermissions: ["TechnologyList", ...(canExport ? ["DataExport"] : [])],
+          additionalPermissions: ["TechnologyList", ...(canExport ? ["DataExport"] : []), ...(beta ? ["BetaFeatures"] : [])],
           scopeOrganizationId: null,
           scopeOrganization: null,
           followedApplications: [],
@@ -143,7 +144,7 @@ test("la consultation Technologies sans DataExport ne propose aucun télécharge
 });
 
 test("le filtre de fin de vie du catalogue est partagé par l'URL, la recherche et l'export", async ({ page }) => {
-  const requests = await prepareSession(page);
+  const requests = await prepareSession(page, true, true);
   await page.goto("/recherche-application?page=2&technologyEolStatus=eol");
   const filter = page.getByTestId("technology-filter-eol-status");
   if (!(await filter.isVisible())) {

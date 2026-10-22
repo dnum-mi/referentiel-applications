@@ -14,6 +14,7 @@ const BASE_CONFIG: ConfigDto = {
   oidcScope: "openid profile email niveau",
   version: "test",
   footerLinks: [],
+  betaFeatures: [],
 };
 
 vi.mock("oidc-client-ts", () => ({

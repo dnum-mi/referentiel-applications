@@ -27,7 +27,7 @@ describe("POST /applications/:applicationId/export/powerpoint (#434)", () => {
   beforeAll(async () => {
     const user = await UserFaker.create({
       role: Roles.VISITOR,
-      additionalPermissions: [Permission.MetadataRead],
+      additionalPermissions: [Permission.MetadataRead, Permission.BetaFeatures],
     });
     userId = user.id;
     token = getToken(user);

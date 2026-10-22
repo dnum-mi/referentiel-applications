@@ -726,12 +726,70 @@ export class SearchPage extends BasePage {
   }
 
   // --- Export Excel (CAT-15) : renvoie le téléchargement déclenché ---
-  async exportExcel() {
+  async exportExcel({ mobile = false }: { mobile?: boolean } = {}) {
     const [download] = await Promise.all([
       this.page.waitForEvent("download"),
-      this.byTestId("application-export-btn").click(),
+      this.byTestId(
+        mobile ? "application-export-btn-mobile" : "application-export-btn",
+      ).click(),
     ]);
     return download;
+  }
+
+  async expectExcelBetaExport(
+    available: boolean,
+    mobile = false,
+  ): Promise<void> {
+    const desktopButton = this.byTestId("application-export-btn");
+    const mobileButton = this.byTestId("application-export-btn-mobile");
+    if (!available) {
+      await expect(desktopButton).toHaveCount(0);
+      await expect(mobileButton).toHaveCount(0);
+      return;
+    }
+    const button = mobile ? mobileButton : desktopButton;
+    await expect(button).toBeVisible();
+    await expect(mobile ? desktopButton : mobileButton).toBeHidden();
+    await expect(button.getByText("Bêta", { exact: true })).toBeVisible();
+    await expect(button).toHaveAccessibleName(/fonctionnalité bêta/i);
+  }
+
+  async expectStableHtmlExportVisible(): Promise<void> {
+    await expect(this.byTestId("applications-export-html-btn")).toBeVisible();
+  }
+
+  /** Une délégation retirée après rendu est relue avant de lancer le téléchargement. */
+  async expectExcelRevocationBeforeDownload(): Promise<void> {
+    const button = this.byTestId("application-export-btn");
+    await expect(button).toBeVisible();
+    let exportRequests = 0;
+    let downloads = 0;
+    const onRequest = (req: import("@playwright/test").Request) => {
+      if (new URL(req.url()).pathname === "/api/v2/applications/export/excel")
+        exportRequests++;
+    };
+    const onDownload = () => {
+      downloads++;
+    };
+    this.page.on("request", onRequest);
+    this.page.on("download", onDownload);
+    try {
+      const [response] = await Promise.all([
+        this.page.waitForResponse(
+          (res) =>
+            new URL(res.url()).pathname === "/api/v2/users/me" &&
+            res.request().method() === "GET",
+        ),
+        button.click(),
+      ]);
+      expect(response.ok()).toBe(true);
+      await this.expectExcelBetaExport(false);
+      expect(exportRequests).toBe(0);
+      expect(downloads).toBe(0);
+    } finally {
+      this.page.off("request", onRequest);
+      this.page.off("download", onDownload);
+    }
   }
 
   // --- Interne ---

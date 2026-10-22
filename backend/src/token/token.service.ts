@@ -14,6 +14,7 @@ import {
 import { createHash } from "node:crypto";
 import { StepDownException } from "src/auth-level/step-down.exception";
 import { DELEGATED_AUTH } from "src/permissions/delegated-auth";
+import { IMPERSONATION_AUTH } from "src/permissions/impersonation-auth";
 import { CheckPermissions } from "src/common/service/check-permissions.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Requestor } from "src/user/entities/user.entity";
@@ -118,7 +119,11 @@ export class TokenService {
         "Requestor must be defined to create a token",
       );
     }
-    if (requestor[DELEGATED_AUTH] || requestor.type === UserType.bot) {
+    if (
+      requestor[DELEGATED_AUTH] ||
+      requestor[IMPERSONATION_AUTH] ||
+      requestor.type === UserType.bot
+    ) {
       throw new ForbiddenException(
         "La création d'un token nécessite une connexion humaine directe.",
       );
@@ -297,7 +302,11 @@ export class TokenService {
     id: string,
     expiresAt: Date,
   ): Promise<ExposedTokenDto> {
-    if (requestor[DELEGATED_AUTH] || requestor.type === UserType.bot) {
+    if (
+      requestor[DELEGATED_AUTH] ||
+      requestor[IMPERSONATION_AUTH] ||
+      requestor.type === UserType.bot
+    ) {
       throw new ForbiddenException(
         "La régénération d'un token nécessite une connexion humaine directe.",
       );

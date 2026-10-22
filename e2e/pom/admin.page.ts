@@ -495,6 +495,13 @@ export class AdminPage extends BasePage {
     await this.byTestId("impersonation-stop-btn").click();
   }
 
+  /** Nettoyage d'un compte de test isolé, y compris après un échec avant impersonation. */
+  async stopImpersonationIfActive(): Promise<void> {
+    if (!(await this.impersonationBanner().isVisible())) return;
+    await this.stopImpersonation();
+    await this.expectNotImpersonating();
+  }
+
   /** Vérifie que plus aucune impersonation n'est en cours. */
   async expectNotImpersonating(): Promise<void> {
     await expect(this.impersonationBanner()).toBeHidden();
