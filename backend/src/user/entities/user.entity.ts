@@ -10,6 +10,8 @@ import {
 import { AuthLevelDto } from "src/auth-level/auth-level.dto";
 import { DELEGATED_AUTH } from "src/permissions/delegated-auth";
 import type { DelegatedAuth } from "src/permissions/delegated-auth";
+import { IMPERSONATION_AUTH } from "src/permissions/impersonation-auth";
+import type { ImpersonationAuth } from "src/permissions/impersonation-auth";
 import { OrganizationDto } from "src/organizations/dto/organizations.dto";
 
 export class UserFollowedApplicationDto {
@@ -194,6 +196,7 @@ export class UserWithPermissions extends UserEntity {
 export class Requestor extends UserWithPermissions {
   /** Contexte vérifié par le middleware, jamais fourni par le client ni exposé en JSON. */
   [DELEGATED_AUTH]?: DelegatedAuth;
+  [IMPERSONATION_AUTH]?: ImpersonationAuth;
 
   @IsArray()
   @IsOptional()

@@ -24,6 +24,7 @@ import {
 } from "src/config/configs";
 import { principalToPermissions } from "src/permissions/role-to-permissions";
 import { delegateToService } from "src/permissions/delegated-auth";
+import { impersonateWithinCeiling } from "src/permissions/impersonation-auth";
 import { TokenService } from "src/token/token.service";
 import { API_TOKEN, SERVICE_TOKEN_MODE } from "src/token/domain/token.entity";
 import { Requestor, UserEntity, UserType } from "src/user/entities/user.entity";
@@ -364,9 +365,6 @@ export class AuthMiddleware implements NestMiddleware {
       admin,
     );
 
-    return {
-      ...target,
-      permissions: principalToPermissions(target),
-    };
+    return impersonateWithinCeiling(admin, target);
   }
 }
