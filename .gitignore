@@ -302,6 +302,8 @@ dist
 .webpack/
 
 .claude/
+.codex/
+.agents/
 
 # Optional stylelint cache
 
