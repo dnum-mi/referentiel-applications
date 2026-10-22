@@ -1,15 +1,20 @@
 import { enableAutoUnmount, mount, flushPromises } from "@vue/test-utils";
 import AdminBatchData from "./AdminBatchData.vue";
-import type { ImportReportDto } from "@/client";
+import { FeatureId, Permission, type ImportReportDto } from "@/client";
+import { reactive, ref } from "vue";
 
-const { importExcel, syncUsers, syncActors, patchQuality, addSuccessMessage, addErrorMessage } = vi.hoisted(() => ({
-  importExcel: vi.fn(),
-  syncUsers: vi.fn(),
-  syncActors: vi.fn(),
-  patchQuality: vi.fn(),
-  addSuccessMessage: vi.fn(),
-  addErrorMessage: vi.fn(),
-}));
+const { importExcel, syncUsers, syncActors, patchQuality, addSuccessMessage, addErrorMessage, hasPermissions, fetchUser, getConfig } =
+  vi.hoisted(() => ({
+    hasPermissions: vi.fn(),
+    fetchUser: vi.fn(),
+    getConfig: vi.fn(),
+    importExcel: vi.fn(),
+    syncUsers: vi.fn(),
+    syncActors: vi.fn(),
+    patchQuality: vi.fn(),
+    addSuccessMessage: vi.fn(),
+    addErrorMessage: vi.fn(),
+  }));
 vi.mock("@/api", () => ({
   default: {
     importControllerImportExcel: importExcel,
@@ -19,9 +24,29 @@ vi.mock("@/api", () => ({
 }));
 vi.mock("@/stores/applicationStore", () => ({ useApplicationStore: () => ({ patchApplicationsQuality: patchQuality }) }));
 vi.mock("@/stores/toasterStore", () => ({ useToasterStore: () => ({ addSuccessMessage, addErrorMessage }) }));
+vi.mock("@/stores/userStore", () => ({ useUserStore: () => ({ hasPermissions, fetchUser }) }));
+vi.mock("@/services/config", () => ({ getConfig }));
+const grantedPermissions = ref<Permission[]>([]);
 enableAutoUnmount(afterEach);
 beforeEach(() => {
-  for (const mock of [importExcel, syncUsers, syncActors, patchQuality, addSuccessMessage, addErrorMessage]) mock.mockReset();
+  for (const mock of [
+    importExcel,
+    syncUsers,
+    syncActors,
+    patchQuality,
+    addSuccessMessage,
+    addErrorMessage,
+    hasPermissions,
+    fetchUser,
+    getConfig,
+  ])
+    mock.mockReset();
+  grantedPermissions.value = [Permission.GLOBAL_ADMIN_MANAGE, Permission.BETA_FEATURES];
+  hasPermissions.mockImplementation((required: Permission[]) =>
+    required.some((permission) => grantedPermissions.value.includes(permission)),
+  );
+  fetchUser.mockResolvedValue(true);
+  getConfig.mockResolvedValue({ betaFeatures: Object.values(FeatureId) });
 });
 
 async function chooseFile(wrapper: ReturnType<typeof mount>) {
@@ -58,9 +83,9 @@ it("affiche les états, les deux listes d’onglets et le journal complet après
     report.summary.ignoredSheets,
   );
   expect(wrapper.findAll('[data-testid="admin-import-report-logs"] li p').map((item) => item.element.textContent)).toEqual(report.logs);
-  expect(wrapper.findAll(".fr-badge").map((badge) => badge.text())).toEqual(["Créé", "Mis à jour", "Erreur"]);
+  expect(wrapper.findAll(".fr-badge").map((badge) => badge.text())).toEqual(["Créé", "Mis à jour", "Erreur", "Bêta"]);
   expect(wrapper.get('[data-testid="admin-import-report-download"]').text()).toBe("Télécharger le rapport CSV");
-  expect(wrapper.get('[data-testid="admin-import-report-download-html"]').text()).toBe("Télécharger le rapport HTML");
+  expect(wrapper.get('[data-testid="admin-import-report-download-html"]').text()).toBe("Télécharger le rapport HTML Bêta");
   expect(wrapper.find("script").exists()).toBe(false);
   wrapper.unmount();
 });
@@ -148,4 +173,94 @@ it("garde le succès du lancement MAIA lorsque le SDK confirme une réponse202",
   expect(syncUsers).toHaveBeenCalledWith({ body: { onlyMissing: false } });
   expect(addSuccessMessage).toHaveBeenCalledExactlyOnceWith("Batch MAIA lancé en tâche de fond.");
   expect(addErrorMessage).not.toHaveBeenCalled();
+});
+
+async function renderImportReport() {
+  const report: ImportReportDto = {
+    summary: { created: 1, updated: 0, errors: 0, processedSheets: ["Applications"], ignoredSheets: [] },
+    entries: [{ sheet: "Applications", row: 2, status: "created", identifier: "app-1" }],
+    logs: ["Import terminé"],
+  };
+  importExcel.mockResolvedValue({ response: { ok: true, status: 200 }, data: report });
+  const wrapper = mount(AdminBatchData);
+  await chooseFile(wrapper);
+  await wrapper.get('[data-testid="admin-import-submit"]').trigger("click");
+  await flushPromises();
+  return wrapper;
+}
+
+describe("AdminBatchData — export HTML bêta du rapport d'import", () => {
+  const createObjectURL = vi.fn((_blob: Blob) => "blob:rapport-import");
+  const revokeObjectURL = vi.fn();
+
+  beforeEach(() => {
+    createObjectURL.mockClear();
+    revokeObjectURL.mockClear();
+    vi.stubGlobal(
+      "URL",
+      class extends URL {
+        static createObjectURL = createObjectURL;
+        static revokeObjectURL = revokeObjectURL;
+      },
+    );
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("masque HTML sans Bêta et conserve le téléchargement CSV", async () => {
+    grantedPermissions.value = [Permission.GLOBAL_ADMIN_MANAGE];
+    const wrapper = await renderImportReport();
+    expect(wrapper.find('[data-testid="admin-import-report-download-html"]').exists()).toBe(false);
+    await wrapper.get('[data-testid="admin-import-report-download"]').trigger("click");
+    expect(createObjectURL).toHaveBeenCalledTimes(1);
+    expect(fetchUser).not.toHaveBeenCalled();
+    expect(createObjectURL.mock.calls[0][0]).toBeInstanceOf(Blob);
+  });
+
+  it("affiche le badge et recharge les capacités avant de générer HTML", async () => {
+    const wrapper = await renderImportReport();
+    const button = wrapper.get('[data-testid="admin-import-report-download-html"]');
+    expect(button.text()).toContain("Bêta");
+    expect(button.element).toHaveAccessibleName("Télécharger le rapport HTML Bêta");
+    expect(button.find(".fr-badge").element.tagName).toBe("SPAN");
+    await button.trigger("click");
+    await flushPromises();
+    expect(fetchUser).toHaveBeenCalledTimes(1);
+    expect(getConfig).toHaveBeenLastCalledWith({ refresh: true });
+    expect(createObjectURL).toHaveBeenCalledTimes(1);
+    expect(createObjectURL.mock.calls[0][0].type).toBe("text/html;charset=utf-8");
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:rapport-import");
+  });
+
+  it.each([Permission.BETA_FEATURES, Permission.GLOBAL_ADMIN_MANAGE])(
+    "ne génère pas de fichier si /users/me retire %s au clic",
+    async (revoked) => {
+      const wrapper = await renderImportReport();
+      fetchUser.mockImplementationOnce(async () => {
+        grantedPermissions.value = grantedPermissions.value.filter((permission) => permission !== revoked);
+        return true;
+      });
+      await wrapper.get('[data-testid="admin-import-report-download-html"]').trigger("click");
+      await flushPromises();
+      expect(createObjectURL).not.toHaveBeenCalled();
+      expect(wrapper.find('[data-testid="admin-import-report-download-html"]').exists()).toBe(false);
+    },
+  );
+
+  it("permet de sortir le rapport de bêta indépendamment des autres exports", async () => {
+    const config = reactive({ betaFeatures: Object.values(FeatureId) });
+    getConfig.mockResolvedValue(config);
+    grantedPermissions.value = [Permission.GLOBAL_ADMIN_MANAGE];
+    const wrapper = await renderImportReport();
+    config.betaFeatures.splice(config.betaFeatures.indexOf(FeatureId.IMPORT_REPORT_HTML_EXPORT), 1);
+    await flushPromises();
+    const button = wrapper.get('[data-testid="admin-import-report-download-html"]');
+    expect(button.text()).not.toContain("Bêta");
+    await button.trigger("click");
+    await flushPromises();
+    expect(createObjectURL).toHaveBeenCalledTimes(1);
+  });
 });

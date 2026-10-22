@@ -9,17 +9,34 @@ import type { DataFeature } from "./datafeature";
  * Aucun endpoint ne crée d'utilisateur : seul cet état initial est provisionné en SQL.
  * Les délégations et leur restauration passent par l'API d'administration existante.
  */
-export async function createIsolatedBetaTester(page: Page, data: DataFeature) {
+export async function createIsolatedBetaTester(
+  page: Page,
+  data: DataFeature,
+  role: "READER" | "ADMIN" = "READER",
+) {
   const id = randomUUID();
   const email = `e2e-beta-${id}@example.test`;
   await dbQuery(
     `INSERT INTO "User" (id, email, role, "additionalPermissions", "emailNotificationsEnabled")
-     VALUES ($1, $2, 'READER', '{}'::"Permission"[], false)`,
-    [id, email],
+     VALUES ($1, $2, $3::"Roles", '{}'::"Permission"[], false)`,
+    [id, email, role],
   );
   const admin = new AdminPage(page);
 
   async function setPermissions(permissions: string[]) {
+    if (role === "ADMIN") {
+      await data.setUserAdditionalPermissionsKeepRole(email, permissions);
+      const updated = await data.getUser(email);
+      if (
+        updated?.role !== role ||
+        JSON.stringify([...updated.additionalPermissions].sort()) !==
+          JSON.stringify([...permissions].sort())
+      )
+        throw new Error(
+          "Délégation du testeur administrateur bêta non appliquée.",
+        );
+      return;
+    }
     const result = await data.setUserAdditionalPermissionsVerbose(
       email,
       permissions,
@@ -43,7 +60,7 @@ export async function createIsolatedBetaTester(page: Page, data: DataFeature) {
         await admin.stopImpersonationIfActive();
       } finally {
         try {
-          // État d'origine : lecteur sans délégation, même si le scénario a échoué.
+          // État d'origine : aucune délégation, même si le scénario a échoué.
           await setPermissions([]);
         } finally {
           for (const table of [

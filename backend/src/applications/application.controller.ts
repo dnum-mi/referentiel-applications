@@ -264,6 +264,7 @@ Vous devez fournir les informations suivantes :
 
   @Get("export/html")
   @UseGuards(PermissionGuard)
+  @RequiresBetaFeature(FeatureId.CatalogueHtmlExport)
   @RequiredPermissions([Permission.DataExport])
   @ApiOperation({
     summary: "Exporter les applications en HTML",
@@ -278,7 +279,10 @@ Vous devez fournir les informations suivantes :
       "text/html": { schema: { type: "string", format: "binary" } },
     },
   })
-  @ApiForbiddenResponse({ description: "Droit d'export requis" })
+  @ApiForbiddenResponse({
+    description:
+      "Droit d'export et capacité bêta requis tant que la fonctionnalité est en bêta",
+  })
   async exportHtml(
     @Query() searchParams: ApplicationSearchDto,
     @Res() res: Response,
