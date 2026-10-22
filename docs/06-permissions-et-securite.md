@@ -21,7 +21,7 @@ Les gardes indépendants se cumulent : une fonctionnalité en bêta exige sa cap
 
 ## 1. Authentification
 
-L'authentification repose sur un **OIDC standard (Authorization Code Flow), agnostique du fournisseur** (configuré par variables d'environnement `OIDC_JWKS_URL` / `OIDC_CONFIG_URL` / `OIDC_CLIENT_ID`), avec une vérification de jeton **JWT côté backend**. **En développement**, le fournisseur OIDC est un **Keycloak local** (realm `referentiel-applications` fourni dans `keycloak/`) ; **en production**, l'application s'interface avec le **fournisseur d'identité (SSO) de l'organisation** via ces mêmes variables. L'**email** est l'identifiant pivot des utilisateurs (`email @unique` dans `backend/prisma/schema/users.prisma`).
+L'authentification repose sur un **OIDC standard (Authorization Code Flow), agnostique du fournisseur** (configuré par variables d'environnement `OIDC_JWKS_URL` / `OIDC_CONFIG_URL` / `OIDC_CLIENT_ID` / `OIDC_ISSUER` / `OIDC_AUDIENCES`), avec une vérification de jeton **JWT côté backend**. **En développement**, le fournisseur OIDC est un **Keycloak local** (realm `referentiel-applications` fourni dans `keycloak/`) ; **en production**, l'application s'interface avec le **fournisseur d'identité (SSO) de l'organisation** via ces mêmes variables. L'**email** est l'identifiant pivot des utilisateurs (`email @unique` dans `backend/prisma/schema/users.prisma`).
 
 ### 1.1. Chaîne d'authentification
 
@@ -49,17 +49,23 @@ Le frontend pilote le flux **Authorization Code** via la librairie `oidc-client-
 
 Le backend revérifie systématiquement le jeton dans `backend/src/middlewares/auth.middleware.ts` (le middleware est branché dans `backend/src/app.module.ts`) :
 
-- Le JWKS est chargé une fois au constructeur via `createRemoteJWKSet(new URL(this.oidc.jwksUrl))` (`auth.middleware.ts:37`).
+- Le résolveur JWKS est créé avec `createRemoteJWKSet(new URL(this.oidc.jwksUrl))` ; les clés sont récupérées à la vérification d’un jeton, sans requête OIDC au démarrage.
 - Deux modes d'authentification (`auth.middleware.ts:42-56`) :
   - **Jeton API** (en-tête `API_KEY_HEADER`) → résolution via `TokenService.findUserByToken`. Un token personnel utilise l'identité de son propriétaire ; un token de service utilise son mode enregistré (`machine` autonome ou `delegated` avec JWT humain et intersection des droits, §1.5).
-  - **Bearer JWT** → vérification `jwtVerify(authorization, this.jwks)`, puis `findOrCreateByEmail(payload.email)` (provisionnement à la volée de l'utilisateur sur la base de son email). L'e-mail est **normalisé en minuscules** avant recherche et création, et la recherche est insensible à la casse (#2501) : deux graphies du même compte ne créent plus deux utilisateurs. L'**email est l'identifiant pivot** : le modèle `User` n'a plus de champ `keycloakId` (l'`id` UUID interne reste la clé de liaison).
+  - **Bearer JWT** → vérification de la signature avec `jwtVerify`, de l’émetteur exact `OIDC_ISSUER`, d’au moins une audience de ressource de `OIDC_AUDIENCES` et de l’expiration obligatoire `exp`, puis `findOrCreateByEmail(payload.email)` (provisionnement à la volée de l'utilisateur sur la base de son email). L'e-mail est **normalisé en minuscules** avant recherche et création, et la recherche est insensible à la casse (#2501) : deux graphies du même compte ne créent plus deux utilisateurs. L'**email est l'identifiant pivot** : le modèle `User` n'a plus de champ `keycloakId` (l'`id` UUID interne reste la clé de liaison).
 - Échappatoire de développement : seule la valeur exacte `DISABLE_JWT_VALIDATION=true`, avec `NODE_ENV=development` explicitement défini, autorise le décodage sans vérification de signature ni d'expiration. La configuration (`jwt-validation.config.ts`) est validée au démarrage et émet un avertissement quand ce mode est actif. Une activation hors développement, y compris si `NODE_ENV` est absent, empêche le démarrage. Les valeurs `false`, `0`, une chaîne vide ou une variable absente conservent la vérification JWT, quel que soit `AUTH_LEVEL_MODE`.
 - En cas d'absence d'utilisateur, réponse **401**. Sur exception, `UnauthorizedException`.
 - Une fois l'utilisateur résolu, le middleware calcule ses permissions de rôle et les attache à la requête :
   `req.user = { ...user, permissions: roleToPermissions(user.role) }` (`auth.middleware.ts:63-66`).
 - Chaque passage est journalisé via `UserConnexionLogService.log(user.id)` (une entrée par utilisateur par jour, cf. `UserConnexionLog`).
 
-La configuration OIDC backend est centralisée dans `backend/src/config/configs/oidc.config.ts` : `OIDC_JWKS_URL`, `OIDC_CONFIG_URL` et `OIDC_CLIENT_ID` sont **obligatoires** (le service lève une erreur au démarrage s'ils manquent). Cette configuration étant générique, le même code fonctionne avec le **Keycloak local** (dev) comme avec le **fournisseur d'identité (SSO) de l'organisation** (prod) : aucun fournisseur n'est codé en dur.
+La configuration OIDC backend est centralisée dans `backend/src/config/configs/oidc.config.ts` : `OIDC_JWKS_URL`, `OIDC_CONFIG_URL`, `OIDC_CLIENT_ID`, `OIDC_ISSUER` et `OIDC_AUDIENCES` sont **obligatoires**, y compris avec le bypass de développement (le service lève une erreur au démarrage si elles manquent). Cette configuration étant générique, le même code fonctionne avec le **Keycloak local** (dev) comme avec le **fournisseur d'identité (SSO) de l'organisation** (prod) : aucun fournisseur n'est codé en dur.
+
+Le profil JWT humain exige `iss`, `aud`, `exp`, `sub` et `email`. L’émetteur est comparé exactement à la configuration, sans normaliser son chemin ou sa barre finale. Une audience `aud` chaîne ou tableau est acceptée si elle contient au moins une audience de ressource configurée. `exp` doit être numérique et dans le futur ; un éventuel `nbf` est également vérifié. `sub` est un sujet opaque non vide : il n’est pas comparé à l’e-mail. `email` est une chaîne non vide utilisée pour retrouver le compte. Ce profil ne rend pas `iat` obligatoire et ne prétend pas implémenter intégralement le profil de jeton d’accès RFC 9068.
+
+Le contrôle est identique pour un Bearer humain direct et pour le JWT humain accompagnant un token de service `delegated`. Les tokens personnels et de service `machine` conservent leur propre authentification. Une erreur de profil JWT est refusée avant la recherche ou la création du compte et avant tout appel à `userinfo`. Le bypass de développement conserve le décodage prévu pour les fixtures ; il ne doit pas être utilisé pour valider le contrat du fournisseur.
+
+`OIDC_ISSUER` et `OIDC_AUDIENCES` sont une politique serveur, non exposée par `/config`. `OIDC_CLIENT_ID` reste le client frontend : il n’est jamais utilisé comme audience API par défaut. Le contrôle existant de `userinfo` signé reste distinct et attend toujours l’audience du client OIDC, avec le sujet et l’émetteur de référence. Pour les valeurs locales et la migration des environnements, voir [Exploitation et déploiement](./12-exploitation-deploiement.md#migration-du-profil-jwt-2924).
 
 ### 1.4. Niveau d'authentification : carte agent ou double authentification (#1985)
 

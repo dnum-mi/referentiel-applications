@@ -39,3 +39,11 @@ La régression de configuration est exécutée avec les tests unitaires frontend
 ```sh
 pnpm --dir frontend exec vitest run src/services/keycloak-session-policy.spec.ts
 ```
+
+## Profil des access tokens accepté par l’API
+
+Le backend local exige `OIDC_ISSUER=http://localhost:8082/realms/referentiel-applications` et `OIDC_AUDIENCES=referentiel-applications`, fournis par `docker-compose.yml`. Le mapper `oidc-audience-mapper` du client place explicitement cette audience dans l’access token. L’adresse du JWKS accessible au backend (`keycloak:8080`) est distincte de l’émetteur public (`localhost:8082`) : leurs noms d’hôte ne doivent pas être intervertis.
+
+L’API exige l’expiration `exp`, un sujet `sub` opaque non vide et un e-mail `email` non vide, en plus de la signature et de la correspondance de `iss` et `aud`. `iat` reste facultatif. Le même profil est vérifié pour le JWT humain accompagnant un token de service délégué. Le contrôle de niveau d’authentification utilise ensuite les claims déjà prévus dans le realm.
+
+Ces valeurs concernent uniquement le realm de développement livré ; elles ne doivent pas être utilisées pour configurer un fournisseur externe. Voir la [migration du profil JWT](../docs/12-exploitation-deploiement.md#migration-du-profil-jwt-2924) pour les déploiements.

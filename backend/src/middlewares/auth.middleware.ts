@@ -123,14 +123,12 @@ export class AuthMiddleware implements NestMiddleware {
         }
       }
       if (authorization && (!token || serviceUser)) {
-        const payload = this.jwtValidation.disabled
-          ? decodeJwt(authorization)
-          : (await jwtVerify(authorization, this.jwks)).payload;
-        evaluation = await this.evaluateLevel(authorization, payload);
+        const payload = await this.verifyAccessToken(authorization);
         const email = payload.email;
         if (typeof email !== "string" || !email.trim()) {
           throw new UnauthorizedException("Identité utilisateur absente.");
         }
+        evaluation = await this.evaluateLevel(authorization, payload);
         // Un système tiers ne peut pas inscrire automatiquement ses utilisateurs.
         user =
           maintenanceMode || serviceUser
@@ -256,6 +254,22 @@ export class AuthMiddleware implements NestMiddleware {
 
       throw new UnauthorizedException("L'authentification a échoué");
     }
+  }
+
+  /** Même profil de JWT humain pour une connexion directe ou un service délégué. */
+  private async verifyAccessToken(token: string): Promise<JWTPayload> {
+    if (this.jwtValidation.disabled) return decodeJwt(token);
+
+    const { payload } = await jwtVerify(token, this.jwks, {
+      issuer: this.oidc.issuer,
+      audience: this.oidc.audiences,
+      requiredClaims: ["exp", "sub", "email"],
+    });
+    // Le sujet est opaque : il ne doit pas être comparé à l'email ni à l'id RefApp.
+    if (typeof payload.sub !== "string" || !payload.sub.trim()) {
+      throw new UnauthorizedException("Sujet utilisateur absent.");
+    }
+    return payload;
   }
 
   /**

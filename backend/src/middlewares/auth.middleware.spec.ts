@@ -50,6 +50,8 @@ const oidcConfig = {
   jwksUrl: "https://example.test/.well-known/jwks.json",
   configUrl: "https://example.test/.well-known/openid-configuration",
   clientId: "refapp",
+  issuer: "https://example.test",
+  audiences: ["refapp-api"],
   scope: "openid profile email",
 } as ConfigType<() => OidcConfig>;
 
@@ -252,6 +254,9 @@ describe("AuthMiddleware", () => {
       };
       forgedToken = await new SignJWT({ email: existingUser.email })
         .setProtectedHeader({ alg: "RS256", kid: "test" })
+        .setIssuer(oidcConfig.issuer)
+        .setAudience(oidcConfig.audiences)
+        .setSubject("opaque-provider-subject")
         .setExpirationTime("1h")
         .sign(otherKeys.privateKey);
     });
@@ -355,6 +360,9 @@ describe("AuthMiddleware", () => {
       process.env.DISABLE_JWT_VALIDATION = "false";
       const token = await new SignJWT({ email: existingUser.email })
         .setProtectedHeader({ alg: "RS256", kid: "test" })
+        .setIssuer(oidcConfig.issuer)
+        .setAudience(oidcConfig.audiences)
+        .setSubject("opaque-provider-subject")
         .setExpirationTime("1h")
         .sign(privateKey);
       const { middleware, userService } = buildMiddleware({
@@ -376,6 +384,9 @@ describe("AuthMiddleware", () => {
       process.env.DISABLE_JWT_VALIDATION = "0";
       const token = await new SignJWT({ email: existingUser.email })
         .setProtectedHeader({ alg: "RS256", kid: "test" })
+        .setIssuer(oidcConfig.issuer)
+        .setAudience(oidcConfig.audiences)
+        .setSubject("opaque-provider-subject")
         .setExpirationTime(Math.floor(Date.now() / 1000) - 60)
         .sign(privateKey);
       const { middleware, userService } = buildMiddleware({

@@ -149,7 +149,8 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # Keycloak n'est pas demarre: jose.createRemoteJWKSet est paresseux, le
-      # backend boote sans lui. Postgres, lui, est indispensable (PrismaService
+      # backend boote sans lui. OIDC_ISSUER/OIDC_AUDIENCES sont fournis par Compose,
+      # sans découverte OIDC réseau au démarrage. Postgres est indispensable (PrismaService
       # se connecte dans onModuleInit).
       - name: Start backend stack
         run: IMAGE_TAG=${{ needs.build-backend.outputs.image_tag }} docker compose -f docker-compose.yml -f docker-compose.ci.yml up backend postgres -d

@@ -63,7 +63,7 @@ Au premier démarrage, les conteneurs `backend` et `client` installent leurs dé
 En développement, les variables nécessaires au backend sont **déjà fournies** par le service `backend` de `docker-compose.yml` ; aucune action n'est requise pour démarrer. Les principales catégories de variables sont :
 
 - **Base de données** : `DATABASE_URL` (chaîne de connexion PostgreSQL).
-- **Authentification OIDC** : `OIDC_CONFIG_URL`, `OIDC_JWKS_URL`, `OIDC_CLIENT_ID`.
+- **Authentification OIDC** : `OIDC_CONFIG_URL`, `OIDC_JWKS_URL`, `OIDC_CLIENT_ID`, `OIDC_ISSUER`, `OIDC_AUDIENCES`. Les deux dernières définissent l’émetteur exact et les audiences de ressource acceptées par l’API ; elles ne sont pas déduites du client frontend.
 - **Niveau d'authentification (#1985)** : `AUTH_LEVEL_MODE` est `off` par défaut dans le code et dans `docker-compose.yml` pour le développement local. La connexion OIDC et les permissions restent appliquées ; seul le contrôle du niveau d'authentification est désactivé. La surcharge `docker-compose.ci.yml` impose `enforce` pour les tests ; `docker-compose.prod.yml` impose temporairement `off` pendant la finalisation Passage2/IAP (voir [Simuler une authentification forte ou faible](#simuler-une-authentification-forte-ou-faible)).
 - **CORS / réseau** : `ALLOWED_ORIGINS`, `PORT`, `HOST`.
 - **Messagerie (SMTP)** : `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_FROM`, `SMTP_ENABLED` (pointés vers Mailpit en local) ; `EMAIL_CRON_ENABLED` active les envois automatiques (digest quotidien, relances de validation), désactivés par défaut.

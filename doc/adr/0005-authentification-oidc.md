@@ -31,7 +31,7 @@ Critères de décision :
 
 ### Option 1 — OIDC générique agnostique du fournisseur, avec table `User` interne
 
-Mettre en place un OIDC standard en Authorization Code Flow, piloté par variables d'environnement (`OIDC_JWKS_URL`, `OIDC_CONFIG_URL`, `OIDC_CLIENT_ID`), avec un Keycloak local en développement et le SSO de l'organisation en production. Les jetons JWT sont validés dans le backend et une table `User` interne est conservée, l'utilisateur étant créé à la première connexion.
+Mettre en place un OIDC standard en Authorization Code Flow, piloté par variables d'environnement (`OIDC_JWKS_URL`, `OIDC_CONFIG_URL`, `OIDC_CLIENT_ID`, `OIDC_ISSUER`, `OIDC_AUDIENCES`), avec un Keycloak local en développement et le SSO de l'organisation en production. Les jetons JWT sont validés dans le backend et une table `User` interne est conservée, l'utilisateur étant créé à la première connexion.
 
 Avantages :
 
@@ -78,7 +78,7 @@ Inconvénients :
 
 ## Décision
 
-- Mettre en place un **OIDC standard, agnostique du fournisseur**, en **Authorization Code Flow**, piloté par variables d'environnement (`OIDC_JWKS_URL`, `OIDC_CONFIG_URL`, `OIDC_CLIENT_ID`). Aucun fournisseur n'est codé en dur. **En développement**, le fournisseur OIDC est un **Keycloak local** (realm `referentiel-applications` fourni dans `keycloak/`) ; **en production**, l'application s'interface avec le **fournisseur d'identité (SSO) de l'organisation** via ces mêmes variables.
+- Mettre en place un **OIDC standard, agnostique du fournisseur**, en **Authorization Code Flow**, piloté par variables d'environnement (`OIDC_JWKS_URL`, `OIDC_CONFIG_URL`, `OIDC_CLIENT_ID`, `OIDC_ISSUER`, `OIDC_AUDIENCES`). Aucun fournisseur n'est codé en dur. **En développement**, le fournisseur OIDC est un **Keycloak local** (realm `referentiel-applications` fourni dans `keycloak/`) ; **en production**, l'application s'interface avec le **fournisseur d'identité (SSO) de l'organisation** via ces mêmes variables.
 - Assurer la **validation des jetons JWT dans le backend** (`backend/src/middlewares/auth.middleware.ts`), par vérification de signature via le JWKS du fournisseur.
 - Conserver une **table `User`** interne plutôt que de tout déléguer au fournisseur : indépendance vis-à-vis du fournisseur, multi-provider OIDC, permissions custom, traçabilité (`createdBy`/`dataOwner`). L'utilisateur est créé **à la première connexion**.
 - Exiger le **contexte HTTPS** pour le front en environnement déployé.
