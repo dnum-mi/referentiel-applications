@@ -754,18 +754,49 @@ export class SearchPage extends BasePage {
     await expect(button).toHaveAccessibleName(/fonctionnalité bêta/i);
   }
 
-  async expectStableHtmlExportVisible(): Promise<void> {
-    await expect(this.byTestId("applications-export-html-btn")).toBeVisible();
+  async exportHtml() {
+    const [download] = await Promise.all([
+      this.page.waitForEvent("download"),
+      this.byTestId("applications-export-html-btn").click(),
+    ]);
+    return download;
+  }
+
+  async expectHtmlBetaExport(available: boolean): Promise<void> {
+    const button = this.byTestId("applications-export-html-btn");
+    if (!available) {
+      await expect(button).toHaveCount(0);
+      return;
+    }
+    await expect(button).toBeVisible();
+    await expect(button.getByText("Bêta", { exact: true })).toBeVisible();
+    await expect(button).toHaveAccessibleName(/fonctionnalité bêta/i);
   }
 
   /** Une délégation retirée après rendu est relue avant de lancer le téléchargement. */
   async expectExcelRevocationBeforeDownload(): Promise<void> {
-    const button = this.byTestId("application-export-btn");
+    await this.expectExportRevocationBeforeDownload("excel");
+  }
+
+  async expectHtmlRevocationBeforeDownload(): Promise<void> {
+    await this.expectExportRevocationBeforeDownload("html");
+  }
+
+  private async expectExportRevocationBeforeDownload(
+    format: "excel" | "html",
+  ): Promise<void> {
+    const button = this.byTestId(
+      format === "excel"
+        ? "application-export-btn"
+        : "applications-export-html-btn",
+    );
     await expect(button).toBeVisible();
     let exportRequests = 0;
     let downloads = 0;
     const onRequest = (req: import("@playwright/test").Request) => {
-      if (new URL(req.url()).pathname === "/api/v2/applications/export/excel")
+      if (
+        new URL(req.url()).pathname === `/api/v2/applications/export/${format}`
+      )
         exportRequests++;
     };
     const onDownload = () => {
@@ -784,6 +815,7 @@ export class SearchPage extends BasePage {
       ]);
       expect(response.ok()).toBe(true);
       await this.expectExcelBetaExport(false);
+      await this.expectHtmlBetaExport(false);
       expect(exportRequests).toBe(0);
       expect(downloads).toBe(0);
     } finally {

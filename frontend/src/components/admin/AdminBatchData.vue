@@ -1,12 +1,20 @@
 <script setup lang="ts">
 import api from "@/api";
 import { isApiSuccess } from "@/api/api-result";
-import type { ImportReportDto, UserControllerSyncOrganizationsFromMaiaData } from "@/client";
+import { FeatureId, Permission, type ImportReportDto, type UserControllerSyncOrganizationsFromMaiaData } from "@/client";
+import { useBetaFeatures } from "@/composables/use-beta-features";
+import BetaBadge from "@/components/BetaBadge.vue";
 import { useApplicationStore } from "@/stores/applicationStore";
 import { useToasterStore } from "@/stores/toasterStore";
+import { useUserStore } from "@/stores/userStore";
 import { createImportReportCsv, createImportReportHtml } from "@/utils/import-report-export";
 
 const toaster = useToasterStore();
+const { canAccess, isBeta, authorize } = useBetaFeatures();
+const userStore = useUserStore();
+const canExportHtmlReport = computed(
+  () => userStore.hasPermissions([Permission.GLOBAL_ADMIN_MANAGE]) && canAccess(FeatureId.IMPORT_REPORT_HTML_EXPORT),
+);
 const applicationStore = useApplicationStore();
 const isLoading = ref(false);
 const progressMessage = ref("");
@@ -61,7 +69,9 @@ async function runImport() {
   }
 }
 
-function downloadImportReport(format: "csv" | "html") {
+async function downloadImportReport(format: "csv" | "html") {
+  if (!importReport.value) return;
+  if (format === "html" && !(await authorize(FeatureId.IMPORT_REPORT_HTML_EXPORT, [Permission.GLOBAL_ADMIN_MANAGE]))) return;
   if (!importReport.value) return;
   const content = format === "csv" ? createImportReportCsv(importReport.value) : createImportReportHtml(importReport.value);
   const blob = new Blob([content], { type: `text/${format === "csv" ? "csv" : "html"};charset=utf-8` });
@@ -254,12 +264,15 @@ async function runMaiaActorSync() {
             @click="downloadImportReport('csv')"
           />
           <DsfrButton
-            label="Télécharger le rapport HTML"
+            v-if="canExportHtmlReport"
             secondary
             icon="ri-download-2-line"
             data-testid="admin-import-report-download-html"
             @click="downloadImportReport('html')"
-          />
+          >
+            Télécharger le rapport HTML
+            <BetaBadge v-if="isBeta(FeatureId.IMPORT_REPORT_HTML_EXPORT)" />
+          </DsfrButton>
         </div>
       </div>
     </div>

@@ -2658,7 +2658,8 @@ paths:
                 type: string
                 format: binary
         "403":
-          description: Droit d'export requis
+          description: Droit d'export et capacité bêta requis tant que la fonctionnalité
+            est en bêta
       summary: Exporter les applications en HTML
       tags: *a8
   /api/v2/applications/{applicationId}/export/powerpoint:
@@ -8199,6 +8200,8 @@ components:
       type: string
       enum:
         - catalogue-excel-export
+        - catalogue-html-export
+        - import-report-html-export
         - product-html-export
         - product-powerpoint-export
       description: Fonctionnalités actuellement en bêta nécessitant la permission
