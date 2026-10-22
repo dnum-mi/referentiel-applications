@@ -374,6 +374,12 @@ La même règle de périmètre s'applique à l'impersonation (#2217, `assertCanI
 
 Côté interface, le bouton « Se connecter en tant que » n'est pas proposé hors périmètre (`UserActions.vue`, `canImpersonate`, alignée sur `canEditUser`).
 
+Depuis #2925, les deux entrées refusent également une cible dont les permissions globales (rôle et permissions additionnelles) dépassent celles de l'administrateur de périmètre, ainsi qu'un périmètre cible explicite plus large ou extérieur. Un périmètre renseigné mais non résolu est refusé. Cela interdit notamment de récupérer les capacités d'un administrateur global simplement rattaché à une organisation du périmètre.
+
+Une cible ordinaire sans périmètre explicite reste impersonnable : la session reçoit alors le périmètre de l'administrateur réel. Si la cible possède un périmètre descendant, la session conserve ce périmètre plus étroit. À chaque application demandée, `CheckPermissions` intersecte les droits effectifs des deux identités, y compris les droits issus des acteurs, des groupes et du type d'acteur par défaut. Un rôle ou un acteur de la cible ne peut ainsi ouvrir une écriture que l'administrateur réel ne possède pas. Ce plafond interne n'est pas sérialisé dans les réponses JSON et ne modifie aucun rôle ou périmètre en base.
+
+La création et la régénération de jetons sont refusées dans une session ainsi plafonnée : un secret durable pourrait être réutilisé sans le contexte d'impersonation. L'administrateur global conserve son parcours existant. Les identités cible et réelle restent distinctes dans les journaux d'impersonation et les traces métier.
+
 En mode `enforce` du niveau d'authentification (#1985, [§1.4](#14-niveau-dauthentification--carte-agent-ou-double-authentification-1985)), l'impersonation exige en outre une **session forte** : le middleware refuse le header `x-impersonate-user-id` d'une session rétrogradée par un 403 `strongAuthRequired` et clôt la session `ImpersonationLog` ouverte.
 
 ### 6.4. Effet sur les onglets d'administration

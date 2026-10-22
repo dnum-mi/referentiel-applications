@@ -25,6 +25,7 @@ import { EmailService } from "src/email/email.service";
 import { emailEquals, normalizeEmail } from "src/common/utils/email.utils";
 import { MaiaUnavailableException } from "./errors/maia-unavailable.exception";
 import { DELEGATED_AUTH } from "src/permissions/delegated-auth";
+import { impersonateWithinCeiling } from "src/permissions/impersonation-auth";
 import { encryptGristApiKey } from "src/grist/grist-api-key";
 
 @Injectable()
@@ -505,6 +506,7 @@ export class UserService {
 
     // Un admin scopé ne peut impersonner que dans son périmètre (#2217).
     await this.scopedPermissionService.assertCanImpersonate(targetId, admin);
+    const principal = impersonateWithinCeiling(admin, target);
 
     await this.prisma.impersonationLog.create({
       data: { adminId: admin.id, targetId },
@@ -514,7 +516,7 @@ export class UserService {
       `[Impersonation] ${admin.email} (admin ${admin.id}) impersonne ${target.email} (${target.id})`,
     );
 
-    return target;
+    return principal;
   }
 
   async stopImpersonation(adminId: string, targetId: string): Promise<void> {

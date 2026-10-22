@@ -1,5 +1,6 @@
 import type { ConfigType } from "@nestjs/config";
 import { UnauthorizedException } from "@nestjs/common";
+import { EventEmitter } from "node:events";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { exportJWK, generateKeyPair, SignJWT } from "jose";
@@ -11,7 +12,7 @@ import {
   ServiceTokenMode,
   UserType,
 } from "@prisma/client";
-import { SERVICE_TOKEN_MODE } from "src/token/domain/token.entity";
+import { API_TOKEN, SERVICE_TOKEN_MODE } from "src/token/domain/token.entity";
 import type { LoggerService } from "src/logger/logger.service";
 import type { MaintenanceService } from "src/maintenance/maintenance.service";
 import type { TokenService } from "src/token/token.service";
@@ -77,6 +78,7 @@ const authLevelObserve: AuthLevelConfigType = {
 
 interface TestUser {
   [SERVICE_TOKEN_MODE]?: ServiceTokenMode;
+  [API_TOKEN]?: { id: string; name: string };
   id: string;
   email: string;
   role: Roles;
@@ -158,7 +160,12 @@ function buildMiddleware({
   const userConnexionLogService = {
     log: jest.fn().mockResolvedValue({ created: logCreated }),
   };
-  const logger = { error: jest.fn(), warn: jest.fn(), log: jest.fn() };
+  const logger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    log: jest.fn(),
+    info: jest.fn(),
+  };
   const maintenanceService = {
     isActive: jest.fn().mockResolvedValue(maintenanceActive),
   };
@@ -202,10 +209,14 @@ function run(
   middleware: AuthMiddleware,
   request: Request,
 ): Promise<{ response: Response; next: NextFunction }> {
-  const response = {
-    status: jest.fn(),
+  const response = Object.assign(new EventEmitter(), {
+    statusCode: 200,
+    status: jest.fn(function (this: Response, code: number) {
+      this.statusCode = code;
+      return this;
+    }),
     json: jest.fn(),
-  } as unknown as Response;
+  }) as unknown as Response;
   const next = jest.fn() as NextFunction;
   return middleware
     .use(request, response, next)
@@ -589,6 +600,88 @@ describe("AuthMiddleware", () => {
         readOnly: true,
       });
       expect(userConnexionLogService.log).not.toHaveBeenCalled();
+    });
+  });
+
+  // #3021 : un log `api_token_call` par appel fait avec un token, compté dans Grafana.
+  describe("api_token_call log", () => {
+    const apiToken = { id: "token-id", name: "Mon token" };
+    const tokenRequest = (token = "api-key") =>
+      ({
+        method: "GET",
+        originalUrl: "/api/v2/applications?page=1",
+        headers: { "x-refapp-token": token },
+      }) as unknown as Request;
+    const apiTokenCalls = (logger: { info: jest.Mock }) =>
+      logger.info.mock.calls.filter(([, msg]) => msg === "api_token_call");
+
+    it("écrit un seul log à la fin de la réponse, avec l'id et le nom du token", async () => {
+      const { middleware, logger } = buildMiddleware({
+        tokenUser: { ...existingUser, [API_TOKEN]: apiToken },
+      });
+      const { response, next } = await run(middleware, tokenRequest());
+      expect(next).toHaveBeenCalled();
+      expect(apiTokenCalls(logger)).toHaveLength(0);
+
+      response.emit("finish");
+      response.emit("finish");
+
+      expect(apiTokenCalls(logger)).toEqual([
+        [
+          {
+            tokenId: "token-id",
+            tokenName: "Mon token",
+            method: "GET",
+            url: "/api/v2/applications?page=1",
+            statusCode: 200,
+          },
+          "api_token_call",
+        ],
+      ]);
+    });
+
+    it("compte aussi un appel refusé, avec son statut", async () => {
+      const { middleware, logger } = buildMiddleware({
+        tokenUser: { ...existingUser, isBlocked: true, [API_TOKEN]: apiToken },
+      });
+      const { response } = await run(middleware, tokenRequest());
+      response.emit("finish");
+      expect(apiTokenCalls(logger)).toEqual([
+        [expect.objectContaining({ statusCode: 403 }), "api_token_call"],
+      ]);
+    });
+
+    it("n'écrit rien pour un appel sans token", async () => {
+      const { middleware, logger } = buildMiddleware();
+      const { response } = await run(
+        middleware,
+        bearerRequest({ email: existingUser.email }),
+      );
+      response.emit("finish");
+      expect(apiTokenCalls(logger)).toHaveLength(0);
+    });
+
+    it("n'écrit rien pour un token inconnu", async () => {
+      const { middleware, logger } = buildMiddleware({ tokenUser: null });
+      const { response } = await run(middleware, tokenRequest());
+      response.emit("finish");
+      expect(apiTokenCalls(logger)).toHaveLength(0);
+    });
+
+    it("ne journalise jamais la valeur du token", async () => {
+      const { middleware, logger } = buildMiddleware({
+        tokenUser: { ...existingUser, [API_TOKEN]: apiToken },
+      });
+      const { response } = await run(
+        middleware,
+        tokenRequest("secret-token-value"),
+      );
+      response.emit("finish");
+      const logged = JSON.stringify(
+        Object.values(logger).flatMap((fn) => fn.mock.calls),
+      );
+      expect(logged).toContain("api_token_call");
+      expect(logged).not.toContain("secret-token-value");
     });
   });
 
@@ -1068,6 +1161,11 @@ describe("AuthMiddleware", () => {
     it("still lets a strong administrator impersonate", async () => {
       const { middleware, userService, scopedPermissionService } =
         buildMiddleware({ authLevel: authLevelEnforce, user: adminUser });
+      userService.findByIdWithRelations.mockResolvedValue({
+        ...existingUser,
+        organizationId: adminUser.organizationId,
+        organization: adminUser.organization,
+      });
       const request = bearerRequest(
         { email: adminUser.email, auth_mode: "CARD" },
         { "x-impersonate-user-id": existingUser.id },
@@ -1089,6 +1187,11 @@ describe("AuthMiddleware", () => {
       const { middleware, userService } = buildMiddleware({
         authLevel: authLevelObserve,
         user: adminUser,
+      });
+      userService.findByIdWithRelations.mockResolvedValue({
+        ...existingUser,
+        organizationId: adminUser.organizationId,
+        organization: adminUser.organization,
       });
       const request = bearerRequest(
         { email: adminUser.email, auth_mode: "PASSWORD" },

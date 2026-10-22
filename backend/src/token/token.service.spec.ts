@@ -1,9 +1,62 @@
 import { Permission, Roles, ServiceTokenMode, UserType } from "@prisma/client";
-import { SERVICE_TOKEN_MODE } from "./domain/token.entity";
+import { API_TOKEN, SERVICE_TOKEN_MODE } from "./domain/token.entity";
 import { StepDownException } from "src/auth-level/step-down.exception";
+import { IMPERSONATION_AUTH } from "src/permissions/impersonation-auth";
 import type { Requestor } from "src/user/entities/user.entity";
 import { TokenStatus } from "./domain/token-status.entity";
 import { TokenService } from "./token.service";
+
+describe("TokenService — impersonation plafonnée (#2925)", () => {
+  const requestor = {
+    id: "target-1",
+    role: Roles.CONTRIBUTOR,
+    type: UserType.human,
+    additionalPermissions: [],
+    [IMPERSONATION_AUTH]: {},
+  } as unknown as Requestor;
+  const prisma = {
+    token: {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+    },
+  };
+  const checkPermissions = { can: jest.fn().mockResolvedValue(true) };
+  const service = new TokenService(
+    prisma as never,
+    checkPermissions as never,
+    {} as never,
+  );
+
+  beforeEach(() => jest.clearAllMocks());
+
+  it.each([true, false])(
+    "refuse de créer un secret durable (personal=%s)",
+    async (personal) => {
+      await expect(
+        service.create(requestor, personal, {
+          name: "synthetic-token",
+          description: "synthetic",
+          role: Roles.CONTRIBUTOR,
+          expiresAt: new Date(Date.now() + 60_000),
+        }),
+      ).rejects.toMatchObject({ status: 403 });
+      expect(checkPermissions.can).not.toHaveBeenCalled();
+      expect(prisma.token.findMany).not.toHaveBeenCalled();
+      expect(prisma.token.create).not.toHaveBeenCalled();
+    },
+  );
+
+  it("refuse la régénération avant toute lecture ou mutation du secret", async () => {
+    await expect(
+      service.regenerate(requestor, "token-1", new Date(Date.now() + 60_000)),
+    ).rejects.toMatchObject({ status: 403 });
+    expect(checkPermissions.can).not.toHaveBeenCalled();
+    expect(prisma.token.findUnique).not.toHaveBeenCalled();
+    expect(prisma.token.update).not.toHaveBeenCalled();
+  });
+});
 
 // #2504 : le plafonnement du rôle par le jeton doit aussi s'appliquer aux permissions déléguées
 // (`additionalPermissions`) du compte impersonné.
@@ -15,6 +68,7 @@ describe("TokenService.findUserByToken — plafonnement", () => {
   function tokenRow(tokenRole: Roles, userRole: Roles) {
     return {
       id: "token-1",
+      name: "Mon token",
       role: tokenRole,
       serviceMode: ServiceTokenMode.machine,
       status: TokenStatus.active,
@@ -52,6 +106,14 @@ describe("TokenService.findUserByToken — plafonnement", () => {
     const user = await service.findUserByToken("clear");
     expect(user?.role).toBe(Roles.READER);
     expect(user?.additionalPermissions).toEqual([Permission.DataExport]);
+  });
+
+  // #3021 : l'id et le nom servent au log `api_token_call`, sans sortir en JSON.
+  it("remonte l'id et le nom du jeton", async () => {
+    findUnique.mockResolvedValue(tokenRow(Roles.READER, Roles.READER));
+    const user = await service.findUserByToken("clear");
+    expect(user?.[API_TOKEN]).toEqual({ id: "token-1", name: "Mon token" });
+    expect(JSON.stringify(user)).not.toContain("Mon token");
   });
 
   it("retourne null pour un jeton inconnu", async () => {

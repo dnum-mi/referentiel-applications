@@ -3,6 +3,7 @@ import { Roles } from "@prisma/client";
 import { StepDownException } from "src/auth-level/step-down.exception";
 import { isPathWithinScope } from "src/common/utils/organization-scope.utils";
 import { PrismaService } from "src/prisma/prisma.service";
+import { impersonateWithinCeiling } from "src/permissions/impersonation-auth";
 import { UpdateUserDto } from "../dto/update-user.dto";
 import { Requestor } from "../entities/user.entity";
 import { ScopePermissionsException } from "../errors/scope-permissions.exception";
@@ -147,8 +148,8 @@ export class ScopedPermissionService {
 
   /**
    * Vérifie qu'un administrateur peut impersonner l'utilisateur cible : un
-   * admin scopé ne peut impersonner que les utilisateurs dont l'organisation
-   * est dans son périmètre (même règle que l'édition, cf. `assertCanUpdate`).
+   * admin scopé reste borné à ses capacités et à son périmètre, y compris
+   * lorsque la cible porte des droits supplémentaires (#2925).
    */
   async assertCanImpersonate(
     targetUserId: string,
@@ -156,23 +157,18 @@ export class ScopedPermissionService {
   ): Promise<void> {
     this.assertIsAdministrator(requestor);
     const requestorScopePath = requestor?.scopeOrganization?.path;
-    // Si le requestor n'a pas de scope, c'est qu'il est super admin et peut tout faire → PAS DE CHECK
-    if (!requestorScopePath) return;
+    if (!requestorScopePath && !requestor.scopeOrganizationId) return;
 
     const target = await this.prisma.user.findFirst({
       where: { id: targetUserId },
-      include: { organization: true },
+      include: { organization: true, scopeOrganization: true },
     });
 
     if (!target) {
       throw new HttpException("Utilisateur introuvable", HttpStatus.NOT_FOUND);
     }
 
-    this.assertWithinScope(
-      target.organization?.path,
-      requestorScopePath,
-      "Vous n'avez pas les permissions pour impersonner cet utilisateur",
-    );
+    impersonateWithinCeiling(requestor, target);
   }
 
   /**

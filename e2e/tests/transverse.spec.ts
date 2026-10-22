@@ -72,7 +72,7 @@ test.describe("Pages transverses", () => {
     await sitemap.expectProtectedSection();
   });
 
-  test("TRV-06 - la page 404 ramène au catalogue (connecté)", async ({
+  test("TRV-06 - la page 404 ramène à l’accueil (connecté)", async ({
     page,
     data,
   }) => {
@@ -80,7 +80,7 @@ test.describe("Pages transverses", () => {
     const notFound = new NotFoundPage(page);
     await notFound.openUnknownRoute();
     await notFound.expectNotFound();
-    await notFound.clickHomeAndExpectCatalogue();
+    await notFound.clickHomeAndExpectHome();
   });
 
   test("TRV-08 - la page Technologies liste les applications concernées (#2236)", async ({

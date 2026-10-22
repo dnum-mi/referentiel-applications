@@ -31,7 +31,7 @@ const HEADERS = [
   "Nom de l’acteur",
   "Rôle",
   "Type",
-  "Email",
+  "Adresse e-mail",
 ] as const;
 
 export async function buildActorImportWorkbook(

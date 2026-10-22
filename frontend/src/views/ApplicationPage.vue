@@ -219,9 +219,7 @@ function formatMetadataAuthor(metadata: MetadataDto): string {
 
 <template>
   <div>
-    <output v-if="isLoading" data-testid="application-loading" aria-live="polite" aria-atomic="true" style="display: block">
-      <AppLoader></AppLoader>
-    </output>
+    <AppLoader v-if="isLoading" data-testid="application-loading" label="Chargement de l'application…" />
 
     <div v-else-if="errorMessage" data-testid="application-error" role="alert" class="fr-alert fr-alert--error fr-m-2w">
       {{ errorMessage }}

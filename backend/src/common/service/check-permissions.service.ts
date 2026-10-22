@@ -14,6 +14,7 @@ import {
 import { QueryBuilderGroupActor } from "./prisma-query-builder.service";
 import { organizationWithinScope } from "src/common/utils/organization-scope.utils";
 import { emailEquals } from "src/common/utils/email.utils";
+import { IMPERSONATION_AUTH } from "src/permissions/impersonation-auth";
 import {
   DELEGATED_AUTH,
   globalPermissions,
@@ -74,6 +75,17 @@ export class CheckPermissions {
     applicationId: string,
     user: Requestor,
   ): Promise<APP_PERMISSIONS[]> {
+    const impersonation = user[IMPERSONATION_AUTH];
+    if (impersonation) {
+      const [adminPermissions, targetPermissions] = await Promise.all([
+        this.effectivePermissions(impersonation.admin, applicationId),
+        this.effectivePermissions(impersonation.target, applicationId),
+      ]);
+      return AppPermissionsValues.filter(
+        (permission) =>
+          adminPermissions.has(permission) && targetPermissions.has(permission),
+      );
+    }
     if (user.type === UserType.bot) {
       // Le rôle et le périmètre du token plafonnent aussi un traitement machine.
       // Un acteur attribué au bot ne doit pas relever le plafond du token.

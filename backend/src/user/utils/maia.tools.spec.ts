@@ -1,3 +1,4 @@
+import { Logger } from "@nestjs/common";
 import { createServer, type RequestListener, type Server } from "node:http";
 import { MaiaUnavailableException } from "../errors/maia-unavailable.exception";
 import { getFullNameFromMaia, getOrganizationPathFromMaia } from "./maia.tools";
@@ -160,6 +161,60 @@ describe("MAIA — requêtes bornées et erreurs explicites", () => {
       getOrganizationPathFromMaia("person@example.com"),
     ).rejects.toMatchObject({ reason: "configuration" });
     expect(fetch).not.toHaveBeenCalled();
+  });
+
+  // #3021 : une ligne `maia_api_call` par appel envoyé, comptée dans Grafana.
+  describe("maia_api_call log", () => {
+    const maiaCalls = (log: jest.SpyInstance) =>
+      log.mock.calls
+        .map(([fields]) => fields as Record<string, unknown>)
+        .filter((fields) => fields?.msg === "maia_api_call");
+
+    it("journalise un appel réussi, sans l'email recherché", async () => {
+      const log = jest.spyOn(Logger.prototype, "log").mockImplementation();
+      jest
+        .spyOn(global, "fetch")
+        .mockResolvedValue(Response.json({ data: [] }));
+      await getFullNameFromMaia("secret.person@example.com");
+      expect(maiaCalls(log)).toEqual([
+        {
+          msg: "maia_api_call",
+          operation: "fullName",
+          outcome: "success",
+          upstreamStatus: undefined,
+          durationMs: expect.any(Number),
+        },
+      ]);
+      expect(JSON.stringify(log.mock.calls)).not.toContain("secret.person");
+    });
+
+    it("journalise un échec avec sa raison et le statut MAIA", async () => {
+      const log = jest.spyOn(Logger.prototype, "log").mockImplementation();
+      jest
+        .spyOn(global, "fetch")
+        .mockResolvedValue(new Response("KO", { status: 502 }));
+      await expect(
+        getOrganizationPathFromMaia("person@example.com"),
+      ).rejects.toBeInstanceOf(MaiaUnavailableException);
+      expect(maiaCalls(log)).toEqual([
+        expect.objectContaining({
+          operation: "organization",
+          outcome: "http",
+          upstreamStatus: 502,
+        }),
+      ]);
+    });
+
+    it("ne journalise rien quand aucun appel n'est envoyé", async () => {
+      const log = jest.spyOn(Logger.prototype, "log").mockImplementation();
+      delete process.env.MAIA_API_URL;
+      await expect(
+        getOrganizationPathFromMaia("person@example.com"),
+      ).rejects.toMatchObject({ reason: "configuration" });
+      process.env.MOCK_MAIA_SERVICE = "true";
+      await getOrganizationPathFromMaia("person@example.com");
+      expect(maiaCalls(log)).toHaveLength(0);
+    });
   });
 
   it("préserve le mode bouchonné sans accès réseau", async () => {

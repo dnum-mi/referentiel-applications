@@ -1,0 +1,444 @@
+{
+  "title": "Appels API RefApp",
+  "uid": "refapp-api-token-usage",
+  "description": "Appels API entrants par token RefApp (log api_token_call) et appels sortants vers l'annuaire MAIA (log maia_api_call), #3021.",
+  "tags": ["refapp", "api", "token", "maia"],
+  "editable": true,
+  "schemaVersion": 39,
+  "version": 1,
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "refresh": "",
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "label": "Source Loki",
+        "type": "datasource",
+        "query": "loki",
+        "current": {},
+        "hide": 0
+      },
+      {
+        "name": "namespace",
+        "label": "Namespace",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "${datasource}"
+        },
+        "query": {
+          "type": 1,
+          "label": "namespace",
+          "refId": "LokiVariableQueryEditor-VariableQuery"
+        },
+        "definition": "label_values(namespace)",
+        "refresh": 1,
+        "sort": 1,
+        "current": {
+          "selected": true,
+          "text": ["All"],
+          "value": ["$__all"]
+        },
+        "hide": 0,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".+"
+      },
+      {
+        "name": "tokenName",
+        "label": "Nom du token (regex)",
+        "description": "Expression régulière sur le nom du token. Par défaut : tous.",
+        "type": "textbox",
+        "query": ".*",
+        "current": {
+          "text": ".*",
+          "value": ".*"
+        },
+        "hide": 0
+      },
+      {
+        "name": "tokenId",
+        "label": "Id du token (regex)",
+        "description": "Expression régulière sur l'id du token. Distingue deux tokens de même nom.",
+        "type": "textbox",
+        "query": ".*",
+        "current": {
+          "text": ".*",
+          "value": ".*"
+        },
+        "hide": 0
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Appels API par token dans le temps",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 10
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "${datasource}"
+          },
+          "queryType": "range",
+          "expr": "sum by (namespace, tokenId, tokenName) (count_over_time({namespace=~\"$namespace\"} |= \"api_token_call\" | regexp `(?P<payload>\\{.*\\})` | line_format \"{{.payload}}\" | json | tokenId!=\"\" | tokenName=~\"$tokenName\" | tokenId=~\"$tokenId\" [$__auto]))",
+          "legendFormat": "{{tokenName}} ({{tokenId}}) · {{namespace}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": ["sum"]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "table",
+      "title": "Total par token sur la période",
+      "gridPos": {
+        "x": 0,
+        "y": 10,
+        "w": 12,
+        "h": 10
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "${datasource}"
+          },
+          "queryType": "instant",
+          "expr": "sum by (namespace, tokenId, tokenName) (count_over_time({namespace=~\"$namespace\"} |= \"api_token_call\" | regexp `(?P<payload>\\{.*\\})` | line_format \"{{.payload}}\" | json | tokenId!=\"\" | tokenName=~\"$tokenName\" | tokenId=~\"$tokenId\" [$__range]))"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "namespace": 0,
+              "tokenName": 1,
+              "tokenId": 2,
+              "Value": 3
+            },
+            "renameByName": {
+              "tokenName": "Nom du token",
+              "tokenId": "Id du token",
+              "Value": "Appels",
+              "namespace": "Namespace"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Appels",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "type": "table",
+      "title": "Appels par token et code HTTP",
+      "gridPos": {
+        "x": 12,
+        "y": 10,
+        "w": 12,
+        "h": 10
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "${datasource}"
+          },
+          "queryType": "instant",
+          "expr": "sum by (namespace, tokenId, tokenName, statusCode) (count_over_time({namespace=~\"$namespace\"} |= \"api_token_call\" | regexp `(?P<payload>\\{.*\\})` | line_format \"{{.payload}}\" | json | tokenId!=\"\" | tokenName=~\"$tokenName\" | tokenId=~\"$tokenId\" [$__range]))"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "namespace": 0,
+              "tokenName": 1,
+              "tokenId": 2,
+              "statusCode": 3,
+              "Value": 4
+            },
+            "renameByName": {
+              "tokenName": "Nom du token",
+              "tokenId": "Id du token",
+              "statusCode": "Code HTTP",
+              "Value": "Appels",
+              "namespace": "Namespace"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Appels",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 10,
+      "type": "row",
+      "title": "Annuaire MAIA (appels sortants)",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 20,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Appels à l'annuaire MAIA dans le temps",
+      "gridPos": {
+        "x": 0,
+        "y": 21,
+        "w": 24,
+        "h": 10
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "${datasource}"
+          },
+          "queryType": "range",
+          "expr": "sum by (namespace, outcome) (count_over_time({namespace=~\"$namespace\"} |= \"maia_api_call\" | regexp `(?P<payload>\\{.*\\})` | line_format \"{{.payload}}\" | json | operation!=\"\" [$__auto]))",
+          "legendFormat": "{{outcome}} · {{namespace}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": ["sum"]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 12,
+      "type": "table",
+      "title": "Total MAIA par opération et résultat",
+      "gridPos": {
+        "x": 0,
+        "y": 31,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "${datasource}"
+          },
+          "queryType": "instant",
+          "expr": "sum by (namespace, operation, outcome) (count_over_time({namespace=~\"$namespace\"} |= \"maia_api_call\" | regexp `(?P<payload>\\{.*\\})` | line_format \"{{.payload}}\" | json | operation!=\"\" [$__range]))"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "namespace": 0,
+              "operation": 1,
+              "outcome": 2,
+              "Value": 3
+            },
+            "renameByName": {
+              "operation": "Opération",
+              "outcome": "Résultat",
+              "Value": "Appels",
+              "namespace": "Namespace"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Appels",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "Durée des appels MAIA (p95)",
+      "gridPos": {
+        "x": 12,
+        "y": 31,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "${datasource}"
+          },
+          "queryType": "range",
+          "expr": "quantile_over_time(0.95, {namespace=~\"$namespace\"} |= \"maia_api_call\" | regexp `(?P<payload>\\{.*\\})` | line_format \"{{.payload}}\" | json | operation!=\"\" | unwrap durationMs [$__auto]) by (namespace, operation)",
+          "legendFormat": "p95 {{operation}} · {{namespace}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    }
+  ]
+}

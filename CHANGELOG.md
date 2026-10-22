@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.100.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.99.0...v1.100.0) (2026-10-21)
+
+
+### Features
+
+* add logs for api token and maia call api for loki ([#3028](https://github.com/dnum-mi/referentiel-applications/issues/3028)) ([ee6b95d](https://github.com/dnum-mi/referentiel-applications/commit/ee6b95ddb386725e6ade4fac9351d49a58f084a6))
+* **technologies:** export stacks and filter by end of life ([#2921](https://github.com/dnum-mi/referentiel-applications/issues/2921)) ([705cef1](https://github.com/dnum-mi/referentiel-applications/commit/705cef1016df3952eb0665f427efbc6cf4fbe694))
+
+
+### Bug Fixes
+
+* **actor-types:** empêcher la suppression des types utilisés ([#2923](https://github.com/dnum-mi/referentiel-applications/issues/2923)) ([2a902fa](https://github.com/dnum-mi/referentiel-applications/commit/2a902fa2b8c53df288466c0f2e70b879b679131b))
+* add paginated focus for a12y for all refapptable ([#3007](https://github.com/dnum-mi/referentiel-applications/issues/3007)) ([cfc5c49](https://github.com/dnum-mi/referentiel-applications/commit/cfc5c498dde8db99cf91dbceeba102eb56614184))
+* improve RGAA accessibility across application workflows ([#2875](https://github.com/dnum-mi/referentiel-applications/issues/2875)) ([a9750e3](https://github.com/dnum-mi/referentiel-applications/commit/a9750e3a85483668e192e0aa6d0e4e74888b91eb))
+* preserve compliance fields when EcoIndex URL changes ([#3017](https://github.com/dnum-mi/referentiel-applications/issues/3017)) ([c3402de](https://github.com/dnum-mi/referentiel-applications/commit/c3402deafb84e65d258a2342370cc45752c55185))
+* redact API tokens from HTTP logs ([#3018](https://github.com/dnum-mi/referentiel-applications/issues/3018)) ([09ef745](https://github.com/dnum-mi/referentiel-applications/commit/09ef745cc11fff0f673fb5f9f6417e48372cf2a2))
+* remove dupplicate h1 ([#3023](https://github.com/dnum-mi/referentiel-applications/issues/3023)) ([eb859e3](https://github.com/dnum-mi/referentiel-applications/commit/eb859e3c80430698e60527ba7ce494677a12c2d2))
+* repair release QA regressions ([#3032](https://github.com/dnum-mi/referentiel-applications/issues/3032)) ([3c06d0b](https://github.com/dnum-mi/referentiel-applications/commit/3c06d0b1fad58cfd83301c83232ca62ad293de11))
+* update vite dependency ([#3031](https://github.com/dnum-mi/referentiel-applications/issues/3031)) ([d1a72d2](https://github.com/dnum-mi/referentiel-applications/commit/d1a72d291213af830980525bf790888ee17fc5e0))
+
 ## [1.99.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.98.0...v1.99.0) (2026-10-14)
 
 
