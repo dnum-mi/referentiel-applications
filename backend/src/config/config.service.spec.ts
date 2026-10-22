@@ -10,6 +10,8 @@ describe("public configuration", () => {
         jwksUrl: "https://idp.example/jwks",
         configUrl: "https://idp.example/.well-known/openid-configuration",
         clientId: "refapp",
+        issuer: "https://idp.example/",
+        audiences: ["refapp-api"],
         scope: "openid profile email",
       },
       {
@@ -32,5 +34,7 @@ describe("public configuration", () => {
     });
     expect(JSON.stringify(frontend)).not.toContain(secret);
     expect(JSON.stringify(frontend)).not.toContain("HS256");
+    expect(frontend).not.toHaveProperty("issuer");
+    expect(frontend).not.toHaveProperty("audiences");
   });
 });

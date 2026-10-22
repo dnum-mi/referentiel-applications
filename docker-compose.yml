@@ -42,6 +42,10 @@ services:
       - OIDC_CONFIG_URL=http://localhost:8082/realms/referentiel-applications/.well-known/openid-configuration
       - OIDC_JWKS_URL=http://keycloak:8080/realms/referentiel-applications/protocol/openid-connect/certs
       - OIDC_CLIENT_ID=referentiel-applications
+      # Émetteur public du jeton, distinct de l'adresse interne du JWKS.
+      - OIDC_ISSUER=http://localhost:8082/realms/referentiel-applications
+      # Audience de ressource émise par le mapper du realm local, pas un repli sur clientId.
+      - OIDC_AUDIENCES=referentiel-applications
       - LOG_LEVEL=debug
       # Chiffrement des clés d'API Grist en base : valeur de développement uniquement.
       - GRIST_ENCRYPTION_KEY=${GRIST_ENCRYPTION_KEY:-dev-only-grist-encryption-key}

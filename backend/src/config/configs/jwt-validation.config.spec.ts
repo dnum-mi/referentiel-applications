@@ -59,6 +59,8 @@ describe("jwtValidationConfig", () => {
     process.env.OIDC_JWKS_URL = "https://idp.example.test/jwks";
     process.env.OIDC_CONFIG_URL = "https://idp.example.test/config";
     process.env.OIDC_CLIENT_ID = "test-client";
+    process.env.OIDC_ISSUER = "https://idp.example.test";
+    process.env.OIDC_AUDIENCES = "refapp-api";
 
     await expect(
       Test.createTestingModule({
