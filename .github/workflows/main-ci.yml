@@ -362,9 +362,9 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
           pnpm exec playwright install --with-deps chromium
-      - name: Replay correlation scenarios twice without retries
+      - name: Replay correlation and relation navigation scenarios twice without retries
         working-directory: e2e
-        run: pnpm exec playwright test tests/correlations.spec.ts --project=chromium --workers=1 --repeat-each=2 --retries=0 --trace=retain-on-failure --reporter=line,html
+        run: pnpm exec playwright test tests/correlations.spec.ts tests/relation-navigation.spec.ts --project=chromium --workers=1 --repeat-each=2 --retries=0 --trace=retain-on-failure --reporter=line,html
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
