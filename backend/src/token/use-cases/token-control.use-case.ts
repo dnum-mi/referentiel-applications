@@ -35,10 +35,14 @@ export type newTokenInvalidReason = BadRequestException;
 export function isNewTokenInvalid(
   token: Pick<TokenEntity, "expiresAt">,
 ): newTokenInvalidReason | false {
-  if (token.expiresAt < new Date()) {
+  const now = new Date();
+  if (!Number.isFinite(token.expiresAt.getTime())) {
+    return new BadRequestException("The expiration date must be valid");
+  }
+  if (token.expiresAt <= now) {
     return new BadRequestException("The expiration date must be in the future");
   }
-  const maxDate = new Date();
+  const maxDate = new Date(now);
   maxDate.setFullYear(maxDate.getFullYear() + 1);
   if (token.expiresAt > maxDate) {
     return new BadRequestException(

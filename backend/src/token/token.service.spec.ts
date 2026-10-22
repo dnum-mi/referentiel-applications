@@ -1,6 +1,14 @@
-import { Permission, Roles, ServiceTokenMode, UserType } from "@prisma/client";
+import {
+  Permission,
+  Prisma,
+  Roles,
+  ServiceTokenMode,
+  UserType,
+} from "@prisma/client";
 import { API_TOKEN, SERVICE_TOKEN_MODE } from "./domain/token.entity";
+import { requestContext } from "src/common/request-context";
 import { StepDownException } from "src/auth-level/step-down.exception";
+import { DELEGATED_AUTH } from "src/permissions/delegated-auth";
 import { IMPERSONATION_AUTH } from "src/permissions/impersonation-auth";
 import type { Requestor } from "src/user/entities/user.entity";
 import { TokenStatus } from "./domain/token-status.entity";
@@ -62,7 +70,9 @@ describe("TokenService — impersonation plafonnée (#2925)", () => {
 // (`additionalPermissions`) du compte impersonné.
 describe("TokenService.findUserByToken — plafonnement", () => {
   const findUnique = jest.fn();
-  const prisma = { token: { findUnique, update: jest.fn() } };
+  const prisma = {
+    token: { findUnique, update: jest.fn(), updateMany: jest.fn() },
+  };
   const service = new TokenService(prisma as never, {} as never, {} as never);
 
   function tokenRow(tokenRole: Roles, userRole: Roles) {
@@ -119,6 +129,39 @@ describe("TokenService.findUserByToken — plafonnement", () => {
   it("retourne null pour un jeton inconnu", async () => {
     findUnique.mockResolvedValue(null);
     expect(await service.findUserByToken("clear")).toBeNull();
+  });
+
+  it("borne le marquage expiré à l'état lu pour préserver régénération et révocation concurrentes", async () => {
+    const expiredAt = new Date(Date.now() - 60_000);
+    findUnique.mockResolvedValue({
+      ...tokenRow(Roles.READER, Roles.READER),
+      expiresAt: expiredAt,
+    });
+    // La ligne a été renouvelée ou révoquée entre lecture et mise à jour :
+    // l'écriture conditionnelle ne trouve plus l'état observé.
+    prisma.token.updateMany.mockResolvedValue({ count: 0 });
+    expect(await service.findUserByToken("clear")).toBeNull();
+    expect(prisma.token.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: "token-1",
+        status: TokenStatus.active,
+        expiresAt: expiredAt,
+      },
+      data: { status: TokenStatus.expired, updatedAt: expect.any(Date) },
+    });
+    expect(prisma.token.update).not.toHaveBeenCalled();
+  });
+
+  it("ne marque pas une expiration en lecture seule", async () => {
+    findUnique.mockResolvedValue({
+      ...tokenRow(Roles.READER, Roles.READER),
+      expiresAt: new Date(Date.now() - 60_000),
+    });
+    expect(
+      await service.findUserByToken("clear", { readOnly: true }),
+    ).toBeNull();
+    expect(prisma.token.updateMany).not.toHaveBeenCalled();
+    expect(prisma.token.update).not.toHaveBeenCalled();
   });
 
   it.each(Object.values(ServiceTokenMode))(
@@ -217,6 +260,192 @@ describe("TokenService.create — un compte de service ne distribue pas de token
       expect(checkPermissions.can).not.toHaveBeenCalled();
       expect(prisma.token.findMany).not.toHaveBeenCalled();
       expect(prisma.token.create).not.toHaveBeenCalled();
+    },
+  );
+});
+
+describe("TokenService.regenerate — échéance et statut (#2926)", () => {
+  const now = new Date("2026-10-22T12:00:00.000Z");
+  const expiresAt = new Date("2027-01-22T12:00:00.000Z");
+  const requestor = {
+    id: "admin-1",
+    role: Roles.ADMIN,
+    type: UserType.human,
+    permissions: [Permission.GlobalAdminManage],
+    additionalPermissions: [],
+  } as Requestor;
+  const prisma = { token: { findUnique: jest.fn(), update: jest.fn() } };
+  const checkPermissions = { can: jest.fn() };
+  const service = new TokenService(
+    prisma as never,
+    checkPermissions as never,
+    {} as never,
+  );
+
+  function tokenRow(status: string = TokenStatus.active) {
+    return {
+      id: "token-1",
+      name: "service",
+      role: Roles.READER,
+      status,
+      serviceMode: ServiceTokenMode.machine,
+      expiresAt: new Date(
+        status === TokenStatus.expired
+          ? "2026-10-21T12:00:00.000Z"
+          : "2026-11-01T12:00:00.000Z",
+      ),
+      createdAt: now,
+      updatedAt: now,
+      createdBy: {
+        id: requestor.id,
+        email: "admin@example.test",
+        type: UserType.human,
+      },
+      userImpersonate: {
+        id: "bot-1",
+        email: "service@example.test",
+        type: UserType.bot,
+        scopeOrganization: null,
+      },
+    };
+  }
+
+  beforeEach(() => {
+    jest.useFakeTimers().setSystemTime(now);
+    jest.clearAllMocks();
+    checkPermissions.can.mockResolvedValue(true);
+    prisma.token.findUnique.mockResolvedValue(tokenRow());
+    prisma.token.update.mockImplementation(
+      async ({ data }: { data: { expiresAt: Date; status: string } }) => ({
+        ...tokenRow(),
+        ...data,
+      }),
+    );
+  });
+  afterEach(() => {
+    jest.useRealTimers();
+    jest.restoreAllMocks();
+  });
+
+  it.each([
+    ["invalide", new Date(Number.NaN)],
+    ["passée", new Date(now.getTime() - 1)],
+    ["présente", now],
+    ["supérieure à un an", new Date("2027-10-22T12:00:00.001Z")],
+  ])(
+    "refuse une date %s avant toute génération de secret ou mutation",
+    async (_description, invalidDate) => {
+      const generateHash = jest.spyOn(service, "generateHash");
+      await expect(
+        service.regenerate(requestor, "token-1", invalidDate),
+      ).rejects.toMatchObject({ status: 400 });
+      expect(generateHash).not.toHaveBeenCalled();
+      expect(prisma.token.update).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([TokenStatus.active, TokenStatus.expired])(
+    "renouvelle atomiquement un jeton %s avec un statut actif",
+    async (status) => {
+      prisma.token.findUnique.mockResolvedValue(tokenRow(status));
+      const result = await service.regenerate(requestor, "token-1", expiresAt);
+      expect(result.status).toBe(TokenStatus.active);
+      expect(result.expiresAt).toBe(expiresAt.toISOString());
+      expect(result.password).toHaveLength(48);
+      expect(prisma.token.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "token-1", status: { not: TokenStatus.revoked } },
+          data: {
+            hash: service.generateHash(result.password),
+            expiresAt,
+            updatedAt: now,
+            status: TokenStatus.active,
+          },
+        }),
+      );
+    },
+  );
+
+  it("conserve le préfixe de hash d'un jeton délégué", async () => {
+    prisma.token.findUnique.mockResolvedValue({
+      ...tokenRow(),
+      serviceMode: ServiceTokenMode.delegated,
+    });
+    const result = await service.regenerate(requestor, "token-1", expiresAt);
+    expect(prisma.token.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          hash: service.generateHash(
+            result.password,
+            ServiceTokenMode.delegated,
+          ),
+        }),
+      }),
+    );
+  });
+
+  it("refuse un jeton déjà révoqué sans le modifier", async () => {
+    prisma.token.findUnique.mockResolvedValue(tokenRow(TokenStatus.revoked));
+    await expect(
+      service.regenerate(requestor, "token-1", expiresAt),
+    ).rejects.toMatchObject({ status: 404 });
+    expect(prisma.token.update).not.toHaveBeenCalled();
+  });
+
+  it("ne réactive pas un jeton révoqué entre lecture et écriture et n'émet aucun secret", async () => {
+    prisma.token.update.mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError("No record found", {
+        code: "P2025",
+        clientVersion: "6.19.3",
+      }),
+    );
+    await expect(
+      service.regenerate(requestor, "token-1", expiresAt),
+    ).rejects.toMatchObject({ status: 404 });
+    expect(prisma.token.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "token-1", status: { not: TokenStatus.revoked } },
+      }),
+    );
+  });
+
+  it("propage une erreur de stockage sans émettre de secret", async () => {
+    const failure = new Error("database unavailable");
+    prisma.token.update.mockRejectedValueOnce(failure);
+    await expect(
+      service.regenerate(requestor, "token-1", expiresAt),
+    ).rejects.toBe(failure);
+  });
+
+  it("refuse une impersonation globale identifiée par le contexte de requête", async () => {
+    await requestContext.run({ impersonatorId: "real-admin" }, async () => {
+      await expect(
+        service.regenerate(requestor, "token-1", expiresAt),
+      ).rejects.toMatchObject({ status: 403 });
+    });
+    expect(checkPermissions.can).not.toHaveBeenCalled();
+    expect(prisma.token.findUnique).not.toHaveBeenCalled();
+    expect(prisma.token.update).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { ...requestor, type: UserType.bot },
+    {
+      ...requestor,
+      [DELEGATED_AUTH]: { human: requestor, service: requestor },
+    },
+    {
+      ...requestor,
+      [IMPERSONATION_AUTH]: { admin: requestor, target: requestor },
+    },
+  ])(
+    "refuse un principal non humain direct avant tout accès Prisma",
+    async (principal) => {
+      await expect(
+        service.regenerate(principal, "token-1", expiresAt),
+      ).rejects.toMatchObject({ status: 403 });
+      expect(prisma.token.findUnique).not.toHaveBeenCalled();
+      expect(prisma.token.update).not.toHaveBeenCalled();
     },
   );
 });

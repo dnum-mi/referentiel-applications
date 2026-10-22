@@ -16,6 +16,7 @@ import { StepDownException } from "src/auth-level/step-down.exception";
 import { DELEGATED_AUTH } from "src/permissions/delegated-auth";
 import { IMPERSONATION_AUTH } from "src/permissions/impersonation-auth";
 import { CheckPermissions } from "src/common/service/check-permissions.service";
+import { requestContext } from "src/common/request-context";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Requestor } from "src/user/entities/user.entity";
 import { ScopedPermissionService } from "src/user/scope-permission/scoped-permission.service";
@@ -250,8 +251,13 @@ export class TokenService {
     const isInvalid = isTokenInvalid(token);
     if (isInvalid === "undetectedExpired" && !options.readOnly) {
       // Handle undetected expired token case
-      await this.prisma.token.update({
-        where: { id: token.id },
+      await this.prisma.token.updateMany({
+        // Ne pas écraser une régénération ou une révocation survenue depuis la lecture.
+        where: {
+          id: token.id,
+          status: TokenStatus.active,
+          expiresAt: token.expiresAt,
+        },
         data: {
           status: TokenStatus.expired,
           updatedAt: new Date(),
@@ -305,6 +311,7 @@ export class TokenService {
     if (
       requestor[DELEGATED_AUTH] ||
       requestor[IMPERSONATION_AUTH] ||
+      requestContext.getStore()?.impersonatorId ||
       requestor.type === UserType.bot
     ) {
       throw new ForbiddenException(
@@ -326,18 +333,36 @@ export class TokenService {
         "Token not found or you don't have permission to regenerate it",
       );
     }
+    const invalidReason = isNewTokenInvalid({ expiresAt });
+    if (invalidReason) {
+      throw invalidReason;
+    }
     const password = generateRandomPassword(48);
 
-    const newToken = await this.prisma.token.update({
-      where: { id: token.id },
-      data: {
-        hash: this.generateHash(password, token.serviceMode),
-        expiresAt,
-        updatedAt: new Date(),
-      },
-      include: TOKEN_INCLUDE,
-      omit: { hash: true },
-    });
+    const newToken = await this.prisma.token
+      .update({
+        // Une révocation concurrente doit rester définitive, même après cette lecture.
+        where: { id: token.id, status: { not: TokenStatus.revoked } },
+        data: {
+          hash: this.generateHash(password, token.serviceMode),
+          expiresAt,
+          status: TokenStatus.active,
+          updatedAt: new Date(),
+        },
+        include: TOKEN_INCLUDE,
+        omit: { hash: true },
+      })
+      .catch((error: unknown) => {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2025"
+        ) {
+          throw new NotFoundException(
+            "Token not found or you don't have permission to regenerate it",
+          );
+        }
+        throw error;
+      });
 
     return {
       ...this.toDto(newToken),
