@@ -755,6 +755,7 @@ export class PrismaQueryBuilder {
     "rgaa",
     "technicalMaturity",
     "businessMaturity",
+    "costContainment",
     "costMaturity",
   ]);
 
@@ -801,7 +802,7 @@ export class PrismaQueryBuilder {
       );
 
     const debtSortQuery = (
-      field: "technicalMaturity" | "businessMaturity" | "costMaturity",
+      field: "technicalMaturity" | "businessMaturity" | "costContainment",
     ) =>
       this.prisma.$queryRaw<{ id: string }[]>(
         Prisma.sql`
@@ -812,7 +813,7 @@ export class PrismaQueryBuilder {
             ORDER BY "createdAt" DESC LIMIT 1
           ) tdi ON true
           WHERE a."id" = ANY(${ids})
-          ORDER BY tdi.val ${dir} NULLS LAST
+          ORDER BY tdi.val ${dir} NULLS LAST, a."id" ASC
         `,
       );
 
@@ -882,8 +883,9 @@ export class PrismaQueryBuilder {
       case "businessMaturity":
         rows = await debtSortQuery("businessMaturity");
         break;
-      case "costMaturity":
-        rows = await debtSortQuery("costMaturity");
+      case "costContainment":
+      case "costMaturity": // Alias historique des URL/API, avant le renommage du champ.
+        rows = await debtSortQuery("costContainment");
         break;
       default:
         return ids;

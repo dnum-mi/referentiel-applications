@@ -27,15 +27,16 @@ describe("Fonctionnalités bêta — capacité explicite et droits métier (#303
 
   const routes = [
     { featureId: FeatureId.CatalogueExcelExport, kind: "excel" },
+    { featureId: FeatureId.CatalogueHtmlExport, kind: "catalogue-html" },
     { featureId: FeatureId.ProductHtmlExport, kind: "html" },
     { featureId: FeatureId.ProductPowerpointExport, kind: "powerpoint" },
   ] as const;
 
   function exportRequest(kind: (typeof routes)[number]["kind"], token: string) {
     const server = request(app().getHttpServer());
-    return kind === "excel"
+    return kind === "excel" || kind === "catalogue-html"
       ? server
-          .get("/applications/export/excel")
+          .get(`/applications/export/${kind === "excel" ? "excel" : "html"}`)
           .query({ label: prefix })
           .set("Authorization", `Bearer ${token}`)
       : server
@@ -51,6 +52,10 @@ describe("Fonctionnalités bêta — capacité explicite et droits métier (#303
     const catalogue = jest.spyOn(
       app().get(ApplicationExportService),
       "exportSearchResultsToExcel",
+    );
+    const catalogueHtml = jest.spyOn(
+      app().get(ApplicationExportService),
+      "exportSearchResultsToHtml",
     );
     const html = jest.spyOn(
       app().get(ApplicationProductExportService),
@@ -68,6 +73,7 @@ describe("Fonctionnalités bêta — capacité explicite et droits métier (#303
         await exportRequest(kind, token).expect(403);
       }
       expect(catalogue).not.toHaveBeenCalled();
+      expect(catalogueHtml).not.toHaveBeenCalled();
       expect(html).not.toHaveBeenCalled();
       expect(powerpoint).not.toHaveBeenCalled();
       expect(
@@ -77,6 +83,7 @@ describe("Fonctionnalités bêta — capacité explicite et droits métier (#303
       ).toBe(before);
     } finally {
       catalogue.mockRestore();
+      catalogueHtml.mockRestore();
       html.mockRestore();
       powerpoint.mockRestore();
     }
@@ -113,12 +120,14 @@ describe("Fonctionnalités bêta — capacité explicite et droits métier (#303
     await scopedTarget.update({ organization: { connect: { id: child.id } } });
   });
 
-  it("publie le registre des trois fonctionnalités dans la configuration publique", async () => {
+  it("publie le registre des fonctionnalités dans la configuration publique", async () => {
     const response = await request(app().getHttpServer())
       .get("/config")
       .expect(200);
     expect(response.body.betaFeatures).toEqual([
       FeatureId.CatalogueExcelExport,
+      FeatureId.CatalogueHtmlExport,
+      FeatureId.ImportReportHtmlExport,
       FeatureId.ProductHtmlExport,
       FeatureId.ProductPowerpointExport,
     ]);
@@ -150,20 +159,26 @@ describe("Fonctionnalités bêta — capacité explicite et droits métier (#303
     },
   );
 
-  it("DataExport seul ne permet aucun des trois exports en bêta", async () => {
-    await expectNoExport(dataExporter, ["excel", "html", "powerpoint"]);
+  it("DataExport seul ne permet aucun export en bêta", async () => {
+    await expectNoExport(dataExporter, [
+      "excel",
+      "catalogue-html",
+      "html",
+      "powerpoint",
+    ]);
   });
 
   it("BetaFeatures seul ne remplace pas le droit métier DataExport du catalogue", async () => {
-    await expectNoExport(betaVisitor, ["excel"]);
+    await expectNoExport(betaVisitor, ["excel", "catalogue-html"]);
   });
 
-  it("l'export HTML stable du catalogue reste accessible avec DataExport sans capacité bêta", async () => {
-    const response = await request(app().getHttpServer())
-      .get("/applications/export/html")
-      .query({ label: prefix })
-      .set("Authorization", `Bearer ${getToken(dataExporter)}`)
-      .expect(200);
+  it("l'export HTML du catalogue demande DataExport et BetaFeatures, même après retrait avec le même JWT", async () => {
+    const exporter = await UserFaker.create({
+      role: Roles.READER,
+      additionalPermissions: [Permission.DataExport, Permission.BetaFeatures],
+    });
+    const token = getToken(exporter);
+    const response = await exportRequest("catalogue-html", token).expect(200);
     expect(response.headers["content-type"]).toMatch(
       /^text\/html;\s*charset=utf-8$/i,
     );
@@ -171,6 +186,8 @@ describe("Fonctionnalités bêta — capacité explicite et droits métier (#303
       "attachment; filename=applications_export.html",
     );
     expect(response.text).toContain(prefix);
+    await exporter.update({ additionalPermissions: [Permission.DataExport] });
+    await expectNoExport(exporter, ["catalogue-html"], token);
   });
 
   it("un administrateur global peut attribuer puis retirer la capacité, sans renouvellement du JWT", async () => {
@@ -223,7 +240,11 @@ describe("Fonctionnalités bêta — capacité explicite et droits métier (#303
       where: { id: target.id },
     });
     expect(revoked.additionalPermissions).toEqual([Permission.DataExport]);
-    await expectNoExport(target, ["excel", "html", "powerpoint"], token);
+    await expectNoExport(
+      target,
+      ["excel", "catalogue-html", "html", "powerpoint"],
+      token,
+    );
   });
 
   it("le retrait en base s'applique au même JWT avant toute génération ou trace métier d'export", async () => {
@@ -241,7 +262,11 @@ describe("Fonctionnalités bêta — capacité explicite et droits métier (#303
       where: { id: betaVisitor.id },
       data: { additionalPermissions: [] },
     });
-    await expectNoExport(betaVisitor, ["excel", "html", "powerpoint"], token);
+    await expectNoExport(
+      betaVisitor,
+      ["excel", "catalogue-html", "html", "powerpoint"],
+      token,
+    );
   });
 
   it("un administrateur scopé ne peut déléguer BetaFeatures à une cible de son périmètre", async () => {
@@ -294,24 +319,33 @@ describe("Fonctionnalités bêta — capacité explicite et droits métier (#303
     expect(user.additionalPermissions).toEqual([Permission.DataExport]);
   });
 
-  it("une fonctionnalité sortie du registre bêta ne demande plus la capacité et les autres restent protégées", async () => {
-    const registry = jest.replaceProperty(betaRegistry, "BETA_FEATURES", [
-      FeatureId.CatalogueExcelExport,
-      FeatureId.ProductPowerpointExport,
-    ]);
-    try {
-      const configuration = await request(app().getHttpServer())
-        .get("/config")
-        .expect(200);
-      expect(configuration.body.betaFeatures).toEqual([
-        FeatureId.CatalogueExcelExport,
-        FeatureId.ProductPowerpointExport,
-      ]);
-      const response = await exportRequest("html", getToken(admin)).expect(200);
-      expect(response.text).toContain(prefix);
-      await expectNoExport(admin, ["excel", "powerpoint"]);
-    } finally {
-      registry.restore();
-    }
-  });
+  it.each([routes[1], routes[2]])(
+    "$featureId sorti du registre bêta ne demande plus la capacité et les autres restent protégées",
+    async ({ kind, featureId }) => {
+      const remainingFeatures = betaRegistry.BETA_FEATURES.filter(
+        (id) => id !== featureId,
+      );
+      const registry = jest.replaceProperty(
+        betaRegistry,
+        "BETA_FEATURES",
+        remainingFeatures,
+      );
+      try {
+        const configuration = await request(app().getHttpServer())
+          .get("/config")
+          .expect(200);
+        expect(configuration.body.betaFeatures).toEqual(remainingFeatures);
+        const response = await exportRequest(kind, getToken(admin)).expect(200);
+        expect(response.text).toContain(prefix);
+        await expectNoExport(
+          admin,
+          routes
+            .filter((route) => route.featureId !== featureId)
+            .map((route) => route.kind),
+        );
+      } finally {
+        registry.restore();
+      }
+    },
+  );
 });

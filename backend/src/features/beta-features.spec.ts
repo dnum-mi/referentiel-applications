@@ -1,9 +1,11 @@
 import { BETA_FEATURES, FeatureId, isBetaFeature } from "./beta-features";
 
 describe("Registre des fonctionnalités bêta", () => {
-  it("déclare les trois fonctionnalités attendues sans doublon", () => {
+  it("déclare les fonctionnalités attendues sans doublon", () => {
     expect(BETA_FEATURES).toEqual([
       FeatureId.CatalogueExcelExport,
+      FeatureId.CatalogueHtmlExport,
+      FeatureId.ImportReportHtmlExport,
       FeatureId.ProductHtmlExport,
       FeatureId.ProductPowerpointExport,
     ]);

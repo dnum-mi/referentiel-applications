@@ -492,10 +492,12 @@ La capacité s'ajoute aux droits métier : **les deux contrôles doivent réussi
 | Fonctionnalité            | Identifiant stable          | Droit métier conservé |
 | ------------------------- | --------------------------- | --------------------- |
 | Export Excel du catalogue | `catalogue-excel-export`    | `DataExport`          |
+| Export HTML du catalogue  | `catalogue-html-export`     | `DataExport`          |
 | Fiche produit HTML        | `product-html-export`       | `AppRead`             |
+| Rapport d’import HTML     | `import-report-html-export` | `GlobalAdminManage`   |
 | Fiche produit PowerPoint  | `product-powerpoint-export` | `AppRead`             |
 
-L'export HTML du catalogue et l'export Excel de la vue Technologies restent soumis à leurs droits habituels, sans capacité bêta.
+Tous les exports HTML sont en bêta. L’export HTML du catalogue et de la fiche est contrôlé côté API avant génération. Le rapport d’import est construit dans le navigateur à partir du rapport déjà reçu ; son action vérifie la capacité avant de créer le fichier. L’export CSV du rapport et l’export Excel de la vue Technologies restent soumis à leurs droits habituels, sans capacité bêta.
 
 **Ajouter une fonctionnalité.** Déclarer son identifiant dans `FeatureId`, l'inscrire dans `BETA_FEATURES`, ajouter `@RequiresBetaFeature(FeatureId.…)` à son endpoint en conservant son garde métier, puis utiliser `useBetaFeatures()` et le composant commun `BetaBadge` sur son action dans l'interface. Régénérer le contrat OpenAPI et le client. Le registre est publié par `GET /api/v2/config` ; l'interface n'en maintient aucune copie de production.
 

@@ -2,7 +2,8 @@ import { readFile } from "node:fs/promises";
 import type { Download } from "@playwright/test";
 import { createIsolatedBetaTester } from "../fixtures/beta-tester";
 import { test, expect } from "../fixtures/test";
-import { ApplicationPage, SearchPage } from "../pom";
+import { AdminPage, ApplicationPage, SearchPage } from "../pom";
+import { buildSheetWorkbook, XLSX_MIME } from "../support/import-xlsx";
 
 async function saveDownload(
   download: Download,
@@ -13,7 +14,7 @@ async function saveDownload(
   if (typeof name === "string") expect(download.suggestedFilename()).toBe(name);
   else expect(download.suggestedFilename()).toMatch(name);
   const artifactName =
-    typeof name === "string" ? name : "applications_export.xlsx";
+    typeof name === "string" ? name : download.suggestedFilename();
   const path = test.info().outputPath(artifactName);
   await download.saveAs(path);
   const content = await readFile(path);
@@ -37,7 +38,7 @@ test.describe("Fonctionnalités bêta — délégation explicite", () => {
       const fiche = new ApplicationPage(page);
       await search.open();
       await search.expectExcelBetaExport(false);
-      await search.expectStableHtmlExportVisible();
+      await search.expectHtmlBetaExport(false);
       await fiche.open(application!.id);
       await fiche.expectProductBetaExports(false);
 
@@ -64,6 +65,13 @@ test.describe("Fonctionnalités bêta — délégation explicite", () => {
 
       await search.open();
       await search.expectExcelBetaExport(true);
+      await search.expectHtmlBetaExport(true);
+      const catalogueHtml = await saveDownload(
+        await search.exportHtml(),
+        /^applications_export_\d{4}-\d{2}-\d{2}\.html$/,
+        "text/html",
+      );
+      expect(catalogueHtml.toString("utf8")).toContain('<html lang="fr">');
       const excel = await saveDownload(
         await search.exportExcel(),
         /^applications_export_\d{4}-\d{2}-\d{2}\.xlsx$/,
@@ -74,8 +82,13 @@ test.describe("Fonctionnalités bêta — délégation explicite", () => {
       // L'interface reste ouverte : le clic doit relire l'habilitation retirée
       // et ne déclencher ni requête d'export ni événement de téléchargement.
       await tester.setPermissions(["DataExport"]);
+      await search.expectHtmlRevocationBeforeDownload();
+      await tester.setPermissions(["DataExport", "BetaFeatures"]);
+      await search.open();
+      await search.expectExcelBetaExport(true);
+      await tester.setPermissions(["DataExport"]);
       await search.expectExcelRevocationBeforeDownload();
-      await search.expectStableHtmlExportVisible();
+      await search.expectHtmlBetaExport(false);
       await fiche.open(application!.id);
       await fiche.expectProductBetaExports(false);
     } finally {
@@ -97,6 +110,13 @@ test.describe("Fonctionnalités bêta — délégation explicite", () => {
       const search = new SearchPage(page);
       await search.open();
       await search.expectExcelBetaExport(true, true);
+      await search.expectHtmlBetaExport(true);
+      const html = await saveDownload(
+        await search.exportHtml(),
+        /^applications_export_\d{4}-\d{2}-\d{2}\.html$/,
+        "text/html",
+      );
+      expect(html.toString("utf8")).toContain('<html lang="fr">');
       await test.info().attach("beta-catalogue-mobile", {
         body: await page.screenshot({ fullPage: true }),
         contentType: "image/png",
@@ -116,7 +136,58 @@ test.describe("Fonctionnalités bêta — délégation explicite", () => {
       await fiche.expectProductBetaExports(false);
       await search.open();
       await search.expectExcelBetaExport(false, true);
-      await search.expectStableHtmlExportVisible();
+      await search.expectHtmlBetaExport(false);
+    } finally {
+      await tester.dispose();
+    }
+  });
+  test("BET-03 - rapport HTML d’import réservé à la capacité bêta, CSV conservé", async ({
+    page,
+    data,
+  }) => {
+    const tester = await createIsolatedBetaTester(page, data, "ADMIN");
+    const workbook = await buildSheetWorkbook(
+      "Qualification bêta",
+      ["Information"],
+      [],
+    );
+    const admin = new AdminPage(page);
+    async function importEmptyWorkbook() {
+      await admin.open();
+      await admin.openBatchDataTab();
+      await admin.importExcel({
+        name: "rapport-beta.xlsx",
+        mimeType: XLSX_MIME,
+        buffer: workbook,
+      });
+      await admin.expectImportReportSummary(/0 créé\(s\)/);
+      await admin.expectImportReportDownloadable();
+    }
+    try {
+      await tester.setPermissions([]);
+      await tester.impersonate();
+      await importEmptyWorkbook();
+      await admin.expectImportHtmlBetaExport(false);
+      const csv = await saveDownload(
+        await admin.downloadImportReport("csv"),
+        /^rapport_import_acteurs_\d{4}-\d{2}-\d{2}\.csv$/,
+        "text/csv",
+      );
+      expect(csv.toString("utf8")).toContain("Onglet");
+
+      await tester.setPermissions(["BetaFeatures"]);
+      await importEmptyWorkbook();
+      await admin.expectImportHtmlBetaExport(true);
+      const html = await saveDownload(
+        await admin.downloadImportReport("html"),
+        /^rapport_import_acteurs_\d{4}-\d{2}-\d{2}\.html$/,
+        "text/html",
+      );
+      expect(html.toString("utf8")).toContain('<html lang="fr">');
+      expect(html.toString("utf8")).toContain("Qualification bêta");
+      await tester.setPermissions([]);
+      await admin.expectImportHtmlRevocationBeforeDownload();
+      await admin.expectImportReportDownloadable();
     } finally {
       await tester.dispose();
     }
