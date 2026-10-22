@@ -226,7 +226,7 @@ test.describe("RGAA — accessibilité", () => {
     await search.open();
     await search.searchByLabel(application.label);
     await search.expectSearchApplied(application.label);
-    await search.openFirstApplication();
+    await search.openApplication(application.id, application.label);
     const chrome = new ChromePage(page);
     await chrome.expectAnnouncerFocused();
     await chrome.expectAnnouncerText(

@@ -112,12 +112,19 @@ test.describe("Permissions & rôles", () => {
 
   test("PRM-07 - modifier et enregistrer la matrice de permissions", async ({
     page,
+    data,
   }) => {
-    await loginAs(page, "admin");
-    const admin = new AdminPage(page);
-    await admin.open();
-    await admin.openPermsMatrixTab();
-    await admin.editMatrixAndRestore();
+    const matrix = await data.permsMatrix();
+    expect(matrix?.length, "Matrice des permissions vide").toBeGreaterThan(0);
+    const snapshot = structuredClone(matrix!);
+    try {
+      const admin = new AdminPage(page);
+      await admin.open();
+      await admin.openPermsMatrixTab();
+      await admin.editMatrixAndRestore();
+    } finally {
+      expect(await data.updatePermsMatrix(snapshot)).not.toBeNull();
+    }
   });
 
   // PRM-09/10 utilisent un CONTEXTE navigateur séparé pour la session `user` : le provisioning se

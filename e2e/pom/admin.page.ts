@@ -369,55 +369,64 @@ export class AdminPage extends BasePage {
     ).toHaveCount(1);
   }
 
-  /**
-   * Modifie une cellule de la matrice (toggle `-`/`RO`/`RW`), enregistre, puis rétablit la valeur
-   * d'origine en recyclant le toggle (PRM-07).
-   */
-  async editMatrixAndRestore(): Promise<void> {
-    // Le testid `app-perms-select-*` (passé par le parent) écrase `permission-toggle`.
-    // On vise un toggle Lecture/Écriture (texte `-` / `RO` / `RW`) de la colonne « App ».
-    const toggle = () =>
-      this.matrixPanel().locator('[data-testid$="-App"]').first();
-    await expect(toggle()).toBeVisible();
-    const original = (await toggle().innerText()).trim();
-
-    await toggle().click();
-    await expect(toggle()).not.toHaveText(original);
-    await this.permsSave().click();
-    await this.expectToaster(
-      /Matrice des permissions mise à jour avec succès/i,
+  /** Enregistre le brouillon, puis vérifie la valeur après une vraie relecture de page. */
+  private async saveMatrixAndVerify(
+    toggleId: string,
+    value: string,
+  ): Promise<void> {
+    const saved = this.page.waitForResponse(
+      (response) =>
+        new URL(response.url()).pathname.endsWith("/actorTypes/perms-matrix") &&
+        response.request().method() === "PATCH",
     );
-
-    // Rétablissement : on recycle le toggle jusqu'à retrouver la valeur d'origine.
-    for (
-      let i = 0;
-      i < 3 && (await toggle().innerText()).trim() !== original;
-      i += 1
-    ) {
-      await toggle().click();
-    }
     await this.permsSave().click();
-    await this.expectToaster(
-      /Matrice des permissions mise à jour avec succès/i,
+    expect((await saved).ok()).toBe(true);
+    await expect(this.byTestId("app-perms-matrix-status")).toHaveText(
+      "Matrice des permissions mise à jour avec succès",
     );
+    await this.page.reload();
+    await this.openPermsMatrixTab();
+    await expect(this.byTestId(toggleId)).toHaveText(value);
   }
 
-  /**
-   * Modifie une cellule de la matrice (toggle) et enregistre SANS restaurer (PRM-12).
-   * L'appelant restaure via l'API dans son `finally`.
-   */
-  async editMatrixAndSave(): Promise<void> {
-    const toggle = () =>
-      this.matrixPanel().locator('[data-testid$="-App"]').first();
-    await expect(toggle()).toBeVisible();
-    const original = (await toggle().innerText()).trim();
+  /** Modifie une cellule de la matrice, vérifie sa persistance, puis la rétablit (PRM-07). */
+  async editMatrixAndRestore(): Promise<void> {
+    const toggle = this.matrixPanel().locator('[data-testid$="-App"]').first();
+    await expect(toggle).toBeVisible();
+    const toggleId = await toggle.getAttribute("data-testid");
+    if (!toggleId)
+      throw new Error("Identifiant du sélecteur de matrice absent");
+    const original = (await toggle.innerText()).trim();
 
-    await toggle().click();
-    await expect(toggle()).not.toHaveText(original);
-    await this.permsSave().click();
-    await this.expectToaster(
-      /Matrice des permissions mise à jour avec succès/i,
-    );
+    await toggle.click();
+    await expect(toggle).not.toHaveText(original);
+    const changed = (await toggle.innerText()).trim();
+    await this.saveMatrixAndVerify(toggleId, changed);
+
+    const persistedToggle = this.byTestId(toggleId);
+    for (
+      let i = 0;
+      i < 3 && (await persistedToggle.innerText()).trim() !== original;
+      i += 1
+    ) {
+      await persistedToggle.click();
+    }
+    await expect(persistedToggle).toHaveText(original);
+    await this.saveMatrixAndVerify(toggleId, original);
+  }
+
+  /** Modifie une cellule et vérifie sa persistance ; l'appelant restaure via API (PRM-12). */
+  async editMatrixAndSave(): Promise<void> {
+    const toggle = this.matrixPanel().locator('[data-testid$="-App"]').first();
+    await expect(toggle).toBeVisible();
+    const toggleId = await toggle.getAttribute("data-testid");
+    if (!toggleId)
+      throw new Error("Identifiant du sélecteur de matrice absent");
+    const original = (await toggle.innerText()).trim();
+
+    await toggle.click();
+    await expect(toggle).not.toHaveText(original);
+    await this.saveMatrixAndVerify(toggleId, (await toggle.innerText()).trim());
   }
 
   /** Vérifie qu'on n'est PAS sur la page admin (cas non-admin). */

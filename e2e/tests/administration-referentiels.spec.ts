@@ -282,7 +282,7 @@ test.describe("Administration des référentiels", () => {
     }
   });
 
-  test("ADM-16 - lister et rechercher les acteurs (admin)", async ({
+  test("ADM-17 - lister et rechercher les acteurs (admin)", async ({
     page,
     data,
   }) => {
@@ -315,7 +315,7 @@ test.describe("Administration des référentiels", () => {
     }
   });
 
-  test("ADM-17 - modifier un acteur unique (admin)", async ({ page, data }) => {
+  test("ADM-18 - modifier un acteur unique (admin)", async ({ page, data }) => {
     const ts = Date.now();
     const email = `e2e-adm16-${ts}@example.com`;
     const newLastname = `MODIFIED-${ts}`;
@@ -346,7 +346,7 @@ test.describe("Administration des référentiels", () => {
     }
   });
 
-  test("ADM-18 - supprimer un acteur unique (admin)", async ({
+  test("ADM-19 - supprimer un acteur unique (admin)", async ({
     page,
     data,
   }) => {
@@ -376,7 +376,7 @@ test.describe("Administration des référentiels", () => {
     await admin.expectActorAbsent(email);
   });
 
-  test("ADM-19 - modifier tous les acteurs par email (admin)", async ({
+  test("ADM-20 - modifier tous les acteurs par email (admin)", async ({
     page,
     data,
   }) => {
@@ -424,7 +424,7 @@ test.describe("Administration des référentiels", () => {
     }
   });
 
-  test("ADM-20 - supprimer tous les acteurs par email (admin)", async ({
+  test("ADM-21 - supprimer tous les acteurs par email (admin)", async ({
     page,
     data,
   }) => {

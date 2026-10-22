@@ -80,9 +80,12 @@ export class NotFoundPage extends BasePage {
     await expect(this.container()).toContainText(/404|introuvable/i);
   }
 
-  /** Le bouton « Retour à l'accueil » mène au catalogue (utilisateur authentifié). */
-  async clickHomeAndExpectCatalogue(): Promise<void> {
+  /** Le bouton « Retour à l'accueil » mène à l'accueil (utilisateur authentifié). */
+  async clickHomeAndExpectHome(): Promise<void> {
     await this.homeBtn().click();
-    await expect(this.page).toHaveURL(/\/recherche-application/);
+    await expect.poll(() => new URL(this.page.url()).pathname).toBe("/");
+    await expect(this.byTestId("home-title")).toHaveText(
+      "Le référentiel des applications",
+    );
   }
 }
