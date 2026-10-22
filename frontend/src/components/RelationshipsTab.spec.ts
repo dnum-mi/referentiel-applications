@@ -1,5 +1,5 @@
 import { createPinia, setActivePinia } from "pinia";
-import { computed, defineComponent } from "vue";
+import { computed, defineComponent, type PropType } from "vue";
 import { enableAutoUnmount, flushPromises, shallowMount } from "@vue/test-utils";
 import { RelationType, type RelationDto } from "@/client";
 import type { ApplicationWithPerms } from "@/models/Application";
@@ -47,7 +47,9 @@ function renderTab(id = "app-a") {
     global: {
       stubs: {
         RefAppTable: defineComponent({
-          props: ["items"],
+          props: {
+            items: { type: Array as PropType<{ originalRow: { id: string }; applicationCible: string }[]>, required: true },
+          },
           template: '<ul><li v-for="item in items" :key="item.originalRow.id">{{ item.applicationCible }}</li></ul>',
         }),
       },
