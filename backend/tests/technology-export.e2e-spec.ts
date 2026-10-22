@@ -360,7 +360,10 @@ describe("Exports Excel des technologies (#2524)", () => {
 
   describe("GET /applications/export/excel", () => {
     async function visitorWithTechnologyAccess(allowedApplicationId?: string) {
-      const visitor = await makeUser(Roles.VISITOR, [Permission.DataExport]);
+      const visitor = await makeUser(Roles.VISITOR, [
+        Permission.DataExport,
+        Permission.BetaFeatures,
+      ]);
       const deniedType = await ActorTypeFaker.create([]);
       const allowedType = allowedApplicationId
         ? await ActorTypeFaker.create([Permission.TechnologyRead])
@@ -402,7 +405,10 @@ describe("Exports Excel des technologies (#2524)", () => {
 
     it("ajoute toutes les technologies autorisées, y compris celles sans alerte", async () => {
       const workbook = await exportCatalogue(
-        await makeUser(Roles.READER, [Permission.DataExport]),
+        await makeUser(Roles.READER, [
+          Permission.DataExport,
+          Permission.BetaFeatures,
+        ]),
       );
       const rows = technologyRows(workbook);
       expect(rows).toHaveLength(activeIds.length + 3);

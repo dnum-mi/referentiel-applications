@@ -66,6 +66,39 @@ export class ApplicationPage extends BasePage {
     await expect(this.root()).toBeVisible();
   }
 
+  async expectProductBetaExports(available: boolean): Promise<void> {
+    for (const format of ["html", "powerpoint"]) {
+      const button = this.byTestId(`application-export-${format}-btn`);
+      if (!available) {
+        await expect(button).toHaveCount(0);
+        continue;
+      }
+      await expect(button).toBeVisible();
+      await expect(button.getByText("Bêta", { exact: true })).toBeVisible();
+      await expect(button).toHaveAccessibleName(/Bêta/i);
+    }
+  }
+
+  /** Téléchargement réel depuis le bouton de la fiche, sans intercepter la route d'export. */
+  async exportProduct(format: "html" | "powerpoint") {
+    const button = this.byTestId(`application-export-${format}-btn`);
+    await expect(button).toBeVisible();
+    const [download] = await Promise.all([
+      this.page.waitForEvent("download"),
+      button.click(),
+    ]);
+    await expect(button).toHaveAttribute("aria-busy", "false");
+    return download;
+  }
+
+  async expectProductExportEnabled(
+    format: "html" | "powerpoint",
+  ): Promise<void> {
+    const button = this.byTestId(`application-export-${format}-btn`);
+    await expect(button).toBeEnabled();
+    await expect(button).toHaveAttribute("aria-disabled", "false");
+  }
+
   /** Échec et nouvelle tentative simulés : aucun export ni journal métier côté serveur. */
   async expectProductExportKeepsFocus(): Promise<void> {
     const button = this.byTestId("application-export-html-btn");

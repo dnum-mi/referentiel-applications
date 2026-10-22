@@ -133,23 +133,23 @@ export const useUserStore = defineStore("userStore", () => {
     try {
       response = await client.userControllerFindMe();
     } catch (error) {
-      if (generation !== sessionGeneration || sequence !== fetchSequence) return;
+      if (generation !== sessionGeneration || sequence !== fetchSequence) return false;
       if (!requiresSessionRevalidation) throw error;
       invalidateSession();
-      return;
+      return false;
     }
-    if (generation !== sessionGeneration || sequence !== fetchSequence) return;
+    if (generation !== sessionGeneration || sequence !== fetchSequence) return false;
     if (response.data && isApiSuccess(response)) {
       requiresSessionRevalidation = false;
       deniedAuthLevel.value = undefined;
       user.value = response.data;
       settleReauthAttempt();
       notifyStepDown();
-      return;
+      return true;
     }
     if (response.response?.status === 403 && isStrongAuthRequiredResponse(response.error)) {
       requireStrongAuth(response.error.authLevel);
-      return;
+      return false;
     }
     // #1985 : filet — une impersonation persistée refusée (session rétrogradée) rejoue le header à
     // chaque requête ; si le payload `stepDown` n'est pas parvenu à l'intercepteur (proxy, ancien
@@ -160,6 +160,7 @@ export const useUserStore = defineStore("userStore", () => {
       globalThis.location.assign("/");
     }
     if (requiresSessionRevalidation) invalidateSession();
+    return false;
   }
 
   // Après un rechargement forcé par un 403 `stepDown` (impersonation refusée), explique ce qui

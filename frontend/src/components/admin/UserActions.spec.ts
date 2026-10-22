@@ -168,6 +168,30 @@ describe("UserActions", () => {
     vi.restoreAllMocks();
   });
 
+  it("propose une délégation bêta explicite sans la cocher pour un administrateur", async () => {
+    hasPermissionsMock.mockReturnValue(true);
+    const admin = { ...targetUser, role: Roles.ADMIN, additionalPermissions: [] };
+    updateUserMock.mockResolvedValue({ response: { ok: true }, data: { ...admin, additionalPermissions: [Permission.BETA_FEATURES] } });
+    render(UserActions, { props: { user: admin }, global: { ...global, stubs: { ...global.stubs, DsfrCheckboxSet: false } } });
+    await fireEvent.click(screen.getByTestId("admin-user-edit-btn"));
+    const capability = screen.getByRole("checkbox", { name: /Accéder aux fonctionnalités bêta/ });
+    expect(capability).not.toBeChecked();
+    expect(capability).toBeEnabled();
+    await fireEvent.click(capability);
+    await fireEvent.click(screen.getByTestId("admin-save-perms-btn"));
+    expect(updateUserMock).toHaveBeenCalledWith({
+      path: { id: admin.id },
+      body: { role: Roles.ADMIN, organizationId: null, scopeOrganizationId: null, additionalPermissions: [Permission.BETA_FEATURES] },
+    });
+  });
+
+  it("réserve la délégation bêta à la capacité d'administration globale", async () => {
+    hasPermissionsMock.mockImplementation((permissions: Permission[]) => permissions.includes(Permission.ADMIN_PANEL_MANAGE));
+    render(UserActions, { props: { user: targetUser }, global: { ...global, stubs: { ...global.stubs, DsfrCheckboxSet: false } } });
+    await fireEvent.click(screen.getByTestId("admin-user-edit-btn"));
+    expect(screen.getByRole("checkbox", { name: /Accéder aux fonctionnalités bêta/ })).toBeDisabled();
+  });
+
   it("garde le focus et l’erreur de blocage dans la fenêtre et refuse le double envoi", async () => {
     hasPermissionsMock.mockReturnValue(true);
     const pending = deferred<{ error: { message: string } }>();

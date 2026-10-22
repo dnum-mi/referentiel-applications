@@ -79,6 +79,8 @@ enum Permission {
   AppList
   /// Exporter les données
   DataExport
+  /// Accéder aux fonctionnalités en bêta. Jamais accordée par un rôle : délégation explicite.
+  BetaFeatures
   /// Manager l'admin panel : administration des utilisateurs et des acteurs. Un administrateur
   /// avec un périmètre organisationnel la conserve, mais ne l'exerce que dans son périmètre.
   AdminPanelManage

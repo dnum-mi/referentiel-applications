@@ -1,10 +1,15 @@
-import { flushPromises, mount } from "@vue/test-utils";
+import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils";
+import { reactive, ref } from "vue";
+import { FeatureId, Permission } from "@/client";
 import ApplicationProductExport from "./ApplicationProductExport.vue";
 
-const { downloadProductPowerpoint, downloadProductHtml, addErrorMessage } = vi.hoisted(() => ({
+const { downloadProductPowerpoint, downloadProductHtml, addErrorMessage, getConfig, hasPermissions, fetchUser } = vi.hoisted(() => ({
   downloadProductPowerpoint: vi.fn(),
   downloadProductHtml: vi.fn(),
   addErrorMessage: vi.fn(),
+  getConfig: vi.fn(),
+  hasPermissions: vi.fn(),
+  fetchUser: vi.fn(),
 }));
 
 vi.mock("@/stores/applicationStore", () => ({
@@ -13,19 +18,29 @@ vi.mock("@/stores/applicationStore", () => ({
 vi.mock("@/stores/toasterStore", () => ({
   useToasterStore: () => ({ addErrorMessage }),
 }));
+vi.mock("@/stores/userStore", () => ({ useUserStore: () => ({ hasPermissions, fetchUser }) }));
+vi.mock("@/services/config", () => ({ getConfig }));
+const permissions = ref<Permission[]>([]);
+enableAutoUnmount(afterEach);
 
-function render() {
-  return mount(ApplicationProductExport, {
+async function render() {
+  const wrapper = mount(ApplicationProductExport, {
     props: { applicationId: "app-1" },
     global: {
       stubs: { DsfrButton: { template: "<button><slot /></button>" } },
     },
   });
+  await flushPromises();
+  return wrapper;
 }
 
 describe("Export de fiche produit PowerPoint", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    permissions.value = [Permission.BETA_FEATURES, Permission.APP_READ];
+    hasPermissions.mockImplementation((required: Permission[]) => required.some((permission) => permissions.value.includes(permission)));
+    fetchUser.mockResolvedValue(true);
+    getConfig.mockResolvedValue({ betaFeatures: Object.values(FeatureId) });
   });
 
   it("signale l'indisponibilité sans retirer le bouton du parcours clavier pendant la préparation", async () => {
@@ -35,8 +50,9 @@ describe("Export de fiche produit PowerPoint", () => {
         finish = resolve;
       }),
     );
-    const wrapper = render();
+    const wrapper = await render();
     await wrapper.get('[data-testid="application-export-powerpoint-btn"]').trigger("click");
+    await flushPromises();
     expect(downloadProductPowerpoint).toHaveBeenCalledWith("app-1");
     expect(wrapper.get('[data-testid="application-export-powerpoint-btn"]').attributes("disabled")).toBeUndefined();
     expect(wrapper.get('[data-testid="application-export-powerpoint-btn"]').attributes("aria-disabled")).toBe("true");
@@ -53,7 +69,7 @@ describe("Export de fiche produit PowerPoint", () => {
   it("présente l'échec et permet de réessayer", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     downloadProductPowerpoint.mockRejectedValueOnce(new Error("Échec serveur"));
-    const wrapper = render();
+    const wrapper = await render();
     await wrapper.get('[data-testid="application-export-powerpoint-btn"]').trigger("click");
     await flushPromises();
     expect(addErrorMessage).toHaveBeenCalledWith("Impossible d'exporter la fiche produit en PowerPoint. Veuillez réessayer.");
@@ -72,8 +88,9 @@ describe("Export de fiche produit PowerPoint", () => {
         finish = resolve;
       }),
     );
-    const wrapper = render();
+    const wrapper = await render();
     await wrapper.get('[data-testid="application-export-html-btn"]').trigger("click");
+    await flushPromises();
     expect(downloadProductHtml).toHaveBeenCalledWith("app-1");
     expect(downloadProductPowerpoint).not.toHaveBeenCalled();
     expect(wrapper.get('[data-testid="application-export-powerpoint-btn"]').attributes("aria-disabled")).toBe("true");
@@ -86,5 +103,67 @@ describe("Export de fiche produit PowerPoint", () => {
     await flushPromises();
     expect(wrapper.get('[data-testid="application-export-html-btn"]').attributes("disabled")).toBeUndefined();
     wrapper.unmount();
+  });
+
+  it("masque les deux exports sans la capacité bêta et les badges sont lisibles dans leurs noms", async () => {
+    permissions.value = [Permission.APP_READ];
+    const denied = await render();
+    expect(denied.find("button").exists()).toBe(false);
+    denied.unmount();
+    permissions.value.push(Permission.BETA_FEATURES);
+    const wrapper = await render();
+    expect(wrapper.get('[data-testid="application-export-html-btn"]').element).toHaveAccessibleName(/HTML.*Bêta/);
+    expect(wrapper.get('[data-testid="application-export-powerpoint-btn"]').element).toHaveAccessibleName(/PowerPoint.*Bêta/);
+    expect(wrapper.get('[data-testid="application-export-html-btn"] .fr-badge').element.tagName).toBe("SPAN");
+    expect(wrapper.get('[data-testid="application-export-powerpoint-btn"] .fr-badge').element.tagName).toBe("SPAN");
+    wrapper.unmount();
+  });
+
+  it("arrête les callbacks après révocation et revalide les droits métier avant l'export", async () => {
+    const wrapper = await render();
+    const button = wrapper.get('[data-testid="application-export-html-btn"]');
+    permissions.value = [Permission.APP_READ];
+    await button.trigger("click");
+    expect(downloadProductHtml).not.toHaveBeenCalled();
+    expect(wrapper.find("button").exists()).toBe(false);
+    permissions.value = [Permission.BETA_FEATURES];
+    await flushPromises();
+    await wrapper.get('[data-testid="application-export-html-btn"]').trigger("click");
+    await flushPromises();
+    expect(downloadProductHtml).not.toHaveBeenCalled();
+    wrapper.unmount();
+  });
+
+  it("retire restriction et badge uniquement du format sorti de bêta", async () => {
+    const config = reactive({ betaFeatures: Object.values(FeatureId) });
+    getConfig.mockResolvedValue(config);
+    permissions.value = [Permission.APP_READ];
+    const wrapper = await render();
+    config.betaFeatures.splice(config.betaFeatures.indexOf(FeatureId.PRODUCT_HTML_EXPORT), 1);
+    await flushPromises();
+    expect(wrapper.find('[data-testid="application-export-powerpoint-btn"]').exists()).toBe(false);
+    const htmlButton = wrapper.get('[data-testid="application-export-html-btn"]');
+    expect(htmlButton.text()).not.toContain("Bêta");
+    await htmlButton.trigger("click");
+    await flushPromises();
+    expect(downloadProductHtml).toHaveBeenCalledExactlyOnceWith("app-1");
+    wrapper.unmount();
+  });
+
+  it("rafraîchit les droits après un refus d'export et retire les commandes révoquées", async () => {
+    const errorLog = vi.spyOn(console, "error").mockImplementation(() => {});
+    downloadProductHtml.mockRejectedValueOnce(new Error("403 Forbidden"));
+    fetchUser.mockResolvedValueOnce(true).mockImplementationOnce(async () => {
+      permissions.value = [Permission.APP_READ];
+      return true;
+    });
+    const wrapper = await render();
+    await wrapper.get('[data-testid="application-export-html-btn"]').trigger("click");
+    await flushPromises();
+    expect(downloadProductHtml).toHaveBeenCalledExactlyOnceWith("app-1");
+    expect(fetchUser).toHaveBeenCalledTimes(2);
+    expect(wrapper.find("button").exists()).toBe(false);
+    expect(addErrorMessage).toHaveBeenCalledOnce();
+    errorLog.mockRestore();
   });
 });

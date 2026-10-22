@@ -404,7 +404,7 @@ describe("userStore — niveau d'authentification (#1985)", () => {
     const store = useUserStore();
     store.user = me({ level: "strong", downgraded: false, reason: "strong-method" }, "ADMIN");
     sessionStorage.setItem("strongReauthAttempt", "prompt");
-    await store.fetchUser();
+    await expect(store.fetchUser()).resolves.toBe(false);
     expect(store.user).toBeUndefined();
     expect(store.authLevel).toEqual(deniedLevel);
     expect(store.isAuthDowngraded).toBe(true);
@@ -539,9 +539,9 @@ describe("userStore — niveau d'authentification (#1985)", () => {
     const first = store.fetchUser();
     const second = store.fetchUser();
     fresh.resolve(okResponse(me({ level: "strong", downgraded: false, reason: "strong-method" }, "ADMIN")));
-    await second;
+    await expect(second).resolves.toBe(true);
     stale.resolve(okResponse(me({ level: "weak", downgraded: true, reason: "weak-method" })));
-    await first;
+    await expect(first).resolves.toBe(false);
 
     expect(store.user?.role).toBe("ADMIN");
     expect(store.isAuthDowngraded).toBe(false);

@@ -1,4 +1,4 @@
-import { Roles } from "@prisma/client";
+import { Permission, Roles } from "@prisma/client";
 import * as ExcelJS from "exceljs";
 import request from "supertest";
 import { ApplicationFaker } from "./fakers/application.faker";
@@ -16,7 +16,10 @@ describe("GET /applications/export/excel — export non paginé (B13)", () => {
   let token: string;
 
   beforeAll(async () => {
-    const admin = await UserFaker.create({ role: Roles.ADMIN });
+    const admin = await UserFaker.create({
+      role: Roles.ADMIN,
+      additionalPermissions: [Permission.BetaFeatures],
+    });
     token = getToken(admin);
     const prisma = getPrismaClient();
 

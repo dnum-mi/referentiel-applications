@@ -1,5 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { ConfigType } from "@nestjs/config";
+import { BETA_FEATURES } from "src/features/beta-features";
 import { appConfig, authLevelConfig } from "./configs";
 import oidcConfig from "./configs/oidc.config";
 import {
@@ -19,6 +20,7 @@ export class ConfigService {
 
   getFrontendConfig(): FrontendConfig {
     return {
+      betaFeatures: [...BETA_FEATURES],
       oidcConfigUrl: this.oidc.configUrl,
       oidcClientId: this.oidc.clientId,
       oidcScope: this.oidc.scope,
