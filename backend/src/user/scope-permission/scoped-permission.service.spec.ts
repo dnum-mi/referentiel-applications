@@ -75,7 +75,9 @@ describe("ScopedPermissionService — assertCanImpersonate", () => {
     return {
       id: "requestor-1",
       role: Roles.ADMIN,
-      scopeOrganization: scopePath ? { path: scopePath } : null,
+      scopeOrganizationId: scopePath ? "scope-1" : null,
+      scopeOrganization: scopePath ? { id: "scope-1", path: scopePath } : null,
+      additionalPermissions: [],
     } as unknown as Requestor;
   }
 
@@ -88,7 +90,17 @@ describe("ScopedPermissionService — assertCanImpersonate", () => {
     const prisma = {
       user: {
         findFirst: jest.fn(({ where: { id } }: { where: { id: string } }) =>
-          Promise.resolve(users[id] ?? null),
+          Promise.resolve(
+            users[id]
+              ? {
+                  role: Roles.VISITOR,
+                  additionalPermissions: [],
+                  scopeOrganizationId: null,
+                  scopeOrganization: null,
+                  ...users[id],
+                }
+              : null,
+          ),
         ),
       },
     } as unknown as PrismaService;

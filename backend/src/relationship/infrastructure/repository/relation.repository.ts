@@ -118,13 +118,16 @@ export class RelationRepository implements IRelationRepository {
   ): Promise<RelationGraphDto> {
     const nodesMap = new Map<string, GraphNodeDto>();
     const edgesMap = new Map<string, GraphEdgeDto>();
-    const visited = new Set<string>();
+    const visited = new Set([applicationId]);
+    const queue = [{ applicationId, depth: 0 }];
 
-    const traverse = async (currentAppId: string, depth: number) => {
-      if (depth >= maxDepth || visited.has(currentAppId)) {
-        return;
+    // Une file parcourt les distances croissantes : un chemin long ne peut
+    // plus empêcher l'exploration ultérieure d'un voisin par un chemin court.
+    for (let index = 0; index < queue.length; index++) {
+      const { applicationId: currentAppId, depth } = queue[index];
+      if (depth >= maxDepth) {
+        continue;
       }
-      visited.add(currentAppId);
 
       const app = await this.prisma.application.findUnique({
         where: { id: currentAppId },
@@ -140,14 +143,14 @@ export class RelationRepository implements IRelationRepository {
       });
 
       if (!app) {
-        return;
+        continue;
       }
 
       // Le graphe n'exclut que les supprimées : les décommissionnées restent
       // visibles (écart avec RETIRED_STATUSES relevé par l'audit dédup — à
       // arbitrer métier avant tout changement, cf. #2250).
       if (isDeleted(app.currentStatus?.status)) {
-        return;
+        continue;
       }
 
       this.upsertNode(nodesMap, app.id, app.label, app.currentStatus?.status);
@@ -161,13 +164,12 @@ export class RelationRepository implements IRelationRepository {
           nodesMap,
           edgesMap,
         );
-        if (nextAppId !== null) {
-          await traverse(nextAppId, depth + 1);
+        if (nextAppId !== null && !visited.has(nextAppId)) {
+          visited.add(nextAppId);
+          queue.push({ applicationId: nextAppId, depth: depth + 1 });
         }
       }
-    };
-
-    await traverse(applicationId, 0);
+    }
 
     return {
       nodes: Array.from(nodesMap.values()),

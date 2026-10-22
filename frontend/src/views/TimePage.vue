@@ -79,10 +79,7 @@ onBeforeUnmount(() => {
       <h1 class="fr-h1" data-testid="time-title">Time</h1>
 
       <section id="technical-debt-chart" class="chart-section" data-testid="technical-debt-chart-section">
-        <output v-if="isTechnicalDebtLoading" class="loader" aria-live="polite" aria-atomic="true">
-          <AppLoader />
-          <span class="sr-only">Chargement du graphique…</span>
-        </output>
+        <AppLoader v-if="isTechnicalDebtLoading" class="loader" label="Chargement du graphique…" />
         <div v-else-if="technicalDebtError">
           <p role="alert">{{ technicalDebtError }}</p>
           <DsfrButton @click="loadTechnicalDebtPoints">Réessayer le chargement TIME</DsfrButton>
@@ -128,17 +125,5 @@ onBeforeUnmount(() => {
   padding: 1rem;
   background: var(--background-default-grey);
   border-radius: 0.5rem;
-}
-
-.sr-only {
-  position: absolute !important;
-  height: 1px;
-  width: 1px;
-  overflow: hidden;
-  clip: rect(1px, 1px, 1px, 1px);
-  white-space: nowrap;
-  border: 0;
-  padding: 0;
-  margin: -1px;
 }
 </style>
