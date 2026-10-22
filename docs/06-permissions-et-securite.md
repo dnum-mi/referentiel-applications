@@ -115,6 +115,8 @@ La création et la régénération de tokens sont refusées dans ce contexte dé
 
 **Migration des intégrations :** la migration SQL renseigne `machine` pour les tokens existants, sans modifier leur hash, leur expiration ou leurs droits. Ils continuent à fonctionner sans JWT. L'API de création conserve `machine` comme défaut pour les anciens clients administrateurs ; le formulaire propose les deux modes et présélectionne `delegated`. Les tokens personnels ignorent ce champ et leur DTO refuse qu'il soit fourni. Le mode ne peut être modifié après création, y compris à la régénération : un changement d'usage nécessite révocation et création par un administrateur. Les intégrations agissant au nom d'une personne doivent utiliser un nouveau token `delegated` et transmettre son JWT. Les réglages de validation JWT et de niveau SSO sont conservés.
 
+**Régénération des jetons.** Elle exige une connexion humaine directe et `GlobalAdminManage` ; les comptes de service, appels délégués et sessions d’impersonation sont refusés. Comme à la création, l’échéance doit être valide, strictement future et au plus à un an calendaire. Un jeton actif ou expiré peut être renouvelé : le nouveau secret, l’échéance et le statut actif sont enregistrés ensemble, sans changer le mode ni les droits ; l’ancien secret est immédiatement invalidé. Un jeton révoqué ne peut pas être renouvelé, y compris en cas de révocation concurrente. La détection tardive de l’expiration d’un ancien secret ne peut pas écraser un renouvellement ou une révocation.
+
 **Déploiement progressif et retour arrière :** le hash stocké d'un token délégué est préfixé par `delegated:`, y compris après régénération. La contrainte SQL `Token_service_mode_hash_check` impose la correspondance entre le mode et ce préfixe : une régénération tentée par un ancien backend échoue avant de remplacer le secret. Un ancien backend, qui ne cherche que `SHA512(secret)`, ne peut pas reconnaître le token délégué : il répond 401 au lieu d'accorder les droits machine du service. Les tokens machine et personnels conservent leur format de hash. Les appels délégués et leur régénération ne sont disponibles que sur les serveurs exécutant cette version ou une version compatible.
 
 Les régressions sont couvertes par `delegated-auth.spec.ts`, `auth.middleware.spec.ts`, `delegated-auth.e2e-spec.ts` et `token-lifecycle.e2e-spec.ts` : signature JWT, identité inconnue ou bloquée, absence de JWT, intersection des droits, acteurs et périmètres, baisse de rôle à la requête suivante, expiration/révocation, création de secrets et impersonation.
@@ -490,10 +492,12 @@ La capacité s'ajoute aux droits métier : **les deux contrôles doivent réussi
 | Fonctionnalité            | Identifiant stable          | Droit métier conservé |
 | ------------------------- | --------------------------- | --------------------- |
 | Export Excel du catalogue | `catalogue-excel-export`    | `DataExport`          |
+| Export HTML du catalogue  | `catalogue-html-export`     | `DataExport`          |
 | Fiche produit HTML        | `product-html-export`       | `AppRead`             |
+| Rapport d’import HTML     | `import-report-html-export` | `GlobalAdminManage`   |
 | Fiche produit PowerPoint  | `product-powerpoint-export` | `AppRead`             |
 
-L'export HTML du catalogue et l'export Excel de la vue Technologies restent soumis à leurs droits habituels, sans capacité bêta.
+Tous les exports HTML sont en bêta. L’export HTML du catalogue et de la fiche est contrôlé côté API avant génération. Le rapport d’import est construit dans le navigateur à partir du rapport déjà reçu ; son action vérifie la capacité avant de créer le fichier. L’export CSV du rapport et l’export Excel de la vue Technologies restent soumis à leurs droits habituels, sans capacité bêta.
 
 **Ajouter une fonctionnalité.** Déclarer son identifiant dans `FeatureId`, l'inscrire dans `BETA_FEATURES`, ajouter `@RequiresBetaFeature(FeatureId.…)` à son endpoint en conservant son garde métier, puis utiliser `useBetaFeatures()` et le composant commun `BetaBadge` sur son action dans l'interface. Régénérer le contrat OpenAPI et le client. Le registre est publié par `GET /api/v2/config` ; l'interface n'en maintient aucune copie de production.
 

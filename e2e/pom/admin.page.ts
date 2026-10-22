@@ -1018,6 +1018,54 @@ export class AdminPage extends BasePage {
     await expect(this.byTestId("admin-import-report-download")).toBeVisible();
   }
 
+  async expectImportHtmlBetaExport(available: boolean): Promise<void> {
+    const button = this.byTestId("admin-import-report-download-html");
+    if (!available) {
+      await expect(button).toHaveCount(0);
+      return;
+    }
+    await expect(button).toBeVisible();
+    await expect(button.getByText("Bêta", { exact: true })).toBeVisible();
+    await expect(button).toHaveAccessibleName(
+      /Télécharger le rapport HTML Bêta/i,
+    );
+  }
+
+  async downloadImportReport(format: "csv" | "html") {
+    const [download] = await Promise.all([
+      this.page.waitForEvent("download"),
+      this.byTestId(
+        format === "csv"
+          ? "admin-import-report-download"
+          : "admin-import-report-download-html",
+      ).click(),
+    ]);
+    return download;
+  }
+
+  async expectImportHtmlRevocationBeforeDownload(): Promise<void> {
+    let downloads = 0;
+    const onDownload = () => {
+      downloads++;
+    };
+    this.page.on("download", onDownload);
+    try {
+      const [response] = await Promise.all([
+        this.page.waitForResponse(
+          (res) =>
+            new URL(res.url()).pathname === "/api/v2/users/me" &&
+            res.request().method() === "GET",
+        ),
+        this.byTestId("admin-import-report-download-html").click(),
+      ]);
+      expect(response.ok()).toBe(true);
+      await this.expectImportHtmlBetaExport(false);
+      expect(downloads).toBe(0);
+    } finally {
+      this.page.off("download", onDownload);
+    }
+  }
+
   /** Vérifie que le détail du rapport (par ligne) contient un texte (ex. motif d'erreur). */
   async expectImportReportContains(text: string | RegExp): Promise<void> {
     await expect(this.byTestId("admin-import-report")).toContainText(text);

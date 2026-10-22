@@ -304,8 +304,8 @@ jobs:
       - name: Verify authentication on three browsers without retries
         working-directory: e2e
         # PRM-14..19 : refus de consultation, profil/jetons inaccessibles, reconnexions, F5 et session forte.
-        # BET-01..02 : délégation bêta explicite, exports et révocation sur ordinateur/mobile.
-        run: pnpm exec playwright test tests/permissions.spec.ts tests/beta-features.spec.ts --grep 'PRM-1[4-9] -|BET-0[12] -' --workers=1 --retries=0 --trace=retain-on-failure --reporter=line,html
+        # BET-01..03 : délégation bêta explicite, exports catalogue/fiche/rapport et révocation sur ordinateur/mobile.
+        run: pnpm exec playwright test tests/permissions.spec.ts tests/beta-features.spec.ts --grep 'PRM-1[4-9] -|BET-0[123] -' --workers=1 --retries=0 --trace=retain-on-failure --reporter=line,html
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ !cancelled() }}
         with:

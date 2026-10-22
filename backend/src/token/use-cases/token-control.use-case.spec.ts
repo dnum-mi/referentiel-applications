@@ -2,7 +2,10 @@ import type { Requestor } from "src/user/entities/user.entity";
 import { UserType } from "src/user/entities/user.entity";
 import { TokenStatus } from "../domain/token-status.entity";
 import type { TokenEntity } from "../domain/token.entity";
-import { isRequestorAllowedToUpdateToken } from "./token-control.use-case";
+import {
+  isNewTokenInvalid,
+  isRequestorAllowedToUpdateToken,
+} from "./token-control.use-case";
 
 function buildRequestor(id: string): Requestor {
   return { id } as Requestor;
@@ -119,5 +122,28 @@ describe("isRequestorAllowedToUpdateToken", () => {
         buildRequestor("other-user"),
       ),
     ).toBe(false);
+  });
+});
+
+describe("isNewTokenInvalid — échéance bornée", () => {
+  const now = new Date("2026-10-22T12:00:00.000Z");
+
+  beforeEach(() => jest.useFakeTimers().setSystemTime(now));
+  afterEach(() => jest.useRealTimers());
+
+  it.each([
+    ["date invalide", new Date(Number.NaN)],
+    ["date passée", new Date(now.getTime() - 1)],
+    ["date présente", now],
+    ["au-delà d'un an", new Date("2027-10-22T12:00:00.001Z")],
+  ])("refuse %s", (_description, expiresAt) => {
+    expect(isNewTokenInvalid({ expiresAt })).toMatchObject({ status: 400 });
+  });
+
+  it.each([
+    ["immédiatement future", new Date(now.getTime() + 1)],
+    ["exactement un an", new Date("2027-10-22T12:00:00.000Z")],
+  ])("accepte une échéance %s", (_description, expiresAt) => {
+    expect(isNewTokenInvalid({ expiresAt })).toBe(false);
   });
 });

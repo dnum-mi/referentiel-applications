@@ -50,16 +50,16 @@ const { open: openCreateCampaign, close: closeCreateCampaign } = createModalHand
 const { open: openGristSync, close: closeGristSync } = createModalHandlers(isGristSyncOpen);
 
 async function exportApplications(format: "Excel" | "HTML") {
-  if (exportFormat.value || !hasExportPermissions.value || (format === "Excel" && !canAccess(FeatureId.CATALOGUE_EXCEL_EXPORT))) return;
+  const feature = format === "Excel" ? FeatureId.CATALOGUE_EXCEL_EXPORT : FeatureId.CATALOGUE_HTML_EXPORT;
+  if (exportFormat.value || !hasExportPermissions.value || !canAccess(feature)) return;
   exportFormat.value = format;
   try {
-    if (format === "Excel") {
-      if (!(await authorize(FeatureId.CATALOGUE_EXCEL_EXPORT, [Permission.DATA_EXPORT]))) return;
-      await applicationStore.downloadExcel(filters.value);
-    } else await applicationStore.downloadHtml(filters.value);
+    if (!(await authorize(feature, [Permission.DATA_EXPORT]))) return;
+    if (format === "Excel") await applicationStore.downloadExcel(filters.value);
+    else await applicationStore.downloadHtml(filters.value);
   } catch (error) {
-    if (format === "Excel") await refreshAccess();
-    console.error("Erreur lors de l'exportation Excel", error);
+    await refreshAccess();
+    console.error(`Erreur lors de l'exportation ${format}`, error);
     toaster.addErrorMessage(`Une erreur est survenue lors de l'exportation ${format}. Veuillez réessayer.`);
   } finally {
     exportFormat.value = null;
@@ -70,6 +70,11 @@ const hasExportPermissions = computed(() => {
   return userStore.hasPermissions([Permission.DATA_EXPORT]);
 });
 const hasExcelExportPermissions = computed(() => hasExportPermissions.value && canAccess(FeatureId.CATALOGUE_EXCEL_EXPORT));
+const hasHtmlExportPermissions = computed(() => hasExportPermissions.value && canAccess(FeatureId.CATALOGUE_HTML_EXPORT));
+const htmlExportLabel = computed(
+  () =>
+    `Exporter en HTML les applications correspondant aux filtres actuels${isBeta(FeatureId.CATALOGUE_HTML_EXPORT) ? " — fonctionnalité bêta" : ""}`,
+);
 const excelExportLabel = computed(
   () =>
     `Exporter en Excel les applications correspondant aux filtres actuels${isBeta(FeatureId.CATALOGUE_EXCEL_EXPORT) ? " — fonctionnalité bêta" : ""}`,
@@ -182,8 +187,7 @@ const hasQualityCampaignPermissions = computed(() => {
       </DsfrButton>
 
       <DsfrButton
-        v-if="hasExportPermissions"
-        label="Exporter en HTML"
+        v-if="hasHtmlExportPermissions"
         icon="fr-icon-download-line"
         secondary
         data-testid="applications-export-html-btn"
@@ -191,8 +195,12 @@ const hasQualityCampaignPermissions = computed(() => {
         :aria-disabled="!!exportFormat"
         :aria-busy="!!exportFormat"
         @click="exportApplications('HTML')"
-        aria-label="Exporter en HTML les applications correspondant aux filtres actuels"
-      />
+        :aria-label="htmlExportLabel"
+        :title="htmlExportLabel"
+      >
+        Exporter en HTML
+        <BetaBadge v-if="isBeta(FeatureId.CATALOGUE_HTML_EXPORT)" aria-hidden="true" />
+      </DsfrButton>
 
       <DsfrButton
         v-if="hasGristSyncPermissions"
