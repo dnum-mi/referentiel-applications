@@ -36,7 +36,7 @@ RUN pnpm api:generate
 RUN pnpm build-only
 
 # nginx-unprivileged 1.30.5-alpine
-FROM nginxinc/nginx-unprivileged@sha256:ed04ec1ff34502c339ee5c3ae3f855442398edc1d05591e2b98981dcbbd20b1e AS prod
+FROM nginxinc/nginx-unprivileged@sha256:09b0d3eda2aa592d2487f284519419015cab010d7df16cd0fe224b585fc60eb6 AS prod
 
 USER 0
 
