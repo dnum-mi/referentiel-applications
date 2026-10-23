@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.101.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.100.0...v1.101.0) (2026-10-23)
+
+
+### Features
+
+* ajouter une capacité explicite pour les fonctionnalités bêta ([#3034](https://github.com/dnum-mi/referentiel-applications/issues/3034)) ([4e74c30](https://github.com/dnum-mi/referentiel-applications/commit/4e74c30df37fc0e41c0b39d1dc7c947ede24a556))
+* gate all HTML exports behind beta capability ([#3042](https://github.com/dnum-mi/referentiel-applications/issues/3042)) ([20beed5](https://github.com/dnum-mi/referentiel-applications/commit/20beed558a6508a601186a0f8fd42e3b2982b407))
+
+
+### Bug Fixes
+
+* **auth:** enforce trusted JWT claims ([#3039](https://github.com/dnum-mi/referentiel-applications/issues/3039)) ([49f9bb8](https://github.com/dnum-mi/referentiel-applications/commit/49f9bb85a27823ab532bc78522a84d10a43dcc72))
+* cap scoped administrator impersonation ([#3029](https://github.com/dnum-mi/referentiel-applications/issues/3029)) ([0adc968](https://github.com/dnum-mi/referentiel-applications/commit/0adc96877a476c1c57ef97f4a6a81303536d61b1))
+* **frontend:** announce AppLoader to screen readers (RGAA 7.5) ([#3037](https://github.com/dnum-mi/referentiel-applications/issues/3037)) ([0cc4e92](https://github.com/dnum-mi/referentiel-applications/commit/0cc4e92dda1ebb00da6b5d3a3456aaf78ac7c08d))
+* isolate application relation context ([#3044](https://github.com/dnum-mi/referentiel-applications/issues/3044)) ([4876562](https://github.com/dnum-mi/referentiel-applications/commit/487656284fe049770e09b289d1657f0b40f39df7))
+* restore cost containment sorting ([#3040](https://github.com/dnum-mi/referentiel-applications/issues/3040)) ([7c8c125](https://github.com/dnum-mi/referentiel-applications/commit/7c8c1259c428816b3bf53a4a7581dff83005cdf2))
+* traverse relation graphs by shortest distance ([#3030](https://github.com/dnum-mi/referentiel-applications/issues/3030)) ([995a2f0](https://github.com/dnum-mi/referentiel-applications/commit/995a2f04a0f288760c3d435ba629b73ce92fed82))
+* update grafana-doc ([#3035](https://github.com/dnum-mi/referentiel-applications/issues/3035)) ([c5c3a7d](https://github.com/dnum-mi/referentiel-applications/commit/c5c3a7db1e01c764804a3c8fcea7402f07cc93c7))
+* validate token renewal and restore active status ([#3043](https://github.com/dnum-mi/referentiel-applications/issues/3043)) ([04418b8](https://github.com/dnum-mi/referentiel-applications/commit/04418b8faf54420ac6c933514a054c407767d80e))
+
 ## [1.100.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.99.0...v1.100.0) (2026-10-21)
 
 
