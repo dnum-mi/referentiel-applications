@@ -72,7 +72,7 @@ jobs:
       - name: Run test coverage
         run: IMAGE_TAG=${{ inputs.backend_image_tag }} docker compose -f docker-compose.yml -f docker-compose.ci.yml exec backend pnpm test:cov
       - name: Upload backend coverage
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: unit-tests-coverage
           path: ./backend/coverage/
@@ -91,12 +91,12 @@ jobs:
       queue: max
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: unit-tests-coverage
           path: ./backend/coverage
       - name: Produce coverage report
-        uses: insightsengineering/coverage-action@43a6afd6801c3936903b40fb7474b4f870abcd62 # v2
+        uses: insightsengineering/coverage-action@3179498004cf3a28cbd5b496ce580767888375b9 # v3.0.4
         with:
           coverage-summary-title: Backend Coverage Summary
           path: ./backend/coverage/cobertura-coverage.xml
@@ -142,15 +142,15 @@ jobs:
         with:
           fetch-depth: 0
       - name: Download artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: unit-tests-coverage
           path: ./coverage/backend
       - name: Install pnpm
-        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
         with:
           version: 10.34.7
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
       - name: Install dependencies
@@ -162,7 +162,7 @@ jobs:
         run: cd frontend && pnpm install --frozen-lockfile && pnpm api:generate
       - name: Download frontend coverage
         if: inputs.frontend_coverage_artifact != ''
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: ${{ inputs.frontend_coverage_artifact }}
           path: frontend/coverage
