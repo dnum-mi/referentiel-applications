@@ -1,5 +1,5 @@
 import type { RelationDto } from "@/client/types.gen";
-import { computed, ref } from "vue";
+import { computed, getCurrentScope, onScopeDispose, ref, toValue, watch, type MaybeRefOrGetter } from "vue";
 import api from "@/api/index";
 import { RelationType } from "@/client/types.gen";
 import { useRelationStore } from "@/stores/relationStore";
@@ -25,7 +25,7 @@ export interface RelationRow {
   };
 }
 
-export function useRelationManager(applicationId: string) {
+export function useRelationManager(applicationId: MaybeRefOrGetter<string>) {
   const store = useRelationStore();
   const toaster = useToasterStore();
 
@@ -36,6 +36,41 @@ export function useRelationManager(applicationId: string) {
   const isAddRelationModalOpen = ref(false);
   const isEditRelationModalOpen = ref(false);
   const relationToEdit = ref<RelationDto | null>(null);
+
+  let revision = 0;
+  let disposed = false;
+
+  function resetContext() {
+    revision++;
+    selectedRelationIds.value = [];
+    currentPage.value = 0;
+    showDeleteConfirmation.value = false;
+    isAddRelationModalOpen.value = false;
+    isEditRelationModalOpen.value = false;
+    relationToEdit.value = null;
+  }
+
+  watch([() => toValue(applicationId), () => store.contextVersion], resetContext, { flush: "sync" });
+  if (getCurrentScope()) {
+    onScopeDispose(() => {
+      disposed = true;
+      resetContext();
+    });
+  }
+
+  function captureContext() {
+    return { applicationId: toValue(applicationId), version: store.contextVersion, revision };
+  }
+
+  function isCurrent(context: ReturnType<typeof captureContext>) {
+    return (
+      !disposed &&
+      context.revision === revision &&
+      context.applicationId === toValue(applicationId) &&
+      context.applicationId === store.activeApplicationId &&
+      context.version === store.contextVersion
+    );
+  }
 
   const headers = ["Sélection", "Application Source", "Relation", "Application Cible", "Mediation Service", "Actions"];
 
@@ -65,6 +100,7 @@ export function useRelationManager(applicationId: string) {
   }
 
   function createRow(rel: RelationDto & { isSource: boolean }): RelationRow {
+    const context = captureContext();
     const sourceLabel = rel.sourceApplication?.label || rel.applicationSourceId || "❌ Source inconnue";
     const targetLabel = rel.targetApplication?.label || rel.applicationTargetId || "❌ Cible inconnue";
 
@@ -82,13 +118,17 @@ export function useRelationManager(applicationId: string) {
         id: rel.mediationService?.id,
       },
       Actions: {
-        edit: () => editRelation(rel),
-        delete: () => deleteSingleRelation(rel),
+        edit: () => {
+          if (isCurrent(context)) editRelation(rel);
+        },
+        delete: () => {
+          if (isCurrent(context)) deleteSingleRelation(rel);
+        },
       },
     };
   }
 
-  const rows = computed<RelationRow[]>(() => store.relations.map(createRow));
+  const rows = computed<RelationRow[]>(() => (store.activeApplicationId === toValue(applicationId) ? store.relations.map(createRow) : []));
 
   function removeSelectedRelations() {
     if (!selectedRelationIds.value.length) {
@@ -99,21 +139,25 @@ export function useRelationManager(applicationId: string) {
   }
 
   async function confirmDelete() {
+    const context = captureContext();
+    if (!isCurrent(context)) return;
+    const relationIds = [...selectedRelationIds.value];
     try {
       await Promise.all(
-        selectedRelationIds.value.map((id) =>
+        relationIds.map((id) =>
           api.relationControllerDelete({
-            path: { applicationId, id },
+            path: { applicationId: context.applicationId, id },
           }),
         ),
       );
-
-      await store.fetchRelationsByApplication(applicationId);
+      if (!isCurrent(context)) return;
+      const published = await store.fetchRelationsByApplication(context.applicationId);
+      if (!published || !isCurrent(context)) return;
       selectedRelationIds.value = [];
       showDeleteConfirmation.value = false;
       toaster.addSuccessMessage("Relations supprimées avec succès !");
     } catch {
-      toaster.addErrorMessage("Erreur lors de la suppression des relations.");
+      if (isCurrent(context)) toaster.addErrorMessage("Erreur lors de la suppression des relations.");
     }
   }
 
@@ -122,6 +166,7 @@ export function useRelationManager(applicationId: string) {
   }
 
   function openAddRelationModal() {
+    if (!isCurrent(captureContext())) return;
     isAddRelationModalOpen.value = true;
   }
 
@@ -135,24 +180,30 @@ export function useRelationManager(applicationId: string) {
   }
 
   async function handleUpdateRelation(updated: RelationUpdate) {
+    const context = captureContext();
+    if (!isCurrent(context) || !rows.value.some((row) => row.id === updated.id)) return;
     try {
-      await store.updateRelation(updated, applicationId);
+      const published = await store.updateRelation(updated, context.applicationId);
+      if (!published || !isCurrent(context)) return;
       toaster.addSuccessMessage("Relation mise à jour avec succès!");
       closeEditRelationModal();
     } catch {
       // On garde la modale ouverte : l'utilisateur peut corriger et réessayer (#2383).
-      toaster.addErrorMessage("Erreur lors de la mise à jour de la relation.");
+      if (isCurrent(context)) toaster.addErrorMessage("Erreur lors de la mise à jour de la relation.");
     }
   }
 
   async function handleCreateRelation(created: RelationCreate) {
+    const context = captureContext();
+    if (!isCurrent(context) || created.applicationSourceId !== context.applicationId) return;
     try {
-      await store.createRelation(created);
+      const published = await store.createRelation(created);
+      if (!published || !isCurrent(context)) return;
       toaster.addSuccessMessage("Relation créée avec succès!");
       closeAddRelationModal();
     } catch {
       // On garde la modale ouverte : l'utilisateur peut corriger et réessayer (#2383).
-      toaster.addErrorMessage("Erreur lors de la création de la relation.");
+      if (isCurrent(context)) toaster.addErrorMessage("Erreur lors de la création de la relation.");
     }
   }
 

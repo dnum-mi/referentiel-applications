@@ -5,7 +5,7 @@ import { useRelationStore } from "@/stores/relationStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import type { TableColumn } from "@/types/table";
 import type { DataTablePageEvent } from "primevue/datatable";
-import { computed, ref, watch, onMounted } from "vue";
+import { computed, ref, watch } from "vue";
 import RefAppTable from "./RefAppTable.vue";
 import RelationshipGraph from "./RelationShipGraph.vue";
 import { Permission, type RelationDto } from "@/client";
@@ -19,7 +19,7 @@ const isLoading = ref(false);
 const canEdit = useAppPermission(() => props.application.myPerms, [Permission.RELATION_WRITE]);
 const toaster = useToasterStore();
 
-const relationManager = useRelationManager(props.application.id);
+const relationManager = useRelationManager(() => props.application.id);
 const {
   headers,
   rows,
@@ -142,17 +142,28 @@ watch(
   },
 );
 
-onMounted(async () => {
-  isLoading.value = true;
-  try {
-    await relationsStore.fetchRelationsByApplication(props.application.id);
-  } catch (error) {
-    console.error(error);
-    toaster.addErrorMessage("Erreur lors du chargement des relations.");
-  } finally {
-    isLoading.value = false;
-  }
-});
+watch(
+  () => props.application.id,
+  async (applicationId, _previous, onCleanup) => {
+    let current = true;
+    const contextVersion = relationsStore.beginContext(applicationId);
+    onCleanup(() => {
+      current = false;
+      relationsStore.clearRelations(contextVersion);
+    });
+    isLoading.value = true;
+    try {
+      await relationsStore.fetchRelationsByApplication(applicationId);
+    } catch (error) {
+      if (!current) return;
+      console.error(error);
+      toaster.addErrorMessage("Erreur lors du chargement des relations.");
+    } finally {
+      if (current) isLoading.value = false;
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <template>

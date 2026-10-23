@@ -2,7 +2,7 @@
 import { hasFullReadAppPermissions, type ApplicationWithPerms } from "@/models/Application";
 import ApplicationOverview from "@/components/ApplicationOverview.vue";
 import ApplicationProductExport from "@/components/ApplicationProductExport.vue";
-import { computed, onMounted, ref, watch, nextTick } from "vue";
+import { computed, onMounted, onBeforeUnmount, ref, watch, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { setPageTitle } from "@/router";
 import { formatDateFR } from "@/composables/use-date";
@@ -15,7 +15,8 @@ import { useToasterStore } from "@/stores/toasterStore";
 import { Permission, RelationType, Status } from "@/client";
 import type { MetadataDto } from "@/client/types.gen";
 import { useAppPermission } from "@/composables/use-app-permission";
-import { useRelationStore } from "@/stores/relationStore";
+import api from "@/api";
+import { isApiSuccess } from "@/api/api-result";
 import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const userStore = useUserStore();
@@ -81,23 +82,33 @@ const canReadRelation = useAppPermission(() => application.value?.myPerms, [Perm
 // Tag "remplacée par" affiché avec les autres tags (statut/IQ/type) : pertinent dès qu'une
 // application est à décommissionner ou décommissionnée, si une relation entrante
 // "in_replacement_of" existe.
-const relationStore = useRelationStore();
 const replacementApplications = ref<{ id: string; label: string }[]>([]);
+let replacementRequest = 0;
+let disposed = false;
+onBeforeUnmount(() => {
+  disposed = true;
+  replacementRequest++;
+});
 const DECOMMISSIONING_STATUSES: Status[] = [Status.IN_PRODUCTION_DECOMMISSIONING, Status.DECOMMISSIONED];
 const isDecommissioning = computed(
   () => !!application.value?.currentStatus?.status && DECOMMISSIONING_STATUSES.includes(application.value.currentStatus.status),
 );
 
 async function loadReplacementApplications() {
+  if (disposed) return;
+  const request = ++replacementRequest;
   replacementApplications.value = [];
   if (!isDecommissioning.value || !canReadRelation.value) return;
   try {
-    await relationStore.fetchRelationsByApplication(id);
-    replacementApplications.value = relationStore.relationsAsTarget
-      .filter((relation) => relation.type === RelationType.IN_REPLACEMENT_OF)
+    // Le badge a sa propre lecture : il ne change pas le contexte de l'onglet Relations.
+    const response = await api.relationControllerFindAll({ path: { applicationId: id } });
+    if (disposed || request !== replacementRequest) return;
+    if (!isApiSuccess(response)) throw new Error("Failed to load replacement relations");
+    replacementApplications.value = (response.data ?? [])
+      .filter((relation) => relation.applicationTargetId === id && relation.type === RelationType.IN_REPLACEMENT_OF)
       .map((relation) => ({ id: relation.sourceApplication.id, label: relation.sourceApplication.label }));
   } catch (err) {
-    console.error("Failed to load replacement relations:", err);
+    if (!disposed && request === replacementRequest) console.error("Failed to load replacement relations:", err);
   }
 }
 
