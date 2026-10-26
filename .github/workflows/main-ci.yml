@@ -81,7 +81,7 @@ jobs:
           pnpm test:unit
           pnpm type-check
       - name: Vérifier le résumé et les verdicts de campagne
-        run: node --test qa/scripts/report-summary.test.mjs qa/scripts/sync-issue.test.mjs
+        run: node --test qa/scripts/report-summary.test.mjs qa/scripts/sync-issue.test.mjs .github/scripts/resolve-release-ref.test.mjs
 
   test-frontend-unit:
     name: Frontend Unit Tests & Type Check
