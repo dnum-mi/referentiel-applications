@@ -37,6 +37,8 @@ describe("ContactAdminService.resolveByOrganizationPaths", () => {
     const [{ where }] = findMany.mock.calls[0];
     expect(where).toEqual({
       role: "ADMIN",
+      type: "human",
+      isBlocked: false,
       scopeOrganizationId: { not: null },
     });
   });
@@ -131,6 +133,8 @@ describe("ContactAdminService.resolveByOrganizationPaths", () => {
     expect(findMany.mock.calls[0][0].where.id).toEqual({ not: "me" });
     expect(findFirst.mock.calls[0][0].where).toEqual({
       role: "ADMIN",
+      type: "human",
+      isBlocked: false,
       scopeOrganizationId: null,
       id: { not: "me" },
     });
@@ -148,7 +152,12 @@ describe("ContactAdminService.resolveByOrganizationPaths", () => {
       source: "global",
     });
     const [{ where, orderBy }] = findFirst.mock.calls[0];
-    expect(where).toEqual({ role: "ADMIN", scopeOrganizationId: null });
+    expect(where).toEqual({
+      role: "ADMIN",
+      type: "human",
+      isBlocked: false,
+      scopeOrganizationId: null,
+    });
     expect(orderBy).toEqual({
       lastPermissionChangeAt: { sort: "desc", nulls: "last" },
     });
@@ -178,4 +187,62 @@ describe("ContactAdminService.resolveByOrganizationPaths", () => {
       source: "support",
     });
   });
+
+  describe.each(["local", "global"] as const)(
+    "admin %s inéligible",
+    (source) => {
+      it.each([
+        { type: "bot", isBlocked: false },
+        { type: "human", isBlocked: true },
+      ])("écarte $type / isBlocked=$isBlocked", async (ineligible) => {
+        const { service, findMany, findFirst } = setup();
+        const unusable = scopedAdmin(
+          "unusable@bot.internal",
+          "MI/DNUM",
+          new Date("2026-10-01"),
+        );
+        const active = scopedAdmin(
+          "active@example.com",
+          "MI/DNUM",
+          new Date("2026-01-01"),
+        );
+        const candidates = [
+          { ...unusable, ...ineligible },
+          { ...active, type: "human", isBlocked: false },
+        ];
+        const eligible = (where: { type?: string; isBlocked?: boolean }) =>
+          candidates.filter(
+            (admin) =>
+              (where.type === undefined || admin.type === where.type) &&
+              (where.isBlocked === undefined ||
+                admin.isBlocked === where.isBlocked),
+          );
+
+        if (source === "local") {
+          findMany.mockImplementation(async ({ where }) => eligible(where));
+          findFirst.mockResolvedValue(active);
+        } else {
+          findFirst.mockImplementation(
+            async ({ where }) => eligible(where)[0] ?? null,
+          );
+        }
+
+        expect(await service.resolveByOrganizationPaths(["MI/DNUM"])).toEqual({
+          email: active.email,
+          source,
+        });
+
+        candidates.pop();
+
+        expect(await service.resolveByOrganizationPaths(["MI/DNUM"])).toEqual(
+          source === "local"
+            ? { email: active.email, source: "global" }
+            : {
+                email: "support-referentiel-applications@interieur.gouv.fr",
+                source: "support",
+              },
+        );
+      });
+    },
+  );
 });

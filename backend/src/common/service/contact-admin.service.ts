@@ -1,11 +1,11 @@
 import { Injectable } from "@nestjs/common";
-import { Roles } from "@prisma/client";
+import { Roles, UserType } from "@prisma/client";
 import { ContactAdminDto } from "src/applications/dto/contact-admin.dto";
 import { PrismaService } from "src/prisma/prisma.service";
 import { isPathWithinScope } from "../utils/organization-scope.utils";
 
-// Adresse de contact générique, utilisée en dernier recours quand aucun administrateur n'existe
-// en base. Même adresse que celle déjà affichée côté frontend (App.vue, AccessibilityPage.vue).
+// Adresse de contact générique, utilisée quand aucun administrateur humain non bloqué n'existe.
+// Même adresse que celle déjà affichée côté frontend (App.vue, AccessibilityPage.vue).
 const SUPPORT_FALLBACK_EMAIL =
   "support-referentiel-applications@interieur.gouv.fr";
 
@@ -24,7 +24,7 @@ export interface ResolveContactAdminOptions {
  * Administrateur à contacter pour un ensemble d'organisations (#2593) : l'admin local dont le
  * périmètre couvre l'une d'elles au plus près (pour `A/B/C` : admin `A/B/C`, sinon `A/B`, sinon
  * `A`), le plus récent à proximité égale ; sinon l'admin global le plus récent, sinon l'adresse
- * support statique.
+ * support statique. Seuls les comptes humains non bloqués sont éligibles.
  *
  * Partagé entre la fiche application (organisations de ses acteurs et directions métier) et le
  * profil utilisateur (organisation de l'utilisateur) : la règle de résolution doit rester unique.
@@ -58,6 +58,8 @@ export class ContactAdminService {
     const scopedAdmins = await this.prisma.user.findMany({
       where: {
         role: Roles.ADMIN,
+        type: UserType.human,
+        isBlocked: false,
         scopeOrganizationId: { not: null },
         ...(excludeUserId && { id: { not: excludeUserId } }),
       },
@@ -89,6 +91,8 @@ export class ContactAdminService {
     return this.prisma.user.findFirst({
       where: {
         role: Roles.ADMIN,
+        type: UserType.human,
+        isBlocked: false,
         scopeOrganizationId: null,
         ...(excludeUserId && { id: { not: excludeUserId } }),
       },
