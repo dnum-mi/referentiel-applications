@@ -380,7 +380,7 @@ export class ActorService {
 
     for (const field of fieldsActor) {
       const label = fieldActorLabels[field];
-      if (oldActor.actorType[field] !== newActor.actorType[field]) {
+      if (oldActor.actorType?.[field] !== newActor.actorType?.[field]) {
         changes.push(label);
       }
     }
