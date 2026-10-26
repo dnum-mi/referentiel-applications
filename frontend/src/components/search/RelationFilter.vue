@@ -20,12 +20,16 @@ const componentKey = ref(0);
 const defaultValue = ref<undefined | string>(undefined);
 
 async function performSearch(query: string) {
-  const response = await searchApplications({ search: query, pageSize: 10, ...NEUTRAL_RELATION_FILTERS, relationAppId: undefined }, false);
+  const response = await searchApplications(
+    { search: query, page: 0, pageSize: 10, ...NEUTRAL_RELATION_FILTERS, relationAppId: undefined },
+    false,
+  );
   return response.results;
 }
 
 const updateSelectedValue = (application?: Pick<ApplicationDto, "label" | "id">) => {
   setFilter({
+    page: 0,
     relationAppId: application?.id,
   });
 };
@@ -108,7 +112,7 @@ const optionsMap: { text: string; value: RelationTypeFilter }[] = [
 
 const updateFilter = (filterKey: RelationField, value: string | number) => {
   if (typeof value === "string" && typeguardIncludes(value, RELATION_TYPE_FILTERS_ARRAY)) {
-    setFilter({ [filterKey]: value || undefined });
+    setFilter({ [filterKey]: value || undefined, page: 0 });
   }
 };
 

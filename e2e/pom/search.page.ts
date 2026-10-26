@@ -34,8 +34,8 @@ export class SearchPage extends BasePage {
     this.sidebar().getByTestId("application-filter-label");
 
   // --- Navigation ---
-  async open(): Promise<void> {
-    await this.goto(SEARCH_PATH);
+  async open(query?: URLSearchParams): Promise<void> {
+    await this.goto(`${SEARCH_PATH}${query?.size ? `?${query}` : ""}`);
     await expect(this.title()).toBeVisible();
     await expect(this.table().or(this.cardView())).toBeVisible();
   }
@@ -404,6 +404,14 @@ export class SearchPage extends BasePage {
     );
   }
 
+  async removeStatus(status: string): Promise<void> {
+    const checkbox = this.statusCheckbox(status);
+    await this.openAccordion("sidebar-accordion-status", checkbox);
+    await expect(checkbox).toBeChecked();
+    await this.statusCheckboxLabel(status).click();
+    await expect(checkbox).not.toBeChecked();
+  }
+
   private statusCheckbox(status: string): Locator {
     return this.sidebar()
       .getByTestId("status-filter")
@@ -635,6 +643,33 @@ export class SearchPage extends BasePage {
     await expect(list).toBeVisible();
     await list.locator('[data-testid^="suggestion-item-"]').first().click();
     await waitForSearchParams(this.page, (p) => !!p.get("relationAppId"));
+  }
+
+  async selectRelationTarget(label: string, id: string): Promise<void> {
+    const group = this.byTestId("relation-suggestions-input");
+    await this.openAccordion("sidebar-accordion-relations", group);
+    await group.getByRole("combobox").fill(label);
+    await group.getByTestId(`suggestion-item-${id}`).click();
+    await waitForSearchParams(this.page, (p) => p.get("relationAppId") === id);
+  }
+
+  async clearRelationTarget(label: string): Promise<void> {
+    const group = this.byTestId("relation-suggestions-input");
+    await this.openAccordion("sidebar-accordion-relations", group);
+    const tag = group.locator(".fr-tag--dismiss");
+    await expect(tag).toContainText(label);
+    await tag.click();
+    await waitForSearchParams(this.page, (p) => !p.has("relationAppId"));
+  }
+
+  async setRelationMode(
+    field: string,
+    mode: "INCLUDE" | "EXCLUDE" | "NEUTRAL",
+  ): Promise<void> {
+    const select = this.byTestId(`relation-${field}-select`);
+    await this.openAccordion("sidebar-accordion-relations", select);
+    await select.selectOption(mode);
+    await expect(select).toHaveValue(mode);
   }
 
   /** La recherche de relations peut se terminer entièrement au clavier. */
