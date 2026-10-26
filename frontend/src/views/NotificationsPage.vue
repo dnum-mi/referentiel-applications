@@ -210,9 +210,11 @@ onMounted(load);
           @click="onNavigate(row)"
         >
           {{ row.message }}
+          <span v-if="!row.isRead" class="fr-sr-only">Non lue</span>
         </button>
         <span v-else :class="{ 'notifications-page__message--unread': !row.isRead }" data-testid="notification-row-message">
           {{ row.message }}
+          <span v-if="!row.isRead" class="fr-sr-only">Non lue</span>
         </span>
         <span v-if="row.emailLogId" class="notifications-page__email-hint">
           <span class="fr-icon-mail-line" aria-hidden="true" /> E-mail disponible
