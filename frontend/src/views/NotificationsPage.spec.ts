@@ -152,3 +152,21 @@ describe("Notifications — commandes différées et contexte conservé", () => 
     },
   );
 });
+
+describe("Notifications — statut non lu restitué sans la couleur ni le gras (RGAA 3.1)", () => {
+  it("ajoute un texte masqué « Non lue » aux seules notifications non lues, avec ou sans lien", async () => {
+    store.notifications = [
+      { ...store.notifications[0], link: "/applications", isRead: false },
+      { ...store.notifications[1], isRead: false },
+      { ...store.notifications[0], id: "gamma", message: "Notification gamma", isRead: true },
+    ];
+    renderPage();
+    const messages = await screen.findAllByTestId("notification-row-message");
+    expect(messages[0]).toHaveAccessibleName("Notification alpha Non lue");
+    expect(messages[1]).toHaveTextContent("Notification beta Non lue");
+    expect(messages[2]).toHaveTextContent("Notification gamma");
+    expect(messages[2]).not.toHaveTextContent("Non lue");
+    expect(screen.getAllByText("Non lue")).toHaveLength(2);
+    screen.getAllByText("Non lue").forEach((label) => expect(label).toHaveClass("fr-sr-only"));
+  });
+});
