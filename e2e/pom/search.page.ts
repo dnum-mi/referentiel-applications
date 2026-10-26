@@ -34,8 +34,8 @@ export class SearchPage extends BasePage {
     this.sidebar().getByTestId("application-filter-label");
 
   // --- Navigation ---
-  async open(): Promise<void> {
-    await this.goto(SEARCH_PATH);
+  async open(query?: URLSearchParams): Promise<void> {
+    await this.goto(`${SEARCH_PATH}${query?.size ? `?${query}` : ""}`);
     await expect(this.title()).toBeVisible();
     await expect(this.table().or(this.cardView())).toBeVisible();
   }
@@ -526,9 +526,8 @@ export class SearchPage extends BasePage {
     const input = this.byTestId("application-filter-data-source-name");
     await this.openAccordion("sidebar-accordion-donnees", input);
     await input.fill(name);
-    await waitForSearchParams(
-      this.page,
-      (p) => p.get("dataSourceName") === name,
+    await waitForSearchParams(this.page, (p) =>
+      name ? p.get("dataSourceName") === name : !p.has("dataSourceName"),
     );
   }
 
