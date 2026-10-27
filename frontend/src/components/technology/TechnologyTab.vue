@@ -321,10 +321,10 @@ function cancelDelete() {
           :href="data.Documentation"
           target="_blank"
           rel="noopener noreferrer"
-          :title="data.Documentation"
+          :title="`${data.Documentation} - nouvelle fenêtre`"
           :data-testid="`technology-doc-link-${data.id}`"
         >
-          Documentation
+          Documentation<span class="fr-sr-only"> - nouvelle fenêtre</span>
         </a>
         <template v-else>—</template>
       </template>

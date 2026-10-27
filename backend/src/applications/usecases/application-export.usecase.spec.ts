@@ -1,6 +1,7 @@
 import * as ExcelJS from "exceljs";
 import JSZip from "jszip";
 import { convert } from "html-to-text";
+import type { ApplicationStatus } from "@prisma/client";
 import { ExcelBuilderService } from "src/common/service/excel-builder.service";
 import type { ApplicationWithAllRelations } from "../types/application.type";
 import { ExportApplicationsUseCase } from "./application-export.usecase";
@@ -57,6 +58,103 @@ const application = {
 
 describe("Export des applications en XLSX et HTML", () => {
   const useCase = new ExportApplicationsUseCase(new ExcelBuilderService());
+
+  const construction: ApplicationStatus = {
+    id: "status-construction",
+    applicationId: application.id,
+    status: "under_construction",
+    statusDate: new Date("2026-10-15T08:00:00Z"),
+    version: null,
+  };
+  const production: ApplicationStatus = {
+    ...construction,
+    id: "status-current-production",
+    status: "in_production",
+    statusDate: new Date("2026-10-15T11:00:00Z"),
+  };
+
+  it.each([
+    [construction, production],
+    [production, construction],
+  ])(
+    "identifie le statut courant malgré deux changements le même jour (%#)",
+    async (first, second) => {
+      const app = {
+        ...application,
+        currentStatusId: production.id,
+        currentStatus: production,
+        statuses: [first, second],
+      };
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(
+        (await useCase.executeWithApps([app])) as unknown as ExcelJS.Buffer,
+      );
+      const applications = workbook.getWorksheet("Applications");
+      expect(applications.getCell("J1").text).toBe("ID Statut actuel");
+      expect(applications.getCell("K1").text).toBe("Statut actuel");
+      expect(applications.getCell("J2").text).toBe(production.id);
+      // Même relation currentStatus et même libellé que la fiche ApplicationPage.
+      expect(applications.getCell("K2").text).toBe("En production");
+      const statuses = workbook.getWorksheet("Statuts");
+      expect(statuses.getCell("E1").text).toBe("ID Statut");
+      const matchingRows: ExcelJS.Row[] = [];
+      statuses.eachRow((row, index) => {
+        if (index === 1) return;
+        expect(row.getCell(4).text).toBe("2026-10-15");
+        if (row.getCell(5).text === applications.getCell("J2").text)
+          matchingRows.push(row);
+      });
+      expect(matchingRows).toHaveLength(1);
+      expect(matchingRows[0].getCell(3).text).toBe("En production");
+      expect(statuses.getCell("E2").text).toBe(first.id);
+      expect(statuses.getCell("E3").text).toBe(second.id);
+
+      const html = (await useCase.executeHtmlWithApps([app])).toString("utf-8");
+      const applicationsSection = html
+        .split('id="section-1"')[1]
+        .split("</section>")[0];
+      expect(applicationsSection).toContain("Statut actuel");
+      expect(applicationsSection).toContain("En production");
+      expect(applicationsSection).not.toContain("En construction");
+      const statusesSection = html
+        .split('id="section-11"')[1]
+        .split("</section>")[0];
+      expect(statusesSection).toContain("ID Statut");
+      expect(statusesSection).toContain(construction.id);
+      expect(statusesSection).toContain(production.id);
+    },
+  );
+
+  it.each([
+    {
+      currentStatus: construction,
+      statuses: [construction],
+      label: "En construction",
+    },
+    { currentStatus: null, statuses: [], label: "" },
+    { currentStatus: null, statuses: [construction, production], label: "" },
+  ])(
+    "exporte le statut courant sans le déduire de l'historique (%#)",
+    async ({ currentStatus, statuses, label }) => {
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(
+        (await useCase.executeWithApps([
+          {
+            ...application,
+            currentStatus,
+            currentStatusId: currentStatus?.id ?? null,
+            statuses,
+          },
+        ])) as unknown as ExcelJS.Buffer,
+      );
+      const applications = workbook.getWorksheet("Applications");
+      expect(applications.getCell("J2").text).toBe(currentStatus?.id ?? "");
+      expect(applications.getCell("K2").text).toBe(label);
+      expect(workbook.getWorksheet("Statuts").actualRowCount).toBe(
+        statuses.length + 1,
+      );
+    },
+  );
 
   it("conserve les onze feuilles, les technologies et le sens des relations dans les deux formats", async () => {
     const buffer = await useCase.executeWithApps([application]);
@@ -151,7 +249,16 @@ describe("Export des applications en XLSX et HTML", () => {
   });
 
   it("garde les feuilles et en-têtes d'un export vide", async () => {
-    const zip = await JSZip.loadAsync(await useCase.executeWithApps([]));
+    const buffer = await useCase.executeWithApps([]);
+    const zip = await JSZip.loadAsync(buffer);
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(buffer as unknown as ExcelJS.Buffer);
+    expect(workbook.getWorksheet("Applications").getCell("K1").text).toBe(
+      "Statut actuel",
+    );
+    expect(workbook.getWorksheet("Statuts").getCell("E1").text).toBe(
+      "ID Statut",
+    );
     expect(
       Object.keys(zip.files).filter((path) =>
         /^xl\/tables\/table\d+\.xml$/.test(path),
@@ -160,5 +267,7 @@ describe("Export des applications en XLSX et HTML", () => {
     const html = (await useCase.executeHtmlWithApps([])).toString("utf-8");
     expect(html.match(/<section /g)).toHaveLength(11);
     expect(html.match(/Aucune ligne\./g)).toHaveLength(11);
+    expect(html).toContain("Statut actuel");
+    expect(html).toContain("ID Statut");
   });
 });

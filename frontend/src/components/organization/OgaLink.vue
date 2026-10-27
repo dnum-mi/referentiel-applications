@@ -21,6 +21,14 @@ onMounted(() => {
 </script>
 
 <template>
-  <a v-if="organization?.url" :href="organization.url" target="_blank" data-testid="org-link">{{ organization.path }}</a>
+  <a
+    v-if="organization?.url"
+    :href="organization.url"
+    target="_blank"
+    rel="noopener noreferrer"
+    :title="`${organization.path} - nouvelle fenêtre`"
+    data-testid="org-link"
+    >{{ organization.path }}<span class="fr-sr-only"> - nouvelle fenêtre</span></a
+  >
   <span v-else data-testid="org-link">{{ organization?.path ?? "" }}</span>
 </template>

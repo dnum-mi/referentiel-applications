@@ -57,7 +57,7 @@ async function renderTab() {
           inheritAttrs: false,
           props: ["items", "columns"],
           template:
-            '<table><thead><tr><th v-for="column in columns" :key="column.field" :data-field="column.field">{{ column.header }}<slot v-if="column.field === \'Groupe\'" name="header-Groupe" /></th></tr></thead><tbody><tr v-for="item in items" :key="item.id"><td><slot name="body-Sélection" :data="item" /></td><td><slot name="body-Actions" :data="item" /></td></tr></tbody></table>',
+            '<table><thead><tr><th v-for="column in columns" :key="column.field" :data-field="column.field">{{ column.header }}<slot v-if="column.field === \'Groupe\'" name="header-Groupe" /></th></tr></thead><tbody><tr v-for="item in items" :key="item.id"><td><slot name="body-Sélection" :data="item" /></td><td><slot name="body-Email" :data="item" /><slot name="body-Actions" :data="item" /></td></tr></tbody></table>',
         },
         ActorForm: {
           props: ["errorMessage"],
@@ -187,4 +187,14 @@ describe("ActorTab — sélection et focus", () => {
     expect(wrapper.get('[data-testid="actor-status"]').text()).toBe("Acteurs supprimés avec succès !");
     expect(wrapper.get('[data-testid="actor-add-btn"]').element).toHaveFocus();
   });
+});
+
+it("annonce la nouvelle fenêtre des liens email (#3027)", async () => {
+  const wrapper = await renderTab();
+  for (const link of wrapper.findAll('[data-testid="actor-email-link"]')) {
+    expect(link.element).toHaveAccessibleName(/nouvelle fenêtre/);
+    expect(link.attributes("title")).toContain("nouvelle fenêtre");
+    expect(link.attributes("rel")).toBe("noopener noreferrer");
+  }
+  expect(wrapper.findAll('[data-testid="actor-email-link"]')).toHaveLength(2);
 });
