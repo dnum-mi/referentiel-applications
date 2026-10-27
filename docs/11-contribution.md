@@ -168,20 +168,24 @@ Le pipeline e2e démarre la pile (`docker compose ... up backend postgres keyclo
 La gestion des versions est entièrement automatisée par **[release-please](https://github.com/googleapis/release-please-action)** (workflow `release.yml`, déclenché sur `main`).
 
 - La **branche par défaut est `main`**.
-- À partir des _conventional commits_ fusionnés, release-please ouvre (puis fusionne) une **PR de release** qui met à jour la version, le `CHANGELOG.md` et le manifeste de version.
+- À partir des _conventional commits_ fusionnés, release-please ouvre une **PR de release** qui met à jour la version, le `CHANGELOG.md` et le manifeste de version. Après sa fusion, le workflow crée le tag et la release GitHub.
 - La configuration se trouve dans `release-please-config.json` (paquet unique à la racine, `package-name: referentiel-applications`) et la version courante dans `.release-please-manifest.json`.
 
-> **Un tag créé par release-please ne déclenche aucun workflow.** release-please pousse le tag
+> **Le tag créé par release-please ne redéclenche pas les workflows à lui seul.** release-please pousse le tag
 > avec le `GITHUB_TOKEN`, et GitHub Actions ignore par conception les événements produits par ce
-> jeton (garde-fou anti-boucle). Tout `on: push: tags: v*` est donc **mort-né** sur ce dépôt :
-> c'est le cas de `release-build.yml` (une seule exécution depuis sa création, manuelle) et
-> c'était celui de la fermeture des campagnes QA (issue #2364). Un traitement à déclencher à la
-> publication d'une version doit être **chaîné dans `release.yml`**, gardé par
+> jeton (garde-fou anti-boucle). Les images versionnées et la fermeture des campagnes QA sont donc
+> **chaînées dans `release.yml`** à la création effective d'une version, avec la condition
 > `needs.release.outputs.release-created == 'true'`.
 
 ### Effets de bord automatisés à la publication d'une version
 
-`release.yml` enchaîne deux jobs après release-please :
+`release.yml` enchaîne trois traitements après release-please :
+
+- **`images`** — appelle `release-build.yml` avec le tag effectivement créé. Ce workflow résout
+  le commit du tag, puis construit les deux images `prod` depuis ce commit exact et les publie
+  sur GHCR avec ce tag. L'argument Docker `VERSION` reprend également le tag, y compris pour un
+  rattrapage depuis un `main` plus récent. Un simple rafraîchissement de la PR de release ne
+  déclenche pas cette publication.
 
 - **`board`** — bascule les items du board de la colonne `Main` vers `Qualif`
   (`.github/scripts/board-sync.mjs`). Sémantique : `Main` = mergé mais pas encore taggé,
@@ -195,6 +199,12 @@ La gestion des versions est entièrement automatisée par **[release-please](htt
   `project` et `repo`. Sans ce secret, le job n'échoue pas : il signale son abstention dans le
   résumé de run.
 - **`qa-close`** — ferme les issues `[QA][vX.Y.Z]` de la version publiée.
+
+Si la publication des images échoue après la création de la release GitHub, le workflow est en
+échec mais la release et son tag existent déjà. Le rattrapage passe par `release-build.yml`,
+lancé depuis `main` avec l'entrée `tag` explicite. Le tag doit exister ; une branche du même nom
+ou une version absente ne sont pas remplacées par `main`. Voir la procédure dans
+[le guide d'exploitation](./12-exploitation-deploiement.md#github-actions).
 
 Le script du board est exécutable à la main (utile pour un rattrapage) :
 
