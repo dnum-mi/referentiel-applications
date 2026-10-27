@@ -534,9 +534,8 @@ export class SearchPage extends BasePage {
     const input = this.byTestId("application-filter-data-source-name");
     await this.openAccordion("sidebar-accordion-donnees", input);
     await input.fill(name);
-    await waitForSearchParams(
-      this.page,
-      (p) => p.get("dataSourceName") === name,
+    await waitForSearchParams(this.page, (p) =>
+      name ? p.get("dataSourceName") === name : !p.has("dataSourceName"),
     );
   }
 
