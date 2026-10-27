@@ -100,6 +100,10 @@ export function mapApplications(apps: ApplicationWithAllRelations[]) {
     targetPopulations: app.targetPopulations?.join(", ") ?? "",
     priorityRestart: translateEnum(PriorityRestartLabels, app.priorityRestart),
     currentStatusId: app.currentStatusId ?? "",
+    currentStatus: translateEnum(
+      ApplicationStatusLabels,
+      app.currentStatus?.status,
+    ),
   }));
 }
 
@@ -231,6 +235,7 @@ export function mapStatuses(app: ApplicationWithAllRelations) {
       statusDate: status.statusDate
         ? new Date(status.statusDate).toISOString().split("T")[0]
         : null,
+      statusId: status.id,
     })) ?? []
   );
 }
