@@ -652,6 +652,7 @@ export class ApplicationService {
     const scalarFields = [
       "label",
       "shortName",
+      "logo",
       "description",
       "priorityRestart",
       "type",
