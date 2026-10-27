@@ -441,11 +441,13 @@ export class PrismaQueryBuilder {
       {
         condition: filters.dataSourceName,
         whereClause: {
-          dataSources: {
+          dataApplications: {
             some: {
-              name: {
-                contains: filters.dataSourceName,
-                mode: "insensitive" as const,
+              dataDescription: {
+                name: {
+                  contains: filters.dataSourceName,
+                  mode: "insensitive" as const,
+                },
               },
             },
           },
@@ -493,7 +495,10 @@ export class PrismaQueryBuilder {
           },
         },
       },
-    ];
+    ] satisfies {
+      condition: unknown;
+      whereClause: Prisma.ApplicationWhereInput;
+    }[];
 
     // Conformité (filtre par état). `compliance__in` reste un alias déprécié de "présent".
     const presentCriteria = [

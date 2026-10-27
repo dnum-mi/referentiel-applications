@@ -1,7 +1,18 @@
 name: Version Release Build
 
 on:
+  workflow_call:
+    inputs:
+      tag:
+        description: Tag v* de la release à construire
+        required: true
+        type: string
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag v* existant à construire (lancer le workflow depuis main)
+        required: true
+        type: string
   push:
     tags:
       - "v*"
@@ -11,18 +22,47 @@ permissions:
   packages: write
 
 jobs:
+  resolve-release:
+    name: Resolve tagged release commit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
+      commit: ${{ steps.release.outputs.commit }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+      - name: Resolve the requested tag without falling back to a branch
+        id: release
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: node .github/scripts/resolve-release-ref.mjs
+
   build-backend:
     name: Build Backend
+    needs: resolve-release
     uses: ./.github/workflows/build.yml
     with:
       image: ghcr.io/dnum-mi/referentiel-applications/backend
       context: ./backend
       target: prod
+      ref: ${{ needs.resolve-release.outputs.commit }}
+      image_tag: ${{ needs.resolve-release.outputs.tag }}
+      version: ${{ needs.resolve-release.outputs.tag }}
 
   build-frontend:
     name: Build Frontend
+    needs: resolve-release
     uses: ./.github/workflows/build.yml
     with:
       image: ghcr.io/dnum-mi/referentiel-applications/frontend
       context: ./frontend
       target: prod
+      ref: ${{ needs.resolve-release.outputs.commit }}
+      image_tag: ${{ needs.resolve-release.outputs.tag }}
+      version: ${{ needs.resolve-release.outputs.tag }}
