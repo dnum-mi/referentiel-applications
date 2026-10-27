@@ -41,7 +41,7 @@ function renderSection() {
         RefAppTable: {
           props: ["items"],
           template:
-            '<table><tbody><tr v-for="item in items" :key="item.id"><td><slot name="body-service_url" :data="item" /></td><td><slot name="body-score" :data="item" /></td><td><slot name="body-actions" :data="item" /></td></tr></tbody></table>',
+            '<table><tbody><tr v-for="item in items" :key="item.id"><td><slot name="body-service_url" :data="item" /></td><td><slot name="body-accessibility_url" :data="item" /><slot name="body-score" :data="item" /></td><td><slot name="body-actions" :data="item" /></td></tr></tbody></table>',
         },
         AppLoader: true,
       },
@@ -134,4 +134,16 @@ describe("RgaaComplianceSection — réponses d'API et saisie", () => {
     expect(screen.getByTestId("rgaa-table")).toHaveTextContent(item.service_url);
     expect(successToast).not.toHaveBeenCalled();
   });
+});
+
+it("annonce la nouvelle fenêtre des liens RGAA (#3027)", async () => {
+  find.mockResolvedValue(ok([{ ...item, accessibility_url: "https://example.test/accessibilite" }]));
+  renderSection();
+  const links = await screen.findAllByRole("link", { name: /nouvelle fenêtre/ });
+  expect(links).toHaveLength(2);
+  for (const link of links) {
+    expect(link).toHaveAttribute("title", expect.stringContaining("nouvelle fenêtre"));
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noopener noreferrer");
+  }
 });
