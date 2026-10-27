@@ -385,11 +385,12 @@ function tagSearchLink(tag: string) {
                 <span class="fr-icon-external-link-line fr-icon--sm fr-mr-1v icon-success" aria-hidden="true" />
                 <a
                   :href="item?.dataDescription?.officialUrl"
+                  :title="`${item?.dataDescription?.officialUrl} - nouvelle fenêtre`"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="fr-link fr-text--bold fr-icon-external-link-line fr-link--icon-right"
                 >
-                  {{ item?.dataDescription?.officialUrl }}
+                  {{ item?.dataDescription?.officialUrl }}<span class="fr-sr-only"> - nouvelle fenêtre</span>
                 </a>
               </div>
             </div>
@@ -636,11 +637,12 @@ function tagSearchLink(tag: string) {
               <template #body-url="{ data }">
                 <a
                   :href="data.url"
+                  :title="`${data.url} - nouvelle fenêtre`"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="fr-link fr-icon-external-link-line fr-link--icon-right"
                 >
-                  {{ data.url }}
+                  {{ data.url }}<span class="fr-sr-only"> - nouvelle fenêtre</span>
                 </a>
               </template>
             </RefAppTable>
@@ -697,20 +699,22 @@ function tagSearchLink(tag: string) {
                   <a
                     v-if="data.url"
                     :href="data.url"
+                    title="Accéder à la ressource - nouvelle fenêtre"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="fr-link fr-icon-external-link-line fr-link--icon-right"
                   >
-                    Accéder à la ressource
+                    Accéder à la ressource<span class="fr-sr-only"> - nouvelle fenêtre</span>
                   </a>
                   <a
                     v-if="data.swaggerUrl"
                     :href="data.swaggerUrl"
+                    title="Swagger - nouvelle fenêtre"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="fr-link fr-icon-external-link-line fr-link--icon-right fr-ml-2v"
                   >
-                    Swagger
+                    Swagger<span class="fr-sr-only"> - nouvelle fenêtre</span>
                   </a>
                   <span v-if="!data.endpoint && !data.url && !data.swaggerUrl" class="fr-text-mention--grey">—</span>
                 </div>
