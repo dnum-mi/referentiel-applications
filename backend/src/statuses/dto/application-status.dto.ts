@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Status } from "@prisma/client";
 import { Type } from "class-transformer";
-import { IsEnum, IsOptional, IsUUID } from "class-validator";
+import { IsDate, IsEnum, IsOptional, IsString, IsUUID } from "class-validator";
 
 export class ApplicationStatusDto {
   @ApiProperty({
@@ -60,6 +60,7 @@ export class CreateApplicationStatusDto {
   })
   @IsOptional()
   @Type(() => Date)
+  @IsDate()
   statusDate?: Date | null;
 
   @ApiProperty({
@@ -68,5 +69,6 @@ export class CreateApplicationStatusDto {
     nullable: true,
   })
   @IsOptional()
+  @IsString()
   version?: string | null;
 }
