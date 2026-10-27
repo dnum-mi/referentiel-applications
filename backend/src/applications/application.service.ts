@@ -130,6 +130,8 @@ export class ApplicationService {
         await tx.applicationStatus.create({
           data: {
             status: createApplicationDto.status.status,
+            statusDate: createApplicationDto.status.statusDate ?? null,
+            version: createApplicationDto.status.version ?? null,
             applicationId: app.id,
           },
         });

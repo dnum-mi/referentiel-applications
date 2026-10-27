@@ -208,8 +208,14 @@ async function remove(item: RgaaComplianceDto) {
 
       <RefAppTable v-else :items="items" :columns="tableColumns" data-testid="rgaa-table">
         <template #body-service_url="{ data }">
-          <a v-if="data.service_url" :href="data.service_url" target="_blank" rel="noopener noreferrer">
-            {{ data.service_url }}
+          <a
+            v-if="data.service_url"
+            :href="data.service_url"
+            :title="`${data.service_url} - nouvelle fenêtre`"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {{ data.service_url }}<span class="fr-sr-only"> - nouvelle fenêtre</span>
           </a>
           <span v-else>Site non renseigné</span>
         </template>
@@ -219,8 +225,14 @@ async function remove(item: RgaaComplianceDto) {
         </template>
 
         <template #body-accessibility_url="{ data }">
-          <a v-if="data.accessibility_url" :href="data.accessibility_url" target="_blank" rel="noopener noreferrer">
-            {{ data.accessibility_url }}
+          <a
+            v-if="data.accessibility_url"
+            :href="data.accessibility_url"
+            :title="`${data.accessibility_url} - nouvelle fenêtre`"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {{ data.accessibility_url }}<span class="fr-sr-only"> - nouvelle fenêtre</span>
           </a>
           <span v-else>Non renseignée</span>
         </template>

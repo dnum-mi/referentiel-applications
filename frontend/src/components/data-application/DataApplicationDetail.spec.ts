@@ -1,3 +1,4 @@
+import PrimeVue from "primevue/config";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/vue";
 import { createMemoryHistory, createRouter } from "vue-router";
 import type { DataApplicationDto } from "@/client/types.gen";
@@ -158,4 +159,26 @@ describe("dataApplicationDetail — tags métier cliquables", () => {
 
     expect(screen.queryByTestId("data-application-detail-tag-link")).not.toBeInTheDocument();
   });
+});
+
+it("annonce la nouvelle fenêtre des quatre liens de données (#3027)", async () => {
+  findOneMock.mockResolvedValue({
+    response: { ok: true },
+    data: dataApplicationFixture({
+      dataDescription: { id: "desc-1", name: "Adresse", officialUrl: "https://example.test/officiel" },
+      documentationUrl: ["https://example.test/doc"],
+      exposures: [{ id: "exposure-1", url: "https://example.test/api", swaggerUrl: "https://example.test/swagger" }],
+    }),
+  });
+  render(DataApplicationDetail, {
+    props: { applicationId: "app-1", dataApplicationId: "data-app-1" },
+    global: { plugins: [makeRouter(), PrimeVue] },
+  });
+  const links = await screen.findAllByRole("link", { name: /nouvelle fenêtre/ });
+  expect(links).toHaveLength(4);
+  for (const link of links) {
+    expect(link).toHaveAttribute("title", expect.stringContaining("nouvelle fenêtre"));
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noopener noreferrer");
+  }
 });
