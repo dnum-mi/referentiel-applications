@@ -11,6 +11,7 @@ import type { CheckPermissions } from "src/common/service/check-permissions.serv
 import type { PrismaService } from "src/prisma/prisma.service";
 import type { Requestor } from "src/user/entities/user.entity";
 import type { GristClient, GristDocument, GristRequest } from "./grist.client";
+import { GristSyncLockService } from "./grist-sync-lock.service";
 import { GristService } from "./grist.service";
 import { encryptGristApiKey } from "./grist-api-key";
 import type { GristApplication } from "./grist-columns";
@@ -173,6 +174,9 @@ function service(
     gristApiKey = encryptGristApiKey("cle-api") as string | null,
     canReadRestricted = true,
     inScope = [] as GristApplication[],
+    syncLock = {
+      run: async (_document, _table, action) => action(() => {}),
+    } as GristSyncLockService,
   } = {},
 ) {
   const prisma = {
@@ -204,6 +208,7 @@ function service(
       applicationExport,
       repository,
       checkPermissions,
+      syncLock,
     ),
     findSearchItems,
     buildScopedWhere,
@@ -918,6 +923,54 @@ describe("GristService.setup", () => {
     expect(added).toHaveLength(2);
   });
 
+  it("restaure les ACL avec les colonnes restantes après un échec d'ajout", async () => {
+    const { client, calls } = fakeGrist({
+      tables: ["RefApp"],
+      columns: ["refapp_id", "nom", "metadata_1"],
+      failingPaths: ["POST /tables/RefApp/columns"],
+      rows: [row(1, "app-0", { metadata_1: "annotation" })],
+    });
+    expect((await setup(client)).status).toBe("error");
+    const resources = applied(calls).filter(
+      ([action, table]) =>
+        action === "AddRecord" && table === "_grist_ACLResources",
+    );
+    expect(resources.map(([, , , fields]) => fields)).toEqual([
+      { tableId: "RefApp", colIds: "refapp_id,nom" },
+      { tableId: "RefApp", colIds: "*" },
+    ]);
+    expect(applied(calls).filter(([, table]) => table === "RefApp")).toEqual(
+      [],
+    );
+    expect(puts(calls)).toEqual([]);
+  });
+
+  it("tente de restaurer les ACL après un déverrouillage partiellement appliqué", async () => {
+    const { client, calls } = fakeGrist({
+      tables: ["RefApp"],
+      resources: [{ tableId: "RefApp", colIds: "*", id: 1 }],
+      rules: [{ id: 2, resource: 1, permissionsText: "-CD" }],
+    });
+    const original = client.request.bind(client);
+    let failed = false;
+    client.request = async (document, path, options = {}) => {
+      const result = await original(document, path, options);
+      if (!failed && path === "/apply") {
+        failed = true;
+        throw new BadGatewayException("Réponse perdue après déverrouillage");
+      }
+      return result;
+    };
+    expect((await setup(client)).status).toBe("error");
+    expect(
+      applied(calls).filter(
+        ([action, table]) =>
+          action === "AddRecord" && table === "_grist_ACLRules",
+      ),
+    ).toHaveLength(2);
+    expect(puts(calls)).toEqual([]);
+  });
+
   it("réutilise les ressources existantes", async () => {
     const { client, calls } = fakeGrist({
       tables: ["RefApp"],
@@ -1192,5 +1245,225 @@ describe("GristService.records, table choisie", () => {
     await expect(
       service(client).sut.records("doc1", requestor, "RefApp2"),
     ).rejects.toThrow(NotFoundException);
+  });
+});
+
+function barrier() {
+  let release!: () => void;
+  const promise = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  return { promise, release };
+}
+
+describe("synchronisations concurrentes — verrous PostgreSQL réels", () => {
+  const locks = () =>
+    new GristSyncLockService({ url: process.env.DATABASE_URL });
+
+  it.each(["upsert", "ACL"])(
+    "refuse une sélection disjointe pendant %s, puis permet de réessayer",
+    async (stage) => {
+      const rows = [row(9, "annotated", { metadata_1: "à conserver" })];
+      const { client, calls } = fakeGrist({ tables: ["RefApp"], rows });
+      const original = client.request.bind(client);
+      const entered = barrier();
+      const resume = barrier();
+      let pause = true;
+      client.request = async (document, path, options = {}) => {
+        if (options.method === "PUT") {
+          for (const record of (
+            options.body as {
+              records: { require: { refapp_id: string }; fields: object }[];
+            }
+          ).records) {
+            const existing = rows.find(
+              (r) => r.fields.refapp_id === record.require.refapp_id,
+            );
+            if (existing) Object.assign(existing.fields, record.fields);
+            else
+              rows.push({
+                id: rows.length + 10,
+                fields: {
+                  refapp_id: record.require.refapp_id,
+                  ...record.fields,
+                },
+              });
+          }
+          if (pause && stage === "upsert") {
+            entered.release();
+            await resume.promise;
+          }
+        }
+        if (path === "/apply") {
+          for (const [action, target, ids] of options.body as [
+            string,
+            string,
+            number[],
+          ][]) {
+            if (
+              pause &&
+              stage === "ACL" &&
+              action === "AddRecord" &&
+              target === "_grist_ACLRules"
+            ) {
+              entered.release();
+              await resume.promise;
+            }
+            if (action === "BulkRemoveRecord" && target === "RefApp") {
+              for (let i = rows.length - 1; i >= 0; i--)
+                if (ids.includes(rows[i].id)) rows.splice(i, 1);
+            }
+          }
+        }
+        return original(document, path, options);
+      };
+      const first = service(client, {
+        applications: [apps(2)[0]],
+        syncLock: locks(),
+      }).sut;
+      const second = service(client, {
+        applications: [apps(2)[1]],
+        syncLock: locks(),
+      }).sut;
+      const running = first.setup(filters, requestor);
+      try {
+        await entered.promise;
+        const before = calls.filter(
+          (call) =>
+            call.path !== "/sql" && call.method && call.method !== "GET",
+        ).length;
+        const report = await second.setup(filters, { ...requestor, id: "u2" }, [
+          { docId: "doc1", tableId: "RefApp" },
+        ]);
+        expect(report.documents[0]).toMatchObject({
+          status: "error",
+          error: expect.stringContaining("déjà en cours"),
+        });
+        expect(
+          calls.filter(
+            (call) =>
+              call.path !== "/sql" && call.method && call.method !== "GET",
+          ),
+        ).toHaveLength(before);
+      } finally {
+        pause = false;
+        resume.release();
+      }
+      expect((await running).documents[0].status).toBe("ok");
+      expect(rows.map((r) => r.fields.refapp_id)).toEqual([
+        "annotated",
+        "app-0",
+      ]);
+      expect((await second.setup(filters, requestor)).documents[0].status).toBe(
+        "ok",
+      );
+      expect(rows.map((r) => r.fields.refapp_id)).toEqual([
+        "annotated",
+        "app-1",
+      ]);
+      expect(rows[0].fields.metadata_1).toBe("à conserver");
+    },
+  );
+
+  it.each([
+    ["doc1", "RefApp2"],
+    ["doc2", "RefApp"],
+  ])(
+    "laisse %s/%s progresser pendant une autre synchronisation",
+    async (docId, tableId) => {
+      const { client } = fakeGrist({ tables: ["RefApp", "RefApp2"] });
+      const original = client.request.bind(client);
+      const entered = barrier();
+      const resume = barrier();
+      client.request = async (document, path, options = {}) => {
+        if (
+          document.docId === "doc1" &&
+          path === "/tables/RefApp/records" &&
+          options.method === "PUT"
+        ) {
+          entered.release();
+          await resume.promise;
+        }
+        return original(document, path, options);
+      };
+      const first = service(client, { syncLock: locks() }).sut.setup(
+        filters,
+        requestor,
+      );
+      try {
+        await entered.promise;
+        const second = await service(client, {
+          docIds: [docId],
+          syncLock: locks(),
+        }).sut.setup(filters, requestor, [{ docId, tableId }]);
+        expect(second.documents[0].status).toBe("ok");
+      } finally {
+        resume.release();
+      }
+      expect((await first).documents[0].status).toBe("ok");
+    },
+  );
+
+  it("protège aussi la création et refuse un emplacement devenu occupé", async () => {
+    const tables: string[] = [];
+    const { client } = fakeGrist({ tables });
+    const original = client.request.bind(client);
+    const entered = barrier();
+    const resume = barrier();
+    client.request = async (document, path, options = {}) => {
+      if (path === "/tables" && options.method === "POST") {
+        entered.release();
+        await resume.promise;
+        tables.push("RefApp");
+      }
+      return original(document, path, options);
+    };
+    const first = service(client, { syncLock: locks() }).sut.setup(
+      filters,
+      requestor,
+    );
+    try {
+      await entered.promise;
+      const second = await service(client, { syncLock: locks() }).sut.setup(
+        filters,
+        requestor,
+        [{ docId: "doc1", newTable: true }],
+      );
+      expect(second.documents[0]).toMatchObject({
+        status: "error",
+        error: expect.stringContaining("déjà en cours"),
+      });
+    } finally {
+      resume.release();
+    }
+    expect((await first).documents[0].status).toBe("ok");
+
+    const stale = fakeGrist();
+    const lock = locks();
+    const run = lock.run.bind(lock);
+    const syncLock = {
+      run: async (document, table, action) => {
+        stale.client.request = fakeGrist({ tables: ["RefApp"] }).client.request;
+        return run(document, table, action);
+      },
+    } as GristSyncLockService;
+    expect((await setup(stale.client, { syncLock })).status).toBe("error");
+  });
+
+  it.each([
+    "PUT /tables/RefApp/records",
+    "POST /tables/RefApp/columns",
+    "POST /apply",
+  ])("libère le verrou après un échec de %s", async (failure) => {
+    const { client } = fakeGrist({
+      tables: ["RefApp"],
+      columns: ["refapp_id"],
+      failingPaths: [failure],
+    });
+    expect((await setup(client, { syncLock: locks() })).status).toBe("error");
+    const healthy = fakeGrist({ tables: ["RefApp"] });
+    expect((await setup(healthy.client, { syncLock: locks() })).status).toBe(
+      "ok",
+    );
   });
 });
