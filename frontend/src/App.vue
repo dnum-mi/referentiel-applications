@@ -135,7 +135,7 @@ const quickLinks = computed<QuickLink[]>(() => {
   return authenticatedQuickLinks.value;
 });
 
-const navItemsComputed = computed(() =>
+const baseNavItems = computed(() =>
   buildNavItems(userStore.hasPermissions([Permission.GLOBAL_ADMIN_MANAGE]), userStore.canListTechnologies),
 );
 
@@ -281,7 +281,7 @@ const { needRefresh, updateServiceWorker } = useAppUpdate();
     </template>
 
     <template #mainnav>
-      <DsfrNavigation v-if="hasMainNavigation" :nav-items="navItemsComputed" id="header-nav" data-testid="main-navigation" />
+      <DsfrNavigation v-if="hasMainNavigation" :nav-items="baseNavItems" id="header-nav" data-testid="main-navigation" />
     </template>
   </DsfrHeader>
   <AppUpdateNotice :available="needRefresh" :update="() => updateServiceWorker(true)" />
