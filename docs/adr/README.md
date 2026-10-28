@@ -33,6 +33,6 @@ Un ADR est **immuable** : une fois accepté, il n'est pas réécrit. Si une déc
 
 ## Voir aussi
 
-- [Sommaire de la documentation](../../docs/README.md)
-- [Architecture](../../docs/02-architecture.md)
-- [Permissions et sécurité](../../docs/06-permissions-et-securite.md)
+- [Sommaire de la documentation](../README.md)
+- [Architecture](../02-architecture.md)
+- [Permissions et sécurité](../06-permissions-et-securite.md)

@@ -18,7 +18,7 @@ La dépendance `@nestjs/throttler` était déclarée sans `ThrottlerModule`, gar
 
 Deux configurations ont été inspectées localement le 28 septembre 2026 :
 
-- Le fichier [`krakend.json`](../../krakend.json) du dépôt applicatif ne contient aucune section de limitation de débit.
+- Le fichier [`krakend.json`](https://github.com/dnum-mi/referentiel-applications/blob/5791b177c18a606016dd3c1c7d3074e37e987d8f/krakend.json) du dépôt applicatif ne contient aucune section de limitation de débit.
 - Le fichier [`apim/values-krakend.yaml` du dépôt d'infrastructure, commit `7d6c6af3`](https://github.com/dnum-mi/referentiel-applications-infra/blob/7d6c6af3bab778d58d418ccfd4df675f03066cb6/apim/values-krakend.yaml#L96-L110) définit les templates `qos/ratelimit/router` et `qos/ratelimit/proxy`. Le premier déclare par défaut `max_rate: 10000`, `client_max_rate: 100` et `every: 1m`, avec la stratégie `header` et la clé `Authorization`. Le second déclare `max_rate: 500` et `every: 1m`. Les routes de recherche et les routes génériques `/apim/v2/{ressource}` et `/apim/v2/{ressource}/{id}` incluent ces templates. Les routes publiques déclarées utilisent la stratégie `ip` côté routeur.
 
 Ces observations prouvent l'existence de règles dans les sources d'infrastructure. Elles ne prouvent ni leur rendu final, ni leur chargement dans un environnement, ni les seuils effectifs d'une instance déployée.
@@ -43,5 +43,5 @@ La qualification d'un environnement doit vérifier la configuration effectivemen
 ## Liens et Références
 
 - [Ticket #2293](https://github.com/dnum-mi/referentiel-applications/issues/2293)
-- [Configuration applicative KrakenD](../../krakend.json)
+- [Configuration applicative KrakenD](https://github.com/dnum-mi/referentiel-applications/blob/5791b177c18a606016dd3c1c7d3074e37e987d8f/krakend.json)
 - [Configuration APIM versionnée et inspectée](https://github.com/dnum-mi/referentiel-applications-infra/blob/7d6c6af3bab778d58d418ccfd4df675f03066cb6/apim/values-krakend.yaml)

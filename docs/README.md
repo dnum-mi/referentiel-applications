@@ -26,7 +26,7 @@ deux usages : **prise en main** (installation, architecture) et **référence**
 
 ### Décisions d'architecture (ADR)
 
-Les choix structurants sont consignés sous [`doc/adr/`](../doc/adr/README.md)
+Les choix structurants sont consignés sous [`docs/adr/`](./adr/README.md)
 (Architecture Decision Records).
 
 ## Conventions de cette documentation

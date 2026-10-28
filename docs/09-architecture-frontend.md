@@ -413,4 +413,4 @@ revalidés) ; les assets hashés `/assets/` en `max-age=31536000, immutable`.
   génériques (`name: "Dummy app"`, `short_name: "Dummy"`) — vestige de
   _boilerplate_ à corriger.
 - L'aide à la décision technique sous-jacente n'est pas documentée dans un
-  [ADR](../doc/adr/README.md) dédié.
+  [ADR](./adr/README.md) dédié.
