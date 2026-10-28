@@ -31,7 +31,7 @@ const router = createRouter({
     },
     {
       name: routeNames.ENDOFLIFE,
-      path: "/fins-de-vie",
+      path: "/technologies",
       component: StubPage,
       meta: { requiresAuth: true, requiresTechnologyList: true, title: "Technologies - Référentiel des applications" },
     },
@@ -77,7 +77,7 @@ describe("plan du site — Technologies", () => {
   it("met à jour le lien lors de l'attribution et du retrait de l'autorisation", async () => {
     render(SiteMapPage, { global: { plugins: [router] } });
     userStore.canListTechnologies = true;
-    expect(await screen.findByRole("link", { name: "Technologies" })).toHaveAttribute("href", "/fins-de-vie");
+    expect(await screen.findByRole("link", { name: "Technologies" })).toHaveAttribute("href", "/technologies");
     userStore.canListTechnologies = false;
     await waitFor(() => expect(screen.queryByRole("link", { name: "Technologies" })).not.toBeInTheDocument());
   });

@@ -27,22 +27,34 @@ describe("route Technologies — accès direct", () => {
   });
 
   it("refuse l'URL directe sans l'autorisation de consultation", async () => {
-    await router.push("/fins-de-vie");
+    await router.push("/technologies");
     expect(router.currentRoute.value.name).toBe(routeNames.ACCUEIL);
   });
 
   it("ouvre l'URL directe avec l'autorisation de consultation", async () => {
     userStore.canListTechnologies = true;
-    await router.push("/fins-de-vie");
+    await router.push("/technologies");
     expect(router.currentRoute.value.name).toBe(routeNames.ENDOFLIFE);
+  });
+
+  it("redirige l’ancienne URL en conservant les paramètres et l’ancre", async () => {
+    userStore.canListTechnologies = true;
+    await router.push("/fins-de-vie?status=eol#resultats");
+    expect(router.currentRoute.value.fullPath).toBe("/technologies?status=eol#resultats");
+    expect(router.resolve({ name: routeNames.ENDOFLIFE }).path).toBe("/technologies");
+  });
+
+  it("refuse aussi l’ancienne URL sans autorisation", async () => {
+    await router.push("/fins-de-vie");
+    expect(router.currentRoute.value.name).toBe(routeNames.ACCUEIL);
   });
 
   it("revérifie l'autorisation lors d'une nouvelle navigation après révocation", async () => {
     userStore.canListTechnologies = true;
-    await router.push("/fins-de-vie");
+    await router.push("/technologies");
     await router.push({ name: routeNames.ACCUEIL });
     userStore.canListTechnologies = false;
-    await router.push("/fins-de-vie");
+    await router.push("/technologies");
     expect(router.currentRoute.value.name).toBe(routeNames.ACCUEIL);
   });
 });

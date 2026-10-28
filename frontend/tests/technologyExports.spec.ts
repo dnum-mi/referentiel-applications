@@ -102,7 +102,7 @@ async function expectExcelDownload(download: Download, filename: RegExp) {
 
 test("l'export Technologies conserve filtres et tri et télécharge toutes les pages", async ({ page }) => {
   const requests = await prepareSession(page);
-  await page.goto("/fins-de-vie");
+  await page.goto("/technologies");
   await expect(page.getByTestId("end-of-life-table")).toContainText("PostgreSQL 13");
 
   await page.getByTestId("end-of-life-filter-status").selectOption("eol-soon");
@@ -137,7 +137,7 @@ test("l'export Technologies conserve filtres et tri et télécharge toutes les p
 
 test("la consultation Technologies sans DataExport ne propose aucun téléchargement", async ({ page }) => {
   const requests = await prepareSession(page, false);
-  await page.goto("/fins-de-vie");
+  await page.goto("/technologies");
   await expect(page.getByTestId("end-of-life-table")).toContainText("PostgreSQL 13");
   await expect(page.getByTestId("end-of-life-export-excel")).toHaveCount(0);
   expect(requests.technologyExports).toEqual([]);

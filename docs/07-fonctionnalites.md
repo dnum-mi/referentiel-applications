@@ -343,7 +343,7 @@ Les lignes dont la fin de vie a été **saisie à la main** (`eolSource = manual
 
 **Où c'est dans le code.**
 
-- Front : `frontend/src/views/EndOfLifePage.vue` (route `/fins-de-vie`, inchangée par #2413 : seul l'intitulé a bougé), store `frontend/src/stores/endOfLifeStore.ts`.
+- Front : `frontend/src/views/EndOfLifePage.vue` (route `/technologies` ; `/fins-de-vie` redirige vers cette URL depuis #3020), store `frontend/src/stores/endOfLifeStore.ts`.
 - Back : `GET /technologies/end-of-life` (`backend/src/technology/end-of-life.controller.ts`), service `end-of-life.service.ts`, règles de classement `utils/eol-status.ts`, recalcul planifié `eol-refresh.service.ts`.
 
 **Tri.** Par libellé d'application. Trier par gravité supposerait d'ordonner sur un agrégat de la relation (la fin de vie la plus proche), ce que Prisma ne sait pas faire : un tri appliqué après pagination ne classerait que la page affichée et donnerait l'illusion d'un classement global. Pour cibler l'urgent, c'est le filtre de statut qui répond.

@@ -318,7 +318,7 @@ Dans le formulaire de droits, la capacité est cochée et non modifiable pour un
 
 Le périmètre fonctionnel est `scopeOrganization`, distinct de l'organisation de rattachement `organization`. Une application appartient au périmètre si un de ses acteurs **ou une de ses directions métier** est rattaché à une organisation de ce périmètre. Une application partagée avec une autre organisation reste visible lorsqu'elle appartient aussi au périmètre autorisé. Un périmètre renseigné mais inexploitable est refusé, jamais assimilé à un accès global.
 
-Le menu, le plan du site et l'accès direct à `/fins-de-vie` appliquent le contrôle de capacité et de profil. L'API `GET /technologies/end-of-life` impose la même autorisation puis filtre les données côté serveur avant pagination et calcul du total. Les recherches, filtres d'organisation et de statut ne peuvent élargir cette sélection. Un changement d'utilisateur, de capacité ou de périmètre invalide les données de la page et ses réponses en attente.
+Le menu, le plan du site et l'accès direct à `/technologies` appliquent le contrôle de capacité et de profil. L'API `GET /technologies/end-of-life` impose la même autorisation puis filtre les données côté serveur avant pagination et calcul du total. Les recherches, filtres d'organisation et de statut ne peuvent élargir cette sélection. Un changement d'utilisateur, de capacité ou de périmètre invalide les données de la page et ses réponses en attente.
 
 La page s'ouvre avec **Toutes les technologies (y compris à jour)** sélectionné. Les filtres de fin de vie restent disponibles. Pour les clients API existants, l'absence de filtre `status` conserve le comportement historique centré sur les échéances ; la page transmet explicitement `status=all` par défaut.
 

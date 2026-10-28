@@ -166,7 +166,6 @@ const tableRows = computed(() =>
       id: application.id,
       label: application.label,
       shortName: application.shortName,
-      worstStatus: application.worstStatus,
     },
     Organisations: application.organizationPaths,
     Technologies: application.technologies,
@@ -279,17 +278,6 @@ watch(
             {{ row.Application.label }}
           </router-link>
           <span v-if="row.Application.shortName" class="fr-text--xs fr-ml-1w"> ({{ row.Application.shortName }}) </span>
-          <!-- #2528 : `worstStatus` était reçu mais jamais affiché. Absent (filtre `all`
-               sur une application entièrement saine) : aucune pastille, rien à signaler. -->
-          <DsfrBadge
-            v-if="row.Application.worstStatus"
-            :type="EOL_STATUS_BADGE_TYPE[row.Application.worstStatus as EolStatus]"
-            :label="STATUS_LABELS[row.Application.worstStatus as EolStatus]"
-            small
-            class="fr-ml-1w"
-            :title="`Statut le plus grave de l'application : ${STATUS_LABELS[row.Application.worstStatus as EolStatus]}`"
-            :data-testid="`end-of-life-worst-${row.Application.id}`"
-          />
         </template>
 
         <template #body-Organisations="{ data: row }">

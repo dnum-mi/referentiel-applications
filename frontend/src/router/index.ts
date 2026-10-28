@@ -124,8 +124,12 @@ const routes = [
     meta: { requiresAuth: true, title: "Qualité générale - Référentiel des applications" },
   },
   {
-    name: routeNames.ENDOFLIFE,
     path: "/fins-de-vie",
+    redirect: { name: routeNames.ENDOFLIFE },
+  },
+  {
+    name: routeNames.ENDOFLIFE,
+    path: "/technologies",
     component: () => import("@/views/EndOfLifePage.vue"),
     // #2413 : titre aligné sur l'entrée de menu « Technologies » ; le plan du site en dérive son libellé.
     meta: { requiresAuth: true, requiresTechnologyList: true, title: "Technologies - Référentiel des applications" },

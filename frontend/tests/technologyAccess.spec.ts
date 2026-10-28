@@ -76,7 +76,7 @@ async function prepareSession(page: Page, role: string, capacity: boolean, scope
 for (const role of ["READER", "CONTRIBUTOR"]) {
   test(`${role} sans capacité : menu, adresse directe et plan du site refusent Technologies`, async ({ page }) => {
     const { requests } = await prepareSession(page, role, false);
-    await page.goto("/fins-de-vie");
+    await page.goto("/technologies");
     await expect(page).toHaveURL(/\/$/);
     await expect(page.getByTestId("main-navigation")).toBeVisible();
     await expect(page.getByTestId("main-navigation").getByRole("link", { name: "Technologies", exact: true })).toHaveCount(0);
@@ -88,7 +88,7 @@ for (const role of ["READER", "CONTRIBUTOR"]) {
 
   test(`${role} avec capacité : toutes les technologies sont sélectionnées dès l'ouverture`, async ({ page }) => {
     const { requests } = await prepareSession(page, role, true);
-    await page.goto("/fins-de-vie");
+    await page.goto("/technologies");
     await expect(page.getByTestId("end-of-life-page-title")).toHaveText("Technologies");
     await expect(page.getByTestId("main-navigation").getByRole("link", { name: "Technologies", exact: true })).toBeVisible();
     await expect(page.getByTestId("end-of-life-filter-status")).toHaveValue("all");
@@ -105,7 +105,7 @@ for (const role of ["READER", "CONTRIBUTOR"]) {
 for (const scope of [null, "MI/DNUM"]) {
   test(`ADMIN ${scope ? "de périmètre" : "global"} sans délégation : accès hérité aux Technologies`, async ({ page }) => {
     const { requests } = await prepareSession(page, "ADMIN", false, scope);
-    await page.goto("/fins-de-vie");
+    await page.goto("/technologies");
     await expect(page.getByTestId("end-of-life-page-title")).toHaveText("Technologies");
     await expect(page.getByTestId("main-navigation").getByRole("link", { name: "Technologies", exact: true })).toBeVisible();
     await expect(page.getByTestId("end-of-life-filter-status")).toHaveValue("all");
@@ -118,7 +118,7 @@ for (const scope of [null, "MI/DNUM"]) {
 
 test("la rétrogradation d'un ADMIN sans délégation retire l'accès après actualisation des droits", async ({ page }) => {
   const { requests, profile } = await prepareSession(page, "ADMIN", false);
-  await page.goto("/fins-de-vie");
+  await page.goto("/technologies");
   await expect(page.getByTestId("end-of-life-table")).toContainText("Node.js 22");
   const requestCount = requests.length;
   profile.role = "READER";
@@ -131,7 +131,7 @@ test("la rétrogradation d'un ADMIN sans délégation retire l'accès après act
 
 test("le retrait de la délégation d'un contributeur retire l'accès après actualisation des droits", async ({ page }) => {
   const { requests, profile } = await prepareSession(page, "CONTRIBUTOR", true);
-  await page.goto("/fins-de-vie");
+  await page.goto("/technologies");
   await expect(page.getByTestId("end-of-life-table")).toContainText("Node.js 22");
   const requestCount = requests.length;
   profile.capacity = false;
@@ -144,7 +144,7 @@ test("le retrait de la délégation d'un contributeur retire l'accès après act
 
 test("un profil standard avec capacité n'obtient pas de vue globale", async ({ page }) => {
   const { requests } = await prepareSession(page, "VISITOR", true);
-  await page.goto("/fins-de-vie");
+  await page.goto("/technologies");
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByTestId("end-of-life-page-title")).toHaveCount(0);
   expect(requests).toEqual([]);
