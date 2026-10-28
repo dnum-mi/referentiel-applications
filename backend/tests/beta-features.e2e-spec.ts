@@ -26,13 +26,15 @@ describe("Fonctionnalités bêta — capacité explicite et droits métier (#303
   let applicationId: string;
 
   const routes = [
-    { featureId: FeatureId.CatalogueExcelExport, kind: "excel" },
     { featureId: FeatureId.CatalogueHtmlExport, kind: "catalogue-html" },
     { featureId: FeatureId.ProductHtmlExport, kind: "html" },
     { featureId: FeatureId.ProductPowerpointExport, kind: "powerpoint" },
   ] as const;
 
-  function exportRequest(kind: (typeof routes)[number]["kind"], token: string) {
+  function exportRequest(
+    kind: (typeof routes)[number]["kind"] | "excel",
+    token: string,
+  ) {
     const server = request(app().getHttpServer());
     return kind === "excel" || kind === "catalogue-html"
       ? server
@@ -46,7 +48,7 @@ describe("Fonctionnalités bêta — capacité explicite et droits métier (#303
 
   async function expectNoExport(
     user: UserFakerReturnType,
-    kinds: readonly (typeof routes)[number]["kind"][],
+    kinds: readonly ((typeof routes)[number]["kind"] | "excel")[],
     token = getToken(user),
   ) {
     const catalogue = jest.spyOn(
@@ -125,7 +127,6 @@ describe("Fonctionnalités bêta — capacité explicite et droits métier (#303
       .get("/config")
       .expect(200);
     expect(response.body.betaFeatures).toEqual([
-      FeatureId.CatalogueExcelExport,
       FeatureId.CatalogueHtmlExport,
       FeatureId.ImportReportHtmlExport,
       FeatureId.ProductHtmlExport,
@@ -161,11 +162,29 @@ describe("Fonctionnalités bêta — capacité explicite et droits métier (#303
 
   it("DataExport seul ne permet aucun export en bêta", async () => {
     await expectNoExport(dataExporter, [
-      "excel",
       "catalogue-html",
       "html",
       "powerpoint",
     ]);
+  });
+
+  it("DataExport permet de télécharger Excel sans BetaFeatures (#3101)", async () => {
+    const response = await exportRequest("excel", getToken(dataExporter))
+      .buffer(true)
+      .parse((res, callback) => {
+        const chunks: Buffer[] = [];
+        res.on("data", (chunk: Buffer) => chunks.push(chunk));
+        res.on("end", () => callback(null, Buffer.concat(chunks)));
+      })
+      .expect(200);
+    expect(response.headers["content-type"]).toContain(
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(response.body as ArrayBuffer);
+    expect(workbook.worksheets[0].getRow(2).getCell(1).value).toBe(
+      applicationId,
+    );
   });
 
   it("BetaFeatures seul ne remplace pas le droit métier DataExport du catalogue", async () => {
@@ -196,7 +215,7 @@ describe("Fonctionnalités bêta — capacité explicite et droits métier (#303
       additionalPermissions: [Permission.DataExport],
     });
     const token = getToken(target);
-    await expectNoExport(target, ["excel"], token);
+    await expectNoExport(target, ["catalogue-html"], token);
 
     await request(app().getHttpServer())
       .patch(`/users/${target.id}`)
@@ -214,22 +233,7 @@ describe("Fonctionnalités bêta — capacité explicite et droits métier (#303
     );
     expect(permissionLog.changedById).toBe(admin.id);
 
-    const response = await exportRequest("excel", token)
-      .buffer(true)
-      .parse((res, callback) => {
-        const chunks: Buffer[] = [];
-        res.on("data", (chunk: Buffer) => chunks.push(chunk));
-        res.on("end", () => callback(null, Buffer.concat(chunks)));
-      })
-      .expect(200);
-    expect(response.headers["content-type"]).toContain(
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    );
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(response.body as ArrayBuffer);
-    expect(workbook.worksheets[0].getRow(2).getCell(1).value).toBe(
-      applicationId,
-    );
+    await exportRequest("catalogue-html", token).expect(200);
 
     await request(app().getHttpServer())
       .patch(`/users/${target.id}`)
@@ -242,7 +246,7 @@ describe("Fonctionnalités bêta — capacité explicite et droits métier (#303
     expect(revoked.additionalPermissions).toEqual([Permission.DataExport]);
     await expectNoExport(
       target,
-      ["excel", "catalogue-html", "html", "powerpoint"],
+      ["catalogue-html", "html", "powerpoint"],
       token,
     );
   });
@@ -319,7 +323,7 @@ describe("Fonctionnalités bêta — capacité explicite et droits métier (#303
     expect(user.additionalPermissions).toEqual([Permission.DataExport]);
   });
 
-  it.each([routes[1], routes[2]])(
+  it.each([routes[0], routes[1]])(
     "$featureId sorti du registre bêta ne demande plus la capacité et les autres restent protégées",
     async ({ kind, featureId }) => {
       const remainingFeatures = betaRegistry.BETA_FEATURES.filter(

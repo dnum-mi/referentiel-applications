@@ -3,15 +3,18 @@ import { defineComponent, onMounted, ref } from "vue";
 import { createMemoryHistory, createRouter } from "vue-router";
 import App from "./App.vue";
 
-vi.mock("@/stores/userStore", () => ({
-  useUserStore: () => ({
-    user: { id: "user-1" },
-    authenticated: true,
-    sessionInitialized: true,
-    hasApplicationAccess: true,
-    hasPermissions: () => false,
-  }),
+const session = vi.hoisted(() => ({
+  user: { id: "user-1" },
+  authenticated: true,
+  sessionInitialized: true,
+  hasApplicationAccess: true,
+  hasPermissions: () => false,
 }));
+vi.mock("@/stores/userStore", () => ({ useUserStore: () => session }));
+beforeEach(() => {
+  session.authenticated = true;
+  session.hasApplicationAccess = true;
+});
 vi.mock("@/stores/notificationStore", () => ({ useNotificationStore: () => ({ emailPreview: null }) }));
 vi.mock("@/stores/toasterStore", () => ({ useToasterStore: () => ({ messages: [] }) }));
 vi.mock("@/services/authentication", () => ({
@@ -58,7 +61,10 @@ async function renderApp() {
   await router.push("/");
   const wrapper = shallowMount(App, {
     attachTo: document.body,
-    global: { plugins: [router], stubs: { RouterView: false, DeferredApplication: false } },
+    global: {
+      plugins: [router],
+      stubs: { RouterView: false, DeferredApplication: false, DsfrHeader: { template: '<header><slot name="mainnav" /></header>' } },
+    },
   });
   await flushPromises();
   await router.push("/applications/app-1/tab-infos");
@@ -96,4 +102,11 @@ it("met à jour le texte sans reprendre le focus et le conserve sur les changeme
   await router.push("/applications/app-1/tab-links");
   await flushPromises();
   expect(input.element).toHaveFocus();
+});
+
+it.each([false, true])("affiche la navigation seulement avec un accès applicatif, connecté = %s (#3101)", async (authenticated) => {
+  session.authenticated = authenticated;
+  session.hasApplicationAccess = authenticated;
+  const { wrapper } = await renderApp();
+  expect(wrapper.find('[data-testid="main-navigation"]').exists()).toBe(authenticated);
 });

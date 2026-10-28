@@ -37,7 +37,13 @@ test.describe("Fonctionnalités bêta — délégation explicite", () => {
       const search = new SearchPage(page);
       const fiche = new ApplicationPage(page);
       await search.open();
-      await search.expectExcelBetaExport(false);
+      await search.expectExcelExport(true);
+      const excel = await saveDownload(
+        await search.exportExcel(),
+        /^applications_export_\d{4}-\d{2}-\d{2}\.xlsx$/,
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      );
+      expect(excel.subarray(0, 4).toString("hex")).toBe("504b0304");
       await search.expectHtmlBetaExport(false);
       await fiche.open(application!.id);
       await fiche.expectProductBetaExports(false);
@@ -64,7 +70,7 @@ test.describe("Fonctionnalités bêta — délégation explicite", () => {
       expect(powerpoint.subarray(0, 4).toString("hex")).toBe("504b0304");
 
       await search.open();
-      await search.expectExcelBetaExport(true);
+      await search.expectExcelExport(true);
       await search.expectHtmlBetaExport(true);
       const catalogueHtml = await saveDownload(
         await search.exportHtml(),
@@ -72,12 +78,6 @@ test.describe("Fonctionnalités bêta — délégation explicite", () => {
         "text/html",
       );
       expect(catalogueHtml.toString("utf8")).toContain('<html lang="fr">');
-      const excel = await saveDownload(
-        await search.exportExcel(),
-        /^applications_export_\d{4}-\d{2}-\d{2}\.xlsx$/,
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      );
-      expect(excel.subarray(0, 4).toString("hex")).toBe("504b0304");
 
       // L'interface reste ouverte : le clic doit relire l'habilitation retirée
       // et ne déclencher ni requête d'export ni événement de téléchargement.
@@ -85,8 +85,8 @@ test.describe("Fonctionnalités bêta — délégation explicite", () => {
       await search.expectHtmlRevocationBeforeDownload();
       await tester.setPermissions(["DataExport", "BetaFeatures"]);
       await search.open();
-      await search.expectExcelBetaExport(true);
-      await tester.setPermissions(["DataExport"]);
+      await search.expectExcelExport(true);
+      await tester.setPermissions([]);
       await search.expectExcelRevocationBeforeDownload();
       await search.expectHtmlBetaExport(false);
       await fiche.open(application!.id);
@@ -96,7 +96,7 @@ test.describe("Fonctionnalités bêta — délégation explicite", () => {
     }
   });
 
-  test("BET-02 - le bouton mobile affiche le badge et télécharge, puis disparaît sans la capacité bêta", async ({
+  test("BET-02 - sur mobile, HTML reste bêta et Excel reste accessible sans la capacité bêta", async ({
     page,
     data,
   }) => {
@@ -109,7 +109,7 @@ test.describe("Fonctionnalités bêta — délégation explicite", () => {
       await page.setViewportSize({ width: 375, height: 812 });
       const search = new SearchPage(page);
       await search.open();
-      await search.expectExcelBetaExport(true, true);
+      await search.expectExcelExport(true, true);
       await search.expectHtmlBetaExport(true);
       const html = await saveDownload(
         await search.exportHtml(),
@@ -121,12 +121,6 @@ test.describe("Fonctionnalités bêta — délégation explicite", () => {
         body: await page.screenshot({ fullPage: true }),
         contentType: "image/png",
       });
-      const excel = await saveDownload(
-        await search.exportExcel({ mobile: true }),
-        /^applications_export_\d{4}-\d{2}-\d{2}\.xlsx$/,
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      );
-      expect(excel.subarray(0, 4).toString("hex")).toBe("504b0304");
       const fiche = new ApplicationPage(page);
       await fiche.open(application!.id);
       await fiche.expectProductBetaExports(true);
@@ -135,8 +129,14 @@ test.describe("Fonctionnalités bêta — délégation explicite", () => {
       await fiche.open(application!.id);
       await fiche.expectProductBetaExports(false);
       await search.open();
-      await search.expectExcelBetaExport(false, true);
+      await search.expectExcelExport(true, true);
       await search.expectHtmlBetaExport(false);
+      const excel = await saveDownload(
+        await search.exportExcel({ mobile: true }),
+        /^applications_export_\d{4}-\d{2}-\d{2}\.xlsx$/,
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      );
+      expect(excel.subarray(0, 4).toString("hex")).toBe("504b0304");
     } finally {
       await tester.dispose();
     }
