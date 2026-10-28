@@ -360,9 +360,10 @@ Seules les technologies retenues par le filtre sont restituées, triées par gra
 
 ### Filtres sauvegardés
 
-| Verbe & chemin                               | Rôle                                                                        |
-| -------------------------------------------- | --------------------------------------------------------------------------- |
-| `GET /saved-filters` · `POST` · `DELETE :id` | Filtres de recherche sauvegardés par l'utilisateur courant (upsert par nom) |
+| Verbe & chemin                               | Rôle                                                                                                                                                                                                                                |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /saved-filters` · `POST` · `DELETE :id` | Filtres de recherche sauvegardés par l'utilisateur courant (upsert par nom)                                                                                                                                                         |
+| `PATCH /saved-filters/:id`                   | Renomme un filtre personnel avec `{ "name": "Nouveau nom" }` sans modifier ses critères. Nom vide ou trop long : 400 ; nom déjà pris par un autre de ses filtres : 409 ; filtre absent ou appartenant à un autre utilisateur : 404. |
 
 ### Notifications in-app (#2280)
 

@@ -4,6 +4,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import api from "@/api/index";
 import { useToasterStore } from "@/stores/toasterStore";
+import { backendErrorMessage } from "@/utils/api-error";
 
 export const useSavedFilterStore = defineStore("savedFilterStore", () => {
   const savedFilters = ref<SavedFilterDto[]>([]);
@@ -53,11 +54,22 @@ export const useSavedFilterStore = defineStore("savedFilterStore", () => {
     }
   }
 
+  async function renameFilter(id: string, name: string) {
+    const response = await api.savedFilterControllerRename({ path: { id }, body: { name } });
+    if (!isApiSuccess(response) || !response.data) {
+      throw new Error(backendErrorMessage(response.error) ?? "Erreur lors du renommage du filtre.");
+    }
+    const renamed = response.data;
+    savedFilters.value = savedFilters.value.map((filter) => (filter.id === id ? { ...filter, name: renamed.name } : filter));
+    return renamed;
+  }
+
   return {
     savedFilters,
     isLoading,
     fetchSavedFilters,
     saveFilter,
     deleteFilter,
+    renameFilter,
   };
 });

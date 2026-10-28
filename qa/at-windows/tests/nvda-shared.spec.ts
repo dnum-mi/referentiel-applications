@@ -83,7 +83,7 @@ async function nextButtonTo(
   );
 }
 
-test("AT-INT-U01 — App/navigation réelles, raccourci public, route, menu compact et thème", async ({
+test("AT-INT-U01 — App réelle, raccourci footer public, route, menu connecté et thème", async ({
   page,
   browser,
   nvda,
@@ -102,21 +102,28 @@ test("AT-INT-U01 — App/navigation réelles, raccourci public, route, menu comp
     () => nvda.press("Tab", { capture: true }),
     info,
   );
-  const shortcut = await shiftTabTo(nvda, "Aller à la navigation", info, 5);
+  await expect(page.locator("#header-nav")).toHaveCount(0);
+  const shortcut = await shiftTabTo(nvda, "Aller au pied de page", info, 5);
   expect(shortcut.text).toContain("lien");
-  await activateCurrent(nvda, info, "public-navigation-shortcut");
-  await expect(page.locator("#header-nav a").first()).toBeFocused();
+  await activateCurrent(nvda, info, "public-footer-shortcut");
+  await captureStep(
+    nvda,
+    "public-footer-first-link",
+    () => nvda.press("Tab", { capture: true }),
+    info,
+  );
+  await expect(
+    page.getByRole("contentinfo").getByRole("link").first(),
+  ).toBeFocused();
   const target = await currentFocus(
     nvda,
     info,
-    "navigation-shortcut-destination",
+    "public-footer-shortcut-destination",
   );
-  expect(target.text).toMatch(/accueil.*lien/);
+  expect(target.text).toContain("lien");
   await tabTo(nvda, "Accessibilité", info);
   await expect(
-    page
-      .locator("#header-nav")
-      .getByRole("link", { name: "Accessibilité", exact: true }),
+    page.getByRole("contentinfo").getByRole("link", { name: /^Accessibilité/ }),
   ).toBeFocused();
   const route = await activateCurrent(nvda, info, "real-accessibility-route");
   await expect

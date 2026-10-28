@@ -14,6 +14,56 @@ const panel = ref<HTMLElement | null>(null);
 const pendingDeleteIds = ref(new Set<string>());
 const isSavingFilter = ref(false);
 useSubmissionFocus(isSavingFilter);
+const showRenameModal = ref(false);
+const renameId = ref<string | null>(null);
+const renameName = ref("");
+const renameError = ref("");
+const isRenamingFilter = ref(false);
+const renameOrigin = ref<HTMLElement | null>(null);
+let renameSession = 0;
+useSubmissionFocus(isRenamingFilter);
+
+function openRenameModal(id: string, event: Event) {
+  const saved = savedFilterStore.savedFilters.find((filter) => filter.id === id);
+  if (!saved) return;
+  renameSession++;
+  renameId.value = id;
+  renameName.value = saved.name;
+  renameError.value = "";
+  renameOrigin.value = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
+  showRenameModal.value = true;
+}
+
+function closeRenameModal() {
+  const session = ++renameSession;
+  const origin = renameOrigin.value;
+  showRenameModal.value = false;
+  isRenamingFilter.value = false;
+  renameError.value = "";
+  // Le bouton reste dans la liste et garde le même id après renommage.
+  nextTick(() => {
+    if (session === renameSession && origin?.isConnected) origin.focus();
+  });
+}
+
+async function confirmRename() {
+  const id = renameId.value;
+  const name = renameName.value.trim();
+  if (!id || !name || name.length > 100 || isRenamingFilter.value) return;
+  const session = renameSession;
+  isRenamingFilter.value = true;
+  renameError.value = "";
+  try {
+    await savedFilterStore.renameFilter(id, name);
+    if (session === renameSession) closeRenameModal();
+  } catch (error) {
+    if (session === renameSession) {
+      renameError.value = `${error instanceof Error ? error.message : "Erreur lors du renommage du filtre."} Votre saisie est conservée.`;
+    }
+  } finally {
+    if (session === renameSession) isRenamingFilter.value = false;
+  }
+}
 
 function openSaveModal() {
   filterName.value = "";
@@ -119,6 +169,15 @@ onMounted(() => {
         </button>
         <button
           type="button"
+          class="saved-filter-rename"
+          :data-testid="`saved-filter-rename-${saved.id}`"
+          :aria-label="`Renommer le filtre ${saved.name}`"
+          @click="openRenameModal(saved.id, $event)"
+        >
+          <VIcon name="ri-edit-line" />
+        </button>
+        <button
+          type="button"
           class="saved-filter-delete"
           :data-testid="`saved-filter-delete-${saved.id}`"
           :aria-label="`Supprimer le filtre ${saved.name}`"
@@ -134,6 +193,40 @@ onMounted(() => {
     ce qui crée un contexte d'empilement local. Une modale rendue en place y resterait
     piégée et passerait sous le header DSFR (z-index 750) malgré son propre z-index. -->
     <Teleport to="body">
+      <DsfrModal
+        :opened="showRenameModal"
+        title="Renommer le filtre personnel"
+        size="sm"
+        data-testid="rename-filter-modal"
+        @close="closeRenameModal"
+      >
+        <div role="alert" aria-live="assertive" aria-atomic="true">
+          <p v-if="renameError" class="fr-error-text" data-testid="rename-filter-error">{{ renameError }}</p>
+        </div>
+        <DsfrInputGroup
+          v-model="renameName"
+          label="Nouveau nom du filtre"
+          label-visible
+          required
+          :maxlength="100"
+          hint="Seul le nom change. Les critères enregistrés et la recherche en cours sont conservés."
+          data-testid="rename-filter-name-input"
+          @keyup.enter="confirmRename"
+        />
+        <template #footer>
+          <DsfrButtonGroup :inline-layout-when="true" :reverse="true">
+            <li><DsfrButton label="Annuler" secondary @click="closeRenameModal" /></li>
+            <li>
+              <DsfrButton
+                label="Renommer"
+                :disabled="!renameName.trim() || renameName.trim().length > 100 || isRenamingFilter"
+                data-testid="confirm-rename-filter-button"
+                @click="confirmRename"
+              />
+            </li>
+          </DsfrButtonGroup>
+        </template>
+      </DsfrModal>
       <DsfrModal
         :opened="showSaveModal"
         title="Sauvegarder les filtres actuels"
@@ -216,7 +309,8 @@ onMounted(() => {
   background-color: var(--background-contrast-grey);
 }
 
-.saved-filter-delete {
+.saved-filter-delete,
+.saved-filter-rename {
   background: none;
   border: none;
   cursor: pointer;

@@ -61,10 +61,10 @@ La recherche reste globale : tous les mots doivent être présents sur la fiche,
 
 **Permission.** `AppList` + `AppRead` (socle Visiteur). Le filtre « Mes applications » repose sur le rattachement de l'utilisateur comme acteur (couche 3).
 
-**Filtres sauvegardés.** Chaque utilisateur peut sauvegarder sa combinaison de filtres courante sous un nom, pour la réappliquer plus tard sans ressaisir chaque critère. Sauvegarder sous un nom déjà utilisé remplace le filtre existant (upsert). Les filtres sont personnels : un utilisateur ne voit et ne peut supprimer que les siens.
+**Filtres sauvegardés.** Chaque utilisateur peut sauvegarder sa combinaison de filtres courante sous un nom, pour la réappliquer plus tard sans ressaisir chaque critère. Sauvegarder sous un nom déjà utilisé remplace le filtre existant (upsert). Le renommage est une action distincte : il conserve les critères enregistrés et la recherche en cours. Le nom, après suppression des espaces en début et fin, doit contenir entre 1 et 100 caractères ; un nom pris par un autre filtre du même utilisateur est refusé sans écrasement. Conserver le nom actuel est accepté. En cas d'échec, le dialogue conserve la saisie pour permettre un nouvel essai. Les filtres sont personnels : un utilisateur ne voit, ne renomme et ne supprime que les siens.
 
 - Front : `frontend/src/components/search/SavedFiltersPanel.vue` (intégré dans `SidebarFilter.vue`), store `frontend/src/stores/savedFilterStore.ts`.
-- Back : `GET/POST /saved-filters`, `DELETE /saved-filters/:id` (`backend/src/saved-filter/`) ; modèle `SavedFilter` (`backend/prisma/schema/users.prisma`), unique par `(userId, name)`.
+- Back : `GET/POST /saved-filters`, `PATCH /saved-filters/:id` (corps `{ "name": "Nouveau nom" }` uniquement), `DELETE /saved-filters/:id` (`backend/src/saved-filter/`) ; modèle `SavedFilter` (`backend/prisma/schema/users.prisma`), unique par `(userId, name)`.
 - **Permission.** Aucune permission dédiée : accessible à tout utilisateur authentifié, scopé à son propre `userId`.
 
 ## 2. Fiche application
