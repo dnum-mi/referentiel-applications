@@ -56,13 +56,24 @@ export class ChromePage extends BasePage {
   async expectMainNavigationAbsent(): Promise<void> {
     await expect(this.mainNav()).toHaveCount(0);
   }
-  /** Le menu public donne accès aux pages publiques, sans liens protégés. */
-  async expectPublicNavigation(): Promise<void> {
-    await expect(this.mainNav()).toBeVisible();
-    await expect(this.mainNav().getByRole("link")).toHaveText([
-      "Accueil",
-      "Accessibilité",
-    ]);
+  /** Sans session, le bandeau métier est absent et la déclaration reste dans le footer. */
+  async expectPublicNavigationAbsent(): Promise<void> {
+    await expect(
+      this.page.getByRole("main").getByRole("heading", {
+        name: "Le référentiel des applications",
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(this.mainNav()).toHaveCount(0);
+    await expect(
+      this.page.getByRole("link", {
+        name: "Aller à la navigation",
+        exact: true,
+      }),
+    ).toHaveCount(0);
+    await expect(
+      this.footer().getByRole("link", { name: /^Accessibilité/ }),
+    ).toBeVisible();
   }
 
   async expectNavigationShortcut(width: number): Promise<void> {
@@ -139,9 +150,7 @@ export class ChromePage extends BasePage {
         .getByRole("main")
         .getByRole("heading", { name: "Accessibilité", exact: true }),
     ).toBeVisible();
-    await this.mainNav()
-      .getByRole("link", { name: "Accueil", exact: true })
-      .press("Enter");
+    await this.header().getByRole("link").first().press("Enter");
     await expect(this.page).toHaveURL(/\/$/);
     await expect(
       this.page.getByRole("main").getByRole("heading", {

@@ -31,11 +31,3 @@ export function buildNavItems(canManageGlobalAdmin: boolean, canListTechnologies
     ...(canManageGlobalAdmin ? [{ to: { name: routeNames.HISTORY }, text: "Modifications" }] : []),
   ];
 }
-
-/** Menu réduit d'un visiteur non authentifié. */
-export function buildPublicNavItems(): NavItem[] {
-  return [
-    { to: { name: routeNames.ACCUEIL }, text: "Accueil" },
-    { to: { name: routeNames.ACCESSIBILITE }, text: "Accessibilité" },
-  ];
-}

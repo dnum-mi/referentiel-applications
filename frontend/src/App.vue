@@ -6,7 +6,7 @@ import { useAppUpdate } from "./composables/use-app-update";
 import { useToasterStore } from "./stores/toasterStore";
 import { routeNames } from "./router/route-names";
 import { isTabNavigation } from "./router";
-import { buildNavItems, buildPublicNavItems } from "./router/nav-items";
+import { buildNavItems } from "./router/nav-items";
 import { getConfig } from "./services/config";
 import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
@@ -139,12 +139,7 @@ const baseNavItems = computed(() =>
   buildNavItems(userStore.hasPermissions([Permission.GLOBAL_ADMIN_MANAGE]), userStore.canListTechnologies),
 );
 
-const publicNavItems = computed(() => buildPublicNavItems());
-const hasMainNavigation = computed(() => userStore.hasApplicationAccess || (userStore.sessionInitialized && !userStore.authenticated));
-
-const navItemsComputed = computed(() => {
-  return userStore.authenticated ? baseNavItems.value : publicNavItems.value;
-});
+const hasMainNavigation = computed(() => userStore.hasApplicationAccess);
 
 function focusSkipLinkTarget(event: MouseEvent) {
   if (!(event.target instanceof Element)) return;
@@ -286,7 +281,7 @@ const { needRefresh, updateServiceWorker } = useAppUpdate();
     </template>
 
     <template #mainnav>
-      <DsfrNavigation v-if="hasMainNavigation" :nav-items="navItemsComputed" id="header-nav" data-testid="main-navigation" />
+      <DsfrNavigation v-if="hasMainNavigation" :nav-items="baseNavItems" id="header-nav" data-testid="main-navigation" />
     </template>
   </DsfrHeader>
   <AppUpdateNotice :available="needRefresh" :update="() => updateServiceWorker(true)" />

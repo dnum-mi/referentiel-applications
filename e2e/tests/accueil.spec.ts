@@ -44,14 +44,14 @@ test.describe("Accueil & chrome", () => {
     );
 
     base(
-      "ACC-04 - header public : connexion et navigation vers les pages publiques",
+      "ACC-04 - header public : connexion sans bandeau et accessibilité dans le footer",
       async ({ page }) => {
         const chrome = new ChromePage(page);
         await chrome.open();
         await chrome.expectSignInLink();
         await chrome.expectNoProfileLink();
         await chrome.expectNoLogoutLink();
-        await chrome.expectPublicNavigation();
+        await chrome.expectPublicNavigationAbsent();
       },
     );
 
