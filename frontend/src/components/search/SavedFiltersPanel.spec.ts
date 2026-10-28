@@ -1,21 +1,29 @@
 import { createPinia } from "pinia";
 import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils";
 import type { SavedFilterDto } from "@/client/types.gen";
+import { useSavedFilterStore } from "@/stores/savedFilterStore";
 import SavedFiltersPanel from "./SavedFiltersPanel.vue";
 
-const { findAll, remove, create, setFilter } = vi.hoisted(() => ({
+const { findAll, remove, create, rename, setFilter, currentFilters } = vi.hoisted(() => ({
   findAll: vi.fn(),
   remove: vi.fn(),
   create: vi.fn(),
+  rename: vi.fn(),
   setFilter: vi.fn(),
+  currentFilters: { value: { actorEmail: "personne@example.test" } as Record<string, unknown> },
 }));
 
 vi.mock("@/api/index", () => ({
-  default: { savedFilterControllerFindAll: findAll, savedFilterControllerRemove: remove, savedFilterControllerCreate: create },
+  default: {
+    savedFilterControllerFindAll: findAll,
+    savedFilterControllerRemove: remove,
+    savedFilterControllerCreate: create,
+    savedFilterControllerRename: rename,
+  },
 }));
 vi.mock("@/composables/use-application-search", () => ({
   DEFAULT_FILTERS: {},
-  useApplicationSearch: () => ({ filters: { value: { actorEmail: "personne@example.test" } }, setFilter }),
+  useApplicationSearch: () => ({ filters: currentFilters, setFilter }),
 }));
 vi.mock("@/stores/toasterStore", () => ({ useToasterStore: () => ({ addErrorMessage: vi.fn(), addSuccessMessage: vi.fn() }) }));
 
@@ -34,7 +42,10 @@ async function renderPanel() {
       stubs: {
         VIcon: true,
         Teleport: true,
-        DsfrModal: { props: ["opened"], template: '<section v-if="opened" role="dialog"><slot /><slot name="footer" /></section>' },
+        DsfrModal: {
+          props: { opened: Boolean, title: String },
+          template: '<section v-if="opened" role="dialog" :aria-label="title"><slot /><slot name="footer" /></section>',
+        },
       },
     },
   });
@@ -46,7 +57,150 @@ beforeEach(() => {
   findAll.mockReset().mockResolvedValue({ data: savedFilters, response: { ok: true } });
   remove.mockReset().mockResolvedValue({ response: { ok: true } });
   create.mockReset().mockResolvedValue({ data: { ...savedFilters[0], id: "new-filter", name: "Nouveau" }, response: { ok: true } });
+  rename.mockReset().mockResolvedValue({ data: { ...savedFilters[0], name: "Renommé" }, response: { ok: true } });
   setFilter.mockReset();
+  currentFilters.value = { actorEmail: "personne@example.test" };
+});
+
+describe("SavedFiltersPanel — renommage indépendant des critères (#3095)", () => {
+  it("renomme A sans remplacer ses critères ni appliquer la recherche courante B", async () => {
+    currentFilters.value = { search: "B", tag: ["autre"] };
+    const before = structuredClone(savedFilters[0]);
+    const wrapper = await renderPanel();
+    const trigger = wrapper.get<HTMLButtonElement>('[data-testid="saved-filter-rename-filter-1"]');
+    trigger.element.focus();
+    await trigger.trigger("click");
+    const dialog = wrapper.get('[data-testid="rename-filter-modal"]');
+    expect(dialog.attributes("aria-label")).toBe("Renommer le filtre personnel");
+    await wrapper.get('[data-testid="rename-filter-name-input"]').setValue(" Renommé ");
+    await wrapper.get('[data-testid="confirm-rename-filter-button"]').trigger("click");
+    await flushPromises();
+
+    expect(rename).toHaveBeenCalledExactlyOnceWith({ path: { id: "filter-1" }, body: { name: "Renommé" } });
+    expect(create).not.toHaveBeenCalled();
+    expect(setFilter).not.toHaveBeenCalled();
+    expect(currentFilters.value).toEqual({ search: "B", tag: ["autre"] });
+    expect(savedFilters[0]).toEqual(before);
+    expect(useSavedFilterStore().savedFilters[0]).toEqual({ ...before, name: "Renommé" });
+    expect(wrapper.get('[data-testid="saved-filter-apply-filter-1"]').text()).toBe("Renommé");
+    expect(wrapper.find('[data-testid="rename-filter-modal"]').exists()).toBe(false);
+    expect(trigger.element).toHaveFocus();
+  });
+
+  it("conserve la saisie et le nom existant après conflit puis permet un nouvel essai", async () => {
+    rename.mockResolvedValueOnce({
+      response: { ok: false, status: 409 },
+      error: { message: "Un autre filtre personnel porte déjà ce nom." },
+    });
+    const wrapper = await renderPanel();
+    await wrapper.get('[data-testid="saved-filter-rename-filter-1"]').trigger("click");
+    const input = wrapper.get('[data-testid="rename-filter-name-input"]');
+    await input.setValue("Renommé");
+    const submit = wrapper.get<HTMLButtonElement>('[data-testid="confirm-rename-filter-button"]');
+    submit.element.focus();
+    await submit.trigger("click");
+    await flushPromises();
+
+    expect(input.element).toHaveValue("Renommé");
+    expect(wrapper.get('[data-testid="saved-filter-apply-filter-1"]').text()).toBe("Mes contacts");
+    const error = wrapper.get('[data-testid="rename-filter-error"]');
+    expect(error.text()).toContain("Un autre filtre personnel porte déjà ce nom.");
+    expect(error.element.closest('[role="alert"]')).not.toBeNull();
+    expect(submit.element).toHaveFocus();
+    await submit.trigger("click");
+    await flushPromises();
+    expect(rename).toHaveBeenCalledTimes(2);
+    expect(wrapper.find('[data-testid="rename-filter-modal"]').exists()).toBe(false);
+  });
+
+  it("garde la saisie après erreur réseau sans mettre à jour le filtre", async () => {
+    rename.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    const wrapper = await renderPanel();
+    await wrapper.get('[data-testid="saved-filter-rename-filter-1"]').trigger("click");
+    await wrapper.get('[data-testid="rename-filter-name-input"]').setValue("Renommé");
+    await wrapper.get('[data-testid="confirm-rename-filter-button"]').trigger("click");
+    await flushPromises();
+    expect(wrapper.get('[data-testid="rename-filter-name-input"]').element).toHaveValue("Renommé");
+    expect(wrapper.get('[data-testid="saved-filter-apply-filter-1"]').text()).toBe("Mes contacts");
+    expect(wrapper.get('[data-testid="rename-filter-error"]').text()).toContain("Votre saisie est conservée");
+  });
+
+  it("bloque les soumissions répétées pendant le renommage", async () => {
+    let finish = () => {};
+    rename.mockImplementationOnce(
+      () =>
+        new Promise<{ data: SavedFilterDto; response: { ok: true } }>((resolve) => {
+          finish = () => resolve({ data: { ...savedFilters[0], name: "Renommé" }, response: { ok: true } });
+        }),
+    );
+    const wrapper = await renderPanel();
+    await wrapper.get('[data-testid="saved-filter-rename-filter-1"]').trigger("click");
+    const input = wrapper.get('[data-testid="rename-filter-name-input"]');
+    await input.setValue("Renommé");
+    await input.trigger("keyup", { key: "Enter" });
+    await input.trigger("keyup", { key: "Enter" });
+    expect(rename).toHaveBeenCalledTimes(1);
+    expect(wrapper.get('[data-testid="confirm-rename-filter-button"]').attributes("disabled")).toBeDefined();
+    finish();
+    await flushPromises();
+    expect(wrapper.find('[data-testid="rename-filter-modal"]').exists()).toBe(false);
+  });
+
+  it("ne ferme pas un nouveau dialogue quand une ancienne requête se termine", async () => {
+    let finish = () => {};
+    rename.mockImplementationOnce(
+      () =>
+        new Promise<{ data: SavedFilterDto; response: { ok: true } }>((resolve) => {
+          finish = () => resolve({ data: { ...savedFilters[0], name: "Renommé" }, response: { ok: true } });
+        }),
+    );
+    const wrapper = await renderPanel();
+    await wrapper.get('[data-testid="saved-filter-rename-filter-1"]').trigger("click");
+    await wrapper.get('[data-testid="rename-filter-name-input"]').setValue("Renommé");
+    await wrapper.get('[data-testid="confirm-rename-filter-button"]').trigger("click");
+    const cancel = wrapper
+      .get('[data-testid="rename-filter-modal"]')
+      .findAll("button")
+      .find((button) => button.text() === "Annuler");
+    await cancel!.trigger("click");
+    await wrapper.get('[data-testid="saved-filter-rename-filter-2"]').trigger("click");
+    finish();
+    await flushPromises();
+    expect(wrapper.get('[data-testid="rename-filter-name-input"]').element).toHaveValue("Mes abonnements");
+    expect(wrapper.find('[data-testid="rename-filter-modal"]').exists()).toBe(true);
+    expect(wrapper.get('[data-testid="saved-filter-apply-filter-1"]').text()).toBe("Renommé");
+    expect(wrapper.get('[data-testid="saved-filter-apply-filter-2"]').text()).toBe("Mes abonnements");
+  });
+
+  it("annule sans appel et rend le focus au bouton du filtre", async () => {
+    const wrapper = await renderPanel();
+    const trigger = wrapper.get<HTMLButtonElement>('[data-testid="saved-filter-rename-filter-1"]');
+    trigger.element.focus();
+    await trigger.trigger("click");
+    const input = wrapper.get<HTMLInputElement>('[data-testid="rename-filter-name-input"]');
+    input.element.focus();
+    const cancel = wrapper
+      .get('[data-testid="rename-filter-modal"]')
+      .findAll("button")
+      .find((button) => button.text() === "Annuler");
+    await cancel!.trigger("click");
+    await flushPromises();
+    expect(rename).not.toHaveBeenCalled();
+    expect(trigger.element).toHaveFocus();
+  });
+
+  it("ne soumet pas de nom vide et accepte de conserver son propre nom", async () => {
+    const wrapper = await renderPanel();
+    await wrapper.get('[data-testid="saved-filter-rename-filter-1"]').trigger("click");
+    const input = wrapper.get('[data-testid="rename-filter-name-input"]');
+    await input.setValue("   ");
+    await input.trigger("keyup", { key: "Enter" });
+    expect(rename).not.toHaveBeenCalled();
+    await input.setValue("Mes contacts");
+    await wrapper.get('[data-testid="confirm-rename-filter-button"]').trigger("click");
+    await flushPromises();
+    expect(rename).toHaveBeenCalledExactlyOnceWith({ path: { id: "filter-1" }, body: { name: "Mes contacts" } });
+  });
 });
 afterEach(() => vi.restoreAllMocks());
 

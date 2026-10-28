@@ -6,11 +6,14 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   UseGuards,
 } from "@nestjs/common";
 import {
   ApiCreatedResponse,
+  ApiBadRequestResponse,
+  ApiConflictResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -23,6 +26,7 @@ import { PermissionGuard } from "src/common/guards/permission.guard";
 import { UserEntity } from "src/user/entities/user.entity";
 import { CreateSavedFilterDto } from "./dto/create-saved-filter.dto";
 import { SavedFilterDto } from "./dto/saved-filter.dto";
+import { RenameSavedFilterDto } from "./dto/rename-saved-filter.dto";
 import { SavedFilterService } from "./saved-filter.service";
 
 @ApiTags("SavedFilters")
@@ -58,6 +62,25 @@ export class SavedFilterController {
   @HttpCode(HttpStatus.CREATED)
   create(@User() user: UserEntity, @Body() body: CreateSavedFilterDto) {
     return this.service.upsert(user.id, body);
+  }
+
+  @Patch(":id")
+  @ApiOperation({
+    summary: "Renommer un filtre personnel sans modifier ses critères",
+  })
+  @ApiParam({ name: "id", description: "ID du filtre personnel" })
+  @ApiOkResponse({ description: "Filtre renommé", type: SavedFilterDto })
+  @ApiBadRequestResponse({ description: "Nom vide ou trop long" })
+  @ApiConflictResponse({
+    description: "Nom déjà pris par un autre filtre personnel",
+  })
+  @ApiNotFoundResponse({ description: "Filtre personnel non trouvé" })
+  rename(
+    @User() user: UserEntity,
+    @Param("id") id: string,
+    @Body() body: RenameSavedFilterDto,
+  ) {
+    return this.service.rename(user.id, id, body.name);
   }
 
   @Delete(":id")

@@ -1,5 +1,10 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import type { Prisma } from "@prisma/client";
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateSavedFilterDto } from "./dto/create-saved-filter.dto";
 
@@ -38,6 +43,37 @@ export class SavedFilterService {
       throw new NotFoundException(
         `Filtre sauvegardé avec l'id ${id} non trouvé`,
       );
+    }
+  }
+
+  async rename(userId: string, id: string, name: string) {
+    const trimmedName = name.trim();
+    if (!trimmedName || trimmedName.length > 100) {
+      throw new BadRequestException(
+        "Le nom du filtre doit contenir entre 1 et 100 caractères.",
+      );
+    }
+    try {
+      // Une seule écriture, bornée au propriétaire. L'index userId/name protège
+      // les conflits concurrents sans toucher aux critères ni au filtre homonyme.
+      return await this.prisma.savedFilter.update({
+        where: { id, userId },
+        data: { name: trimmedName },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === "P2002") {
+          throw new ConflictException(
+            "Un autre filtre personnel porte déjà ce nom.",
+          );
+        }
+        if (error.code === "P2025") {
+          throw new NotFoundException(
+            `Filtre sauvegardé avec l'id ${id} non trouvé`,
+          );
+        }
+      }
+      throw error;
     }
   }
 }
