@@ -70,18 +70,33 @@ describe.each(["cron", "lecture"] as const)(
   "Technologies — résolution EOL obsolète par %s (#2944)",
   (mode) => {
     const prisma = getPrismaClient();
+    let applicationId: string;
+    let technologyId: string;
+    // Le cron lit normalement toutes les applications. Dans la base commune
+    // aux workers Jest, borner sa sélection à cette fixture sans simuler le
+    // prédicat ni l'écriture atomique : toutes les requêtes restent en SQL.
+    const isolatedPrisma = prisma.$extends({
+      query: {
+        technologyStack: {
+          findMany({ args, query }) {
+            return query({
+              ...args,
+              where: { AND: [args.where ?? {}, { applicationId }] },
+            });
+          },
+        },
+      },
+    });
     const refresh = new EolRefreshService(
-      prisma as unknown as PrismaService,
+      isolatedPrisma as unknown as PrismaService,
       new ConfigService(),
     );
     const service = new TechnologyService(
-      prisma as unknown as PrismaService,
+      isolatedPrisma as unknown as PrismaService,
       {} as MetadatasService,
       {} as ApplicationService,
       {} as ApplicationSearchService,
     );
-    let applicationId: string;
-    let technologyId: string;
 
     beforeEach(async () => {
       resolveProductReleases.mockReset();
@@ -250,6 +265,54 @@ describe.each(["cron", "lecture"] as const)(
         expect(response).toEqual([expect.objectContaining(actual)]);
       } else {
         expect(response).toMatchObject({ updated: 1 });
+      }
+    });
+
+    it("laisse intacte une ligne éligible d'une autre suite de tests", async () => {
+      const other = await prisma.application.create({
+        data: { label: "Autre suite EOL", description: "Témoin hors fixture" },
+      });
+      try {
+        const status = await prisma.applicationStatus.create({
+          data: { applicationId: other.id, status: "in_production" },
+        });
+        await prisma.application.update({
+          where: { id: other.id },
+          data: { currentStatusId: status.id },
+        });
+        const witness = await prisma.technologyStack.create({
+          data: {
+            applicationId: other.id,
+            technology: "Base de données",
+            product: "PostgreSQL",
+            version: "13",
+            eolCheckedAt: null,
+          },
+        });
+        const { release, pending } = await startPendingResolution();
+        const expected = await prisma.technologyStack.update({
+          where: { id: technologyId },
+          data: { version: "15" },
+        });
+        release(resolved);
+        const response = await pending;
+        expect(
+          await prisma.technologyStack.findUnique({
+            where: { id: witness.id },
+          }),
+        ).toEqual(witness);
+        expect(
+          await prisma.technologyStack.findUnique({
+            where: { id: technologyId },
+          }),
+        ).toEqual(expected);
+        if (Array.isArray(response)) {
+          expect(response).toEqual([expect.objectContaining(expected)]);
+        } else {
+          expect(response).toMatchObject({ stale: 1, updated: 0 });
+        }
+      } finally {
+        await prisma.application.delete({ where: { id: other.id } });
       }
     });
   },
