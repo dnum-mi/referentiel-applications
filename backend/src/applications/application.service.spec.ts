@@ -644,6 +644,19 @@ describe("ApplicationService.update — protection des champs (B22)", () => {
   const updatedData = (prisma: ReturnType<typeof setup>["prisma"]) =>
     prisma.application.update.mock.calls[0][0].data;
 
+  it.each([
+    { logo: "https://example.test/new.png" },
+    { logo: "https://example.test/new.png", label: "Nouveau libellé" },
+    { logo: "" },
+    { label: "Logo inchangé" },
+  ])("transmet les champs du PATCH à Prisma : %j", async (data) => {
+    const { service, prisma } = setup([Permission.AppWrite]);
+
+    await service.update({ applicationId: "app-1", data, requestor });
+
+    expect(updatedData(prisma)).toEqual(data);
+  });
+
   it("résout les permissions sur l'application ciblée, sans état préalable sur le requestor", async () => {
     const { service, prisma, resolveAppPermissions } = setup([
       Permission.AppWrite,
@@ -679,10 +692,15 @@ describe("ApplicationService.update — protection des champs (B22)", () => {
 
     await service.update({
       applicationId: "app-1",
-      data: { label: "App", priorityRestart: "P1" } as never,
+      data: {
+        label: "App",
+        logo: "https://example.test/new.png",
+        priorityRestart: "P1",
+      } as never,
       requestor,
     });
 
     expect(updatedData(prisma)).not.toHaveProperty("label");
+    expect(updatedData(prisma)).not.toHaveProperty("logo");
   });
 });

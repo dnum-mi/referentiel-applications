@@ -28,6 +28,7 @@ import {
   computeEolStatus,
   type EolStatus,
 } from "./utils/eol-status";
+import { eolRefreshWhere } from "./utils/eol-refresh-where";
 
 // Au-delà de ce délai, on rafraîchit paresseusement la fin de vie au GET.
 
@@ -223,10 +224,10 @@ export class TechnologyService extends BaseService<
   async findAllByApplicationId(
     applicationId: string,
   ): Promise<TechnologyStack[]> {
-    const rows = (await this.prisma.technologyStack.findMany({
+    const rows = await this.prisma.technologyStack.findMany({
       where: { applicationId },
       orderBy: [{ technology: "asc" }, { product: "asc" }],
-    })) as unknown as TechnologyStack[];
+    });
 
     if (this.eolDisabled()) return rows.map(withEolStatus);
 
@@ -245,7 +246,7 @@ export class TechnologyService extends BaseService<
       return pending;
     };
 
-    return Promise.all(
+    const refreshed = await Promise.all(
       rows.map(async (row) => {
         // Une saisie manuelle (#2454) n'est jamais recalculée : la date vient d'un humain,
         // endoflife.date n'a rien à en dire — et l'écraserait par du vide.
@@ -266,18 +267,25 @@ export class TechnologyService extends BaseService<
         // sera retentée au prochain GET dès qu'endoflife.date répond de nouveau.
         if (!fields.eolCheckedAt) return withEolStatus(row);
         // Persistance best-effort : un échec d'écriture ne doit pas casser la lecture.
-        // #2527 : conditionnée à l'origine — une date saisie à la main entre la lecture et
-        // l'écriture ne doit pas être écrasée par la résolution automatique.
+        // Une édition ou une résolution concurrente invalide l'instantané (#2944).
+        // La source automatique reste requise pour protéger les saisies manuelles.
         const written = await this.prisma.technologyStack
           .updateMany({
-            where: { id: row.id, eolSource: TechnologyEolSource.endoflife },
+            where: eolRefreshWhere(row),
             data: fields,
           })
           .then((result) => result.count > 0)
           .catch(() => false);
-        return withEolStatus(written ? { ...row, ...fields } : row);
+        if (written) return withEolStatus({ ...row, ...fields });
+        // Restituer la ligne actuelle après conflit, sans mélanger sa nouvelle
+        // version avec l'ancienne résolution ; une ligne supprimée disparaît.
+        const current = await this.prisma.technologyStack
+          .findUnique({ where: { id: row.id, applicationId } })
+          .catch(() => row);
+        return current ? withEolStatus(current) : null;
       }),
     );
+    return refreshed.filter((row) => row !== null);
   }
 
   // Recherche la ligne de stack existante pour ce couple technologie/produit,

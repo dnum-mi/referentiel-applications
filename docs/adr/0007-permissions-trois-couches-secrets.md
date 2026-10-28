@@ -89,5 +89,5 @@ Inconvénients :
 
 ## Liens et Références
 
-- [Permissions et sécurité](../../docs/06-permissions-et-securite.md)
+- [Permissions et sécurité](../06-permissions-et-securite.md)
 - Référentiel des applications : https://github.com/dnum-mi/referentiel-applications

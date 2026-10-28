@@ -15,6 +15,7 @@ import {
   ACTIVE_APPLICATION_WHERE,
   EOL_REFRESH_TTL_MS,
 } from "./utils/eol-status";
+import { eolRefreshWhere } from "./utils/eol-refresh-where";
 
 /// Champs à écrire pour un produit résolu. Le cycle apparié est persisté sous
 /// `eolCycle` (#2449) : avec des dates nulles seules, la fiche ne distinguerait
@@ -163,7 +164,18 @@ export class EolRefreshService {
         // application supprimée.
         application: ACTIVE_APPLICATION_WHERE,
       },
-      select: { id: true, product: true, version: true },
+      select: {
+        id: true,
+        applicationId: true,
+        product: true,
+        version: true,
+        eolCheckedAt: true,
+        eolProduct: true,
+        eolCycle: true,
+        eolDate: true,
+        eoasDate: true,
+        latestVersion: true,
+      },
       orderBy: { id: "asc" },
     });
 
@@ -212,12 +224,12 @@ export class EolRefreshService {
                   row.version,
                 );
           // Best-effort ligne à ligne : une écriture en échec — ligne supprimée
-          // entre-temps, par exemple — ne doit pas interrompre le run. #2527 :
-          // conditionnée à l'origine, pour ne jamais écraser une date saisie à la
-          // main entre la sélection des lignes et l'écriture.
+          // entre-temps, par exemple — ne doit pas interrompre le run. L'écriture
+          // vérifie les entrées et l'état résolus : une édition ou une résolution
+          // concurrente rend ce résultat obsolète, sans réarmer son TTL (#2944).
           const written = await this.prisma.technologyStack
             .updateMany({
-              where: { id: row.id, eolSource: TechnologyEolSource.endoflife },
+              where: eolRefreshWhere(row),
               data,
             })
             .then((result) => result.count > 0)

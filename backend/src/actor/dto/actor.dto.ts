@@ -70,7 +70,9 @@ export class CreateActorDto {
   isGroup: boolean;
 }
 
-export class UpdateActorDto extends PartialType(CreateActorDto) {}
+export class UpdateActorDto extends PartialType(CreateActorDto, {
+  skipNullProperties: false,
+}) {}
 
 export class ActorDto extends CreateActorDto {
   @ApiProperty({
