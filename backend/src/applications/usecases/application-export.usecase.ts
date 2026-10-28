@@ -6,6 +6,7 @@ import {
 import { createApplicationsHtml } from "../export-html";
 import { sheetLabels } from "src/applications/constants/application-export.sheet-labels";
 import { ApplicationWithAllRelations } from "src/applications/types/application.type";
+import { jsonListHeader } from "src/common/utils/excel-list.util";
 import {
   columnLabels,
   technologyExportColumns,
@@ -29,7 +30,7 @@ export class ExportApplicationsUseCase {
   constructor(private readonly excelBuilder: ExcelBuilderService) {}
 
   async executeWithApps(apps: ApplicationWithAllRelations[]): Promise<Buffer> {
-    return this.excelBuilder.buildWorkbook(this.createSheets(apps));
+    return this.excelBuilder.buildWorkbook(this.createSheets(apps, true));
   }
 
   async executeHtmlWithApps(
@@ -40,10 +41,15 @@ export class ExportApplicationsUseCase {
 
   private createSheets(
     apps: ApplicationWithAllRelations[],
+    jsonLists = false,
   ): ExcelSheetConfig[] {
     const now = new Date();
+    const listKeys = new Set(["tags", "purposes", "targetPopulations"]);
     const col = (key: string, width: number) => ({
-      header: columnLabels[key],
+      header:
+        jsonLists && listKeys.has(key)
+          ? jsonListHeader(columnLabels[key])
+          : columnLabels[key],
       key,
       width,
     });
@@ -64,7 +70,7 @@ export class ExportApplicationsUseCase {
           col("currentStatusId", 30),
           col("currentStatus", 30),
         ],
-        rows: mapApplications(apps),
+        rows: mapApplications(apps, jsonLists),
       },
       {
         name: sheetLabels.Technologies,

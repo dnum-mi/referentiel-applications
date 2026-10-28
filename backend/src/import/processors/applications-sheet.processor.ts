@@ -14,6 +14,10 @@ import { CheckPermissions } from "src/common/service/check-permissions.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Requestor } from "src/user/entities/user.entity";
 import {
+  jsonListHeader,
+  parseExcelList,
+} from "src/common/utils/excel-list.util";
+import {
   ImportReportDto,
   ImportReportEntryDto,
 } from "../dto/import-report.dto";
@@ -54,14 +58,6 @@ const PRIORITY_LABEL_TO_CODE: Record<string, priorityRestart> = Object.entries(
   {} as Record<string, priorityRestart>,
 );
 
-/** Découpe une cellule multi-valeurs de l'export (séparateur « , ») en tableau nettoyé. */
-function splitList(value: string): string[] {
-  return value
-    .split(",")
-    .map((part) => part.trim())
-    .filter(Boolean);
-}
-
 /**
  * Traitement de l'onglet « Applications » (US #752, phase 3). Toujours traité en premier par
  * l'orchestrateur. Une ligne avec un « Identifiant » met à jour l'application correspondante ;
@@ -92,7 +88,29 @@ export class ApplicationsSheetProcessor {
       return;
     }
 
+    const ambiguous = [
+      HEADERS.tags,
+      HEADERS.purposes,
+      HEADERS.targetPopulations,
+    ].filter(
+      (header) =>
+        header in headerIndex && jsonListHeader(header) in headerIndex,
+    );
+    if (ambiguous.length > 0) {
+      const message = `Onglet « ${this.sheetName} » non traité : colonnes de liste ambiguës (${ambiguous.join(", ")}) ; conserver soit l'en-tête historique, soit l'en-tête JSON v1.`;
+      report.logs.push(message);
+      this.logger.warn(message);
+      return;
+    }
+
     report.summary.processedSheets.push(this.sheetName);
+
+    const jsonLists = {
+      tags: jsonListHeader(HEADERS.tags) in headerIndex,
+      purposes: jsonListHeader(HEADERS.purposes) in headerIndex,
+      targetPopulations:
+        jsonListHeader(HEADERS.targetPopulations) in headerIndex,
+    };
 
     for (let rowNumber = 2; rowNumber <= worksheet.rowCount; rowNumber++) {
       const getCell = makeCellReader(headerIndex, worksheet.getRow(rowNumber));
@@ -102,9 +120,19 @@ export class ApplicationsSheetProcessor {
         shortName: getCell(HEADERS.shortName),
         logo: getCell(HEADERS.logo),
         description: getCell(HEADERS.description),
-        tags: getCell(HEADERS.tags),
-        purposes: getCell(HEADERS.purposes),
-        targetPopulations: getCell(HEADERS.targetPopulations),
+        tags: getCell(
+          jsonLists.tags ? jsonListHeader(HEADERS.tags) : HEADERS.tags,
+        ),
+        purposes: getCell(
+          jsonLists.purposes
+            ? jsonListHeader(HEADERS.purposes)
+            : HEADERS.purposes,
+        ),
+        targetPopulations: getCell(
+          jsonLists.targetPopulations
+            ? jsonListHeader(HEADERS.targetPopulations)
+            : HEADERS.targetPopulations,
+        ),
         priorityRestart: getCell(HEADERS.priorityRestart),
       };
 
@@ -112,7 +140,12 @@ export class ApplicationsSheetProcessor {
       if (Object.values(data).every((v) => v === "")) continue;
 
       try {
-        const entry = await this.processRow(rowNumber, data, requestor);
+        const entry = await this.processRow(
+          rowNumber,
+          data,
+          requestor,
+          jsonLists,
+        );
         report.entries.push(entry);
         if (entry.status === "created") report.summary.created++;
         else if (entry.status === "updated") report.summary.updated++;
@@ -147,6 +180,7 @@ export class ApplicationsSheetProcessor {
       priorityRestart: string;
     },
     requestor: Requestor,
+    jsonLists: Record<"tags" | "purposes" | "targetPopulations", boolean>,
   ): Promise<ImportReportEntryDto> {
     const identifier = data.label || data.id;
 
@@ -155,10 +189,18 @@ export class ApplicationsSheetProcessor {
       shortName: data.shortName || undefined,
       logo: data.logo || undefined,
       description: data.description || undefined,
-      tags: data.tags ? splitList(data.tags) : undefined,
-      purposes: data.purposes ? splitList(data.purposes) : undefined,
+      tags: data.tags
+        ? parseExcelList(data.tags, jsonLists.tags, HEADERS.tags)
+        : undefined,
+      purposes: data.purposes
+        ? parseExcelList(data.purposes, jsonLists.purposes, HEADERS.purposes)
+        : undefined,
       targetPopulations: data.targetPopulations
-        ? splitList(data.targetPopulations)
+        ? parseExcelList(
+            data.targetPopulations,
+            jsonLists.targetPopulations,
+            HEADERS.targetPopulations,
+          )
         : undefined,
       priorityRestart: this.resolvePriority(data.priorityRestart),
     });

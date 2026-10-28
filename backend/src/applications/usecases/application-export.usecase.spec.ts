@@ -5,6 +5,8 @@ import type { ApplicationStatus } from "@prisma/client";
 import { ExcelBuilderService } from "src/common/service/excel-builder.service";
 import type { ApplicationWithAllRelations } from "../types/application.type";
 import { ExportApplicationsUseCase } from "./application-export.usecase";
+import { jsonListHeader } from "src/common/utils/excel-list.util";
+import { columnLabels } from "../columnLabels/application-export.columnLabels";
 
 const application = {
   id: "application-centre",
@@ -215,11 +217,43 @@ describe("Export des applications en XLSX et HTML", () => {
       expect(html).toContain(sheet.name);
       sheet.eachRow((row, index) => {
         if (index > 1)
-          row.eachCell((cell) => {
-            expect(convert(html, { wordwrap: false })).toContain(cell.text);
+          row.eachCell((cell, columnNumber) => {
+            const jsonList =
+              sheet.name === "Applications" &&
+              ["tags", "purposes", "targetPopulations"].some(
+                (key) =>
+                  sheet.getRow(1).getCell(columnNumber).text ===
+                  jsonListHeader(columnLabels[key]),
+              );
+            const text = jsonList
+              ? (JSON.parse(cell.text) as string[]).join(", ")
+              : cell.text;
+            expect(convert(html, { wordwrap: false })).toContain(text);
           });
       });
     }
+  });
+
+  it("conserve les listes lisibles et les en-têtes habituels de l'export HTML", async () => {
+    const app = {
+      ...application,
+      purposes: ["Piloter, contrôler", 'Avec "guillemets"'],
+      targetPopulations: ["Agents, prestataires", "Autre population"],
+      tags: [
+        {
+          id: "tag-1",
+          name: "Tag, composé",
+          createdAt: new Date("2026-01-01"),
+        },
+      ],
+    };
+    const html = (await useCase.executeHtmlWithApps([app])).toString("utf-8");
+    const text = convert(html, { wordwrap: false });
+    expect(text).toContain('Piloter, contrôler, Avec "guillemets"');
+    expect(text).toContain("Agents, prestataires, Autre population");
+    expect(text).toContain("Tag, composé");
+    expect(html).not.toContain("[liste JSON v1]");
+    expect(html).not.toContain("[&quot;Piloter");
   });
 
   it("écrit des en-têtes structurés, des métadonnées françaises et uniquement des liens sûrs", async () => {
