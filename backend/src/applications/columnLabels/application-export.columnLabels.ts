@@ -9,6 +9,7 @@ export const columnLabels: Record<string, string> = {
   targetPopulations: "Populations cibles",
   priorityRestart: "Priorité de redémarrage",
   currentStatusId: "ID Statut actuel",
+  currentStatus: "Statut actuel",
   applicationId: "ID Application",
   applicationLabel: "Application",
   "technologies.technology": "Technologie",
@@ -88,6 +89,7 @@ export const columnLabels: Record<string, string> = {
   // Statuses
   status: "Statut",
   statusDate: "Date du statut",
+  statusId: "ID Statut",
 
   report: "Signalements",
   "report.description": "Description",

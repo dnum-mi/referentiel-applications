@@ -15,7 +15,7 @@ const statusCheckboxOptions = Object.keys(statusApplicationDictionary).map((valu
 
 const withoutStatus = computed({
   get: () => (filters.value.currentStatus__isNull ? [true] : []),
-  set: (value: boolean[]) => setFilter({ currentStatus__isNull: value.includes(true) }),
+  set: (value: boolean[]) => setFilter({ currentStatus__isNull: value.includes(true), page: 0 }),
 });
 
 const selectedStatuses = computed({
@@ -23,6 +23,7 @@ const selectedStatuses = computed({
   set: (value: ApplicationStatus[]) => {
     const statuses = value;
     setFilter({
+      page: 0,
       currentStatus__in: statuses.length > 0 ? statuses : undefined,
       ...(statuses.length === 0 ? { currentStatus__isNull: true } : {}),
     });

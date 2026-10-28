@@ -546,3 +546,12 @@ describe("technologyTab — chargement en erreur, dates et liens (#2521, #2522, 
     });
   });
 });
+
+it("annonce la nouvelle fenêtre du lien de documentation (#3027)", async () => {
+  renderWithTechnologies([makeResolvedTechnology({ id: "t-doc" })]);
+  const link = await screen.findByTestId("technology-doc-link-t-doc");
+  expect(link).toHaveAccessibleName("Documentation - nouvelle fenêtre");
+  expect(link).toHaveAttribute("title", "https://dev.mysql.com/doc/ - nouvelle fenêtre");
+  expect(link).toHaveAttribute("rel", "noopener noreferrer");
+  expect(link).toHaveAttribute("target", "_blank");
+});

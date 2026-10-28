@@ -347,8 +347,8 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
             target="_blank"
             rel="noopener noreferrer"
             data-testid="actor-email-link"
-            :title="`Envoyer un email à ${data.Email}`"
-            :aria-label="`Envoyer un email à ${data.Email}`"
+            :title="`Envoyer un email à ${data.Email} - nouvelle fenêtre`"
+            :aria-label="`Envoyer un email à ${data.Email} - nouvelle fenêtre`"
           >
             {{ data.Email }}
           </a>

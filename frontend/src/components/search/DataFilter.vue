@@ -19,7 +19,7 @@ const { filters, setFilter } = useApplicationSearch();
           <DsfrTooltip
             aria-label="Afficher l’aide sur le filtre Source de données"
             id="data-source-name-tooltip-desc"
-            content="Recherche les applications dont une source de données porte un nom contenant le texte saisi."
+            content="Recherche les applications utilisant une donnée dont le nom contient le texte saisi."
           />
         </span>
       </template>
