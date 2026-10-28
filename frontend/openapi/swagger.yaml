@@ -747,7 +747,11 @@ paths:
         - name: day
           required: false
           in: query
+          description: Journée civile dans Europe/Paris ; yesterday par défaut.
           schema:
+            enum:
+              - today
+              - yesterday
             type: string
       responses:
         "204":
