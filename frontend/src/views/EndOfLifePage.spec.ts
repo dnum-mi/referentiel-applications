@@ -57,7 +57,7 @@ function makeRouter() {
     routes: [
       { name: routeNames.ACCUEIL, path: "/", component: StubPage },
       { name: routeNames.PROFILEAPP, path: "/applications/:id/:tab?", component: StubPage },
-      { name: routeNames.ENDOFLIFE, path: "/fins-de-vie", component: StubPage },
+      { name: routeNames.ENDOFLIFE, path: "/technologies", component: StubPage },
     ],
   });
 }
@@ -409,7 +409,7 @@ describe("EndOfLifePage", () => {
   });
 });
 
-describe("EndOfLifePage — pastille de synthèse et tri (#2528, #2522)", () => {
+describe("EndOfLifePage — badges des technologies et tri (#3020, #2522)", () => {
   beforeEach(() => {
     storeMock.applications.value = [];
     storeMock.total.value = 0;
@@ -451,11 +451,15 @@ describe("EndOfLifePage — pastille de synthèse et tri (#2528, #2522)", () => 
     expect(screen.queryByTestId("end-of-life-badge-tech-healthy")).not.toBeInTheDocument();
   });
 
-  it("affiche le statut le plus grave de l'application à côté de son libellé", async () => {
+  it("réserve les badges de fin de vie aux technologies même si l’application a un statut agrégé", async () => {
     storeMock.applications.value = [applicationFixture({ worstStatus: "eol-soon" })];
     storeMock.total.value = 1;
     render_();
-    expect(await screen.findByTestId("end-of-life-worst-app-1")).toHaveTextContent("Fin de vie proche");
+    const link = await screen.findByTestId("end-of-life-row-app-1-link");
+    expect(link).toHaveTextContent("Portail Agent");
+    expect(screen.queryByText("Fin de vie proche")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("end-of-life-worst-app-1")).not.toBeInTheDocument();
+    expect(screen.getByTestId("end-of-life-badge-tech-1")).toHaveTextContent("Fin de vie");
   });
 
   it("le premier clic sur « Application » inverse le tri initial par libellé", async () => {

@@ -417,7 +417,7 @@ test("AT-LAST-U23 — technologies, filtres, pagination, lien et dialogue sans s
 }, info) => {
   const network = await lastFamiliesNetwork(page);
   await page.goto(network.base);
-  await mountLastApp(page, "/fins-de-vie");
+  await mountLastApp(page, "/technologies");
   await expect(page.getByTestId("end-of-life-status")).toContainText(
     "Résultat 1 à 15 sur 18",
   );

@@ -21,7 +21,7 @@ export function buildNavItems(canManageGlobalAdmin: boolean, canListTechnologies
     { to: { name: routeNames.SEARCHAPP }, text: "Applications" },
     { to: { name: routeNames.TIMEPAGE }, text: "Time" },
     { to: { name: routeNames.QUALITYPAGE }, text: "Qualité Générale" },
-    // #2413 : l'entrée s'intitule « Technologies » (demande PO) ; la route reste `/fins-de-vie`.
+    // #2413 : l'entrée s'intitule « Technologies » (demande PO).
     ...(canListTechnologies ? [{ to: { name: routeNames.ENDOFLIFE }, text: "Technologies" }] : []),
     { to: { name: routeNames.REPORTS }, text: "Signalements" },
     // #2440 : l'historique global expose les valeurs de champs (emails d'acteurs, dates de

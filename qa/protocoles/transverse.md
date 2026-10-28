@@ -59,7 +59,7 @@
 - **Datafeature** : session `admin` avec capacité `TechnologyList` accordée par le rôle, seed QA (`pnpm db:seed:qa`) — l'application `QA-EOL` porte une
   technologie dont la fin de vie est dépassée, une proche, une hors support actif, une saisie à la
   main, et une **saine** (Vue.js, aucune fin de vie connue).
-- **Action** : ouvrir `/fins-de-vie` depuis le menu « Technologies » ; filtrer sur « Fin de vie
+- **Action** : ouvrir `/technologies` depuis le menu « Technologies » ; filtrer sur « Fin de vie
   dépassée », puis sur « Sortie du support actif », puis sur « Toutes les technologies (y compris à
   jour) » ; cliquer le nom d'une application de la liste.
 - **Résultat attendu** : la page s'intitule « Technologies » (h1 aligné sur le menu, #2413) ; le filtre
@@ -75,7 +75,7 @@
 - **Datafeature** : profils lecture et écriture avec puis sans capacité individuelle `TechnologyList` ;
   administrateurs sans capacité individuelle, avec un périmètre A puis sans périmètre. Applications rattachées à A, à un
   descendant, à une direction métier de A, à une organisation extérieure et à un faux préfixe de A.
-- **Action** : ouvrir le menu, le plan du site et `/fins-de-vie` directement ; rechercher une
+- **Action** : ouvrir le menu, le plan du site et `/technologies` directement ; rechercher une
   application extérieure, filtrer sur son organisation puis paginer. Retirer une capacité individuelle,
   rétrograder un administrateur ou modifier le périmètre et actualiser les droits de la session.
 - **Résultat attendu** : les administrateurs reçoivent automatiquement la capacité, avec ou sans

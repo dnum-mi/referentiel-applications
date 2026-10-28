@@ -2,7 +2,7 @@ import { expect } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 /**
- * Page Object — Technologies, suivi des fins de vie (`/fins-de-vie`, #2236 ; intitulé #2413).
+ * Page Object — Technologies, suivi des fins de vie (`/technologies`, #2236 ; intitulé #2413).
  *
  * La page affiche par défaut toutes les technologies du périmètre autorisé, y compris saines.
  * Les filtres de fin de vie utilisent les dates déjà persistées ; les assertions distinguent
@@ -17,7 +17,7 @@ export class EndOfLifePage extends BasePage {
   private clearFilters = () => this.byTestId("end-of-life-clear-filters");
 
   async open(): Promise<void> {
-    await this.goto("/fins-de-vie");
+    await this.goto("/technologies");
     await expect(this.title()).toBeVisible();
     // #2413 : le h1 reprend l'entrée de menu ; sans cette attente, un retour à
     // l'ancien intitulé laisserait TRV-08 vert alors que le protocole QA l'annonce.
