@@ -161,6 +161,16 @@ describe("GristSyncModal", () => {
     expect(wrapper.emitted("close")).toHaveLength(1);
   });
 
+  it("affiche le conflit sans annoncer de succès", async () => {
+    const error = "Une synchronisation est déjà en cours pour cette table. Réessayez dans quelques instants.";
+    syncWithGrist.mockResolvedValue({ documents: [{ docId: "doc1", tableId: "RefApp", status: "error", error }] });
+    const wrapper = await renderModal();
+    await confirm(wrapper);
+    await flushPromises();
+    expect(addErrorMessage).toHaveBeenCalledWith(expect.stringContaining(error));
+    expect(addSuccessMessage).not.toHaveBeenCalled();
+  });
+
   it("reste ouverte avec un message si la synchronisation échoue", async () => {
     vi.spyOn(console, "error").mockImplementation(() => undefined);
     syncWithGrist.mockRejectedValue(new Error("502"));
