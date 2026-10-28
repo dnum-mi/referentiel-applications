@@ -1,0 +1,9 @@
+{
+  "name": "@refapp/deepmerge",
+  "version": "4.3.1-refapp.1",
+  "private": true,
+  "description": "Vendored deepmerge 4.3.1 with prototype poisoning guards",
+  "main": "index.cjs",
+  "types": "index.d.ts",
+  "license": "MIT"
+}
