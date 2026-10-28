@@ -101,6 +101,6 @@ Inconvénients :
 
 ## Liens et Références
 
-- [Permissions et sécurité](../../docs/06-permissions-et-securite.md)
-- [Architecture](../../docs/02-architecture.md)
+- [Permissions et sécurité](../06-permissions-et-securite.md)
+- [Architecture](../02-architecture.md)
 - Référentiel des applications : https://github.com/dnum-mi/referentiel-applications

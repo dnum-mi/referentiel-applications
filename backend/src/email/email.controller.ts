@@ -11,6 +11,7 @@ import {
   ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiQuery,
   ApiTags,
 } from "@nestjs/swagger";
 import { Permission } from "@prisma/client";
@@ -50,6 +51,12 @@ export class EmailController {
   @Post("digest")
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: "Exécute le digest email des abonnés (admin)" })
+  @ApiQuery({
+    name: "day",
+    required: false,
+    enum: ["today", "yesterday"],
+    description: "Journée civile dans Europe/Paris ; yesterday par défaut.",
+  })
   @ApiNoContentResponse({ description: "Digest déclenché" })
   @RequiredPermissions([Permission.GlobalAdminManage])
   async runDigest(@Query("day") day?: "today" | "yesterday"): Promise<void> {

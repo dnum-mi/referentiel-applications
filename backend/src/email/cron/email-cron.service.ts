@@ -4,6 +4,28 @@ import { Cron } from "@nestjs/schedule";
 import { PrismaService } from "src/prisma/prisma.service";
 import { EmailService } from "../email.service";
 
+const parisDateFormatter = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "Europe/Paris",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+const parisTimeFormatter = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "Europe/Paris",
+  hourCycle: "h23",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+function parisMidnight(year: number, month: number, day: number): Date {
+  const utcMidnight = Date.UTC(year, month - 1, day);
+  // À minuit UTC, Paris a encore le décalage de son minuit civil, même les jours de changement d'heure.
+  const parts = parisTimeFormatter.formatToParts(new Date(utcMidnight));
+  const hour = Number(parts.find((part) => part.type === "hour")!.value);
+  const minute = Number(parts.find((part) => part.type === "minute")!.value);
+  return new Date(utcMidnight - (hour * 60 + minute) * 60_000);
+}
+
 interface ApplicationChange {
   applicationId: string;
   applicationLabel: string;
@@ -47,36 +69,30 @@ export class EmailDigestCronService {
     await this.sendDailyDigest();
   }
 
-  // Envoi effectif, aussi déclenchable manuellement via POST /email/digest (admin).
+  // targetDate cible le jour de cet instant à Paris ; sans date, la veille civile à Paris.
   async sendDailyDigest(targetDate?: Date) {
     Logger.log("Starting daily email digest job at midnight");
 
     try {
-      // Par défaut (cron) : la veille. La CLI peut cibler une autre date (ex. aujourd'hui).
-      const target =
-        targetDate ??
-        (() => {
-          const d = new Date();
-          d.setDate(d.getDate() - 1);
-          return d;
-        })();
-
-      const startOfYesterday = new Date(target);
-      startOfYesterday.setHours(0, 0, 0, 0);
-
-      const endOfYesterday = new Date(target);
-      endOfYesterday.setHours(23, 59, 59, 999);
+      const parts = parisDateFormatter.formatToParts(targetDate ?? new Date());
+      const year = Number(parts.find((part) => part.type === "year")!.value);
+      const month = Number(parts.find((part) => part.type === "month")!.value);
+      const day =
+        Number(parts.find((part) => part.type === "day")!.value) -
+        (targetDate === undefined ? 1 : 0);
+      const start = parisMidnight(year, month, day);
+      const end = parisMidnight(year, month, day + 1);
 
       Logger.log(
-        `Scanning metadata from ${startOfYesterday.toISOString()} to ${endOfYesterday.toISOString()}`,
+        `Scanning metadata from ${start.toISOString()} to ${end.toISOString()} (exclusive)`,
       );
 
       const yesterdayMetadata = await this.prisma.metadata.findMany({
         where: {
           action: { not: "export" },
           createdAt: {
-            gte: startOfYesterday,
-            lte: endOfYesterday,
+            gte: start,
+            lt: end,
           },
         },
         select: {

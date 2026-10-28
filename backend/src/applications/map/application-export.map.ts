@@ -12,6 +12,7 @@ import {
   type EolStatus,
 } from "src/technology/utils/eol-status";
 import type { TechnologyEolSource } from "@prisma/client";
+import { serializeExcelList } from "src/common/utils/excel-list.util";
 
 const eolStatusLabels: Record<EolStatus, string> = {
   eol: "Fin de vie dépassée",
@@ -88,16 +89,21 @@ export function getFullField(
   return value ? JSON.stringify(value) : "";
 }
 
-export function mapApplications(apps: ApplicationWithAllRelations[]) {
+export function mapApplications(
+  apps: ApplicationWithAllRelations[],
+  jsonLists = false,
+) {
+  const list = (values: string[] = []) =>
+    jsonLists ? serializeExcelList(values) : values.join(", ");
   return apps.map((app) => ({
     id: app.id,
     label: app.label,
     shortName: app.shortName ?? "",
     logo: app.logo ?? "",
     description: app.description,
-    tags: app.tags?.map((tag) => tag.name).join(", ") ?? "",
-    purposes: app.purposes?.join(", ") ?? "",
-    targetPopulations: app.targetPopulations?.join(", ") ?? "",
+    tags: list(app.tags?.map((tag) => tag.name)),
+    purposes: list(app.purposes),
+    targetPopulations: list(app.targetPopulations),
     priorityRestart: translateEnum(PriorityRestartLabels, app.priorityRestart),
     currentStatusId: app.currentStatusId ?? "",
     currentStatus: translateEnum(

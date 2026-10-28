@@ -377,6 +377,26 @@ globales. Un constat, pas une note.
 
 **Ce que ça fait.** Export au format Excel des résultats de recherche (avec les filtres en cours) ou de l'intégralité du référentiel.
 
+Dans la feuille **Applications**, les colonnes **Tags**, **Finalités** et
+**Populations cibles** portent le suffixe **[liste JSON v1]**. Chaque cellule
+contient un tableau JSON de textes, par exemple
+`["Piloter, contrôler","Autre finalité"]`. Ce format conserve les virgules
+internes, guillemets, retours à la ligne et espaces de chaque élément lors d'un
+export puis réimport sans modification. Conserver ces en-têtes pour réimporter
+ce format. Pour modifier une liste, conserver les guillemets de chaque texte et
+séparer les éléments par une virgule ; `[]` vide explicitement la liste, tandis
+qu'une cellule laissée vide ne modifie pas sa valeur existante. Un tableau JSON
+invalide ou contenant autre chose que des textes refuse la ligne et le rapport
+en indique la raison, sans interrompre les suivantes.
+
+Les fichiers historiques, sans ce suffixe, restent importables avec leur ancienne
+convention : séparation par virgules, suppression des espaces autour des éléments
+et omission des éléments vides. Leurs virgules internes ne peuvent pas être
+distinguées des séparateurs ; refaire un export pour disposer du format réversible.
+L'export HTML conserve sa présentation textuelle habituelle des listes.
+Une feuille contenant à la fois l'ancien et le nouvel en-tête d'une même liste
+est refusée avec un message dans le rapport : conserver un seul de ces en-têtes.
+
 La feuille **Technologies** restitue une ligne par technologie accessible : application, produit,
 version, fin de vie, fin de support actif, dernière version connue, source des dates et statut.
 Le filtre **Fin de vie** de la recherche utilise le même classement que la fiche et la vue
