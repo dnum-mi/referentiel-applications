@@ -3,13 +3,16 @@ import { BETA_FEATURES, FeatureId, isBetaFeature } from "./beta-features";
 describe("Registre des fonctionnalités bêta", () => {
   it("déclare les fonctionnalités attendues sans doublon", () => {
     expect(BETA_FEATURES).toEqual([
-      FeatureId.CatalogueExcelExport,
       FeatureId.CatalogueHtmlExport,
       FeatureId.ImportReportHtmlExport,
       FeatureId.ProductHtmlExport,
       FeatureId.ProductPowerpointExport,
     ]);
     expect(new Set(BETA_FEATURES).size).toBe(BETA_FEATURES.length);
+  });
+
+  it("laisse l’export Excel accessible sans capacité bêta (#3101)", () => {
+    expect(isBetaFeature(FeatureId.CatalogueExcelExport)).toBe(false);
   });
 
   it("conserve un identifiant stable après son retrait de la liste bêta", () => {
@@ -19,7 +22,7 @@ describe("Registre des fonctionnalités bêta", () => {
     expect(isBetaFeature(released, remainingBetaFeatures)).toBe(false);
     expect(Object.values(FeatureId)).toContain(released);
     expect(
-      isBetaFeature(FeatureId.CatalogueExcelExport, remainingBetaFeatures),
+      isBetaFeature(FeatureId.CatalogueHtmlExport, remainingBetaFeatures),
     ).toBe(true);
   });
 });

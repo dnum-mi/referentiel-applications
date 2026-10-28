@@ -770,10 +770,7 @@ export class SearchPage extends BasePage {
     return download;
   }
 
-  async expectExcelBetaExport(
-    available: boolean,
-    mobile = false,
-  ): Promise<void> {
+  async expectExcelExport(available: boolean, mobile = false): Promise<void> {
     const desktopButton = this.byTestId("application-export-btn");
     const mobileButton = this.byTestId("application-export-btn-mobile");
     if (!available) {
@@ -784,8 +781,8 @@ export class SearchPage extends BasePage {
     const button = mobile ? mobileButton : desktopButton;
     await expect(button).toBeVisible();
     await expect(mobile ? desktopButton : mobileButton).toBeHidden();
-    await expect(button.getByText("Bêta", { exact: true })).toBeVisible();
-    await expect(button).toHaveAccessibleName(/fonctionnalité bêta/i);
+    await expect(button.getByText("Bêta", { exact: true })).toHaveCount(0);
+    await expect(button).not.toHaveAccessibleName(/bêta/i);
   }
 
   async exportHtml() {
@@ -848,7 +845,8 @@ export class SearchPage extends BasePage {
         button.click(),
       ]);
       expect(response.ok()).toBe(true);
-      await this.expectExcelBetaExport(false);
+      // Retirer BetaFeatures bloque HTML ; Excel reste autorisé avec DataExport.
+      await this.expectExcelExport(format === "html");
       await this.expectHtmlBetaExport(false);
       expect(exportRequests).toBe(0);
       expect(downloads).toBe(0);

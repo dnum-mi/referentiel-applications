@@ -205,6 +205,20 @@ describe("ApplicationSearchActions — accès bêta de l'export Excel", () => {
     expect(screen.queryByTestId("application-export-btn")).toBeNull();
   });
 
+  it.each(["application-export-btn", "application-export-btn-mobile"])(
+    "permet Excel avec DataExport seul quand le registre l'exclut de la bêta (%s, #3101)",
+    async (testId) => {
+      getConfig.mockResolvedValue({ betaFeatures: Object.values(FeatureId).filter((id) => id !== FeatureId.CATALOGUE_EXCEL_EXPORT) });
+      await renderWith([Permission.DATA_EXPORT]);
+      const button = screen.getByTestId(testId);
+      expect(button).not.toHaveTextContent("Bêta");
+      expect(screen.queryByTestId("applications-export-html-btn")).toBeNull();
+      await fireEvent.click(button);
+      await flushPromises();
+      expect(downloadExcel).toHaveBeenCalledExactlyOnceWith({ shortName: "app" });
+    },
+  );
+
   it("la sortie de bêta retire le badge et laisse uniquement le droit DataExport", async () => {
     const config = reactive({ betaFeatures: Object.values(FeatureId) });
     getConfig.mockResolvedValue(config);

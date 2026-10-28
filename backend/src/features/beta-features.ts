@@ -9,7 +9,6 @@ export enum FeatureId {
 
 /** Registre autoritaire : retirer un identifiant suffit à lever son contrôle bêta. */
 export const BETA_FEATURES: readonly FeatureId[] = [
-  FeatureId.CatalogueExcelExport,
   FeatureId.CatalogueHtmlExport,
   FeatureId.ImportReportHtmlExport,
   FeatureId.ProductHtmlExport,

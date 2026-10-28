@@ -33,7 +33,7 @@ describe("public configuration", () => {
     expect(frontend.betaFeatures).not.toBe(BETA_FEATURES);
     frontend.betaFeatures.pop();
     expect(service.getFrontendConfig().betaFeatures).toEqual(BETA_FEATURES);
-    expect(service.getFrontendConfig().betaFeatures).toContain(
+    expect(service.getFrontendConfig().betaFeatures).not.toContain(
       FeatureId.CatalogueExcelExport,
     );
     expect(frontend.authLevel).toEqual({

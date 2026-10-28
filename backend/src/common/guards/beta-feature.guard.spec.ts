@@ -16,12 +16,16 @@ import { PermissionGuard } from "./permission.guard";
 
 class ExportController {
   @RequiredPermissions([Permission.DataExport])
-  @RequiresBetaFeature(FeatureId.CatalogueExcelExport)
-  exportExcel() {}
+  @RequiresBetaFeature(FeatureId.CatalogueHtmlExport)
+  exportHtml() {}
 
   @RequiredPermissions([Permission.AppRead])
   @RequiresBetaFeature(FeatureId.ProductHtmlExport)
   exportProductHtml() {}
+
+  @RequiredPermissions([Permission.DataExport])
+  @RequiresBetaFeature(FeatureId.CatalogueExcelExport)
+  exportExcel() {}
 
   ordinaryRoute() {}
 }
@@ -42,7 +46,7 @@ function principal(additionalPermissions: Permission[] = []): Requestor {
 
 function contextFor(
   user?: Requestor,
-  handler = ExportController.prototype.exportExcel,
+  handler = ExportController.prototype.exportHtml,
 ): ExecutionContext {
   return {
     getHandler: () => handler,
@@ -63,6 +67,18 @@ describe("BetaFeatureGuard", () => {
 
   afterEach(() => jest.restoreAllMocks());
 
+  it.each([false, true])(
+    "Excel exige uniquement DataExport, accordé = %s (#3101)",
+    async (granted) => {
+      const context = contextFor(
+        principal(granted ? [Permission.DataExport] : []),
+        ExportController.prototype.exportExcel,
+      );
+      await expect(betaGuard.canActivate(context)).resolves.toBe(true);
+      await expect(businessGuard.canActivate(context)).resolves.toBe(granted);
+    },
+  );
+
   it("ne restreint pas une route sans fonctionnalité bêta", async () => {
     await expect(
       betaGuard.canActivate(
@@ -78,7 +94,7 @@ describe("BetaFeatureGuard", () => {
       response: {
         statusCode: 403,
         betaFeatureRequired: true,
-        featureId: FeatureId.CatalogueExcelExport,
+        featureId: FeatureId.CatalogueHtmlExport,
       },
     });
   });
