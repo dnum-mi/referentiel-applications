@@ -140,7 +140,7 @@ test.describe("RGAA — accessibilité", () => {
 
   for (const authenticated of [false, true]) {
     for (const width of [1280, 320]) {
-      test(`RGA-10 — le raccourci navigation fonctionne ${authenticated ? "connecté" : "en public"} à ${width} px`, async ({
+      test(`RGA-10 — ${authenticated ? "raccourci navigation connecté" : "absence de navigation publique"} à ${width} px`, async ({
         page,
       }) => {
         if (authenticated) await loginAs(page, "admin");
@@ -148,7 +148,11 @@ test.describe("RGAA — accessibilité", () => {
         await chrome.open();
         if (authenticated) await chrome.expectProfileLink();
         else await chrome.expectSignInLink();
-        await chrome.expectNavigationShortcut(width);
+        if (authenticated) await chrome.expectNavigationShortcut(width);
+        else {
+          await page.setViewportSize({ width, height: 900 });
+          await chrome.expectPublicNavigationAbsent();
+        }
       });
     }
   }

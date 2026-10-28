@@ -86,10 +86,10 @@ modifient pas la durée maximale de session du fournisseur d'identité.
 - **Action** : ouvrir et fermer les filtres à 375 pixels avec Entrée et Espace, parcourir le début du panneau au clavier, le refermer à la souris alors qu'un filtre possède le focus, puis réduire la fenêtre alors qu'un filtre possède le focus.
 - **Résultat attendu** : le panneau est initialement replié ; son bouton expose son état et le panneau contrôlé. Une fois ouvert, il précède les résultats sans les recouvrir. Le repli lors du redimensionnement restitue le focus au bouton.
 
-### RGA-10 — Accès rapide à la navigation publique et connectée ✅
+### RGA-10 — Navigation connectée et absence de bandeau public ✅
 
-- **Action** : activer « Aller à la navigation » au clavier à 1 280 puis 320 pixels, sans session puis connecté.
-- **Résultat attendu** : le premier lien du menu reçoit le focus sur grand écran. Sur mobile, le bouton Menu reçoit le focus ; Entrée ouvre le menu et Échap le ferme en rendant le focus au bouton. Une fois le menu fermé, Échap depuis un autre lien conserve le focus sur ce lien.
+- **Action** : vérifier l'accueil à 1 280 puis 320 pixels sans session ; connecté, activer « Aller à la navigation » au clavier.
+- **Résultat attendu** : sans session, aucun bandeau de navigation ni raccourci vers une navigation absente ; la déclaration d'accessibilité reste accessible dans le pied de page. Connecté, le premier lien du menu reçoit le focus sur grand écran. Sur mobile, le bouton Menu reçoit le focus ; Entrée ouvre le menu et Échap le ferme en rendant le focus au bouton. Une fois le menu fermé, Échap depuis un autre lien conserve le focus sur ce lien.
 
 ### RGA-11 — Plan du site public et accès rapide au contenu ✅
 
