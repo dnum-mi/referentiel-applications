@@ -16,6 +16,7 @@ overrides:
   '@istanbuljs/load-nyc-config>js-yaml': 4.3.2
   cross-spawn@<6.0.6: '>=6.0.6'
   cross-spawn@>=7.0.0 <7.0.5: '>=7.0.5'
+  deepmerge: file:patches/deepmerge
   fast-uri: 3.1.9
   file-type@>=13.0.0 <21.3.1: '>=21.3.1'
   form-data: 4.0.6
@@ -1146,6 +1147,9 @@ packages:
   '@prisma/get-platform@6.19.3':
     resolution: {integrity: sha512-xFj1VcJ1N3MKooOQAGO0W5tsd0W2QzIvW7DD7c/8H14Zmp4jseeWAITm+w2LLoLrlhoHdPPh0NMZ8mfL6puoHA==}
 
+  '@refapp/deepmerge@file:patches/deepmerge':
+    resolution: {directory: patches/deepmerge, type: directory}
+
   '@scarf/scarf@1.4.0':
     resolution: {integrity: sha512-xxeapPiUXdZAE3che6f3xogoJPeZgig6omHEy1rIY5WVsB3H2BHNnZH+gHG6x91SCWyQCzWGsuL2Hh3ClO5/qQ==}
 
@@ -2188,10 +2192,6 @@ packages:
   deepmerge-ts@8.0.2:
     resolution: {integrity: sha512-uqbvqLUMrc6p0MO+WBRtTxY55hmyh94WRwI5a++PZe54X+bfVh59FSN7uWCBCW1CCVjzjnrwzfI8zidE2obMMw==}
     engines: {node: '>=16.9.0'}
-
-  deepmerge@4.3.1:
-    resolution: {integrity: sha512-3sUqbMEc77XqpdNO7FRyRog+eW3ph+GYCbj+rK+uYyRMuwsVy0rMiVtPn+QJlKFvWP/1PYpapqYn0Me2knFn+A==}
-    engines: {node: '>=0.10.0'}
 
   defaults@1.0.4:
     resolution: {integrity: sha512-eFuaLoy/Rxalv2kr+lqMlUnrDWV+3j4pljOIJgLIhI058IQfWJ7vXhyEIHu+HtC738klGALYxOKDO0bQP3tg8A==}
@@ -5297,6 +5297,8 @@ snapshots:
     dependencies:
       '@prisma/debug': 6.19.3
 
+  '@refapp/deepmerge@file:patches/deepmerge': {}
+
   '@scarf/scarf@1.4.0': {}
 
   '@sec-ant/readable-stream@0.4.1': {}
@@ -6340,8 +6342,6 @@ snapshots:
 
   deepmerge-ts@8.0.2: {}
 
-  deepmerge@4.3.1: {}
-
   defaults@1.0.4:
     dependencies:
       clone: 1.0.4
@@ -6679,7 +6679,7 @@ snapshots:
       chalk: 4.1.2
       chokidar: 4.0.3
       cosmiconfig: 8.3.6(typescript@5.9.3)
-      deepmerge: 4.3.1
+      deepmerge: '@refapp/deepmerge@file:patches/deepmerge'
       fs-extra: 10.1.0
       memfs: 3.5.3
       minimatch: 3.1.5
@@ -7057,7 +7057,7 @@ snapshots:
       babel-jest: 30.5.2(@babel/core@7.29.6)
       chalk: 4.1.2
       ci-info: 4.4.0
-      deepmerge: 4.3.1
+      deepmerge: '@refapp/deepmerge@file:patches/deepmerge'
       glob: 13.0.6
       graceful-fs: 4.2.11
       jest-circus: 30.5.2
