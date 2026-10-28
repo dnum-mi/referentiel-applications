@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildNavItems, buildPublicNavItems } from "./nav-items";
+import { buildNavItems } from "./nav-items";
 import { routeNames } from "./route-names";
 
 describe("navItems — menu principal", () => {
@@ -33,12 +33,5 @@ describe("navItems — menu principal", () => {
 
   it.each([false, true])("masque Technologies sans capacité, administration globale = %s", (canManageGlobalAdmin) => {
     expect(buildNavItems(canManageGlobalAdmin, false).map((item) => item.to.name)).not.toContain(routeNames.ENDOFLIFE);
-  });
-
-  it("limite le menu d'un visiteur aux pages publiques", () => {
-    expect(buildPublicNavItems()).toEqual([
-      { to: { name: routeNames.ACCUEIL }, text: "Accueil" },
-      { to: { name: routeNames.ACCESSIBILITE }, text: "Accessibilité" },
-    ]);
   });
 });

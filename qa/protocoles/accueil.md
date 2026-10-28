@@ -33,12 +33,13 @@
   dédié sont absents ; le lien « Contact Tchap » reste visible dans le pied de page et pointe
   vers un salon sur `https://www.tchap.gouv.fr/#/room/`.
 
-### ACC-04 — Header public : connexion et navigation vers les pages publiques ✅
+### ACC-04 — Header public : connexion sans bandeau et accessibilité dans le footer ✅
 
 - **Datafeature** : aucune (session vierge).
 - **Action** : ouvrir `/` sans être authentifié et observer le bandeau.
 - **Résultat attendu** : le raccourci « Se connecter » est présent ; « Mon profil » et
-  « Déconnexion » sont absents ; le menu principal propose uniquement « Accueil » et « Accessibilité ».
+  « Déconnexion » sont absents ; aucun menu principal n'est affiché et la déclaration
+  d'accessibilité reste accessible dans le pied de page.
 
 ### ACC-05 — Header connecté : navigation principale et profil/déconnexion ✅
 
