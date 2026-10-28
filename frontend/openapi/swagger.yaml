@@ -7848,6 +7848,48 @@ paths:
       summary: Sauvegarder un filtre
       tags: *a39
   /api/v2/saved-filters/{id}:
+    patch:
+      operationId: SavedFilterController_rename
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID du filtre personnel
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RenameSavedFilterDto"
+      responses:
+        "200":
+          description: Filtre renommé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SavedFilterDto"
+        "400":
+          description: Nom vide ou trop long
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorDto"
+        "404":
+          description: Filtre personnel non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorDto"
+        "409":
+          description: Nom déjà pris par un autre filtre personnel
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorDto"
+      summary: Renommer un filtre personnel sans modifier ses critères
+      tags: *a39
     delete:
       operationId: SavedFilterController_remove
       parameters:
@@ -13045,6 +13087,16 @@ components:
       required:
         - name
         - filters
+    RenameSavedFilterDto:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Nouveau nom du filtre personnel
+      required:
+        - name
     CreateQualityCampaignDto:
       type: object
       properties:
