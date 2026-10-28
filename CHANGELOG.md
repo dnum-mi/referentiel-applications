@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.102.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.101.0...v1.102.0) (2026-10-28)
+
+
+### Features
+
+* rename personal saved filters ([#3104](https://github.com/dnum-mi/referentiel-applications/issues/3104)) ([e75a5fe](https://github.com/dnum-mi/referentiel-applications/commit/e75a5fed303b7c2c331fe8011c55a935b8d9ff45))
+
+
+### Bug Fixes
+
+* remove unauthenticated application navigation ([#3103](https://github.com/dnum-mi/referentiel-applications/issues/3103)) ([d3ba405](https://github.com/dnum-mi/referentiel-applications/commit/d3ba4055d797f33603765cb8e1a9700b4f3da72f))
+* remove vulnerability from image docker frontback ([#3102](https://github.com/dnum-mi/referentiel-applications/issues/3102)) ([da265d2](https://github.com/dnum-mi/referentiel-applications/commit/da265d2913c2514465ffbffc7297a9711aa1d87b))
+
 ## [1.101.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.100.0...v1.101.0) (2026-10-28)
 
 
