@@ -58,6 +58,7 @@ jobs:
           context: ${{ inputs.ref != '' && 'git' || 'workflow' }}
           tags: ${{ inputs.image_tag != '' && format('type=raw,value={0}', inputs.image_tag) || '' }}
       - name: Build and push
+        id: build
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: ${{ inputs.context }}
@@ -67,3 +68,19 @@ jobs:
           target: ${{ inputs.target }}
           build-args: |
             VERSION=${{ inputs.version || github.ref_name }}
+      # Le digest identifie l'image finale exacte, même si un autre build déplace
+      # son tag. Inclure les bibliothèques couvre aussi celles de pnpm global.
+      - name: Scan the published image for vulnerabilities
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: v0.76.1
+          scan-type: image
+          image-ref: ${{ inputs.image }}@${{ steps.build.outputs.digest }}
+          scanners: vuln
+          vuln-type: os,library
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+          ignore-unfixed: false
+          exit-code: "1"
+          format: table
+        env:
+          TRIVY_IGNOREFILE: /dev/null
