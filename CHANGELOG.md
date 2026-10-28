@@ -1,5 +1,43 @@
 # Changelog
 
+## [1.101.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.100.0...v1.101.0) (2026-10-28)
+
+
+### Features
+
+* add logo handling in application updates and import processing ([#3086](https://github.com/dnum-mi/referentiel-applications/issues/3086)) ([ad21681](https://github.com/dnum-mi/referentiel-applications/commit/ad2168157c924834fd3a670f1ea0bb6a8d802ebd))
+* ajouter une capacité explicite pour les fonctionnalités bêta ([#3034](https://github.com/dnum-mi/referentiel-applications/issues/3034)) ([4e74c30](https://github.com/dnum-mi/referentiel-applications/commit/4e74c30df37fc0e41c0b39d1dc7c947ede24a556))
+* gate all HTML exports behind beta capability ([#3042](https://github.com/dnum-mi/referentiel-applications/issues/3042)) ([20beed5](https://github.com/dnum-mi/referentiel-applications/commit/20beed558a6508a601186a0f8fd42e3b2982b407))
+* implement daily email digest functionality with Paris timezone handling ([#3098](https://github.com/dnum-mi/referentiel-applications/issues/3098)) ([018ffc3](https://github.com/dnum-mi/referentiel-applications/commit/018ffc35f7db5210897b17453d1e94acde59bc16))
+* implement GristSyncLockService for managing concurrent synchronizations and handle conflicts ([#3087](https://github.com/dnum-mi/referentiel-applications/issues/3087)) ([7da1153](https://github.com/dnum-mi/referentiel-applications/commit/7da11534ba86bf399fa9bae50bcc207d41a3a4ed))
+* make current status identifiable in Excel export of applications ([#3082](https://github.com/dnum-mi/referentiel-applications/issues/3082)) ([6d86b67](https://github.com/dnum-mi/referentiel-applications/commit/6d86b674db3d5a75dc83d75c4561021876c71eeb))
+
+
+### Bug Fixes
+
+* **auth:** enforce trusted JWT claims ([#3039](https://github.com/dnum-mi/referentiel-applications/issues/3039)) ([49f9bb8](https://github.com/dnum-mi/referentiel-applications/commit/49f9bb85a27823ab532bc78522a84d10a43dcc72))
+* cap scoped administrator impersonation ([#3029](https://github.com/dnum-mi/referentiel-applications/issues/3029)) ([0adc968](https://github.com/dnum-mi/referentiel-applications/commit/0adc96877a476c1c57ef97f4a6a81303536d61b1))
+* **cd:** publish images for created releases ([#3079](https://github.com/dnum-mi/referentiel-applications/issues/3079)) ([a9613e4](https://github.com/dnum-mi/referentiel-applications/commit/a9613e4b707ae2fc1f6316236099e5200e1bb319))
+* discard obsolete technology EOL resolutions ([#3091](https://github.com/dnum-mi/referentiel-applications/issues/3091)) ([15d7533](https://github.com/dnum-mi/referentiel-applications/commit/15d753370cce141e491c1702e900de81f6a81167))
+* expose unread notification status to screen readers ([#3045](https://github.com/dnum-mi/referentiel-applications/issues/3045)) ([eae7bc7](https://github.com/dnum-mi/referentiel-applications/commit/eae7bc738579889215aefbf20c657f90a9b62e97))
+* **frontend:** announce AppLoader to screen readers (RGAA 7.5) ([#3037](https://github.com/dnum-mi/referentiel-applications/issues/3037)) ([0cc4e92](https://github.com/dnum-mi/referentiel-applications/commit/0cc4e92dda1ebb00da6b5d3a3456aaf78ac7c08d))
+* isolate application relation context ([#3044](https://github.com/dnum-mi/referentiel-applications/issues/3044)) ([4876562](https://github.com/dnum-mi/referentiel-applications/commit/487656284fe049770e09b289d1657f0b40f39df7))
+* preserve application lists in Excel round trips ([#3092](https://github.com/dnum-mi/referentiel-applications/issues/3092)) ([e132e71](https://github.com/dnum-mi/referentiel-applications/commit/e132e713b928829a1a15436cdeb6ea037dbb98c4))
+* preserve initial application status details ([#3083](https://github.com/dnum-mi/referentiel-applications/issues/3083)) ([9a50a94](https://github.com/dnum-mi/referentiel-applications/commit/9a50a941a8b1870c05c138dee66e89f7624ce491))
+* remove bloqued and service account from contact to admin ([#3046](https://github.com/dnum-mi/referentiel-applications/issues/3046)) ([882770d](https://github.com/dnum-mi/referentiel-applications/commit/882770debb70b4847dc85ba5d52de706485ad56f))
+* reset catalogue pagination when filters change ([#3054](https://github.com/dnum-mi/referentiel-applications/issues/3054)) ([07c809e](https://github.com/dnum-mi/referentiel-applications/commit/07c809e58b32f046195d4ec77cf5b41ab447c0e1))
+* restore application search by data source ([#3055](https://github.com/dnum-mi/referentiel-applications/issues/3055)) ([d197a10](https://github.com/dnum-mi/referentiel-applications/commit/d197a105f54b520de8b1fbe6ef3781445d9cdef7))
+* restore cost containment sorting ([#3040](https://github.com/dnum-mi/referentiel-applications/issues/3040)) ([7c8c125](https://github.com/dnum-mi/referentiel-applications/commit/7c8c1259c428816b3bf53a4a7581dff83005cdf2))
+* **security:** patch qs and deepmerge advisories ([#3088](https://github.com/dnum-mi/referentiel-applications/issues/3088)) ([887d7fa](https://github.com/dnum-mi/referentiel-applications/commit/887d7fa55b2199e7ec6961e78f24b254b4fa8421))
+* **security:** update vulnerable locked dependencies ([#3080](https://github.com/dnum-mi/referentiel-applications/issues/3080)) ([2650ceb](https://github.com/dnum-mi/referentiel-applications/commit/2650ceb1a5939c4565df153d308475c1d7bd8261))
+* settle concurrent organization requests ([#3090](https://github.com/dnum-mi/referentiel-applications/issues/3090)) ([832c32a](https://github.com/dnum-mi/referentiel-applications/commit/832c32a30f49168c0fd4ed62fe406dd121f5b3d3))
+* traverse relation graphs by shortest distance ([#3030](https://github.com/dnum-mi/referentiel-applications/issues/3030)) ([995a2f0](https://github.com/dnum-mi/referentiel-applications/commit/995a2f04a0f288760c3d435ba629b73ce92fed82))
+* update grafana-doc ([#3035](https://github.com/dnum-mi/referentiel-applications/issues/3035)) ([c5c3a7d](https://github.com/dnum-mi/referentiel-applications/commit/c5c3a7db1e01c764804a3c8fcea7402f07cc93c7))
+* update links to indicate new window behavior and improve accessibility ([#3081](https://github.com/dnum-mi/referentiel-applications/issues/3081)) ([0d30a22](https://github.com/dnum-mi/referentiel-applications/commit/0d30a221966edb3d891e5ff53f373981365d211f))
+* update references from /fins-de-vie to /technologies across the application ([#3099](https://github.com/dnum-mi/referentiel-applications/issues/3099)) ([aed2bde](https://github.com/dnum-mi/referentiel-applications/commit/aed2bde7391e9fae0a8815f64294db3c1f661117))
+* validate actor type before partial updates ([#3077](https://github.com/dnum-mi/referentiel-applications/issues/3077)) ([ad88a44](https://github.com/dnum-mi/referentiel-applications/commit/ad88a446898c5a650e1d94066c6c7a3b6afa68c2))
+* validate token renewal and restore active status ([#3043](https://github.com/dnum-mi/referentiel-applications/issues/3043)) ([04418b8](https://github.com/dnum-mi/referentiel-applications/commit/04418b8faf54420ac6c933514a054c407767d80e))
+
 ## [1.100.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.99.0...v1.100.0) (2026-10-21)
 
 
