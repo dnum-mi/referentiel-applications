@@ -251,6 +251,43 @@ describe("Applications", () => {
     );
   });
 
+  it("/PATCH applications/:id - remplace, conserve et vide le logo", async () => {
+    const admin = await UserFaker.create({ role: Roles.ADMIN });
+    const adminToken = await getToken(admin);
+    const application = await ApplicationFaker.create(admin);
+    const prisma = getPrismaClient();
+    await prisma.application.update({
+      where: { id: application.id },
+      data: { logo: "https://example.test/old.png" },
+    });
+
+    for (const [data, expectedLogo] of [
+      [
+        { logo: "https://example.test/new.png" },
+        "https://example.test/new.png",
+      ],
+      [
+        { logo: "https://example.test/combined.png", label: "Logo modifié" },
+        "https://example.test/combined.png",
+      ],
+      [{ label: "Logo conservé" }, "https://example.test/combined.png"],
+      [{ logo: "" }, ""],
+    ] as const) {
+      const response = await request(app().getHttpServer())
+        .patch(`/applications/${application.id}`)
+        .send(data)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .expect(200);
+
+      expect(response.body.logo).toBe(expectedLogo);
+      const persisted = await prisma.application.findUniqueOrThrow({
+        where: { id: application.id },
+      });
+      expect(persisted.logo).toBe(expectedLogo);
+      if ("label" in data) expect(persisted.label).toBe(data.label);
+    }
+  });
+
   it("/PATCH applications/:id - remplace les directions métiers (set complet)", async () => {
     const admin = await UserFaker.create({ role: Roles.ADMIN });
     const adminToken = await getToken(admin);

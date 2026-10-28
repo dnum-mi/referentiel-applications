@@ -14,6 +14,7 @@ import { ApplicationRepository } from "src/applications/infrastructure/repositor
 import { CheckPermissions } from "src/common/service/check-permissions.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Requestor } from "src/user/entities/user.entity";
+import { GristSyncLockService } from "./grist-sync-lock.service";
 import { decryptGristApiKey } from "./grist-api-key";
 import {
   DEFAULT_GRIST_COLUMN_FIELDS,
@@ -94,6 +95,7 @@ export class GristService {
     private readonly applicationExport: ApplicationExportService,
     private readonly applications: ApplicationRepository,
     private readonly checkPermissions: CheckPermissions,
+    private readonly syncLock: GristSyncLockService,
   ) {}
 
   /// Écrit ce que la page de recherche affiche : les applications correspondant aux filtres, avec
@@ -306,44 +308,102 @@ export class GristService {
     applications: GristApplication[],
     findInScope: (ids: string[]) => Promise<GristApplication[]>,
   ): Promise<GristDocumentReportDto> {
-    const table = (await this.resolveTable(document, choice, columns))!;
-    // Les règles d'accès désignent les colonnes verrouillées : elles sont retirées avant de
-    // supprimer une colonne. Le verrou est remis même si l'écriture échoue.
-    await this.unlock(table);
-    let report: Pick<
-      GristDocumentReportDto,
-      "columnsAdded" | "columnsRemoved" | "rowsKept" | "rowsDeleted"
-    >;
-    try {
-      // Une table créée a déjà exactement les colonnes synchronisées.
-      const changes = table.created
-        ? { columnsAdded: [], columnsRemoved: [] }
-        : await this.syncColumns(table, columns);
-      if (table.created || changes.columnsAdded.includes(SELECTION_COLUMN)) {
-        await this.hideSelectionColumn(table);
+    const selected = (await this.resolveTable(document, choice))!;
+    return this.syncLock.run(document, selected.tableId, async (assertHeld) => {
+      const table = {
+        ...selected,
+        request: <T>(path: string, options?: GristRequest) => {
+          // shortcut: un appel déjà reçu par Grist reste en vol ; une atomicité distante demanderait un protocole Grist dédié.
+          assertHeld();
+          return selected.request<T>(path, options);
+        },
+      };
+      const existing = await this.tableIds(table.request);
+      if (table.created) {
+        if (existing.has(table.tableId)) {
+          throw new ConflictException(
+            "La table vient d'être créée par une autre synchronisation. Réessayez.",
+          );
+        }
+        await table.request("/tables", {
+          method: "POST",
+          body: {
+            tables: [
+              {
+                id: table.tableId,
+                columns: [
+                  ...FIXED_DEFINITIONS,
+                  ...columns.map(columnDefinition),
+                ],
+              },
+            ],
+          },
+        });
+      } else if (
+        !existing.has(table.tableId) ||
+        !(await this.columnIds(table.request, table.tableId)).has(KEY_COLUMN)
+      ) {
+        throw new ConflictException(
+          "La table Grist a changé depuis sa sélection. Réessayez.",
+        );
       }
-      await this.upsert(table, columns, applications, true);
-      const exited = await this.handleExitedRows(
-        table,
-        columns,
-        new Set(applications.map((app) => app.id)),
-        findInScope,
-      );
-      // Après l'ajout des colonnes, y compris celles ajoutées dans Grist depuis la dernière fois.
-      await this.ensureGreyStyle(table);
-      report = { ...changes, ...exited };
-    } finally {
-      await this.lock(table, columns);
-    }
 
-    return {
-      docId: document.docId,
-      status: "ok",
-      tableId: table.tableId,
-      tableCreated: table.created,
-      rowsWritten: applications.length,
-      ...report,
-    };
+      let completed = false;
+      try {
+        await this.unlock(table);
+        const changes = table.created
+          ? { columnsAdded: [], columnsRemoved: [] }
+          : await this.syncColumns(table, columns);
+        if (table.created || changes.columnsAdded.includes(SELECTION_COLUMN)) {
+          await this.hideSelectionColumn(table);
+        }
+        await this.upsert(table, columns, applications, true);
+        const exited = await this.handleExitedRows(
+          table,
+          columns,
+          new Set(applications.map((app) => app.id)),
+          findInScope,
+        );
+        await this.ensureGreyStyle(table);
+        completed = true;
+        return {
+          docId: document.docId,
+          status: "ok",
+          tableId: table.tableId,
+          tableCreated: table.created,
+          rowsWritten: applications.length,
+          ...changes,
+          ...exited,
+        };
+      } finally {
+        await this.restoreLock(table, columns, completed);
+      }
+    });
+  }
+
+  private async restoreLock(
+    table: GristTable,
+    columns: GristColumnDefinition[],
+    completed: boolean,
+  ): Promise<void> {
+    try {
+      let locked = [...FIXED_COLUMNS, ...columns.map(({ colId }) => colId)];
+      if (!completed) {
+        // Une modification partielle du schéma peut avoir échoué avant l'ajout des colonnes.
+        locked = [
+          ...(await this.columnIds(table.request, table.tableId)),
+        ].filter(
+          (id) => FIXED_COLUMNS.includes(id) || REFAPP_COLUMN_IDS.has(id),
+        );
+        await this.unlock(table);
+      }
+      await this.lock(table, locked);
+    } catch (error) {
+      logger.error(
+        `Restauration des ACL Grist en échec pour la table ${table.tableId}.`,
+      );
+      throw error;
+    }
   }
 
   private async upsert(
@@ -412,12 +472,10 @@ export class GristService {
   /// - `tableId` : cette table, qui doit exister et être à nous ;
   /// - `newTable` : la première place libre parmi RefApp, RefApp2… ;
   /// - sinon : notre première table, ou à défaut la première place libre si `create`.
-  /// Une table créée reçoit les colonnes fixes et `columns` ; les colonnes d'une table existante sont
-  /// alignées ensuite (syncColumns). RefApp ne crée jamais de colonne de métadonnées.
+  /// Résout seulement la cible : sa création éventuelle attend l’acquisition du verrou partagé.
   private async resolveTable(
     document: GristDocument,
     { tableId: requested, newTable, create }: TableChoice,
-    columns: GristColumnDefinition[] = [],
   ): Promise<(GristTable & { created: boolean }) | null> {
     const request: GristTable["request"] = (path, options) =>
       this.grist.request(document, path, options);
@@ -446,20 +504,6 @@ export class GristService {
       const tableId = tableName(rank);
       if (!tableIds.has(tableId)) {
         if (!create) return null;
-        await request("/tables", {
-          method: "POST",
-          body: {
-            tables: [
-              {
-                id: tableId,
-                columns: [
-                  ...FIXED_DEFINITIONS,
-                  ...columns.map(columnDefinition),
-                ],
-              },
-            ],
-          },
-        });
         return { tableId, request, created: true };
       }
       if (newTable) continue;
@@ -770,11 +814,7 @@ export class GristService {
   }
 
   /// Colonnes écrites par RefApp en lecture seule ; ni ajout ni suppression de lignes.
-  private async lock(
-    table: GristTable,
-    columns: GristColumnDefinition[],
-  ): Promise<void> {
-    const locked = [...FIXED_COLUMNS, ...columns.map(({ colId }) => colId)];
+  private async lock(table: GristTable, locked: string[]): Promise<void> {
     await this.addRule(table, locked.join(","), "-U");
     await this.addRule(table, TABLE_RESOURCE, "-CD");
   }
