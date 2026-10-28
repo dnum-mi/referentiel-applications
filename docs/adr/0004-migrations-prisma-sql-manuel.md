@@ -102,5 +102,5 @@ Inconvénients :
 
 ## Liens et Références
 
-- [Modèle de données](../../docs/04-modele-de-donnees.md)
+- [Modèle de données](../04-modele-de-donnees.md)
 - Référentiel des applications : https://github.com/dnum-mi/referentiel-applications

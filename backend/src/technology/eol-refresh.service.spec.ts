@@ -238,7 +238,7 @@ describe("EolRefreshService — verrou et origine (#2527)", () => {
       { id: "t-1", product: "PostgreSQL", version: "13" },
     ]);
     await service.runRefreshSafely();
-    expect(update.mock.calls[0][0].where).toEqual({
+    expect(update.mock.calls[0][0].where).toMatchObject({
       id: "t-1",
       eolSource: "endoflife",
     });

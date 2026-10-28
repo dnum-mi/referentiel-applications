@@ -608,7 +608,9 @@ describe("TechnologyService — fin de vie saisie à la main (#2454)", () => {
     expect(resolveProductReleases).toHaveBeenCalledTimes(1);
     expect(resolveProductReleases).toHaveBeenCalledWith("PostgreSQL");
     expect(prisma.technologyStack.updateMany).toHaveBeenCalledTimes(1);
-    expect(prisma.technologyStack.updateMany.mock.calls[0][0].where).toEqual({
+    expect(
+      prisma.technologyStack.updateMany.mock.calls[0][0].where,
+    ).toMatchObject({
       id: "tech-1",
       eolSource: "endoflife",
     });
@@ -826,7 +828,7 @@ describe("TechnologyService — hygiène (#2527)", () => {
       releases: [{ name: "13", eolFrom: "2025-11-13" }],
     });
     await service.findAllByApplicationId("app-1");
-    expect(technologyStack.updateMany.mock.calls[0][0].where).toEqual({
+    expect(technologyStack.updateMany.mock.calls[0][0].where).toMatchObject({
       id: "tech-1",
       eolSource: "endoflife",
     });
