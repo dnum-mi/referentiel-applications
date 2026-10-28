@@ -83,14 +83,15 @@ test.describe("Fonctionnalités bêta — délégation explicite", () => {
       // et ne déclencher ni requête d'export ni événement de téléchargement.
       await tester.setPermissions(["DataExport"]);
       await search.expectHtmlRevocationBeforeDownload();
+      await fiche.open(application!.id);
+      await fiche.expectProductBetaExports(false);
       await tester.setPermissions(["DataExport", "BetaFeatures"]);
       await search.open();
       await search.expectExcelExport(true);
-      await tester.setPermissions([]);
+      // Retirer le seul droit métier doit bloquer Excel, même si Bêta est conservé.
+      await tester.setPermissions(["BetaFeatures"]);
       await search.expectExcelRevocationBeforeDownload();
       await search.expectHtmlBetaExport(false);
-      await fiche.open(application!.id);
-      await fiche.expectProductBetaExports(false);
     } finally {
       await tester.dispose();
     }
@@ -137,6 +138,13 @@ test.describe("Fonctionnalités bêta — délégation explicite", () => {
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       );
       expect(excel.subarray(0, 4).toString("hex")).toBe("504b0304");
+
+      await tester.setPermissions(["DataExport", "BetaFeatures"]);
+      await search.open();
+      await search.expectExcelExport(true, true);
+      await tester.setPermissions(["BetaFeatures"]);
+      await search.expectExcelRevocationBeforeDownload(true);
+      await search.expectHtmlBetaExport(false);
     } finally {
       await tester.dispose();
     }

@@ -166,4 +166,27 @@ describe("Export de fiche produit PowerPoint", () => {
     expect(addErrorMessage).toHaveBeenCalledOnce();
     errorLog.mockRestore();
   });
+
+  it.each(["html", "powerpoint"])("la sortie de bêta d'Excel conserve la restriction et la révocation de la fiche %s", async (format) => {
+    getConfig.mockResolvedValue({
+      betaFeatures: Object.values(FeatureId).filter((feature) => feature !== FeatureId.CATALOGUE_EXCEL_EXPORT),
+    });
+    permissions.value = [Permission.APP_READ];
+    const wrapper = await render();
+    expect(wrapper.find("button").exists()).toBe(false);
+    permissions.value.push(Permission.BETA_FEATURES);
+    await flushPromises();
+    const button = wrapper.get(`[data-testid="application-export-${format}-btn"]`);
+    expect(button.text()).toContain("Bêta");
+    expect(button.element).toHaveAccessibleName(/Bêta/);
+    fetchUser.mockImplementationOnce(async () => {
+      permissions.value = [Permission.APP_READ];
+      return true;
+    });
+    await button.trigger("click");
+    await flushPromises();
+    expect(downloadProductHtml).not.toHaveBeenCalled();
+    expect(downloadProductPowerpoint).not.toHaveBeenCalled();
+    expect(wrapper.find("button").exists()).toBe(false);
+  });
 });
