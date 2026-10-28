@@ -22,6 +22,7 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { User } from "src/common/decorators/user.decorator";
+import { ApiErrorDto } from "src/common/dto/api-error.dto";
 import { PermissionGuard } from "src/common/guards/permission.guard";
 import { UserEntity } from "src/user/entities/user.entity";
 import { CreateSavedFilterDto } from "./dto/create-saved-filter.dto";
@@ -70,11 +71,18 @@ export class SavedFilterController {
   })
   @ApiParam({ name: "id", description: "ID du filtre personnel" })
   @ApiOkResponse({ description: "Filtre renommé", type: SavedFilterDto })
-  @ApiBadRequestResponse({ description: "Nom vide ou trop long" })
+  @ApiBadRequestResponse({
+    description: "Nom vide ou trop long",
+    type: ApiErrorDto,
+  })
   @ApiConflictResponse({
     description: "Nom déjà pris par un autre filtre personnel",
+    type: ApiErrorDto,
   })
-  @ApiNotFoundResponse({ description: "Filtre personnel non trouvé" })
+  @ApiNotFoundResponse({
+    description: "Filtre personnel non trouvé",
+    type: ApiErrorDto,
+  })
   rename(
     @User() user: UserEntity,
     @Param("id") id: string,

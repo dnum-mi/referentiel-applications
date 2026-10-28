@@ -7872,10 +7872,22 @@ paths:
                 $ref: "#/components/schemas/SavedFilterDto"
         "400":
           description: Nom vide ou trop long
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorDto"
         "404":
           description: Filtre personnel non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorDto"
         "409":
           description: Nom déjà pris par un autre filtre personnel
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorDto"
       summary: Renommer un filtre personnel sans modifier ses critères
       tags: *a39
     delete:
