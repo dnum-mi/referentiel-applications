@@ -80,6 +80,6 @@ Inconvénients :
 
 ## Liens et Références
 
-- [Architecture frontend](../../docs/09-architecture-frontend.md)
-- [API](../../docs/05-api.md)
+- [Architecture frontend](../09-architecture-frontend.md)
+- [API](../05-api.md)
 - Référentiel des applications : https://github.com/dnum-mi/referentiel-applications
