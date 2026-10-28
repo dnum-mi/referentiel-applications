@@ -48,6 +48,43 @@ function setup() {
 }
 
 describe("ApplicationsSheetProcessor", () => {
+  it.each([
+    {
+      headers: ["Logo"],
+      cells: ["https://example.test/new.png"],
+      logo: "https://example.test/new.png",
+    },
+    { headers: ["Logo"], cells: [""], logo: undefined },
+    { headers: [], cells: [], logo: undefined },
+  ])(
+    "importe le logo sans effacer les valeurs omises : %j",
+    async ({ headers, cells, logo }) => {
+      const { processor, applicationService } = setup();
+      const report = createEmptyReport();
+
+      await processor.process(
+        buildSheet(
+          ["Identifiant", "Libellé", ...headers],
+          [["app-1", "App MAJ", ...cells]],
+        ),
+        requestor,
+        report,
+      );
+
+      expect(report.summary.updated).toBe(1);
+      expect(report.summary.errors).toBe(0);
+      expect(applicationService.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          applicationId: "app-1",
+          data:
+            logo === undefined
+              ? expect.not.objectContaining({ logo: expect.anything() })
+              : expect.objectContaining({ logo }),
+        }),
+      );
+    },
+  );
+
   it("crée une application sans identifiant", async () => {
     const { processor, applicationService } = setup();
     const report = createEmptyReport();

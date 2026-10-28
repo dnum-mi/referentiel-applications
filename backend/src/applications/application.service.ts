@@ -130,6 +130,8 @@ export class ApplicationService {
         await tx.applicationStatus.create({
           data: {
             status: createApplicationDto.status.status,
+            statusDate: createApplicationDto.status.statusDate ?? null,
+            version: createApplicationDto.status.version ?? null,
             applicationId: app.id,
           },
         });
@@ -652,6 +654,7 @@ export class ApplicationService {
     const scalarFields = [
       "label",
       "shortName",
+      "logo",
       "description",
       "priorityRestart",
       "type",

@@ -63,6 +63,40 @@ describe("useApplicationSearch — debounce partagé", () => {
     expect(searchMock).toHaveBeenCalledTimes(1);
   });
 
+  it("conserve la page demandée lorsque seule la pagination change, avec des filtres de statut et de relation actifs", async () => {
+    routeMock.query = {
+      page: "3",
+      search: "refapp",
+      currentStatus__in: "in_production",
+      relationAppId: "reference-application",
+      is_part_of: "INCLUDE",
+    };
+    const search = scope.run(() => useApplicationSearch())!;
+    search.page.value = 2;
+    await nextTick();
+    expect(search.filters.value.page).toBe(2);
+    expect(searchMock).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        query: expect.objectContaining({
+          page: 2,
+          search: "refapp",
+          currentStatus__in: ["in_production"],
+          relationAppId: "reference-application",
+          is_part_of: "INCLUDE",
+        }),
+      }),
+    );
+    expect(replaceMock).toHaveBeenCalledExactlyOnceWith({
+      query: expect.objectContaining({
+        page: "2",
+        search: "refapp",
+        currentStatus__in: "in_production",
+        relationAppId: "reference-application",
+        is_part_of: "INCLUDE",
+      }),
+    });
+  });
+
   it("la réinitialisation remplace la recherche différée", async () => {
     const search = scope.run(() => useApplicationSearch())!;
     search.setFilter({ search: "à effacer" });
