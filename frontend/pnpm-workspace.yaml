@@ -7,6 +7,7 @@ overrides:
   defu: 6.1.5
   dompurify@3: 3.4.17
   esbuild@0.27: 0.28.1
+  deepmerge: file:patches/deepmerge
   fast-uri: 3.1.9
   follow-redirects: 1.16.0
   form-data: 4.0.6

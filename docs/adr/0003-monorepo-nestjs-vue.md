@@ -100,5 +100,5 @@ Le mono-repo a été choisi « pour la clarté pendant la grosse refacto », tou
 
 ## Liens et Références
 
-- [Architecture](../../docs/02-architecture.md)
+- [Architecture](../02-architecture.md)
 - Référentiel des applications : https://github.com/dnum-mi/referentiel-applications
