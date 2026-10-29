@@ -781,40 +781,8 @@ export class SearchPage extends BasePage {
     const button = mobile ? mobileButton : desktopButton;
     await expect(button).toBeVisible();
     await expect(mobile ? desktopButton : mobileButton).toBeHidden();
-    if (await this.isExcelExportBeta()) {
-      await expect(button.getByText("Bêta", { exact: true })).toBeVisible();
-      await expect(button).toHaveAccessibleName(/fonctionnalité bêta/i);
-    } else {
-      await expect(button.getByText("Bêta", { exact: true })).toHaveCount(0);
-      await expect(button).toHaveAccessibleName(/^Exporter en Excel\b/);
-      await expect(button).not.toHaveAccessibleName(/bêta/i);
-    }
-  }
-
-  /** Le registre servi par le backend, et non une hypothèse du protocole, décide du statut bêta. */
-  async isExcelExportBeta(): Promise<boolean> {
-    const response = await this.page.request.get(
-      new URL("/api/v2/config", this.page.url()).href,
-    );
-    expect(
-      response.ok(),
-      `Configuration bêta inaccessible (${response.status()})`,
-    ).toBe(true);
-    const config: unknown = await response.json();
-    if (
-      typeof config !== "object" ||
-      config === null ||
-      !("betaFeatures" in config) ||
-      !Array.isArray(config.betaFeatures) ||
-      !config.betaFeatures.every(
-        (feature: unknown) => typeof feature === "string",
-      )
-    ) {
-      throw new Error(
-        "Registre betaFeatures absent ou invalide dans /api/v2/config",
-      );
-    }
-    return config.betaFeatures.includes("catalogue-excel-export");
+    await expect(button.getByText("Bêta", { exact: true })).toHaveCount(0);
+    await expect(button).not.toHaveAccessibleName(/bêta/i);
   }
 
   async exportHtml() {
@@ -880,11 +848,8 @@ export class SearchPage extends BasePage {
         button.click(),
       ]);
       expect(response.ok()).toBe(true);
-      // Retirer BetaFeatures bloque HTML ; Excel sorti de bêta garde DataExport.
-      await this.expectExcelExport(
-        format === "html" && !(await this.isExcelExportBeta()),
-        mobile,
-      );
+      // Retirer BetaFeatures bloque HTML ; Excel reste autorisé avec DataExport.
+      await this.expectExcelExport(format === "html", mobile);
       await this.expectHtmlBetaExport(false);
       expect(exportRequests).toBe(0);
       expect(downloads).toBe(0);

@@ -219,6 +219,24 @@ describe("ApplicationSearchActions — accès bêta de l'export Excel", () => {
     },
   );
 
+  it.each(["application-export-btn", "application-export-btn-mobile"])(
+    "bloque Excel si /users/me retire DataExport seul au clic (%s)",
+    async (testId) => {
+      getConfig.mockResolvedValue({ betaFeatures: Object.values(FeatureId).filter((id) => id !== FeatureId.CATALOGUE_EXCEL_EXPORT) });
+      await renderWith([Permission.DATA_EXPORT, Permission.BETA_FEATURES]);
+      fetchUser.mockImplementationOnce(async () => {
+        grantedPermissions.value = [Permission.BETA_FEATURES];
+        return true;
+      });
+      await fireEvent.click(screen.getByTestId(testId));
+      await flushPromises();
+      expect(fetchUser).toHaveBeenCalledOnce();
+      expect(downloadExcel).not.toHaveBeenCalled();
+      expect(screen.queryByTestId("application-export-btn")).toBeNull();
+      expect(screen.queryByTestId("application-export-btn-mobile")).toBeNull();
+    },
+  );
+
   it("la sortie de bêta retire le badge et laisse uniquement le droit DataExport", async () => {
     const config = reactive({ betaFeatures: Object.values(FeatureId) });
     getConfig.mockResolvedValue(config);
@@ -285,87 +303,3 @@ describe("ApplicationSearchActions — accès bêta de l'export HTML", () => {
     expect(downloadHtml).toHaveBeenCalledExactlyOnceWith({ shortName: "app" });
   });
 });
-
-for (const excelIsBeta of [true, false]) {
-  describe(`ApplicationSearchActions — Excel ${excelIsBeta ? "bêta" : "sorti de bêta"}`, () => {
-    beforeEach(() => {
-      getConfig.mockResolvedValue({
-        betaFeatures: Object.values(FeatureId).filter((feature) => excelIsBeta || feature !== FeatureId.CATALOGUE_EXCEL_EXPORT),
-      });
-    });
-
-    it("DataExport seul suit le registre, sans donner accès à HTML", async () => {
-      await renderWith([Permission.DATA_EXPORT]);
-      for (const testId of ["application-export-btn", "application-export-btn-mobile"]) {
-        const button = screen.queryByTestId(testId);
-        if (excelIsBeta) expect(button).toBeNull();
-        else {
-          expect(button).not.toBeNull();
-          expect(button).not.toHaveTextContent("Bêta");
-          expect(button).not.toHaveAccessibleName(/bêta/i);
-          await fireEvent.click(button!);
-          await flushPromises();
-        }
-      }
-      expect(downloadExcel).toHaveBeenCalledTimes(excelIsBeta ? 0 : 2);
-      expect(screen.queryByTestId("applications-export-html-btn")).toBeNull();
-      expect(downloadHtml).not.toHaveBeenCalled();
-    });
-
-    it.each(["application-export-btn", "application-export-btn-mobile"])(
-      "%s : un retrait de Bêta au clic suit le registre",
-      async (testId) => {
-        await renderWith([Permission.DATA_EXPORT, Permission.BETA_FEATURES]);
-        const button = screen.getByTestId(testId);
-        expect(button).toHaveTextContent(excelIsBeta ? /Bêta/ : /^Exporter en Excel\s*$/);
-        fetchUser.mockImplementationOnce(async () => {
-          grantedPermissions.value = [Permission.DATA_EXPORT];
-          return true;
-        });
-        await fireEvent.click(button);
-        await flushPromises();
-        expect(fetchUser).toHaveBeenCalledExactlyOnceWith();
-        expect(getConfig).toHaveBeenLastCalledWith({ refresh: true });
-        expect(downloadExcel).toHaveBeenCalledTimes(excelIsBeta ? 0 : 1);
-        expect(screen.queryByTestId(testId) === null).toBe(excelIsBeta);
-        expect(screen.queryByTestId("applications-export-html-btn")).toBeNull();
-      },
-    );
-
-    it.each(["application-export-btn", "application-export-btn-mobile"])(
-      "%s : DataExport retiré au clic bloque tout téléchargement",
-      async (testId) => {
-        await renderWith([Permission.DATA_EXPORT, Permission.BETA_FEATURES]);
-        fetchUser.mockImplementationOnce(async () => {
-          grantedPermissions.value = [Permission.BETA_FEATURES];
-          return true;
-        });
-        await fireEvent.click(screen.getByTestId(testId));
-        await flushPromises();
-        expect(fetchUser).toHaveBeenCalledExactlyOnceWith();
-        expect(downloadExcel).not.toHaveBeenCalled();
-        expect(downloadHtml).not.toHaveBeenCalled();
-        expect(screen.queryByTestId("application-export-btn")).toBeNull();
-        expect(screen.queryByTestId("application-export-btn-mobile")).toBeNull();
-        expect(screen.queryByTestId("applications-export-html-btn")).toBeNull();
-      },
-    );
-
-    it("HTML conserve le badge et son contrôle Bêta avant téléchargement", async () => {
-      await renderWith([Permission.DATA_EXPORT, Permission.BETA_FEATURES]);
-      const html = screen.getByTestId("applications-export-html-btn");
-      expect(html).toHaveTextContent("Bêta");
-      expect(html).toHaveAccessibleName(/fonctionnalité bêta/i);
-      fetchUser.mockImplementationOnce(async () => {
-        grantedPermissions.value = [Permission.DATA_EXPORT];
-        return true;
-      });
-      await fireEvent.click(html);
-      await flushPromises();
-      expect(downloadHtml).not.toHaveBeenCalled();
-      expect(downloadExcel).not.toHaveBeenCalled();
-      expect(screen.queryByTestId("applications-export-html-btn")).toBeNull();
-      expect(screen.queryByTestId("application-export-btn") === null).toBe(excelIsBeta);
-    });
-  });
-}

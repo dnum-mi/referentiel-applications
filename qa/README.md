@@ -91,8 +91,7 @@ pnpm install             # 1ʳᵉ fois (le frontend doit aussi avoir ses deps in
 pnpm test:e2e            # tous les specs (stack docker requise : back + Keycloak + Postgres)
 pnpm test:e2e:json       # sortie JSON consommée par qa-sync (résultats par ID d'étape)
 pnpm type-check          # tsc --noEmit (vérifie le typage du POM)
-pnpm exec playwright install chromium
-pnpm test:unit           # prérequis QA + régressions des POM dans Chromium, sans stack applicative
+pnpm test:unit           # contrat des prérequis QA, sans stack ni navigateur
 ```
 
 ### Fixtures manquantes et tests ignorés

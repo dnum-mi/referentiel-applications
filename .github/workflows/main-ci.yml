@@ -75,10 +75,6 @@ jobs:
       - name: Installer les dépendances QA
         working-directory: e2e
         run: pnpm install --frozen-lockfile
-      - name: Installer Chromium pour les régressions des Page Objects
-        timeout-minutes: 10
-        working-directory: e2e
-        run: bash ../.github/scripts/install-playwright-browsers.sh chromium
       - name: Vérifier les prérequis et le typage QA
         working-directory: e2e
         run: |

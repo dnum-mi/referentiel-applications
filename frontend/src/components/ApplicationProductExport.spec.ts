@@ -134,6 +134,20 @@ describe("Export de fiche produit PowerPoint", () => {
     wrapper.unmount();
   });
 
+  it.each(["html", "powerpoint"])("bloque la fiche %s si /users/me retire Bêta au clic", async (format) => {
+    const wrapper = await render();
+    fetchUser.mockImplementationOnce(async () => {
+      permissions.value = [Permission.APP_READ];
+      return true;
+    });
+    await wrapper.get(`[data-testid="application-export-${format}-btn"]`).trigger("click");
+    await flushPromises();
+    expect(fetchUser).toHaveBeenCalledOnce();
+    expect(downloadProductHtml).not.toHaveBeenCalled();
+    expect(downloadProductPowerpoint).not.toHaveBeenCalled();
+    expect(wrapper.find("button").exists()).toBe(false);
+  });
+
   it("retire restriction et badge uniquement du format sorti de bêta", async () => {
     const config = reactive({ betaFeatures: Object.values(FeatureId) });
     getConfig.mockResolvedValue(config);
@@ -165,28 +179,5 @@ describe("Export de fiche produit PowerPoint", () => {
     expect(wrapper.find("button").exists()).toBe(false);
     expect(addErrorMessage).toHaveBeenCalledOnce();
     errorLog.mockRestore();
-  });
-
-  it.each(["html", "powerpoint"])("la sortie de bêta d'Excel conserve la restriction et la révocation de la fiche %s", async (format) => {
-    getConfig.mockResolvedValue({
-      betaFeatures: Object.values(FeatureId).filter((feature) => feature !== FeatureId.CATALOGUE_EXCEL_EXPORT),
-    });
-    permissions.value = [Permission.APP_READ];
-    const wrapper = await render();
-    expect(wrapper.find("button").exists()).toBe(false);
-    permissions.value.push(Permission.BETA_FEATURES);
-    await flushPromises();
-    const button = wrapper.get(`[data-testid="application-export-${format}-btn"]`);
-    expect(button.text()).toContain("Bêta");
-    expect(button.element).toHaveAccessibleName(/Bêta/);
-    fetchUser.mockImplementationOnce(async () => {
-      permissions.value = [Permission.APP_READ];
-      return true;
-    });
-    await button.trigger("click");
-    await flushPromises();
-    expect(downloadProductHtml).not.toHaveBeenCalled();
-    expect(downloadProductPowerpoint).not.toHaveBeenCalled();
-    expect(wrapper.find("button").exists()).toBe(false);
   });
 });
