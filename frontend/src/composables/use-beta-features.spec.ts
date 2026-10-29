@@ -5,14 +5,19 @@ import { useBetaFeatures } from "./use-beta-features";
 
 const { getConfig, fetchUser, hasPermissions } = vi.hoisted(() => ({ getConfig: vi.fn(), fetchUser: vi.fn(), hasPermissions: vi.fn() }));
 vi.mock("@/services/config", () => ({ getConfig }));
-vi.mock("@/stores/userStore", () => ({ useUserStore: () => ({ fetchUser, hasPermissions }) }));
+vi.mock("@/stores/userStore", () => ({ useUserStore: () => userStore }));
 const permissions = ref<Permission[]>([]);
+const userStore = reactive({ accessRefreshFailed: false, fetchUser, hasPermissions });
 
 beforeEach(() => {
   vi.resetAllMocks();
   permissions.value = [];
+  userStore.accessRefreshFailed = false;
   hasPermissions.mockImplementation((required: Permission[]) => required.some((permission) => permissions.value.includes(permission)));
-  fetchUser.mockResolvedValue(true);
+  fetchUser.mockImplementation(async () => {
+    userStore.accessRefreshFailed = false;
+    return true;
+  });
   getConfig.mockResolvedValue({ betaFeatures: Object.values(FeatureId) });
 });
 
@@ -58,11 +63,57 @@ it.each([false, new Error("réseau")])("bloque si la revalidation de session éc
   permissions.value = [Permission.BETA_FEATURES];
   const beta = useBetaFeatures();
   await flushPromises();
-  if (failure instanceof Error) fetchUser.mockRejectedValueOnce(failure);
-  else fetchUser.mockResolvedValueOnce(failure);
+  fetchUser.mockImplementationOnce(async () => {
+    userStore.accessRefreshFailed = true;
+    if (failure instanceof Error) throw failure;
+    return failure;
+  });
   expect(await beta.authorize(FeatureId.PRODUCT_HTML_EXPORT)).toBe(false);
   expect(beta.canAccess(FeatureId.PRODUCT_HTML_EXPORT)).toBe(false);
 });
+
+it("reste fermé avant la première validation et suit son succès sans remontage", async () => {
+  userStore.accessRefreshFailed = true;
+  getConfig.mockResolvedValue({ betaFeatures: [] });
+  const beta = useBetaFeatures();
+  await flushPromises();
+  expect(beta.canAccess(FeatureId.CATALOGUE_EXCEL_EXPORT)).toBe(false);
+
+  await fetchUser();
+  expect(beta.canAccess(FeatureId.CATALOGUE_EXCEL_EXPORT)).toBe(true);
+});
+
+it("annule un clic périmé sans verrouiller le verdict valide conservé par le store", async () => {
+  permissions.value = [Permission.BETA_FEATURES, Permission.DATA_EXPORT];
+  const beta = useBetaFeatures();
+  await flushPromises();
+  fetchUser.mockResolvedValueOnce(false);
+
+  expect(await beta.authorize(FeatureId.CATALOGUE_EXCEL_EXPORT, [Permission.DATA_EXPORT])).toBe(false);
+  expect(beta.canAccess(FeatureId.CATALOGUE_EXCEL_EXPORT)).toBe(true);
+  expect(await beta.authorize(FeatureId.CATALOGUE_EXCEL_EXPORT, [Permission.DATA_EXPORT])).toBe(true);
+});
+
+it.each([false, new Error("réseau")])(
+  "retrouve les exports après une nouvelle validation réussie, sans remontage (%s)",
+  async (failure) => {
+    permissions.value = [Permission.BETA_FEATURES, Permission.DATA_EXPORT];
+    const beta = useBetaFeatures();
+    await flushPromises();
+    fetchUser.mockImplementationOnce(async () => {
+      userStore.accessRefreshFailed = true;
+      if (failure instanceof Error) throw failure;
+      return failure;
+    });
+    expect(await beta.authorize(FeatureId.CATALOGUE_EXCEL_EXPORT, [Permission.DATA_EXPORT])).toBe(false);
+    expect(beta.canAccess(FeatureId.CATALOGUE_EXCEL_EXPORT)).toBe(false);
+
+    // Une autre revalidation du store peut être déclenchée par les événements OIDC.
+    await fetchUser();
+    expect(beta.canAccess(FeatureId.CATALOGUE_EXCEL_EXPORT)).toBe(true);
+    expect(await beta.authorize(FeatureId.CATALOGUE_EXCEL_EXPORT, [Permission.DATA_EXPORT])).toBe(true);
+  },
+);
 
 it("retire badge et restriction en retirant uniquement la fonctionnalité du registre backend", async () => {
   const config = reactive({ betaFeatures: Object.values(FeatureId) });
