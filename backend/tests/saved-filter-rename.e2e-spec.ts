@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { ConflictException, NotFoundException } from "@nestjs/common";
 import request from "supertest";
-import type { PrismaService } from "src/prisma/prisma.service";
+import { PrismaService } from "src/prisma/prisma.service";
 import { SavedFilterService } from "src/saved-filter/saved-filter.service";
 import { getPrismaClient } from "./fakers/prisma";
 import { getToken } from "./getToken";
@@ -12,6 +12,9 @@ describe("SavedFilterService rename — PostgreSQL (#3095)", () => {
   const prisma = getPrismaClient();
   const service = new SavedFilterService(prisma as unknown as PrismaService);
   const createdUserIds: string[] = [];
+  const observeActionLogWrites = () =>
+    jest.spyOn(app().get(PrismaService).actionLog, "create");
+  let actionLogWrites: ReturnType<typeof observeActionLogWrites>;
   let ownerId: string;
   let otherId: string;
   let filterId: string;
@@ -25,6 +28,7 @@ describe("SavedFilterService rename — PostgreSQL (#3095)", () => {
   };
 
   beforeEach(async () => {
+    actionLogWrites = observeActionLogWrites();
     const owner = await prisma.user.create({
       data: {
         email: `${randomUUID()}@example.test`,
@@ -49,6 +53,17 @@ describe("SavedFilterService rename — PostgreSQL (#3095)", () => {
     filterId = filter.id;
   });
   afterEach(async () => {
+    try {
+      // La réponse HTTP précède la fin de l'écriture du journal d'audit.
+      // Attendre les vrais inserts avant de supprimer les logs et leurs auteurs.
+      await Promise.all(
+        actionLogWrites.mock.results
+          .filter((result) => result.type === "return")
+          .map((result) => result.value),
+      );
+    } finally {
+      actionLogWrites.mockRestore();
+    }
     const ids = createdUserIds.splice(0);
     await prisma.actionLog.deleteMany({ where: { userId: { in: ids } } });
     await prisma.userPermissionLog.deleteMany({
