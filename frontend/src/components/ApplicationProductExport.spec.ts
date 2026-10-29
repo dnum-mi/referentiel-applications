@@ -134,6 +134,20 @@ describe("Export de fiche produit PowerPoint", () => {
     wrapper.unmount();
   });
 
+  it.each(["html", "powerpoint"])("bloque la fiche %s si /users/me retire Bêta au clic", async (format) => {
+    const wrapper = await render();
+    fetchUser.mockImplementationOnce(async () => {
+      permissions.value = [Permission.APP_READ];
+      return true;
+    });
+    await wrapper.get(`[data-testid="application-export-${format}-btn"]`).trigger("click");
+    await flushPromises();
+    expect(fetchUser).toHaveBeenCalledOnce();
+    expect(downloadProductHtml).not.toHaveBeenCalled();
+    expect(downloadProductPowerpoint).not.toHaveBeenCalled();
+    expect(wrapper.find("button").exists()).toBe(false);
+  });
+
   it("retire restriction et badge uniquement du format sorti de bêta", async () => {
     const config = reactive({ betaFeatures: Object.values(FeatureId) });
     getConfig.mockResolvedValue(config);

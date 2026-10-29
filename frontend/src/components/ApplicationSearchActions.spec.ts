@@ -219,6 +219,24 @@ describe("ApplicationSearchActions — accès bêta de l'export Excel", () => {
     },
   );
 
+  it.each(["application-export-btn", "application-export-btn-mobile"])(
+    "bloque Excel si /users/me retire DataExport seul au clic (%s)",
+    async (testId) => {
+      getConfig.mockResolvedValue({ betaFeatures: Object.values(FeatureId).filter((id) => id !== FeatureId.CATALOGUE_EXCEL_EXPORT) });
+      await renderWith([Permission.DATA_EXPORT, Permission.BETA_FEATURES]);
+      fetchUser.mockImplementationOnce(async () => {
+        grantedPermissions.value = [Permission.BETA_FEATURES];
+        return true;
+      });
+      await fireEvent.click(screen.getByTestId(testId));
+      await flushPromises();
+      expect(fetchUser).toHaveBeenCalledOnce();
+      expect(downloadExcel).not.toHaveBeenCalled();
+      expect(screen.queryByTestId("application-export-btn")).toBeNull();
+      expect(screen.queryByTestId("application-export-btn-mobile")).toBeNull();
+    },
+  );
+
   it("la sortie de bêta retire le badge et laisse uniquement le droit DataExport", async () => {
     const config = reactive({ betaFeatures: Object.values(FeatureId) });
     getConfig.mockResolvedValue(config);

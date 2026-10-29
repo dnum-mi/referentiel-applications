@@ -805,8 +805,8 @@ export class SearchPage extends BasePage {
   }
 
   /** Une délégation retirée après rendu est relue avant de lancer le téléchargement. */
-  async expectExcelRevocationBeforeDownload(): Promise<void> {
-    await this.expectExportRevocationBeforeDownload("excel");
+  async expectExcelRevocationBeforeDownload(mobile = false): Promise<void> {
+    await this.expectExportRevocationBeforeDownload("excel", mobile);
   }
 
   async expectHtmlRevocationBeforeDownload(): Promise<void> {
@@ -815,10 +815,13 @@ export class SearchPage extends BasePage {
 
   private async expectExportRevocationBeforeDownload(
     format: "excel" | "html",
+    mobile = false,
   ): Promise<void> {
     const button = this.byTestId(
       format === "excel"
-        ? "application-export-btn"
+        ? mobile
+          ? "application-export-btn-mobile"
+          : "application-export-btn"
         : "applications-export-html-btn",
     );
     await expect(button).toBeVisible();
@@ -846,7 +849,7 @@ export class SearchPage extends BasePage {
       ]);
       expect(response.ok()).toBe(true);
       // Retirer BetaFeatures bloque HTML ; Excel reste autorisé avec DataExport.
-      await this.expectExcelExport(format === "html");
+      await this.expectExcelExport(format === "html", mobile);
       await this.expectHtmlBetaExport(false);
       expect(exportRequests).toBe(0);
       expect(downloads).toBe(0);
