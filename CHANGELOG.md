@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.102.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.102.0...v1.102.1) (2026-10-29)
+
+
+### Bug Fixes
+
+* preserve release refs for image metadata ([#3127](https://github.com/dnum-mi/referentiel-applications/issues/3127)) ([a11940e](https://github.com/dnum-mi/referentiel-applications/commit/a11940e6bcba8b656b6e6dd81c296f8b6b7db123))
+* refresh beta registry when mounting exports ([#3128](https://github.com/dnum-mi/referentiel-applications/issues/3128)) ([7fdc801](https://github.com/dnum-mi/referentiel-applications/commit/7fdc801020529a8e6b9595f57e1dcd31d0a1c5cc))
+
 ## [1.102.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.101.0...v1.102.0) (2026-10-28)
 
 
