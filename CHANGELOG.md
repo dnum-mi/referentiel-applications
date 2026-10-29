@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.102.2](https://github.com/dnum-mi/referentiel-applications/compare/v1.102.1...v1.102.2) (2026-10-29)
+
+
+### Bug Fixes
+
+* allow slow Excel exports to complete ([#3171](https://github.com/dnum-mi/referentiel-applications/issues/3171)) ([993bfb5](https://github.com/dnum-mi/referentiel-applications/commit/993bfb5dc0e6169ad171164589b567ade1df4397))
+* recover exports after session renewal ([#3150](https://github.com/dnum-mi/referentiel-applications/issues/3150)) ([93f36b0](https://github.com/dnum-mi/referentiel-applications/commit/93f36b08f7017808380985b3ea68c500b8857a2e))
+
 ## [1.102.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.102.0...v1.102.1) (2026-10-29)
 
 
