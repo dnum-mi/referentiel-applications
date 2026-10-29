@@ -251,8 +251,12 @@ describe("userStore — niveau d'authentification (#1985)", () => {
   const okResponse = (data: UserWithPermissions) => ({ data, response: { ok: true, status: 200 } });
   const deferred = <T>() => {
     let resolve!: (value: T) => void;
-    const promise = new Promise<T>((r) => (resolve = r));
-    return { promise, resolve };
+    let reject!: (error: Error) => void;
+    const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+      resolve = resolvePromise;
+      reject = rejectPromise;
+    });
+    return { promise, resolve, reject };
   };
 
   const deniedLevel = { level: "weak", downgraded: true, reason: "weak-method" } as const;
@@ -269,6 +273,112 @@ describe("userStore — niveau d'authentification (#1985)", () => {
     expect(store.hasApplicationAccess).toBe(true);
     return store;
   }
+
+  it("garde les exports fermés jusqu'au premier profil validé par le backend", async () => {
+    const pending = deferred<ReturnType<typeof okResponse>>();
+    getUserMock.mockResolvedValueOnce(oidcSession());
+    findMeMock.mockReturnValueOnce(pending.promise);
+    const store = useUserStore();
+    expect(store.accessRefreshFailed).toBe(true);
+    await flushPromises();
+    expect(store.authenticated).toBe(true);
+    expect(store.accessRefreshFailed).toBe(true);
+
+    pending.resolve(okResponse(me(undefined, "READER")));
+    await flushPromises();
+    expect(store.accessRefreshFailed).toBe(false);
+  });
+
+  it.each([401, 403, 500])("bloque les exports après un refus HTTP %s puis accepte une revalidation réussie", async (status) => {
+    const store = await startVerifiedSession();
+    expect(store.accessRefreshFailed).toBe(false);
+    findMeMock.mockResolvedValueOnce({ response: { ok: false, status } });
+    await expect(store.fetchUser()).resolves.toBe(false);
+    expect(store.accessRefreshFailed).toBe(true);
+
+    await expect(store.fetchUser()).resolves.toBe(true);
+    expect(store.accessRefreshFailed).toBe(false);
+  });
+
+  it("conserve l'erreur réseau d'un fetch ordinaire et retire le verrou au prochain succès", async () => {
+    const store = await startVerifiedSession();
+    findMeMock.mockRejectedValueOnce(new Error("Indisponible"));
+    await expect(store.fetchUser()).rejects.toThrow("Indisponible");
+    expect(store.accessRefreshFailed).toBe(true);
+
+    await expect(store.fetchUser()).resolves.toBe(true);
+    expect(store.accessRefreshFailed).toBe(false);
+  });
+
+  it.each(["succès", "refus", "réseau"] as const)(
+    "ne remplace pas une validation réussie par une réponse périmée : %s",
+    async (outcome) => {
+      const store = await startVerifiedSession();
+      const stale = deferred<ReturnType<typeof okResponse> | typeof deniedResponse>();
+      findMeMock.mockReturnValueOnce(stale.promise);
+      const first = store.fetchUser();
+      await expect(store.fetchUser()).resolves.toBe(true);
+
+      if (outcome === "réseau") stale.reject(new Error("Ancienne requête indisponible"));
+      else stale.resolve(outcome === "refus" ? deniedResponse : okResponse(me(undefined)));
+      await expect(first).resolves.toBe(false);
+      expect(store.accessRefreshFailed).toBe(false);
+      expect(store.hasApplicationAccess).toBe(true);
+    },
+  );
+
+  it.each(["refus", "réseau"] as const)(
+    "un ancien succès ne lève pas le verrou d'une requête plus récente en échec : %s",
+    async (failure) => {
+      const store = await startVerifiedSession();
+      const stale = deferred<ReturnType<typeof okResponse>>();
+      findMeMock.mockReturnValueOnce(stale.promise);
+      const first = store.fetchUser();
+      if (failure === "réseau") {
+        findMeMock.mockRejectedValueOnce(new Error("Indisponible"));
+        await expect(store.fetchUser()).rejects.toThrow("Indisponible");
+      } else {
+        findMeMock.mockResolvedValueOnce(deniedResponse);
+        await expect(store.fetchUser()).resolves.toBe(false);
+      }
+      stale.resolve(okResponse(me(undefined)));
+      await expect(first).resolves.toBe(false);
+      expect(store.accessRefreshFailed).toBe(true);
+    },
+  );
+
+  it("ne rouvre pas les exports sur une réponse périmée pendant que la nouvelle validation attend", async () => {
+    const store = await startVerifiedSession();
+    findMeMock.mockResolvedValueOnce({ response: { ok: false, status: 500 } });
+    await store.fetchUser();
+    const stale = deferred<ReturnType<typeof okResponse>>();
+    const fresh = deferred<ReturnType<typeof okResponse>>();
+    findMeMock.mockReturnValueOnce(stale.promise).mockReturnValueOnce(fresh.promise);
+    const first = store.fetchUser();
+    const second = store.fetchUser();
+    stale.resolve(okResponse(me(undefined)));
+    await expect(first).resolves.toBe(false);
+    expect(store.accessRefreshFailed).toBe(true);
+
+    fresh.resolve(okResponse(me(undefined)));
+    await expect(second).resolves.toBe(true);
+    expect(store.accessRefreshFailed).toBe(false);
+  });
+
+  it.each(["déconnexion", "refus MFA"] as const)("un succès périmé ne rouvre pas les exports après %s", async (cause) => {
+    const store = await startVerifiedSession();
+    const pending = deferred<ReturnType<typeof okResponse>>();
+    findMeMock.mockReturnValueOnce(pending.promise);
+    const fetching = store.fetchUser();
+    if (cause === "déconnexion") oidcEvents.unloaded();
+    else store.requireStrongAuth(deniedLevel);
+    expect(store.accessRefreshFailed).toBe(true);
+
+    pending.resolve(okResponse(me(undefined)));
+    await expect(fetching).resolves.toBe(false);
+    expect(store.accessRefreshFailed).toBe(true);
+    expect(store.hasApplicationAccess).toBe(false);
+  });
 
   it("conserve la vue pendant un renouvellement de la même session puis applique les droits revalidés", async () => {
     const store = await startVerifiedSession();
