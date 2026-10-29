@@ -1,4 +1,9 @@
-import { HttpException, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  ConflictException,
+  HttpException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ApplicationService } from "src/applications/application.service";
@@ -91,7 +96,14 @@ export class CompliancesService extends BaseService<
   async calculateAndStoreLatestEcoIndex(
     applicationId: string,
   ): Promise<Compliance> {
-    const complianceRecord = await this.findByApplicationId(applicationId);
+    const complianceRecord = await this.prisma.compliance.findUnique({
+      where: { applicationId },
+      select: {
+        id: true,
+        eco_index_target_url: true,
+        eco_index_target_revision: true,
+      },
+    });
     const targetUrl = complianceRecord?.eco_index_target_url;
 
     if (!targetUrl?.startsWith("http")) {
@@ -118,15 +130,23 @@ export class CompliancesService extends BaseService<
       eco_index_water: water,
       eco_index_last_calculated_at: calculatedAt,
     };
-    return this.prisma.compliance.upsert({
-      where: { applicationId },
-      create: {
-        applicationId,
-        ...data,
-      },
-      update: {
-        ...data,
-      },
-    }) as unknown as Compliance;
+    return this.prisma.$transaction(async (tx) => {
+      const { count } = await tx.compliance.updateMany({
+        where: {
+          id: complianceRecord.id,
+          eco_index_target_url: targetUrl,
+          eco_index_target_revision: complianceRecord.eco_index_target_revision,
+        },
+        data,
+      });
+      if (count === 0) {
+        throw new ConflictException(
+          "La cible EcoIndex a été modifiée ou supprimée pendant le calcul. Résultat ignoré. Vérifiez l’URL actuelle puis relancez le calcul.",
+        );
+      }
+      return tx.compliance.findUniqueOrThrow({
+        where: { id: complianceRecord.id },
+      });
+    }) as unknown as Promise<Compliance>;
   }
 }

@@ -46,7 +46,10 @@ export class PrismaService
       },
       // Secret : absent de toute ligne User lue (Requestor, listes d'administration…) tant
       // qu'une requête ne le sélectionne pas explicitement (`select: { gristApiKey: true }`).
-      omit: { user: { gristApiKey: true } },
+      omit: {
+        user: { gristApiKey: true },
+        compliance: { eco_index_target_revision: true },
+      },
     });
     Object.assign(this, withExtensions(this as unknown as PrismaClient));
   }

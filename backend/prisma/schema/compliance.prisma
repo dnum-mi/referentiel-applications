@@ -72,6 +72,8 @@ model Compliance {
   eco_index_water              Float?
   /// EcoIndex : URL cible utilisée pour le calcul
   eco_index_target_url         String?
+  /// Révision interne de la cible EcoIndex, incrémentée par PostgreSQL
+  eco_index_target_revision    Int       @default(0)
   /// EcoIndex : Date du dernier calcul
   eco_index_last_calculated_at DateTime?
 }
