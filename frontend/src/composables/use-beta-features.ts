@@ -43,7 +43,9 @@ export function useBetaFeatures() {
     return canAccess(feature) && requiredPermissions.every((permission) => userStore.hasPermissions([permission]));
   }
 
-  void refreshConfiguration();
+  // Le démarrage OIDC peut avoir mis en cache un registre antérieur au déploiement.
+  // Relire au montage garde le backend autoritaire ; getConfig déduplique les appels simultanés.
+  void refreshConfiguration(true);
 
   return { isBeta, canAccess, authorize, refreshAccess };
 }
