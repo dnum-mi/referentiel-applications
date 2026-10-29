@@ -237,6 +237,8 @@ describe("applicationStore.downloadExcel — filtres technologies", () => {
     await useApplicationStore().downloadExcel({ technologyEolStatus: "eol", search: "portail", page: 2, pageSize: 15, order: "desc" });
     expect(exportExcelMock).toHaveBeenCalledExactlyOnceWith({
       query: { technologyEolStatus: "eol", search: "portail", page: 2, pageSize: 0, order: "desc" },
+      parseAs: "blob",
+      fetch: expect.any(Function),
     });
     expect(downloadUtils.downloadBlob).toHaveBeenCalledExactlyOnceWith(
       expect.any(Blob),

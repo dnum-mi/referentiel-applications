@@ -20,6 +20,9 @@ import { downloadBlob } from "@/utils/download-blob";
 /// Délai de la synchronisation Grist, bien au-delà du délai par défaut des appels d'API.
 const GRIST_SYNC_TIMEOUT_MS = 5 * 60_000;
 
+// La génération du catalogue complet peut dépasser le délai des appels API ordinaires.
+const EXCEL_EXPORT_TIMEOUT_MS = 5 * 60_000;
+
 export const useApplicationStore = defineStore("applicationStore", () => {
   const applicationsById = ref<Record<string, ApplicationWithPerms>>({});
   const currentAppId = ref<string>();
@@ -119,10 +122,12 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     cleanedFilters.pageSize = 0;
     const response = await api.applicationControllerExportExcel({
       query: cleanedFilters,
+      parseAs: "blob",
+      fetch: (input, init) => fetchWithTimeout(input, init, EXCEL_EXPORT_TIMEOUT_MS),
     });
 
     if (!isApiSuccess(response) || !response.data) {
-      throw new Error("Erreur lors de l'export Excel.");
+      throw new Error("Erreur lors de l'export Excel.", { cause: response.error });
     }
 
     return new Blob([response.data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
