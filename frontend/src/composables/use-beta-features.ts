@@ -7,7 +7,6 @@ import { useUserStore } from "@/stores/userStore";
 export function useBetaFeatures() {
   const userStore = useUserStore();
   const betaFeatures = ref<FeatureId[]>();
-  const accessRefreshFailed = ref(false);
 
   async function refreshConfiguration(refresh = false) {
     try {
@@ -25,15 +24,18 @@ export function useBetaFeatures() {
   function canAccess(feature: FeatureId) {
     return (
       betaFeatures.value !== undefined &&
-      !accessRefreshFailed.value &&
+      !userStore.accessRefreshFailed &&
       (!isBeta(feature) || userStore.hasPermissions([Permission.BETA_FEATURES]))
     );
   }
 
   async function refreshAccess() {
     const [permissions] = await Promise.allSettled([userStore.fetchUser(), refreshConfiguration(true)]);
-    accessRefreshFailed.value = permissions.status !== "fulfilled" || permissions.value !== true;
-    return !accessRefreshFailed.value && betaFeatures.value !== undefined;
+    // Un false peut désigner une réponse périmée : le store conserve le verdict
+    // de la revalidation courante. Le clic dépassé reste annulé.
+    return (
+      permissions.status === "fulfilled" && permissions.value === true && !userStore.accessRefreshFailed && betaFeatures.value !== undefined
+    );
   }
 
   async function authorize(feature: FeatureId, requiredPermissions: Permission[] = []) {
@@ -43,7 +45,9 @@ export function useBetaFeatures() {
     return canAccess(feature) && requiredPermissions.every((permission) => userStore.hasPermissions([permission]));
   }
 
-  void refreshConfiguration();
+  // Le démarrage OIDC peut avoir mis en cache un registre antérieur au déploiement.
+  // Relire au montage garde le backend autoritaire ; getConfig déduplique les appels simultanés.
+  void refreshConfiguration(true);
 
   return { isBeta, canAccess, authorize, refreshAccess };
 }

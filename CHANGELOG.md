@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.102.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.102.0...v1.102.1) (2026-10-29)
+
+
+### Bug Fixes
+
+* preserve release refs for image metadata ([#3127](https://github.com/dnum-mi/referentiel-applications/issues/3127)) ([a11940e](https://github.com/dnum-mi/referentiel-applications/commit/a11940e6bcba8b656b6e6dd81c296f8b6b7db123))
+* refresh beta registry when mounting exports ([#3128](https://github.com/dnum-mi/referentiel-applications/issues/3128)) ([7fdc801](https://github.com/dnum-mi/referentiel-applications/commit/7fdc801020529a8e6b9595f57e1dcd31d0a1c5cc))
+
+## [1.102.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.101.0...v1.102.0) (2026-10-28)
+
+
+### Features
+
+* rename personal saved filters ([#3104](https://github.com/dnum-mi/referentiel-applications/issues/3104)) ([e75a5fe](https://github.com/dnum-mi/referentiel-applications/commit/e75a5fed303b7c2c331fe8011c55a935b8d9ff45))
+
+
+### Bug Fixes
+
+* remove unauthenticated application navigation ([#3103](https://github.com/dnum-mi/referentiel-applications/issues/3103)) ([d3ba405](https://github.com/dnum-mi/referentiel-applications/commit/d3ba4055d797f33603765cb8e1a9700b4f3da72f))
+* remove vulnerability from image docker frontback ([#3102](https://github.com/dnum-mi/referentiel-applications/issues/3102)) ([da265d2](https://github.com/dnum-mi/referentiel-applications/commit/da265d2913c2514465ffbffc7297a9711aa1d87b))
+
 ## [1.101.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.100.0...v1.101.0) (2026-10-28)
 
 

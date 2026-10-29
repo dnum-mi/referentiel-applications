@@ -38,6 +38,9 @@ export const useUserStore = defineStore("userStore", () => {
   const authenticated = ref(false);
   const sessionInitialized = ref(false);
   const deniedAuthLevel = ref<AuthLevelDto>();
+  // Les fonctionnalités restent fermées avant validation ; seule la réponse /me
+  // courante peut ensuite les verrouiller ou les rétablir.
+  const accessRefreshFailed = ref(true);
   // Toutes les réponses sont rattachées à la session qui les a lancées, y compris les
   // préférences et abonnements. Un événement OIDC invalide aussi l'initialisation en cours.
   let sessionGeneration = 0;
@@ -54,6 +57,7 @@ export const useUserStore = defineStore("userStore", () => {
     requiresSessionRevalidation = false;
     user.value = undefined;
     deniedAuthLevel.value = undefined;
+    accessRefreshFailed.value = true;
   }
   // État d'impersonation restauré depuis le localStorage (survit au rechargement).
   const impersonation = ref<ImpersonationState | null>(getImpersonationState());
@@ -134,6 +138,7 @@ export const useUserStore = defineStore("userStore", () => {
       response = await client.userControllerFindMe();
     } catch (error) {
       if (generation !== sessionGeneration || sequence !== fetchSequence) return false;
+      accessRefreshFailed.value = true;
       if (!requiresSessionRevalidation) throw error;
       invalidateSession();
       return false;
@@ -143,10 +148,12 @@ export const useUserStore = defineStore("userStore", () => {
       requiresSessionRevalidation = false;
       deniedAuthLevel.value = undefined;
       user.value = response.data;
+      accessRefreshFailed.value = false;
       settleReauthAttempt();
       notifyStepDown();
       return true;
     }
+    accessRefreshFailed.value = true;
     if (response.response?.status === 403 && isStrongAuthRequiredResponse(response.error)) {
       requireStrongAuth(response.error.authLevel);
       return false;
@@ -330,6 +337,7 @@ export const useUserStore = defineStore("userStore", () => {
     userRole,
     authenticated,
     fetchUser,
+    accessRefreshFailed,
     updateEmailPreferences,
     updateGristSettings,
     isSubscribed,
