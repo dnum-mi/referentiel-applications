@@ -2,11 +2,16 @@ import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils";
 import type { ActorTypeDto, CreateActorDto } from "@/client/types.gen";
 import ActorForm from "./ActorForm.vue";
 
+const { syncMaia } = vi.hoisted(() => ({ syncMaia: vi.fn() }));
+vi.mock("@/api/index.js", () => ({
+  default: { userControllerSyncOrganizationFromMaiaByEmail: syncMaia },
+}));
 vi.mock("@/stores/organizationStore", () => ({
   useOrganizationStore: () => ({ getById: vi.fn().mockResolvedValue({ id: "org-1", path: "MI/DNUM" }) }),
 }));
 vi.mock("@/stores/toasterStore", () => ({ useToasterStore: () => ({ addErrorMessage: vi.fn(), addSuccessMessage: vi.fn() }) }));
 enableAutoUnmount(afterEach);
+beforeEach(() => syncMaia.mockReset());
 afterEach(() => vi.restoreAllMocks());
 
 const actorTypes: ActorTypeDto[] = [{ id: "type-1", code: "MOA", label: "Maîtrise d’ouvrage", isDefault: false }];
@@ -84,5 +89,42 @@ describe("ActorForm — confirmation des modifications personnelles", () => {
     await wrapper.get('[data-testid="actor-submit-btn"]').trigger("click");
     expect(wrapper.emitted("submit")).toHaveLength(1);
     expect(confirm).not.toHaveBeenCalled();
+  });
+
+  it("complète depuis MAIA puis soumet un acteur avec une adresse externe", async () => {
+    const email = "camille@finances.example.test";
+    syncMaia.mockResolvedValueOnce({
+      response: { ok: true },
+      data: { firstName: "Camille", lastName: "Martin", organizationId: "org-1" },
+    });
+    const wrapper = await renderForm(false);
+    await wrapper.get('[data-testid="actor-type-select"]').setValue("type-1");
+    await wrapper.get('[data-testid="actor-email-input"]').setValue(email);
+    expect(wrapper.get('[data-testid="actor-submit-btn"]').element).toBeDisabled();
+
+    await wrapper.get('[data-testid="admin-user-sync-maia-btn"]').trigger("click");
+    await flushPromises();
+
+    expect(syncMaia).toHaveBeenCalledExactlyOnceWith({ path: { email } });
+    expect(wrapper.get('[data-testid="actor-email-input"]').element).toHaveValue(email);
+    expect(wrapper.get('[data-testid="actor-firstname-input"]').element).toHaveValue("Camille");
+    expect(wrapper.get('[data-testid="actor-lastname-input"]').element).toHaveValue("Martin");
+    expect(wrapper.get("select:not([data-testid])").element).toHaveValue("org-1");
+    expect(wrapper.get('[data-testid="actor-submit-btn"]').element).not.toBeDisabled();
+
+    await wrapper.get('[data-testid="actor-submit-btn"]').trigger("click");
+    expect(wrapper.emitted("submit")).toEqual([
+      [
+        {
+          actorTypeId: "type-1",
+          applicationId: "app-1",
+          isGroup: false,
+          email,
+          firstname: "Camille",
+          lastname: "Martin",
+          organizationId: "org-1",
+        },
+      ],
+    ]);
   });
 });

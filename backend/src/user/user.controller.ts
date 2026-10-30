@@ -166,25 +166,23 @@ export class UserController {
     return { ...user, followedApplications: updated.followedApplications };
   }
 
-  // #2365 : route de LECTURE (interroge MAIA sans rien modifier), utilisée pour préremplir le
-  // formulaire acteur. `AdminPanelManage` était trop haut — un contributeur habilité à saisir un
-  // acteur doit pouvoir l'utiliser. Restreinte à AppList (Lecteur et au-delà), pas aux VISITEURS.
+  // #2365 : préremplissage du formulaire acteur, sans créer ni modifier de compte.
+  // AppList autorise la consultation, y compris pour une personne externe à RefApp.
   @Get("by-email/:email/sync-organization-from-maia")
   @RequiredPermissions([Permission.AppList])
   @ApiOperation({
-    summary: "Récupérer les informations MAIA d'un utilisateur par email",
+    summary: "Récupérer les informations MAIA d'une personne par email",
     description:
-      "Interroge MAIA pour récupérer l'organisation et les informations personnelles associées à cet email, sans modifier l'utilisateur en base.",
+      "Interroge MAIA à partir de l'email, même sans compte RefApp. Résout ou crée l'organisation pour préremplir un acteur, sans créer ni modifier de compte utilisateur.",
   })
-  @ApiParam({ name: "email", description: "Email de l'utilisateur" })
+  @ApiParam({ name: "email", description: "Email de la personne recherchée" })
   @ApiOkResponse({
     description: "Informations MAIA récupérées",
     type: MaiaOrganizationSuggestionDto,
   })
   @ApiForbiddenResponse({
-    description: "Accès refusé - Privilège admin requis",
+    description: "Accès refusé - Permission AppList requise",
   })
-  @ApiNotFoundResponse({ description: "Utilisateur non trouvé" })
   async syncOrganizationFromMaiaByEmail(@Param("email") email: string) {
     return this.userService.syncOrganizationFromMaiaByEmail(email);
   }

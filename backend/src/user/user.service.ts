@@ -538,15 +538,8 @@ export class UserService {
   }
 
   async syncOrganizationFromMaiaByEmail(email: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { email },
-      select: { id: true, email: true },
-    });
-
-    if (!user) {
-      throw new NotFoundException("Utilisateur non trouvé");
-    }
-
+    // Un acteur référencé peut ne jamais se connecter : la recherche MAIA ne
+    // nécessite pas de compte utilisateur RefApp et n'en crée pas.
     const [organizationPath, { lastName, firstName, fullName }] =
       await Promise.all([
         getOrganizationPathFromMaia(email),
