@@ -496,3 +496,11 @@ En `observe`, le niveau est visible dans le profil sans effet sur l'accès. L'ac
 ---
 
 **Voir aussi :** [Modèle de données](./04-modele-de-donnees.md) · [Permissions et sécurité](./06-permissions-et-securite.md) · [Architecture frontend](./09-architecture-frontend.md) · [Accessibilité RGAA](./10-accessibilite-rgaa.md).
+
+## Rappel d’expiration des jetons API
+
+Un traitement horaire envoie une notification in-app au créateur humain d’un jeton actif, personnel ou de service, lorsqu’il expire dans les 168 prochaines heures. Le message contient son nom, son échéance (heure de Paris) et un lien vers **Profil → Mes tokens**. Aucun secret ni hash n’est inclus, et les permissions de régénération restent inchangées.
+
+Chaque échéance est notifiée au plus une fois, même après suppression de la notification ou redémarrage. Une régénération avec une autre échéance permet un nouveau rappel. Un jeton révoqué ou déjà expiré est ignoré. Un créateur bloqué ou non humain ne reçoit rien ; un compte débloqué avant expiration redevient éligible. Aucun destinataire de remplacement, email ou renouvellement automatique n’est prévu.
+
+Les rappels et leur journal sont enregistrés dans une même transaction. Un échec est journalisé puis retenté au passage suivant. Le backend doit fonctionner avant l’expiration ; le premier passage après déploiement traite aussi les jetons déjà dans la fenêtre de sept jours.

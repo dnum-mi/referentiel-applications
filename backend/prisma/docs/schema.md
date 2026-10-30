@@ -1383,6 +1383,10 @@ erDiagram
   DateTime sentAt
   Boolean wasSent
 }
+"TokenExpirationReminder" {
+  String tokenId FK
+  DateTime expiresAt
+}
 "UserPermissionLog" {
   String id PK
   String userId FK
@@ -1447,6 +1451,15 @@ Properties as follows:
 - `wasSent`
   > Faux si généré alors que les envois SMTP étaient désactivés : le contenu reste consultable
   > (notification in-app, historique admin) mais aucun e-mail réel n'est parti (#2411).
+
+### `TokenExpirationReminder`
+
+Échéances déjà notifiées, indépendamment de la suppression des notifications.
+
+Properties as follows:
+
+- `tokenId`:
+- `expiresAt`:
 
 ### `UserPermissionLog`
 

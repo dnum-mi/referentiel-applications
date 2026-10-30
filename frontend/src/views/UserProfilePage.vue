@@ -6,9 +6,18 @@ import UserInfoTab from "@/components/users/UserInfoTab.vue";
 import UserTokensTab from "@/components/users/UserTokensTab.vue";
 import { useUserStore } from "@/stores/userStore";
 import { computed, nextTick, ref, useTemplateRef, watch } from "vue";
+import { useRoute } from "vue-router";
 
 const userStore = useUserStore();
 const activeTab = ref(0);
+const route = useRoute();
+watch(
+  () => route.query.tab,
+  (tab) => {
+    if (tab === "tokens") activeTab.value = 1;
+  },
+  { immediate: true },
+);
 const profileRoot = useTemplateRef<HTMLElement>("profileRoot");
 
 // Onglet réservé aux utilisateurs qui peuvent synchroniser avec Grist ; placé en dernier pour ne pas
