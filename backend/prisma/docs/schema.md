@@ -409,6 +409,7 @@ erDiagram
   Float eco_index_ges "nullable"
   Float eco_index_water "nullable"
   String eco_index_target_url "nullable"
+  Int eco_index_target_revision
   DateTime eco_index_last_calculated_at "nullable"
 }
 "RgaaCompliance" {
@@ -457,6 +458,7 @@ Properties as follows:
 - `eco_index_ges`: EcoIndex : Émissions de gaz à effet de serre (gCO2e)
 - `eco_index_water`: EcoIndex : Consommation d'eau (centilitres)
 - `eco_index_target_url`: EcoIndex : URL cible utilisée pour le calcul
+- `eco_index_target_revision`: Révision interne de la cible EcoIndex, incrémentée par PostgreSQL
 - `eco_index_last_calculated_at`: EcoIndex : Date du dernier calcul
 
 ### `RgaaCompliance`

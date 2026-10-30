@@ -10,6 +10,7 @@ import {
 } from "@nestjs/common";
 import {
   ApiBadGatewayResponse,
+  ApiConflictResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
@@ -137,6 +138,11 @@ export class ApplicationCompliancesController {
   @ApiOkResponse({
     description: "Score EcoIndex calculé et enregistré avec succès",
     type: ComplianceDto,
+  })
+  @ApiConflictResponse({
+    description:
+      "La cible EcoIndex a été modifiée ou supprimée pendant le calcul. Résultat ignoré. Vérifiez l’URL actuelle puis relancez le calcul.",
+    type: ApiErrorDto,
   })
   @ApiBadGatewayResponse({
     description:

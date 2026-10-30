@@ -5046,6 +5046,13 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ComplianceDto"
+        "409":
+          description: La cible EcoIndex a été modifiée ou supprimée pendant le calcul.
+            Résultat ignoré. Vérifiez l’URL actuelle puis relancez le calcul.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorDto"
         "502":
           description: "Le site cible est injoignable ou a renvoyé une erreur : le score
             n'a pas pu être calculé."

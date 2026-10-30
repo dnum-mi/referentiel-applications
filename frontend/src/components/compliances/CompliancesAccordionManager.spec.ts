@@ -28,7 +28,8 @@ function renderManager() {
         DsfrModal: true,
         RefAppTable: {
           props: ["items"],
-          template: '<div><div v-for="item in items" :key="item.type"><slot name="body-Actions" :data="item" /></div></div>',
+          template:
+            '<div><div v-for="item in items" :key="item.type"><span>{{ item.preview }}</span><slot name="body-Actions" :data="item" /></div></div>',
         },
       },
     },
@@ -89,4 +90,26 @@ it("ne reprend pas le focus déplacé pendant un calcul réussi", async () => {
   await waitFor(() => expect(mocks.success).toHaveBeenCalledWith("Scan EcoIndex effectué avec succès."));
   expect(outside).toHaveFocus();
   outside.remove();
+});
+
+it.each([false, true])("recharge la cible après un conflit sans relancer le scan (mobile=%s)", async (mobile) => {
+  mocks.mobile = mobile;
+  const message =
+    "La cible EcoIndex a été modifiée ou supprimée pendant le calcul. Résultat ignoré. Vérifiez l’URL actuelle puis relancez le calcul.";
+  mocks.scan.mockResolvedValue({ response: { ok: false, status: 409 }, error: { message } });
+  renderManager();
+  await flushPromises();
+  mocks.find.mockResolvedValue({
+    response: { ok: true },
+    data: { ...compliance, eco_index_target_url: "https://current.example.test", eco_index_score: null },
+  });
+  const button = await screen.findByTestId("compliance-scan-ecoindex-btn");
+  await fireEvent.click(button);
+  await waitFor(() => expect(mocks.find).toHaveBeenCalledTimes(2));
+  await waitFor(() => expect(screen.getByTestId("compliance-scan-ecoindex-btn")).toHaveAttribute("aria-disabled", "false"));
+  expect(screen.getAllByText("Non calculé").length).toBeGreaterThan(0);
+  expect(screen.queryByText(/65\/100/)).not.toBeInTheDocument();
+  expect(mocks.error).toHaveBeenCalledWith(message);
+  expect(mocks.scan).toHaveBeenCalledTimes(1);
+  expect(mocks.success).not.toHaveBeenCalled();
 });

@@ -252,6 +252,7 @@ async function runEcoIndexScan() {
     // (502). Afficher son message plutôt qu'un diagnostic unique, et souvent faux.
     if (!isApiSuccess(response)) {
       toaster.addErrorMessage(backendErrorMessage(response.error) ?? "Erreur lors du scan EcoIndex.");
+      if (response.response?.status === 409) await fetchCompliance();
       return;
     }
     compliance.value = response.data ?? compliance.value;
