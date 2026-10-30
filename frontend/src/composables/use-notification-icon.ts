@@ -1,6 +1,7 @@
 import { NotificationType } from "@/client/types.gen";
 
 const iconByType: Record<NotificationType, string> = {
+  [NotificationType.TOKEN_EXPIRATION_REMINDER]: "fr-icon-time-line",
   [NotificationType.REPORT_CREATED]: "fr-icon-flag-line",
   [NotificationType.REPORT_STATUS_CHANGED]: "fr-icon-flag-line",
   [NotificationType.ACTOR_ADDED]: "fr-icon-user-add-line",
