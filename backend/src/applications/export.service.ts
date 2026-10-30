@@ -108,8 +108,14 @@ export class ApplicationExportService {
     const fullText = searchParams.q?.trim();
     if (prefixText || fullText) {
       const ranked = prefixText
-        ? await this.applicationSearchService.fullTextSearchPrefix(prefixText)
-        : await this.applicationSearchService.fullTextSearch(fullText!);
+        ? await this.applicationSearchService.fullTextSearchPrefix(
+            prefixText,
+            requestor,
+          )
+        : await this.applicationSearchService.fullTextSearch(
+            fullText!,
+            requestor,
+          );
       where.AND.push({ id: { in: ranked.map(({ id }) => id) } });
     }
     return where;

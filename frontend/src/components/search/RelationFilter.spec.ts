@@ -14,6 +14,7 @@ vi.mock("vue-router", () => ({ useRoute: () => routeMock, useRouter: () => ({ re
 vi.mock("@/stores/statisticsStore", () => ({
   useStatisticsStore: () => ({ countApplications: vi.fn().mockResolvedValue(0), countTechnicalDebtPoints: vi.fn() }),
 }));
+vi.mock("@/stores/userStore", () => ({ useUserStore: () => ({ hasApplicationAccess: true }) }));
 
 describe("RelationFilter — pagination de la recherche", () => {
   let wrapper: VueWrapper;

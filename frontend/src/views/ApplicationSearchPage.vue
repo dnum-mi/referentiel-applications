@@ -5,12 +5,16 @@ import ApplicationSearchActions from "@/components/ApplicationSearchActions.vue"
 import ApplicationTableView from "@/components/ApplicationTableView.vue";
 import SidebarFilters from "@/components/search/SidebarFilter.vue";
 import { useApplicationSearch } from "@/composables/use-application-search";
+import { useSearchAccessContext } from "@/composables/use-search-access-context";
 import { useStatisticsStore } from "@/stores/statisticsStore";
+import { useUserStore } from "@/stores/userStore";
 import { useMediaQuery } from "@vueuse/core";
-import { computed, onMounted } from "vue";
+import { computed, onMounted, watch } from "vue";
 
 const statsStore = useStatisticsStore();
 const { isLoading, searchApplications, averageIq, total, page, pageSize, error } = useApplicationSearch();
+const userStore = useUserStore();
+const accessContext = useSearchAccessContext();
 
 const isMobile = useMediaQuery("(max-width: 768px)");
 
@@ -18,6 +22,16 @@ onMounted(() => {
   statsStore.countApplications();
   searchApplications().catch(() => {});
 });
+
+// Le composable purge immédiatement les données de l'ancien contexte. Seule la
+// page du catalogue relance ensuite sa recherche, avec les filtres conservés.
+watch(
+  accessContext,
+  () => {
+    if (userStore.hasApplicationAccess) searchApplications().catch(() => {});
+  },
+  { flush: "post" },
+);
 
 const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
 

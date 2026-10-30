@@ -18,6 +18,7 @@ const filters = ref<Filters>({});
 
 vi.mock("@/api/index.js", () => ({ default: {} }));
 vi.mock("@/stores/statisticsStore", () => ({ useStatisticsStore: vi.fn() }));
+vi.mock("@/stores/userStore", () => ({ useUserStore: () => ({ hasApplicationAccess: true }) }));
 vi.mock("@/composables/use-application-search", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/composables/use-application-search")>()),
   useApplicationSearch: () => ({ filters, setFilter }),

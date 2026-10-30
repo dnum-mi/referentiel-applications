@@ -14,6 +14,7 @@ const { fetchRelations, addErrorMessage, addSuccessMessage } = vi.hoisted(() => 
 vi.mock("@/api/index", () => ({ default: { relationControllerFindAll: fetchRelations } }));
 vi.mock("@/stores/toasterStore", () => ({ useToasterStore: () => ({ addErrorMessage, addSuccessMessage }) }));
 vi.mock("@/composables/use-app-permission", () => ({ useAppPermission: () => computed(() => true) }));
+vi.mock("@/stores/userStore", () => ({ useUserStore: () => ({ hasApplicationAccess: true }) }));
 
 type RelationsResponse = { response: { ok: boolean }; data: RelationDto[] };
 function deferred() {
