@@ -304,4 +304,29 @@ describe("useApplicationSearch — debounce partagé", () => {
     await expect(currentSearch).resolves.toMatchObject({ results: [{ id: "résultat-actualisé" }] });
     expect(search.results.value[0].id).toBe("résultat-actualisé");
   });
+
+  it("aligne le compteur TIME sur les points du millésime demandé, pas sur le nombre total de fiches", async () => {
+    const search = scope.run(() => useApplicationSearch())!;
+    const common = { id: "common", label: "Application commune" };
+    const historical = { id: "historical", label: "Évaluée uniquement en 2025" };
+    const incomplete = { id: "incomplete", label: "Évaluation incomplète" };
+    const points2025 = [
+      { ...common, technicalDebtInfo: { technicalMaturity: 1, businessMaturity: 5, costContainment: 1 } },
+      { ...historical, technicalDebtInfo: { technicalMaturity: 4, businessMaturity: 4, costContainment: 2 } },
+    ];
+    const points2026 = [{ ...common, technicalDebtInfo: { technicalMaturity: 5, businessMaturity: 1, costContainment: 5 } }];
+
+    for (const millesime of [2025, 2026, 2025]) {
+      const technicalDebtPoints = millesime === 2025 ? points2025 : points2026;
+      searchMock.mockResolvedValueOnce({
+        response: { ok: true },
+        data: { results: [common, historical, incomplete], total: 3, technicalDebtPoints, averageIq: 75 },
+      });
+      await search.searchApplications({ millesime, pageSize: 0 });
+      expect(searchMock).toHaveBeenLastCalledWith(expect.objectContaining({ query: expect.objectContaining({ millesime, pageSize: 0 }) }));
+      expect(search.total.value).toBe(3);
+      expect(search.technicalDebtPoints.value).toEqual(technicalDebtPoints);
+      expect(countTechnicalDebtPoints).toHaveBeenLastCalledWith(millesime === 2025 ? 2 : 1);
+    }
+  });
 });
