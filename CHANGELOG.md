@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.103.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.102.2...v1.103.0) (2026-10-30)
+
+
+### Features
+
+* add eco_index_target_revision to Compliance model ([#3172](https://github.com/dnum-mi/referentiel-applications/issues/3172)) ([1d59eb7](https://github.com/dnum-mi/referentiel-applications/commit/1d59eb77708f215d1d8ca4c9d7cb0f8db406bf00))
+
+
+### Bug Fixes
+
+* allow MAIA lookup without a RefApp account ([#3174](https://github.com/dnum-mi/referentiel-applications/issues/3174)) ([7d88b67](https://github.com/dnum-mi/referentiel-applications/commit/7d88b67a94c3b4ed0a76d3f2a3f1892d5b687a5a))
+* reload after service worker activation ([#3173](https://github.com/dnum-mi/referentiel-applications/issues/3173)) ([88f4836](https://github.com/dnum-mi/referentiel-applications/commit/88f48362e738940ac1f1589d3057e8b3eea5b283))
+* respect technology permissions in global search ([#3176](https://github.com/dnum-mi/referentiel-applications/issues/3176)) ([856d920](https://github.com/dnum-mi/referentiel-applications/commit/856d9201e5ba45afb598a0e228cb3a6ac4e639ca))
+
 ## [1.102.2](https://github.com/dnum-mi/referentiel-applications/compare/v1.102.1...v1.102.2) (2026-10-29)
 
 
