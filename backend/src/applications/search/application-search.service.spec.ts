@@ -1,22 +1,46 @@
+import { Permission } from "@prisma/client";
+import { CheckPermissions } from "src/common/service/check-permissions.service";
 import { PrismaService } from "src/prisma/prisma.service";
+import { Requestor } from "src/user/entities/user.entity";
 import { ApplicationSearchService } from "./application-search.service";
 
 describe("ApplicationSearchService", () => {
-  const makeService = (queryRawResult: unknown[] = []) => {
+  const requestor = { email: "reader@example.test" } as Requestor;
+  const makeService = (
+    queryRawResult: {
+      applicationId: string;
+      rank: number;
+      rankWithoutTechnologies?: number | null;
+    }[] = [],
+  ) => {
     const prisma = {
-      $queryRaw: jest.fn().mockResolvedValue(queryRawResult),
+      $queryRaw: jest.fn().mockResolvedValue(
+        queryRawResult.map((row) => ({
+          ...row,
+          rankWithoutTechnologies:
+            row.rankWithoutTechnologies === undefined
+              ? row.rank
+              : row.rankWithoutTechnologies,
+        })),
+      ),
       $executeRawUnsafe: jest.fn().mockResolvedValue(0),
+    };
+    const permissions = {
+      can: jest
+        .fn<Promise<boolean>, Parameters<CheckPermissions["can"]>>()
+        .mockResolvedValue(true),
     };
     const service = new ApplicationSearchService(
       prisma as unknown as PrismaService,
+      permissions as unknown as CheckPermissions,
     );
-    return { service, prisma };
+    return { service, prisma, permissions };
   };
 
   describe("fullTextSearch", () => {
     it("retourne une liste vide sans interroger la base pour une requête vide", async () => {
       const { service, prisma } = makeService();
-      expect(await service.fullTextSearch("   ")).toEqual([]);
+      expect(await service.fullTextSearch("   ", requestor)).toEqual([]);
       expect(prisma.$queryRaw).not.toHaveBeenCalled();
     });
 
@@ -26,7 +50,10 @@ describe("ApplicationSearchService", () => {
         { applicationId: "app-2", rank: 0.4 },
       ]);
 
-      const result = await service.fullTextSearch("gestion factures");
+      const result = await service.fullTextSearch(
+        "gestion factures",
+        requestor,
+      );
 
       expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
       expect(result).toEqual([
@@ -42,7 +69,10 @@ describe("ApplicationSearchService", () => {
         { applicationId: "app-1", rank: 1 },
       ]);
 
-      const result = await service.fullTextSearchPrefix("tow, muel!");
+      const result = await service.fullTextSearchPrefix(
+        "tow, muel!",
+        requestor,
+      );
 
       expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
       // La valeur interpolée dans le tagged template = la tsquery construite.
@@ -71,7 +101,7 @@ describe("ApplicationSearchService", () => {
       async (query, expectedTsQuery) => {
         const { service, prisma } = makeService();
 
-        await service.fullTextSearchPrefix(query);
+        await service.fullTextSearchPrefix(query, requestor);
 
         // « 15:* » inclurait la version 150, « 15.5:* » inclurait 15.50.
         // Seules les versions (poids D) imposent une correspondance exacte ;
@@ -83,7 +113,7 @@ describe("ApplicationSearchService", () => {
     it("découpe les points des noms de produit sans les confondre avec une version", async () => {
       const { service, prisma } = makeService();
 
-      await service.fullTextSearchPrefix("Node.js 20.11");
+      await service.fullTextSearchPrefix("Node.js 20.11", requestor);
 
       expect(prisma.$queryRaw.mock.calls[0][1]).toBe(
         "Node:* & js:* & (20.11:*ABC | 20.11:D)",
@@ -93,7 +123,7 @@ describe("ApplicationSearchService", () => {
     it("conserve les préfixes numériques des noms d'application", async () => {
       const { service, prisma } = makeService();
 
-      await service.fullTextSearchPrefix("Budget 20");
+      await service.fullTextSearchPrefix("Budget 20", requestor);
 
       expect(prisma.$queryRaw.mock.calls[0][1]).toBe(
         "Budget:* & (20:*ABC | 20:D)",
@@ -109,9 +139,9 @@ describe("ApplicationSearchService", () => {
         { applicationId: "app-1", rank: 1 },
       ]);
 
-      await service.fullTextSearchPrefix("O'Kon");
-      await service.fullTextSearchPrefix("QA-GROUP-CHILD");
-      await service.fullTextSearchPrefix("Runolfsdottir - O'Kon");
+      await service.fullTextSearchPrefix("O'Kon", requestor);
+      await service.fullTextSearchPrefix("QA-GROUP-CHILD", requestor);
+      await service.fullTextSearchPrefix("Runolfsdottir - O'Kon", requestor);
 
       expect(prisma.$queryRaw.mock.calls[0][1]).toBe("O:* & Kon:*");
       expect(prisma.$queryRaw.mock.calls[1][1]).toBe(
@@ -125,8 +155,10 @@ describe("ApplicationSearchService", () => {
     it("retourne [] sans interroger la base pour une requête vide ou ponctuation seule", async () => {
       const { service, prisma } = makeService();
 
-      expect(await service.fullTextSearchPrefix("   ")).toEqual([]);
-      expect(await service.fullTextSearchPrefix("!!! ???")).toEqual([]);
+      expect(await service.fullTextSearchPrefix("   ", requestor)).toEqual([]);
+      expect(await service.fullTextSearchPrefix("!!! ???", requestor)).toEqual(
+        [],
+      );
       expect(prisma.$queryRaw).not.toHaveBeenCalled();
     });
   });
@@ -137,8 +169,8 @@ describe("ApplicationSearchService", () => {
         { applicationId: "app-1", rank: 0.9 },
       ]);
 
-      const first = await service.fullTextSearch("gestion");
-      const second = await service.fullTextSearch("gestion");
+      const first = await service.fullTextSearch("gestion", requestor);
+      const second = await service.fullTextSearch("gestion", requestor);
 
       expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
       expect(second).toEqual(first);
@@ -149,8 +181,8 @@ describe("ApplicationSearchService", () => {
         { applicationId: "app-1", rank: 0.9 },
       ]);
 
-      await service.fullTextSearch("Gestion");
-      await service.fullTextSearch("gestion");
+      await service.fullTextSearch("Gestion", requestor);
+      await service.fullTextSearch("gestion", requestor);
 
       expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
     });
@@ -160,9 +192,9 @@ describe("ApplicationSearchService", () => {
         { applicationId: "app-1", rank: 0.9 },
       ]);
 
-      await service.fullTextSearch("gestion");
+      await service.fullTextSearch("gestion", requestor);
       await service.refreshIndex();
-      await service.fullTextSearch("gestion");
+      await service.fullTextSearch("gestion", requestor);
 
       expect(prisma.$queryRaw).toHaveBeenCalledTimes(2);
     });
@@ -172,11 +204,88 @@ describe("ApplicationSearchService", () => {
         { applicationId: "app-1", rank: 0.9 },
       ]);
 
-      await service.fullTextSearch("gestion");
-      await service.fullTextSearchPrefix("gestion");
+      await service.fullTextSearch("gestion", requestor);
+      await service.fullTextSearchPrefix("gestion", requestor);
 
       expect(prisma.$queryRaw).toHaveBeenCalledTimes(2);
     });
+  });
+
+  describe.each(["fullTextSearch", "fullTextSearchPrefix"] as const)(
+    "%s — droits de lecture des technologies",
+    (method) => {
+      const rows = [
+        { applicationId: "private", rank: 1, rankWithoutTechnologies: null },
+        {
+          applicationId: "public-with-private-boost",
+          rank: 0.9,
+          rankWithoutTechnologies: 0.2,
+        },
+        { applicationId: "public", rank: 0.5, rankWithoutTechnologies: 0.5 },
+      ];
+
+      it("exclut les correspondances interdites et classe uniquement les données lisibles", async () => {
+        const { service, permissions } = makeService(rows);
+        permissions.can.mockResolvedValue(false);
+
+        expect(await service[method]("PostgreSQL", requestor)).toEqual([
+          { id: "public", rank: 0.5 },
+          { id: "public-with-private-boost", rank: 0.2 },
+        ]);
+        expect(permissions.can).toHaveBeenCalledWith(
+          [Permission.TechnologyRead],
+          requestor,
+          "private",
+        );
+        expect(permissions.can).toHaveBeenCalledWith(
+          [Permission.TechnologyRead],
+          requestor,
+          "public-with-private-boost",
+        );
+        expect(permissions.can).not.toHaveBeenCalledWith(
+          expect.anything(),
+          expect.anything(),
+          "public",
+        );
+      });
+
+      it("recontrôle les droits avec un cache partagé et après leur retrait", async () => {
+        const { service, prisma, permissions } = makeService(rows);
+        const other = { email: "other@example.test" } as Requestor;
+        permissions.can.mockImplementation(
+          async (_permissions, user) => user === requestor,
+        );
+        const allowed = await service[method]("PostgreSQL", requestor);
+        expect(allowed.map(({ id }) => id)).toEqual(
+          rows.map(({ applicationId }) => applicationId),
+        );
+
+        const denied = await service[method]("PostgreSQL", other);
+        expect(denied).toEqual([
+          { id: "public", rank: 0.5 },
+          { id: "public-with-private-boost", rank: 0.2 },
+        ]);
+        permissions.can.mockResolvedValue(false);
+        expect(await service[method]("PostgreSQL", requestor)).toEqual(denied);
+        expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
+        expect(allowed[0]).toEqual({ id: "private", rank: 1 });
+      });
+    },
+  );
+
+  it("applique le plafond de suggestions après le filtrage des technologies interdites", async () => {
+    const { service, permissions } = makeService([
+      ...Array.from({ length: 1000 }, (_, index) => ({
+        applicationId: `private-${index}`,
+        rank: 1,
+        rankWithoutTechnologies: null,
+      })),
+      { applicationId: "public", rank: 0.1, rankWithoutTechnologies: 0.1 },
+    ]);
+    permissions.can.mockResolvedValue(false);
+    expect(await service.fullTextSearchPrefix("PostgreSQL", requestor)).toEqual(
+      [{ id: "public", rank: 0.1 }],
+    );
   });
 
   describe("refreshIndex", () => {

@@ -53,11 +53,13 @@ describe("ApplicationExportService.buildScopedWhere", () => {
     expect(await where(sut, { q: " dossier " })).toEqual({
       AND: [{ x: 1 }, { id: { in: ["a"] } }],
     });
-    expect(fullTextSearch).toHaveBeenCalledWith("dossier");
+    expect(fullTextSearch).toHaveBeenCalledWith("dossier", requestor);
+    expect(fullTextSearch.mock.calls[0][1]).toBe(requestor);
     expect(await where(sut, { q: "dossier", qPrefix: "dos" })).toEqual({
       AND: [{ x: 1 }, { id: { in: ["p"] } }],
     });
-    expect(fullTextSearchPrefix).toHaveBeenCalledWith("dos");
+    expect(fullTextSearchPrefix).toHaveBeenCalledWith("dos", requestor);
+    expect(fullTextSearchPrefix.mock.calls[0][1]).toBe(requestor);
   });
 
   it("ne filtre rien de plus sans millésime ni texte", async () => {
@@ -227,7 +229,8 @@ describe("Même recherche et même périmètre dans les exports HTML et Excel", 
         actorEmail: requestor.email,
         businessDivisionId: "direction",
       });
-      expect(fullTextSearchPrefix).toHaveBeenCalledWith("préfixe");
+      expect(fullTextSearchPrefix).toHaveBeenCalledWith("préfixe", requestor);
+      expect(fullTextSearchPrefix.mock.calls[0][1]).toBe(requestor);
       expect(fullTextSearch).not.toHaveBeenCalled();
       expect(findAllWithFullRelations).toHaveBeenCalledWith(
         {

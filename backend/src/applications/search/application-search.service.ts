@@ -1,11 +1,19 @@
 import { Injectable, Logger, type OnModuleDestroy } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
+import { Permission } from "@prisma/client";
+import { CheckPermissions } from "src/common/service/check-permissions.service";
 import { PrismaService } from "src/prisma/prisma.service";
+import type { Requestor } from "src/user/entities/user.entity";
 
 /** Un identifiant d'application accompagné de son score de pertinence full-text. */
 export interface RankedApplication {
   id: string;
   rank: number;
+}
+
+interface SearchCandidate extends RankedApplication {
+  /** null lorsque seuls les produits ou versions techniques correspondent. */
+  rankWithoutTechnologies: number | null;
 }
 
 /**
@@ -18,7 +26,10 @@ export interface RankedApplication {
  * service et au contrôleur qui la consomment.
  */
 export interface ApplicationSearchEngine {
-  fullTextSearch(query: string): Promise<RankedApplication[]>;
+  fullTextSearch(
+    query: string,
+    requestor: Requestor,
+  ): Promise<RankedApplication[]>;
 }
 
 const MATERIALIZED_VIEW = "application_search_index";
@@ -26,19 +37,12 @@ const MATERIALIZED_VIEW = "application_search_index";
 /**
  * Plafond de résultats pour la recherche préfixe (autocomplétion). Un préfixe
  * court (« a ») peut matcher quasi toutes les applications ; l'autocomplétion
- * n'affiche que les premiers résultats, inutile de classer et transporter
- * l'intégralité de la base.
- *
- * ATTENTION : ce plafond s'applique au classement FTS *avant* le filtrage par
- * permissions (l'intersection `id IN (rankedIds)` est faite ensuite côté Prisma,
- * cf. application.service). Une valeur trop basse pourrait masquer des
- * applications autorisées d'un utilisateur si elles sont classées au-delà du
- * plafond pour un préfixe donné. 1000 rend ce cas très improbable tout en
- * gardant la requête rapide (index GIN + LIMIT). Le filtrage des permissions
- * dans la requête SQL elle-même serait la solution complète mais bien plus
- * lourde (la logique de droits vit dans buildSearchWhere).
+ * n'affiche que les premiers résultats. Le plafond s'applique après contrôle
+ * de TechnologyRead et classement : des correspondances interdites ne doivent
+ * pas évincer les applications retrouvées par leurs autres informations.
  */
 const PREFIX_RESULT_LIMIT = 1000;
+const PERMISSION_BATCH_SIZE = 8;
 
 /** Un segment ou préfixe de version, conservé entier par le parseur PostgreSQL. */
 const NUMERIC_VERSION = /^\d+(?:\.\d+)*$/;
@@ -61,14 +65,18 @@ export class ApplicationSearchService
    * Cache mémoire des résultats par requête normalisée. L'index ne change
    * qu'au REFRESH de la vue matérialisée : le cache est vidé à ce moment-là
    * (+ TTL de sécurité). Il absorbe les requêtes répétées de l'autocomplétion
-   * et les allers-retours de pagination sur une même recherche.
+   * et les allers-retours de pagination sur une même recherche. Seuls les
+   * candidats bruts sont mémorisés : les droits sont revérifiés à chaque appel.
    */
   private readonly resultCache = new Map<
     string,
-    { at: number; rows: RankedApplication[] }
+    { at: number; rows: SearchCandidate[] }
   >();
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly checkPermissions: CheckPermissions,
+  ) {}
 
   public onModuleDestroy(): void {
     this.isShuttingDown = true;
@@ -76,7 +84,7 @@ export class ApplicationSearchService
     this.refreshQueued = false;
   }
 
-  private getCached(key: string): RankedApplication[] | undefined {
+  private getCached(key: string): SearchCandidate[] | undefined {
     const entry = this.resultCache.get(key);
     if (!entry) return undefined;
     if (Date.now() - entry.at > CACHE_TTL_MS) {
@@ -86,13 +94,50 @@ export class ApplicationSearchService
     return entry.rows;
   }
 
-  private setCached(key: string, rows: RankedApplication[]): void {
+  private setCached(key: string, rows: SearchCandidate[]): void {
     if (this.resultCache.size >= CACHE_MAX_ENTRIES) {
       // Éviction simple de la plus ancienne entrée (ordre d'insertion).
       const oldest = this.resultCache.keys().next().value;
       if (oldest !== undefined) this.resultCache.delete(oldest);
     }
     this.resultCache.set(key, { at: Date.now(), rows });
+  }
+
+  private async rankAuthorizedCandidates(
+    candidates: SearchCandidate[],
+    requestor: Requestor,
+  ): Promise<RankedApplication[]> {
+    const results: RankedApplication[] = [];
+    for (
+      let offset = 0;
+      offset < candidates.length;
+      offset += PERMISSION_BATCH_SIZE
+    ) {
+      const batch = await Promise.all(
+        candidates
+          .slice(offset, offset + PERMISSION_BATCH_SIZE)
+          .map(async (candidate) => {
+            const { id, rank, rankWithoutTechnologies } = candidate;
+            // Aucune donnée technique n'influence ce résultat : son autorisation
+            // ne change ni sa présence ni son classement.
+            if (rankWithoutTechnologies === rank) return { id, rank };
+
+            const canRead = await this.checkPermissions.can(
+              [Permission.TechnologyRead],
+              requestor,
+              id,
+            );
+            const effectiveRank = canRead ? rank : rankWithoutTechnologies;
+            return effectiveRank === null ? null : { id, rank: effectiveRank };
+          }),
+      );
+      results.push(...batch.filter((result) => result !== null));
+    }
+    // Nouveau tableau : ne jamais trier ou filtrer le cache partagé selon un utilisateur.
+    return results.sort(
+      (left, right) =>
+        right.rank - left.rank || left.id.localeCompare(right.id),
+    );
   }
 
   /**
@@ -105,19 +150,30 @@ export class ApplicationSearchService
    * opérateurs interprètent un `-` dans les données (ex. « Altenwerth - Goodwin »)
    * comme une exclusion. Une chaîne vide renvoie une liste vide (aucun filtrage).
    */
-  public async fullTextSearch(query: string): Promise<RankedApplication[]> {
+  public async fullTextSearch(
+    query: string,
+    requestor: Requestor,
+  ): Promise<RankedApplication[]> {
     const trimmed = query?.trim();
     if (!trimmed) return [];
 
     const cacheKey = `f:${trimmed.toLowerCase()}`;
     const cached = this.getCached(cacheKey);
-    if (cached) return cached;
+    if (cached) return this.rankAuthorizedCandidates(cached, requestor);
 
     const rows = await this.prisma.$queryRaw<
-      { applicationId: string; rank: number }[]
+      {
+        applicationId: string;
+        rank: number;
+        rankWithoutTechnologies: number | null;
+      }[]
     >`
       SELECT asi."applicationId",
-             ts_rank(asi.document, q.query)::float8 AS rank
+             ts_rank(asi.document, q.query)::float8 AS rank,
+             CASE WHEN asi.document_without_technologies @@ q.query
+               THEN ts_rank(asi.document_without_technologies, q.query)::float8
+               ELSE NULL
+             END AS "rankWithoutTechnologies"
       FROM application_search_index asi,
            plainto_tsquery('french', immutable_unaccent(${trimmed})) AS q(query)
       WHERE asi.document @@ q.query
@@ -127,9 +183,10 @@ export class ApplicationSearchService
     const results = rows.map((row) => ({
       id: row.applicationId,
       rank: row.rank,
+      rankWithoutTechnologies: row.rankWithoutTechnologies,
     }));
     this.setCached(cacheKey, results);
-    return results;
+    return this.rankAuthorizedCandidates(results, requestor);
   }
 
   /**
@@ -158,6 +215,7 @@ export class ApplicationSearchService
    */
   public async fullTextSearchPrefix(
     query: string,
+    requestor: Requestor,
   ): Promise<RankedApplication[]> {
     const tokens = query
       ?.trim()
@@ -178,26 +236,41 @@ export class ApplicationSearchService
 
     const cacheKey = `p:${tsQuery.toLowerCase()}`;
     const cached = this.getCached(cacheKey);
-    if (cached) return cached;
+    if (cached)
+      return (await this.rankAuthorizedCandidates(cached, requestor)).slice(
+        0,
+        PREFIX_RESULT_LIMIT,
+      );
 
     const rows = await this.prisma.$queryRaw<
-      { applicationId: string; rank: number }[]
+      {
+        applicationId: string;
+        rank: number;
+        rankWithoutTechnologies: number | null;
+      }[]
     >`
       SELECT asi."applicationId",
-             ts_rank(asi.document_simple, q.query)::float8 AS rank
+             ts_rank(asi.document_simple, q.query)::float8 AS rank,
+             CASE WHEN asi.document_simple_without_technologies @@ q.query
+               THEN ts_rank(asi.document_simple_without_technologies, q.query)::float8
+               ELSE NULL
+             END AS "rankWithoutTechnologies"
       FROM application_search_index asi,
            to_tsquery('simple', immutable_unaccent(${tsQuery})) AS q(query)
       WHERE asi.document_simple @@ q.query
       ORDER BY rank DESC, asi."applicationId"
-      LIMIT ${PREFIX_RESULT_LIMIT}
     `;
 
     const results = rows.map((row) => ({
       id: row.applicationId,
       rank: row.rank,
+      rankWithoutTechnologies: row.rankWithoutTechnologies,
     }));
     this.setCached(cacheKey, results);
-    return results;
+    return (await this.rankAuthorizedCandidates(results, requestor)).slice(
+      0,
+      PREFIX_RESULT_LIMIT,
+    );
   }
 
   /**

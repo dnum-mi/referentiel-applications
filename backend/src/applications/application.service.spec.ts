@@ -141,6 +141,10 @@ describe("ApplicationService.search — recherche full-text (param q)", () => {
 
     expect(applicationSearchService.fullTextSearch).toHaveBeenCalledWith(
       "gestion factures",
+      requestor,
+    );
+    expect(applicationSearchService.fullTextSearch.mock.calls[0][1]).toBe(
+      requestor,
     );
     // Tri par pertinence => une passe filtrée + page chargées dans la même transaction.
     expect(
@@ -191,6 +195,10 @@ describe("ApplicationService.search — recherche full-text (param q)", () => {
 
     expect(applicationSearchService.fullTextSearchPrefix).toHaveBeenCalledWith(
       "tow muel",
+      requestor,
+    );
+    expect(applicationSearchService.fullTextSearchPrefix.mock.calls[0][1]).toBe(
+      requestor,
     );
     expect(applicationSearchService.fullTextSearch).not.toHaveBeenCalled();
     expect(
@@ -213,6 +221,7 @@ describe("ApplicationService.search — recherche full-text (param q)", () => {
 
     expect(applicationSearchService.fullTextSearch).toHaveBeenCalledWith(
       "facture",
+      requestor,
     );
     // Tri explicite (quality) => findApplications classique, pas le tri pertinence.
     expect(applicationRepository.findApplications).toHaveBeenCalledTimes(1);

@@ -438,8 +438,14 @@ export class ApplicationService {
     const rankedPromise: Promise<string[] | undefined> = !hasFullText
       ? Promise.resolve(undefined)
       : (prefixText
-          ? this.applicationSearchService.fullTextSearchPrefix(prefixText)
-          : this.applicationSearchService.fullTextSearch(fullText as string)
+          ? this.applicationSearchService.fullTextSearchPrefix(
+              prefixText,
+              requestor,
+            )
+          : this.applicationSearchService.fullTextSearch(
+              fullText as string,
+              requestor,
+            )
         ).then((ranked) => ranked.map((result) => result.id));
 
     const [where, rankedIds] = await Promise.all([

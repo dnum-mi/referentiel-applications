@@ -1,15 +1,38 @@
 import { effectScope, nextTick } from "vue";
+import { Permission, Roles, type UserWithPermissions } from "@/client/types.gen";
 
-const { searchMock, replaceMock, routeMock } = vi.hoisted(() => ({
+const { searchMock, replaceMock, routeMock, countTechnicalDebtPoints } = vi.hoisted(() => ({
   searchMock: vi.fn(),
   replaceMock: vi.fn(),
   routeMock: { query: {} as Record<string, string> },
+  countTechnicalDebtPoints: vi.fn(),
 }));
+const userStore = await vi.hoisted(async () => {
+  const { reactive } = await import("vue");
+  return reactive({ hasApplicationAccess: true, user: undefined as Partial<UserWithPermissions> | undefined });
+});
 vi.mock("@/api/index.js", () => ({ default: { applicationControllerSearch: searchMock } }));
 vi.mock("vue-router", () => ({ useRoute: () => routeMock, useRouter: () => ({ replace: replaceMock }) }));
 vi.mock("@/stores/statisticsStore", () => ({
-  useStatisticsStore: () => ({ countApplications: vi.fn().mockResolvedValue(0), countTechnicalDebtPoints: vi.fn() }),
+  useStatisticsStore: () => ({ countApplications: vi.fn().mockResolvedValue(0), countTechnicalDebtPoints }),
 }));
+vi.mock("@/stores/userStore", () => ({ useUserStore: () => userStore }));
+
+function searchResponse(id = "application-tech-privee") {
+  const application = { id, label: "Application trouvée par sa technologie" };
+  return {
+    response: { ok: true },
+    data: { results: [application], total: 1, technicalDebtPoints: [application], averageIq: 75 },
+  };
+}
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((done) => {
+    resolve = done;
+  });
+  return { promise, resolve };
+}
 
 describe("useApplicationSearch — debounce partagé", () => {
   let scope: ReturnType<typeof effectScope>;
@@ -19,6 +42,16 @@ describe("useApplicationSearch — debounce partagé", () => {
     vi.useFakeTimers();
     vi.resetModules();
     routeMock.query = {};
+    userStore.hasApplicationAccess = true;
+    userStore.user = {
+      id: "reader",
+      email: "reader@example.test",
+      role: Roles.READER,
+      permissions: [Permission.APP_READ, Permission.TECHNOLOGY_READ],
+      additionalPermissions: [Permission.DATA_EXPORT, Permission.BETA_FEATURES],
+      scopeOrganizationId: null,
+    };
+    countTechnicalDebtPoints.mockReset();
     scope = effectScope();
     ({ useApplicationSearch } = await import("./use-application-search"));
     searchMock.mockReset().mockResolvedValue({
@@ -150,5 +183,125 @@ describe("useApplicationSearch — debounce partagé", () => {
     routeMock.query = { technologyEolStatus: "all" };
     const search = scope.run(() => useApplicationSearch())!;
     expect(search.filters.value.technologyEolStatus).toBeUndefined();
+  });
+
+  it.each([
+    [
+      "identité",
+      () => {
+        userStore.user!.id = "other-reader";
+      },
+    ],
+    [
+      "rôle",
+      () => {
+        userStore.user!.role = Roles.VISITOR;
+      },
+    ],
+    [
+      "périmètre",
+      () => {
+        userStore.user!.scopeOrganizationId = "restricted-scope";
+      },
+    ],
+    [
+      "permission",
+      () => {
+        userStore.user!.permissions = [Permission.APP_READ];
+      },
+    ],
+    [
+      "déconnexion",
+      () => {
+        userStore.hasApplicationAccess = false;
+      },
+    ],
+  ] as const)("retire les résultats et les comptes dès un changement de %s sans perdre les filtres", async (_name, changeAccess) => {
+    routeMock.query = { search: "technologie privée", page: "2" };
+    const [search, second] = scope.run(() => [useApplicationSearch(), useApplicationSearch()])!;
+    searchMock.mockResolvedValueOnce(searchResponse());
+    await search.searchApplications();
+    expect(search.total.value).toBe(1);
+    const filters = { ...search.filters.value };
+
+    changeAccess();
+
+    expect(search.results.value).toEqual([]);
+    expect(second.results.value).toEqual([]);
+    expect(search.technicalDebtPoints.value).toEqual([]);
+    expect(search.total.value).toBe(0);
+    expect(search.averageIq.value).toBe(0);
+    expect(countTechnicalDebtPoints).toHaveBeenLastCalledWith(0);
+    expect(search.filters.value).toEqual(filters);
+    expect(replaceMock).not.toHaveBeenCalled();
+  });
+
+  it.each([true, false])("rejette la réponse de l'ancien contexte, recherche stockée = %s", async (store) => {
+    const search = scope.run(() => useApplicationSearch())!;
+    const stale = deferred<ReturnType<typeof searchResponse>>();
+    searchMock.mockReturnValueOnce(stale.promise);
+    const previousSearch = search.searchApplications({ qPrefix: "technologie" }, store, false);
+    const rejection = expect(previousSearch).rejects.toThrow("Le contexte d'accès à la recherche a changé.");
+
+    userStore.user!.permissions = [Permission.APP_READ];
+    searchMock.mockResolvedValueOnce(searchResponse("application-publique"));
+    await search.searchApplications();
+    stale.resolve(searchResponse());
+    await rejection;
+
+    expect(search.results.value.map(({ id }) => id)).toEqual(["application-publique"]);
+    expect(search.total.value).toBe(1);
+    expect(search.error.value).toBeNull();
+    expect(search.isLoading.value).toBe(false);
+  });
+
+  it("invalide le retrait d'une permission explicite même si elle figure aussi dans les permissions du rôle", async () => {
+    userStore.user!.additionalPermissions = [Permission.TECHNOLOGY_READ];
+    const search = scope.run(() => useApplicationSearch())!;
+    searchMock.mockResolvedValueOnce(searchResponse());
+    await search.searchApplications();
+
+    userStore.user!.additionalPermissions = [];
+
+    expect(search.results.value).toEqual([]);
+    expect(search.total.value).toBe(0);
+  });
+
+  it("annule la recherche différée lors du retrait des droits et conserve le texte saisi", async () => {
+    const search = scope.run(() => useApplicationSearch())!;
+    search.setFilter({ search: "technologie" });
+    await nextTick();
+    await vi.advanceTimersByTimeAsync(100);
+
+    userStore.user!.permissions = [Permission.APP_READ];
+    await vi.advanceTimersByTimeAsync(300);
+
+    expect(searchMock).not.toHaveBeenCalled();
+    expect(search.filters.value.search).toBe("technologie");
+  });
+
+  it("conserve les résultats et la réponse en cours quand le renouvellement ne change pas les droits", async () => {
+    routeMock.query = { search: "technologie" };
+    const search = scope.run(() => useApplicationSearch())!;
+    searchMock.mockResolvedValueOnce(searchResponse());
+    await search.searchApplications();
+    const results = search.results.value;
+    const pending = deferred<ReturnType<typeof searchResponse>>();
+    searchMock.mockReturnValueOnce(pending.promise);
+    const currentSearch = search.searchApplications();
+
+    userStore.user = {
+      ...userStore.user,
+      permissions: [...userStore.user!.permissions!].reverse(),
+      additionalPermissions: [...userStore.user!.additionalPermissions!].reverse(),
+      emailNotificationsEnabled: true,
+    };
+
+    expect(search.results.value).toBe(results);
+    expect(search.total.value).toBe(1);
+    expect(search.filters.value.search).toBe("technologie");
+    pending.resolve(searchResponse("résultat-actualisé"));
+    await expect(currentSearch).resolves.toMatchObject({ results: [{ id: "résultat-actualisé" }] });
+    expect(search.results.value[0].id).toBe("résultat-actualisé");
   });
 });

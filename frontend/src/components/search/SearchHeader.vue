@@ -3,6 +3,7 @@ import { ref, nextTick, watch } from "vue";
 import { useRouter } from "vue-router";
 import AccessibleAutocomplete from "../AccessibleAutocomplete.vue";
 import { useApplicationSearch } from "@/composables/use-application-search";
+import { useSearchAccessContext } from "@/composables/use-search-access-context";
 import { useMediaQuery } from "@vueuse/core";
 
 interface ApplicationOption {
@@ -19,6 +20,11 @@ const closeBtnRef = ref<HTMLButtonElement | null>(null);
 const panelRef = ref<HTMLDialogElement | HTMLDivElement | null>(null);
 const isMobile = useMediaQuery("(max-width: 768px)");
 const showInput = ref(!isMobile.value);
+const accessContext = useSearchAccessContext();
+
+// clear() retire les suggestions et invalide aussi une réponse encore en vol.
+// Une revalidation de session avec les mêmes droits conserve la saisie.
+watch(accessContext, () => searchRef.value?.clear?.(), { flush: "sync" });
 
 // Bascule desktop⇄mobile : ne pas laisser surgir l'overlay plein écran sur un
 // simple redimensionnement (il ne doit s'ouvrir que sur action explicite).

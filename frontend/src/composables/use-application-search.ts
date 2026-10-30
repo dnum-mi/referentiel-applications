@@ -13,6 +13,7 @@ import api from "@/api/index.js";
 import { APPLICATION_STATUSES } from "@/constants/dictionary";
 import { NEUTRAL_RELATION_FILTERS } from "@/types/relation-type-filter";
 import { useStatisticsStore } from "@/stores/statisticsStore";
+import { useSearchAccessContext } from "./use-search-access-context";
 
 export type TechnicalDebtPoint = TechnicalDebtControllerGetTechnicalDebtPointsResponses[200][number];
 
@@ -119,6 +120,25 @@ watchDebounced(
 // Identifiant de la dernière recherche « stockée » partie sur le réseau : une
 // réponse dépassée par une requête plus récente ne doit pas écraser l'état.
 let latestStoredSearchId = 0;
+let currentAccessContext: string | undefined;
+let accessGeneration = 0;
+
+function invalidateSearchAccess(context: string) {
+  // Le composable est partagé entre le bandeau, la page et ses filtres : une seule
+  // invalidation par contexte, même lorsque plusieurs instances l'observent.
+  if (context === currentAccessContext) return;
+  currentAccessContext = context;
+  accessGeneration++;
+  latestStoredSearchId++;
+  pendingSearch.value = undefined;
+  results.value = [];
+  technicalDebtPoints.value = [];
+  total.value = 0;
+  averageIq.value = 0;
+  useStatisticsStore().countTechnicalDebtPoints(0);
+  error.value = null;
+  isLoading.value = false;
+}
 
 type QueryParam = LocationQueryValue | LocationQueryValue[];
 
@@ -259,6 +279,8 @@ function normalizeAverageIq(value: unknown) {
 export function useApplicationSearch() {
   const route = useRoute();
   const router = useRouter();
+  const accessContext = useSearchAccessContext();
+  watch(accessContext, invalidateSearchAccess, { immediate: true, flush: "sync" });
 
   function scheduleSearch(immediate: boolean) {
     pendingSearch.value = { run: () => searchApplications(), delay: immediate ? 0 : 300 };
@@ -312,10 +334,12 @@ export function useApplicationSearch() {
   // courante (utilisée par la recherche globale du header, qui ne doit hériter ni
   // des filtres ni du tri de la page de recherche).
   async function searchApplications(customFilters?: Partial<Filters>, store = true, mergeCurrentFilters = true) {
+    invalidateSearchAccess(accessContext.value);
+    const generation = accessGeneration;
     // Les appels « stockés » sont numérotés : si une requête plus récente est
     // partie entre-temps, la réponse courante est ignorée (anti-course).
     const searchId = store ? ++latestStoredSearchId : 0;
-    const isCurrent = () => !store || searchId === latestStoredSearchId;
+    const isCurrent = () => generation === accessGeneration && (!store || searchId === latestStoredSearchId);
 
     if (store) {
       isLoading.value = true;
@@ -327,6 +351,10 @@ export function useApplicationSearch() {
       const query = cleanFilters(currentFilters);
 
       const response = await api.applicationControllerSearch({ query });
+
+      // Les suggestions ne sont pas stockées ici : leur promesse ne doit pas non
+      // plus restituer une réponse obtenue avec les droits de l'ancien contexte.
+      if (generation !== accessGeneration) throw new Error("Le contexte d'accès à la recherche a changé.");
 
       if (!isApiSuccess(response) || !response.data) {
         throw new Error("Erreur lors de la recherche d'applications");
