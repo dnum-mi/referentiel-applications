@@ -1,6 +1,7 @@
 import { Roles } from "@prisma/client";
 import request from "supertest";
 import { OrganizationFaker } from "./fakers/organization.faker";
+import { getPrismaClient } from "./fakers/prisma";
 import { UserFaker } from "./fakers/user.faker";
 import { getToken } from "./getToken";
 import { setupTestSuite } from "./setup";
@@ -68,17 +69,111 @@ describe("Synchronisation MAIA — permission et périmètre (#2374, #2365)", ()
     // Route de LECTURE (suggestion) : `AppList` est portée par tous les rôles authentifiés — le
     // durcissement de #2365 est de ne PLUS exiger AdminPanelManage, pas de restreindre davantage.
     it("n'est plus réservée aux administrateurs : accessible à un contributeur", async () => {
-      const res = await request(app().getHttpServer())
+      await request(app().getHttpServer())
         .get(route("qui@example.com"))
-        .set("Authorization", `Bearer ${await getToken(contributor)}`);
-      expect(res.status).not.toBe(403);
+        .set("Authorization", `Bearer ${await getToken(contributor)}`)
+        .expect(200);
     });
 
     it("accessible aussi à un visiteur authentifié (lecture)", async () => {
-      const res = await request(app().getHttpServer())
+      await request(app().getHttpServer())
         .get(route("qui@example.com"))
-        .set("Authorization", `Bearer ${await getToken(visitor)}`);
-      expect(res.status).not.toBe(403);
+        .set("Authorization", `Bearer ${await getToken(visitor)}`)
+        .expect(200);
+    });
+
+    it("refuse une recherche sans authentification", async () => {
+      await request(app().getHttpServer())
+        .get(route("acteur@finances.example.test"))
+        .expect(401);
+    });
+
+    describe("acteur externe sans compte RefApp", () => {
+      let previousMaiaUrl: string | undefined;
+
+      beforeAll(() => {
+        previousMaiaUrl = process.env.MAIA_API_URL;
+        process.env.MAIA_API_URL = "http://maia.test/find";
+        process.env.MOCK_MAIA_SERVICE = "false";
+      });
+
+      afterEach(() => {
+        jest.restoreAllMocks();
+      });
+
+      afterAll(() => {
+        if (previousMaiaUrl === undefined) delete process.env.MAIA_API_URL;
+        else process.env.MAIA_API_URL = previousMaiaUrl;
+        process.env.MOCK_MAIA_SERVICE = "true";
+      });
+
+      it.each([
+        { label: "existante", organizationExists: true },
+        { label: "absente du référentiel", organizationExists: false },
+      ])(
+        "retourne le nom et l'organisation $label sans créer de compte",
+        async ({ organizationExists }) => {
+          const email = `acteur-${suffix}-${organizationExists}@finances.example.test`;
+          const organizationPath = `E2E/FINANCES-${suffix}/${organizationExists}`;
+          const existingOrganization = organizationExists
+            ? await OrganizationFaker.create({ path: organizationPath })
+            : null;
+          const prisma = getPrismaClient();
+          expect(await prisma.user.findUnique({ where: { email } })).toBeNull();
+          if (!organizationExists) {
+            expect(
+              await prisma.organization.findFirst({
+                where: { path: organizationPath },
+              }),
+            ).toBeNull();
+          }
+
+          const fetchMock = jest
+            .spyOn(global, "fetch")
+            .mockImplementation(async () =>
+              Response.json({
+                data: [
+                  {
+                    values: {
+                      firstName: "Camille",
+                      lastName: "Externe",
+                      fullName: "Camille Externe",
+                      structure: { values: { fullCode: organizationPath } },
+                    },
+                  },
+                ],
+              }),
+            );
+
+          const response = await request(app().getHttpServer())
+            .get(route(email))
+            .set("Authorization", `Bearer ${getToken(contributor)}`)
+            .expect(200);
+
+          expect(fetchMock).toHaveBeenCalledWith(
+            "http://maia.test/find",
+            expect.objectContaining({
+              method: "POST",
+              body: expect.stringContaining(JSON.stringify(email)),
+            }),
+          );
+          expect(response.body).toMatchObject({
+            firstName: "Camille",
+            lastName: "Externe",
+            fullName: "Camille Externe",
+            organizationPath,
+            organizationId: expect.any(String),
+          });
+          const organization = await prisma.organization.findUnique({
+            where: { id: response.body.organizationId },
+          });
+          expect(organization?.path).toBe(organizationPath);
+          if (existingOrganization) {
+            expect(organization?.id).toBe(existingOrganization.id);
+          }
+          expect(await prisma.user.findUnique({ where: { email } })).toBeNull();
+        },
+      );
     });
   });
 

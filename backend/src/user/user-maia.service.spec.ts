@@ -9,7 +9,10 @@ import { MaiaUnavailableException } from "./errors/maia-unavailable.exception";
 import { ScopedPermissionService } from "./scope-permission/scoped-permission.service";
 import { UserPermissionLogService } from "./user-permission-log.service";
 import { UserService } from "./user.service";
-import { getOrganizationPathFromMaia } from "./utils/maia.tools";
+import {
+  getFullNameFromMaia,
+  getOrganizationPathFromMaia,
+} from "./utils/maia.tools";
 
 jest.mock("./utils/maia.tools");
 jest.mock(
@@ -23,7 +26,7 @@ jest.mock("./user-permission-log.service", () => ({
   UserPermissionLogService: jest.fn(),
 }));
 
-describe("UserService — indisponibilité MAIA", () => {
+describe("UserService — MAIA", () => {
   const lookup = jest.mocked(getOrganizationPathFromMaia);
 
   async function setup() {
@@ -36,6 +39,7 @@ describe("UserService — indisponibilité MAIA", () => {
     const prisma = {
       user: {
         findFirst: jest.fn().mockResolvedValue(null),
+        findUnique: jest.fn().mockResolvedValue(null),
         create: jest.fn().mockResolvedValue(user),
         findMany: jest.fn(),
         update: jest.fn(),
@@ -69,6 +73,37 @@ describe("UserService — indisponibilité MAIA", () => {
   }
 
   beforeEach(() => jest.resetAllMocks());
+
+  it("récupère un acteur externe depuis MAIA sans créer de compte RefApp", async () => {
+    const { service, prisma, references, permissions } = await setup();
+    const email = "acteur.externe@finances.example.com";
+    const organizationPath = "FINANCES/DIRECTION";
+    const identity = {
+      firstName: "Camille",
+      lastName: "Externe",
+      fullName: "Camille Externe",
+    };
+    lookup.mockResolvedValue(organizationPath);
+    jest.mocked(getFullNameFromMaia).mockResolvedValue(identity);
+
+    await expect(
+      service.syncOrganizationFromMaiaByEmail(email),
+    ).resolves.toEqual({
+      organizationId: "org-1",
+      organizationPath,
+      ...identity,
+    });
+
+    expect(lookup).toHaveBeenCalledWith(email);
+    expect(getFullNameFromMaia).toHaveBeenCalledWith(email);
+    expect(references.findOrganizationByMaiaRef).toHaveBeenCalledWith(
+      organizationPath,
+    );
+    expect(prisma.user.findUnique).not.toHaveBeenCalled();
+    expect(prisma.user.create).not.toHaveBeenCalled();
+    expect(prisma.user.update).not.toHaveBeenCalled();
+    expect(permissions.log).not.toHaveBeenCalled();
+  });
 
   it.each(["network", "timeout", "http", "response", "configuration"] as const)(
     "crée un nouveau visiteur sans organisation malgré une panne %s",

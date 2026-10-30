@@ -300,14 +300,15 @@ paths:
       tags: *a2
   /api/v2/users/by-email/{email}/sync-organization-from-maia:
     get:
-      description: Interroge MAIA pour récupérer l'organisation et les informations
-        personnelles associées à cet email, sans modifier l'utilisateur en base.
+      description: Interroge MAIA à partir de l'email, même sans compte RefApp. Résout
+        ou crée l'organisation pour préremplir un acteur, sans créer ni modifier de
+        compte utilisateur.
       operationId: UserController_syncOrganizationFromMaiaByEmail
       parameters:
         - name: email
           required: true
           in: path
-          description: Email de l'utilisateur
+          description: Email de la personne recherchée
           schema:
             type: string
       responses:
@@ -318,10 +319,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/MaiaOrganizationSuggestionDto"
         "403":
-          description: Accès refusé - Privilège admin requis
-        "404":
-          description: Utilisateur non trouvé
-      summary: Récupérer les informations MAIA d'un utilisateur par email
+          description: Accès refusé - Permission AppList requise
+      summary: Récupérer les informations MAIA d'une personne par email
       tags: *a2
   /api/v2/users/{id}/sync-organization-from-maia:
     post:
