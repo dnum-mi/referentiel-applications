@@ -498,6 +498,7 @@ export class ApplicationService {
               matching.map((app) => app.id),
               sortBy,
               order,
+              searchParams.millesime,
             );
           },
         );

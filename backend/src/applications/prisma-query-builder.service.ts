@@ -772,6 +772,7 @@ export class PrismaQueryBuilder {
     ids: string[],
     sortBy: string,
     order: "asc" | "desc",
+    millesime?: number,
   ): Promise<string[]> {
     if (ids.length === 0) return [];
 
@@ -815,6 +816,7 @@ export class PrismaQueryBuilder {
           LEFT JOIN LATERAL (
             SELECT ${Prisma.raw(`"${field}"`)} AS val FROM "TechnicalDebtInfo"
             WHERE "applicationId" = a."id"
+              ${millesime == null ? Prisma.empty : Prisma.sql`AND "millesime" = ${millesime}`}
             ORDER BY "createdAt" DESC LIMIT 1
           ) tdi ON true
           WHERE a."id" = ANY(${ids})
