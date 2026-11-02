@@ -7,10 +7,10 @@ import NotificationBell from "./NotificationBell.vue";
 
 const { storeMock } = vi.hoisted(() => ({
   storeMock: {
-    notifications: [] as NotificationDto[],
+    bellNotifications: [] as NotificationDto[],
     unreadCount: 0,
     emailPreview: null as EmailLogDto | null,
-    fetchNotifications: vi.fn(),
+    fetchBellNotifications: vi.fn(),
     fetchUnreadCount: vi.fn(),
     markAsRead: vi.fn(),
     markAllAsRead: vi.fn(),
@@ -52,10 +52,10 @@ function notificationFixture(overrides: Partial<NotificationDto> = {}): Notifica
 
 describe("NotificationBell", () => {
   beforeEach(() => {
-    storeMock.notifications = [];
+    storeMock.bellNotifications = [];
     storeMock.unreadCount = 0;
     storeMock.emailPreview = null;
-    storeMock.fetchNotifications.mockReset().mockResolvedValue(undefined);
+    storeMock.fetchBellNotifications.mockReset().mockResolvedValue(undefined);
     storeMock.fetchUnreadCount.mockReset().mockResolvedValue(undefined);
     storeMock.markAsRead.mockReset().mockResolvedValue(undefined);
     storeMock.markAllAsRead.mockReset().mockResolvedValue(undefined);
@@ -82,7 +82,7 @@ describe("NotificationBell", () => {
   });
 
   it("opens the panel and fetches the latest notifications on click", async () => {
-    storeMock.notifications = [notificationFixture()];
+    storeMock.bellNotifications = [notificationFixture()];
 
     render(NotificationBell, { global: { plugins: [makeRouter()] } });
 
@@ -91,13 +91,13 @@ describe("NotificationBell", () => {
     await fireEvent.click(screen.getByTestId("notification-bell-button"));
 
     await waitFor(() => expect(screen.getByTestId("notification-bell-panel")).toBeInTheDocument());
-    expect(storeMock.fetchNotifications).toHaveBeenCalledWith(0, 10);
+    expect(storeMock.fetchBellNotifications).toHaveBeenCalledWith();
     expect(screen.getByText("Nouveau signalement sur Portail Agent.")).toBeInTheDocument();
   });
 
   it("marks all notifications as read when the action is used", async () => {
     storeMock.unreadCount = 2;
-    storeMock.notifications = [notificationFixture()];
+    storeMock.bellNotifications = [notificationFixture()];
 
     render(NotificationBell, { global: { plugins: [makeRouter()] } });
     await fireEvent.click(screen.getByTestId("notification-bell-button"));
@@ -110,7 +110,7 @@ describe("NotificationBell", () => {
 
   it.each([false, true])("conserve le panneau et le choix de focus après disparition du marquage (déplacement : %s)", async (moveFocus) => {
     store.unreadCount = 2;
-    store.notifications = [notificationFixture()];
+    store.bellNotifications = [notificationFixture()];
     let finish = () => {};
     store.markAllAsRead.mockImplementationOnce(
       () =>
@@ -142,7 +142,7 @@ describe("NotificationBell", () => {
   });
 
   it("marks a notification as read and navigates to its link when selected", async () => {
-    storeMock.notifications = [notificationFixture()];
+    storeMock.bellNotifications = [notificationFixture()];
 
     render(NotificationBell, { global: { plugins: [makeRouter()] } });
     await fireEvent.click(screen.getByTestId("notification-bell-button"));
@@ -155,7 +155,7 @@ describe("NotificationBell", () => {
   });
 
   it("opens the e-mail preview instead of navigating when a notification has an associated e-mail", async () => {
-    storeMock.notifications = [notificationFixture({ emailLogId: "email-log-1" })];
+    storeMock.bellNotifications = [notificationFixture({ emailLogId: "email-log-1" })];
 
     render(NotificationBell, { global: { plugins: [makeRouter()] } });
     await fireEvent.click(screen.getByTestId("notification-bell-button"));
@@ -169,7 +169,7 @@ describe("NotificationBell", () => {
   });
 
   it("expose l’e-mail comme un bouton et restaure le focus après Échap", async () => {
-    storeMock.notifications = [notificationFixture({ emailLogId: "email-log-1" })];
+    storeMock.bellNotifications = [notificationFixture({ emailLogId: "email-log-1" })];
     render(NotificationBell, { global: { plugins: [makeRouter()] } });
     const bell = screen.getByTestId("notification-bell-button");
     await fireEvent.click(bell);

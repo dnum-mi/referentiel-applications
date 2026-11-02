@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { NotificationDto } from "@/client/types.gen";
+import { NotificationType, type NotificationDto } from "@/client/types.gen";
 import type { TableColumn } from "@/types/table";
 import type { DsfrDataTableHeaderCell } from "@gouvminint/vue-dsfr";
 import type { DataTablePageEvent } from "primevue/datatable";
@@ -27,6 +27,23 @@ const tableColumns: TableColumn[] = headers.map((h) => ({
   sortable: h.key === "createdAt",
 }));
 
+const typeLabels = {
+  report_created: "Signalement créé",
+  report_status_changed: "Statut d’un signalement modifié",
+  actor_added: "Acteur ajouté",
+  actor_modified: "Acteur modifié",
+  application_followed_changed: "Application suivie modifiée",
+  application_validation_reminder: "Rappel de validation d’une application",
+  user_organization_changed: "Organisation modifiée",
+  user_permissions_changed: "Droits modifiés",
+  user_blocked: "Compte bloqué",
+  user_unblocked: "Compte débloqué",
+  campaign_quality_reminder: "Rappel de campagne qualité",
+  campaign_quality_sponsor_report: "Bilan de campagne qualité",
+  technology_end_of_life: "Fin de vie technologique",
+} satisfies Partial<Record<NotificationType, string>>;
+const typeOptions = [{ value: "", text: "Tous" }, ...Object.entries(typeLabels).map(([value, text]) => ({ value, text }))];
+const selectedType = ref<NotificationType | "">("");
 const currentPage = ref(0);
 const itemsPerPage = ref(15);
 const sortOrder = ref<1 | -1>(-1);
@@ -63,8 +80,18 @@ async function markAllAsRead() {
 }
 
 async function load() {
-  await notificationStore.fetchNotifications(currentPage.value, itemsPerPage.value, sortOrder.value === 1 ? "asc" : "desc");
   selection.value = [];
+  await notificationStore.fetchNotifications(
+    currentPage.value,
+    itemsPerPage.value,
+    sortOrder.value === 1 ? "asc" : "desc",
+    selectedType.value || undefined,
+  );
+}
+
+function onTypeChange() {
+  currentPage.value = 0;
+  load();
 }
 
 function onPage(event: DataTablePageEvent) {
@@ -180,6 +207,17 @@ onMounted(load);
       operationStatus
     }}</output>
 
+    <DsfrSelect
+      v-model="selectedType"
+      label="Type d’événement"
+      :options="typeOptions"
+      data-testid="notifications-type-filter"
+      @update:model-value="onTypeChange"
+    />
+    <p v-if="notificationStore.unreadCount > 0" class="fr-text--sm">
+      « Tout marquer comme lu » concerne toutes vos notifications, même celles masquées par le filtre.
+    </p>
+
     <RefAppTable
       ref="notificationTable"
       v-model:selection="selection"
@@ -196,7 +234,7 @@ onMounted(load);
       selectable
       data-key="id"
       data-testid="notifications-table"
-      empty-message="Vous n'avez aucune notification."
+      :empty-message="selectedType ? 'Aucune notification pour ce type d’événement.' : 'Vous n’avez aucune notification.'"
       @page="onPage"
       @sort="onSort"
     >

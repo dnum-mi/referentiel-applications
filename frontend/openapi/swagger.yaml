@@ -301,8 +301,8 @@ paths:
   /api/v2/users/by-email/{email}/sync-organization-from-maia:
     get:
       description: Interroge MAIA à partir de l'email, même sans compte RefApp. Résout
-        ou crée l'organisation pour préremplir un acteur, sans créer ni modifier de
-        compte utilisateur.
+        ou crée l'organisation pour préremplir un acteur, sans créer ni modifier
+        de compte utilisateur.
       operationId: UserController_syncOrganizationFromMaiaByEmail
       parameters:
         - name: email
@@ -798,6 +798,13 @@ paths:
             enum:
               - asc
               - desc
+        - name: type
+          required: false
+          in: query
+          description: Filtrer par type d’événement. Sans ce paramètre, tous les types
+            sont renvoyés.
+          schema:
+            $ref: "#/components/schemas/NotificationType"
         - name: isRead
           required: false
           in: query
