@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/vue";
 import { flushPromises } from "@vue/test-utils";
-import { defineComponent, nextTick, ref } from "vue";
+import { defineComponent, nextTick, reactive, ref } from "vue";
 import UserProfilePage from "./UserProfilePage.vue";
 
 afterEach(() => cleanup());
@@ -8,6 +8,11 @@ afterEach(() => cleanup());
 const { hasPermissions } = vi.hoisted(() => ({ hasPermissions: vi.fn() }));
 
 vi.mock("@/stores/userStore", () => ({ useUserStore: () => ({ hasPermissions }) }));
+const route = reactive({ query: { tab: "" } });
+vi.mock("vue-router", () => ({ useRoute: () => route }));
+beforeEach(() => {
+  route.query.tab = "";
+});
 
 const renderPage = () =>
   render(UserProfilePage, {
@@ -15,6 +20,17 @@ const renderPage = () =>
   });
 
 describe("UserProfilePage — onglet Synchronisation Grist", () => {
+  it("ouvre les jetons depuis le lien de rappel, y compris après navigation", async () => {
+    route.query.tab = "tokens";
+    renderPage();
+    const tokens = screen.getByRole("tab", { name: "Mes tokens" });
+    expect(tokens).toHaveAttribute("aria-selected", "true");
+    await fireEvent.click(screen.getByRole("tab", { name: "Mes informations" }));
+    route.query.tab = "";
+    await nextTick();
+    route.query.tab = "tokens";
+    await waitFor(() => expect(tokens).toHaveAttribute("aria-selected", "true"));
+  });
   it("affiche l'onglet avec la capacité GristSync", () => {
     hasPermissions.mockReturnValue(true);
     renderPage();
