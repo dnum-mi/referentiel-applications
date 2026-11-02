@@ -54,15 +54,17 @@ export class ApplicationRepository implements IApplicationRepository {
   /**
    * Relations chargées pour chaque ligne d'une liste d'applications. Partagé
    * entre la recherche classique (`findApplications`) et la recherche full-text
-   * triée par pertinence (`findApplicationsRanked`).
+   * triée par pertinence (`findMatchingApplicationsPage`). Le millésime filtre
+   * aussi l'évaluation chargée, pas seulement la sélection des applications.
    */
-  private buildListInclude() {
+  private buildListInclude(millesime?: number) {
     const since = new Date();
     since.setMonth(since.getMonth() - 12);
 
     return {
       currentStatus: true,
       technicalDebtInfo: {
+        where: millesime == null ? undefined : { millesime },
         orderBy: { createdAt: "desc" },
         take: 1,
       },
@@ -168,7 +170,7 @@ export class ApplicationRepository implements IApplicationRepository {
           orderBy,
           skip,
           take,
-          include: this.buildListInclude(),
+          include: this.buildListInclude(filters.millesime),
         }),
         this.prisma.application.aggregate({
           where,
@@ -236,7 +238,7 @@ export class ApplicationRepository implements IApplicationRepository {
         const records = pageIds.length
           ? await tx.application.findMany({
               where: { id: { in: pageIds } },
-              include: this.buildListInclude(),
+              include: this.buildListInclude(filters.millesime),
             })
           : [];
         const byId = new Map(records.map((record) => [record.id, record]));

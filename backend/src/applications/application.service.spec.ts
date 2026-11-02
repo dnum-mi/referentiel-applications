@@ -259,6 +259,7 @@ describe("ApplicationService.search — recherche full-text (param q)", () => {
       ["app-a", "app-b"],
       "moa",
       "asc",
+      undefined,
     );
     const { orderedIds } =
       await applicationRepository.findMatchingApplicationsPage.mock.results[0]
