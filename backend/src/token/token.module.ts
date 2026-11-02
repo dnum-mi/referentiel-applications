@@ -4,11 +4,12 @@ import { PrismaModule } from "src/prisma/prisma.module";
 import { UserModule } from "src/user/user.module";
 import { TokenController } from "./token.controller";
 import { TokenService } from "./token.service";
+import { TokenExpirationReminderService } from "./token-expiration-reminder.service";
 
 @Module({
   imports: [PrismaModule, CommonModule, UserModule],
   controllers: [TokenController],
-  providers: [TokenService],
+  providers: [TokenService, TokenExpirationReminderService],
   exports: [TokenService],
 })
 export class TokenModule {}

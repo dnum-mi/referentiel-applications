@@ -31,6 +31,16 @@ model Token {
   createdById       String
   /// Utilisateur qui a créé ce token
   createdBy         User   @relation("TokenUserCreator", fields: [createdById], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  expirationReminders TokenExpirationReminder[]
+}
+
+/// Échéances déjà notifiées, indépendamment de la suppression des notifications.
+model TokenExpirationReminder {
+  tokenId String
+  expiresAt DateTime
+  token Token @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+
+  @@id([tokenId, expiresAt])
 }
 
 /// Statut d'un token API

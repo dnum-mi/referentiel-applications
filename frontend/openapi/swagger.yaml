@@ -9233,6 +9233,7 @@ components:
         - campaign_quality_reminder
         - campaign_quality_sponsor_report
         - technology_end_of_life
+        - token_expiration_reminder
     NotificationDto:
       type: object
       properties:
