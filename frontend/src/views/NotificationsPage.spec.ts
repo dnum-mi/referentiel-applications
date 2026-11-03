@@ -1,3 +1,4 @@
+import { DsfrSelect } from "@gouvminint/vue-dsfr";
 import Aura from "@primevue/themes/aura";
 import PrimeVue from "primevue/config";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/vue";
@@ -25,6 +26,7 @@ function renderPage() {
   const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/", component: { template: "<div/>" } }] });
   return render(NotificationsPage, {
     global: {
+      components: { DsfrSelect },
       plugins: [router, [PrimeVue, { theme: { preset: Aura } }]],
       stubs: {
         DsfrModal: { props: { opened: Boolean }, template: '<section v-if="opened" role="dialog"><slot/><slot name="footer"/></section>' },
@@ -169,4 +171,33 @@ describe("Notifications — statut non lu restitué sans la couleur ni le gras (
     expect(screen.getAllByText("Non lue")).toHaveLength(2);
     screen.getAllByText("Non lue").forEach((label) => expect(label).toHaveClass("fr-sr-only"));
   });
+});
+
+it("filtre par type, vide la sélection puis revient à Tous", async () => {
+  renderPage();
+  await fireEvent.click(await screen.findByRole("checkbox", { name: "Tout sélectionner" }));
+  const select = screen.getByRole("combobox", { name: "Type d’événement" });
+  await fireEvent.update(select, NotificationType.ACTOR_ADDED);
+  expect(store.fetchNotifications).toHaveBeenLastCalledWith(0, 15, "desc", NotificationType.ACTOR_ADDED);
+  expect(screen.queryByTestId("notifications-page-delete-selection")).not.toBeInTheDocument();
+  store.notifications = [];
+  await waitFor(() => expect(screen.getByText("Aucune notification pour ce type d’événement.")).toBeInTheDocument());
+  expect(screen.getByText(/concerne toutes vos notifications/)).toBeInTheDocument();
+  await fireEvent.update(select, "");
+  expect(store.fetchNotifications).toHaveBeenLastCalledWith(0, 15, "desc", undefined);
+});
+
+it("conserve le type pendant la pagination et le tri, puis revient en première page au changement de type", async () => {
+  vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+  store.total = 45;
+  renderPage();
+  const select = screen.getByRole("combobox", { name: "Type d’événement" });
+  await fireEvent.update(select, NotificationType.ACTOR_ADDED);
+  await fireEvent.click(screen.getByRole("button", { name: "Page suivante (page 2 sur 3)" }));
+  expect(store.fetchNotifications).toHaveBeenLastCalledWith(1, 15, "desc", NotificationType.ACTOR_ADDED);
+  await fireEvent.click(screen.getByRole("button", { name: "Date" }));
+  expect(store.fetchNotifications).toHaveBeenLastCalledWith(0, 15, "asc", NotificationType.ACTOR_ADDED);
+  await fireEvent.click(screen.getByRole("button", { name: "Page suivante (page 2 sur 3)" }));
+  await fireEvent.update(select, NotificationType.REPORT_CREATED);
+  expect(store.fetchNotifications).toHaveBeenLastCalledWith(0, 15, "asc", NotificationType.REPORT_CREATED);
 });

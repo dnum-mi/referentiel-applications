@@ -1,5 +1,5 @@
 import { isApiSuccess } from "@/api/api-result";
-import type { EmailLogDto, NotificationDto } from "@/client/types.gen";
+import type { EmailLogDto, NotificationDto, NotificationType } from "@/client/types.gen";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import api from "@/api/index";
@@ -7,24 +7,32 @@ import { useToasterStore } from "@/stores/toasterStore";
 
 export const useNotificationStore = defineStore("notificationStore", () => {
   const notifications = ref<NotificationDto[]>([]);
+  const bellNotifications = ref<NotificationDto[]>([]);
+  let requestId = 0;
   const total = ref(0);
   const unreadCount = ref(0);
   const isLoading = ref(false);
   const emailPreview = ref<EmailLogDto | null>(null);
 
-  async function fetchNotifications(page = 0, pageSize = 15, order: "asc" | "desc" = "desc") {
+  async function fetchNotifications(page = 0, pageSize = 15, order: "asc" | "desc" = "desc", type?: NotificationType) {
+    const currentRequest = ++requestId;
     isLoading.value = true;
     try {
       const response = await api.notificationControllerFindAll({
-        query: { page, pageSize, sortBy: "createdAt", order },
+        query: { page, pageSize, sortBy: "createdAt", order, type },
       });
-      if (response.data) {
+      if (response.data && currentRequest === requestId) {
         notifications.value = response.data.results;
         total.value = response.data.total;
       }
     } finally {
-      isLoading.value = false;
+      if (currentRequest === requestId) isLoading.value = false;
     }
+  }
+
+  async function fetchBellNotifications() {
+    const response = await api.notificationControllerFindAll({ query: { page: 0, pageSize: 10, sortBy: "createdAt", order: "desc" } });
+    if (response.data) bellNotifications.value = response.data.results;
   }
 
   async function fetchUnreadCount() {
@@ -36,7 +44,7 @@ export const useNotificationStore = defineStore("notificationStore", () => {
 
   async function markAsRead(id: string) {
     const toaster = useToasterStore();
-    const notification = notifications.value.find((n) => n.id === id);
+    const notification = notifications.value.find((n) => n.id === id) ?? bellNotifications.value.find((n) => n.id === id);
     if (notification?.isRead) {
       return;
     }
@@ -45,8 +53,8 @@ export const useNotificationStore = defineStore("notificationStore", () => {
       if (!isApiSuccess(response)) {
         throw new Error("Erreur lors du marquage de la notification comme lue");
       }
-      if (notification) {
-        notification.isRead = true;
+      for (const item of [...notifications.value, ...bellNotifications.value]) {
+        if (item.id === id) item.isRead = true;
       }
       unreadCount.value = Math.max(0, unreadCount.value - 1);
     } catch {
@@ -62,6 +70,7 @@ export const useNotificationStore = defineStore("notificationStore", () => {
         throw new Error("Erreur lors du marquage des notifications comme lues");
       }
       notifications.value = notifications.value.map((n) => ({ ...n, isRead: true }));
+      bellNotifications.value = bellNotifications.value.map((n) => ({ ...n, isRead: true }));
       unreadCount.value = 0;
       return true;
     } catch {
@@ -79,6 +88,7 @@ export const useNotificationStore = defineStore("notificationStore", () => {
       }
       const removed = notifications.value.find((n) => n.id === id);
       notifications.value = notifications.value.filter((n) => n.id !== id);
+      bellNotifications.value = bellNotifications.value.filter((n) => n.id !== id);
       total.value = Math.max(0, total.value - 1);
       if (removed && !removed.isRead) {
         unreadCount.value = Math.max(0, unreadCount.value - 1);
@@ -100,6 +110,7 @@ export const useNotificationStore = defineStore("notificationStore", () => {
       const idSet = new Set(ids);
       const removedUnreadCount = notifications.value.filter((n) => idSet.has(n.id) && !n.isRead).length;
       notifications.value = notifications.value.filter((n) => !idSet.has(n.id));
+      bellNotifications.value = bellNotifications.value.filter((n) => !idSet.has(n.id));
       total.value = Math.max(0, total.value - ids.length);
       unreadCount.value = Math.max(0, unreadCount.value - removedUnreadCount);
       return true;
@@ -127,6 +138,8 @@ export const useNotificationStore = defineStore("notificationStore", () => {
 
   return {
     notifications,
+    bellNotifications,
+    fetchBellNotifications,
     total,
     unreadCount,
     isLoading,

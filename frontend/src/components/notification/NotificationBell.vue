@@ -45,7 +45,7 @@ const buttonLabel = computed(() =>
 async function togglePanel() {
   isOpen.value = !isOpen.value;
   if (isOpen.value) {
-    await notificationStore.fetchNotifications(0, 10);
+    await notificationStore.fetchBellNotifications();
   }
 }
 
@@ -130,10 +130,10 @@ async function goToHistory() {
       </div>
 
       <ul class="notification-bell__list">
-        <li v-if="notificationStore.notifications.length === 0">
+        <li v-if="notificationStore.bellNotifications.length === 0">
           <output class="notification-bell__empty fr-p-2w fr-text--sm" aria-live="polite" aria-atomic="true">Aucune notification.</output>
         </li>
-        <li v-for="notification in notificationStore.notifications" :key="notification.id">
+        <li v-for="notification in notificationStore.bellNotifications" :key="notification.id">
           <NotificationListItem :notification="notification" @select="onSelect" />
         </li>
       </ul>

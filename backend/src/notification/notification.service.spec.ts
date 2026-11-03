@@ -120,10 +120,15 @@ describe("NotificationService", () => {
         page: 0,
         pageSize: 2,
         isRead,
+        type: NotificationType.report_created,
       });
 
       expect(paginate).toHaveBeenCalledWith({
-        where: { userId: "user-1", isRead },
+        where: {
+          userId: "user-1",
+          isRead,
+          type: NotificationType.report_created,
+        },
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         page: 0,
         pageSize: 2,

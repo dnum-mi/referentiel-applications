@@ -89,6 +89,7 @@ describe("Notifications — contrat HTTP (#2297)", () => {
         },
         {
           ...common,
+          type: NotificationType.actor_added,
           id: oldestId,
           userId: owner.id,
           isRead: true,
@@ -324,6 +325,46 @@ describe("Notifications — contrat HTTP (#2297)", () => {
     ).toBe(3);
   });
 
+  it.each(["asc", "desc"])(
+    "filtre avant comptage et pagination (%s), en isolant le destinataire",
+    async (order) => {
+      const expected = descendingIds.filter((id) => id !== oldestId);
+      if (order === "asc") expected.reverse();
+      for (const page of [0, 1]) {
+        const response = await request(app.getHttpServer())
+          .get("/notifications")
+          .set("Authorization", `Bearer ${ownerToken}`)
+          .query({
+            type: NotificationType.report_created,
+            page,
+            pageSize: 2,
+            order,
+          })
+          .expect(200);
+        expect(response.body.total).toBe(4);
+        expect(response.body.results.map((n: { id: string }) => n.id)).toEqual(
+          expected.slice(page * 2, page * 2 + 2),
+        );
+      }
+      const read = await request(app.getHttpServer())
+        .get("/notifications")
+        .set("Authorization", `Bearer ${ownerToken}`)
+        .query({ type: NotificationType.report_created, isRead: true })
+        .expect(200);
+      expect(read.body.total).toBe(1);
+      expect(read.body.results[0].id).toBe(tieMiddleId);
+      await unreadCount(ownerToken).expect(200, { count: 3 });
+    },
+  );
+
+  it("refuse un type inconnu", async () => {
+    await request(app.getHttpServer())
+      .get("/notifications")
+      .set("Authorization", `Bearer ${ownerToken}`)
+      .query({ type: "unknown" })
+      .expect(400);
+  });
+
   it("documente la pagination, le filtre, les réponses et les endpoints de lecture dans OpenAPI", async () => {
     const response = await request(app.getHttpServer())
       .get("/swagger/json")
@@ -344,6 +385,12 @@ describe("Notifications — contrat HTTP (#2297)", () => {
       in: "query",
       required: false,
       schema: { type: "integer", minimum: 0, maximum: 100, default: 15 },
+    });
+    expect(findParameter("type")).toMatchObject({
+      name: "type",
+      in: "query",
+      required: false,
+      schema: { $ref: "#/components/schemas/NotificationType" },
     });
     expect(findParameter("isRead")).toMatchObject({
       name: "isRead",

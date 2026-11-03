@@ -1,9 +1,27 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
 import { Transform, Type } from "class-transformer";
-import { IsBoolean, IsInt, IsOptional, Max, Min } from "class-validator";
+import {
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  Max,
+  Min,
+} from "class-validator";
+import { NotificationType } from "@prisma/client";
 import { PaginationDto } from "src/common/dto";
 
 export class NotificationFiltersDto extends PaginationDto {
+  @ApiPropertyOptional({
+    enum: NotificationType,
+    enumName: "NotificationType",
+    description:
+      "Filtrer par type d’événement. Sans ce paramètre, tous les types sont renvoyés.",
+  })
+  @IsOptional()
+  @IsEnum(NotificationType)
+  type?: NotificationType;
+
   @ApiPropertyOptional({
     type: "integer",
     minimum: 0,
