@@ -127,6 +127,7 @@ describe("Fonctionnalités bêta — capacité explicite et droits métier (#303
       .get("/config")
       .expect(200);
     expect(response.body.betaFeatures).toEqual([
+      FeatureId.GristSync,
       FeatureId.CatalogueHtmlExport,
       FeatureId.ImportReportHtmlExport,
       FeatureId.ProductHtmlExport,
