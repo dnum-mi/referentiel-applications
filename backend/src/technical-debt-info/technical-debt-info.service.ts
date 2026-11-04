@@ -1,4 +1,6 @@
-import { Injectable } from "@nestjs/common";
+import { technicalDebtAccessWhere } from "src/common/utils/technical-debt-access.utils";
+import type { Requestor } from "src/user/entities/user.entity";
+import { ForbiddenException, Injectable } from "@nestjs/common";
 import { ApplicationService } from "src/applications/application.service";
 import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -27,7 +29,16 @@ export class TechnicalDebtInfoService extends BaseService<
   async findByApplicationId(
     applicationId: string,
     filters: Pick<PaginationDto, "page" | "pageSize">,
+    requestor: Requestor,
   ): Promise<PaginatedResponseDto<TechnicalDebtInfo>> {
+    const allowed = await this.prisma.application.findFirst({
+      where: {
+        AND: [{ id: applicationId }, technicalDebtAccessWhere(requestor)],
+      },
+      select: { id: true },
+    });
+    if (!allowed)
+      throw new ForbiddenException("Données de dette IT hors périmètre.");
     return this.model.paginate({
       where: { applicationId },
       orderBy: { createdAt: "desc" },

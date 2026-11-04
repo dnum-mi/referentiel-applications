@@ -54,13 +54,20 @@ const canViewHostings = useAppPermission(() => props.application.myPerms, [Permi
 const canEditHostings = useAppPermission(() => props.application.myPerms, [Permission.HOSTING_WRITE]);
 
 const isTechnicalDebtModalOpen = ref(false);
+const technicalDebtRestricted = ref(false);
 const technicalDebtInfo = ref<TechnicalDebtInfoDto | null>(null);
 
 async function fetchTechnicalDebtInfo() {
+  technicalDebtInfo.value = null;
+  technicalDebtRestricted.value = false;
   const response = await api.applicationTechnicalDebtInfoControllerFind({
     path: { applicationId: props.application.id },
     query: { pageSize: 1 },
   });
+  if (response.response?.status === 403) {
+    technicalDebtRestricted.value = true;
+    return;
+  }
   if (response.response?.status === 404) {
     technicalDebtInfo.value = null;
     return;
@@ -477,7 +484,11 @@ watch(
         </div>
       </div>
 
+      <p v-if="technicalDebtRestricted" data-testid="technical-debt-restricted">
+        Vous n’avez pas accès aux données de dette IT de cette application.
+      </p>
       <TechnicalDebtCard
+        v-else
         :technical-debt-info="technicalDebtInfo"
         :can-edit="canEditBase"
         :small="small"

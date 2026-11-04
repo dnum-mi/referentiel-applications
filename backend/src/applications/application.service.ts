@@ -1,3 +1,4 @@
+import { technicalDebtAccessWhere } from "src/common/utils/technical-debt-access.utils";
 import {
   ConflictException,
   Injectable,
@@ -413,6 +414,7 @@ export class ApplicationService {
     searchParams: ApplicationSearchDto,
     requestor?: Requestor,
   ): Promise<ApplicationSearchResultDto> {
+    const debtScope = technicalDebtAccessWhere(requestor);
     const fullText = searchParams.q?.trim();
     const prefixText = searchParams.qPrefix?.trim();
     // `qPrefix` (autocomplétion au fil de la frappe) est prioritaire sur `q`.
@@ -501,12 +503,14 @@ export class ApplicationService {
               searchParams.millesime,
             );
           },
+          debtScope,
         );
     } else {
       paginatedResult = await this.applicationRepository.findApplications(
         searchParams,
         where,
         orderBy,
+        debtScope,
       );
     }
 
@@ -547,10 +551,12 @@ export class ApplicationService {
     const { sortBy = "shortName", order = "asc" } = searchParams;
     const orderBy = this.prismaQueryBuilder.buildOrderBy(sortBy, order);
 
+    const debtScope = technicalDebtAccessWhere(requestor);
+
     // Par défaut, on présente le millésime de campagne le plus récent disponible.
     const millesime =
       searchParams.millesime ??
-      (await this.applicationRepository.findLatestMillesime()) ??
+      (await this.applicationRepository.findLatestMillesime(debtScope)) ??
       undefined;
 
     const hasMDITList = await this.checkPermissions.can(
@@ -562,7 +568,10 @@ export class ApplicationService {
         searchParams,
         requestor,
       );
-      where.AND.push(this.prismaQueryBuilder.buildTechnicalDebtInfo(millesime));
+      where.AND.push(
+        debtScope,
+        this.prismaQueryBuilder.buildTechnicalDebtInfo(millesime),
+      );
       return this.applicationRepository.findTechnicalDebtPoints(
         where,
         orderBy,
@@ -584,7 +593,10 @@ export class ApplicationService {
           businessDivisionId: requestor?.organization?.businessDivisionId,
         },
       );
-      where.AND.push(this.prismaQueryBuilder.buildTechnicalDebtInfo(millesime));
+      where.AND.push(
+        debtScope,
+        this.prismaQueryBuilder.buildTechnicalDebtInfo(millesime),
+      );
       return this.applicationRepository.findTechnicalDebtPoints(
         where,
         orderBy,
@@ -595,8 +607,12 @@ export class ApplicationService {
     return [];
   }
 
-  public async getTechnicalDebtMillesimes(): Promise<number[]> {
-    return this.applicationRepository.findDistinctMillesimes();
+  public async getTechnicalDebtMillesimes(
+    requestor: Requestor,
+  ): Promise<number[]> {
+    return this.applicationRepository.findDistinctMillesimes(
+      technicalDebtAccessWhere(requestor),
+    );
   }
 
   public async getApplicationById(applicationId: string, user?: Requestor) {

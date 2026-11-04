@@ -1,3 +1,5 @@
+import { User } from "src/common/decorators/user.decorator";
+import { Requestor } from "src/user/entities/user.entity";
 import {
   Body,
   Controller,
@@ -86,11 +88,13 @@ export class ApplicationTechnicalDebtInfoController {
   async find(
     @Param("applicationId") applicationId: string,
     @Query() filters: PaginationDto,
+    @User() requestor: Requestor,
   ) {
     const { page, pageSize } = filters;
     const result = await this.technicalDebtInfoService.findByApplicationId(
       applicationId,
       { page, pageSize },
+      requestor,
     );
     if (!result?.results?.length) {
       throw new NotFoundException(

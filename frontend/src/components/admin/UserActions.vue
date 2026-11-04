@@ -287,7 +287,7 @@ const additionalPermissionsOptions = computed<Omit<DsfrCheckboxProps, "modelValu
     hint: "Accès accordé explicitement, y compris pour les administrateurs. Les droits habituels de chaque fonctionnalité restent nécessaires.",
   },
   {
-    label: "Voir les données MDIT",
+    label: "Voir les données dette IT",
     value: Permission.MDIT_LIST,
     name: "capability-mdit-view",
   },

@@ -57,14 +57,17 @@ export class ApplicationRepository implements IApplicationRepository {
    * triée par pertinence (`findMatchingApplicationsPage`). Le millésime filtre
    * aussi l'évaluation chargée, pas seulement la sélection des applications.
    */
-  private buildListInclude(millesime?: number) {
+  private buildListInclude(
+    millesime?: number,
+    debtScope: Prisma.ApplicationWhereInput = {},
+  ) {
     const since = new Date();
     since.setMonth(since.getMonth() - 12);
 
     return {
       currentStatus: true,
       technicalDebtInfo: {
-        where: millesime == null ? undefined : { millesime },
+        where: { millesime, application: debtScope },
         orderBy: { createdAt: "desc" },
         take: 1,
       },
@@ -136,11 +139,12 @@ export class ApplicationRepository implements IApplicationRepository {
   public async findSearchItems(
     where: Prisma.ApplicationWhereInput,
     orderBy: Prisma.ApplicationOrderByWithRelationInput,
+    debtScope: Prisma.ApplicationWhereInput = {},
   ) {
     const applications = await this.prisma.application.findMany({
       where,
       orderBy,
-      include: this.buildListInclude(),
+      include: this.buildListInclude(undefined, debtScope),
     });
     return applications.map((app) => {
       const { _count, ...rest } = this.toSearchItem(app);
@@ -152,6 +156,7 @@ export class ApplicationRepository implements IApplicationRepository {
     filters: ApplicationSearchFilters,
     where: Prisma.ApplicationWhereInput,
     orderBy: Prisma.ApplicationOrderByWithRelationInput,
+    debtScope: Prisma.ApplicationWhereInput = {},
   ): Promise<ApplicationSearchResultDto> {
     const { page = 0, pageSize } = filters;
     const skip =
@@ -170,7 +175,7 @@ export class ApplicationRepository implements IApplicationRepository {
           orderBy,
           skip,
           take,
-          include: this.buildListInclude(filters.millesime),
+          include: this.buildListInclude(filters.millesime, debtScope),
         }),
         this.prisma.application.aggregate({
           where,
@@ -206,6 +211,7 @@ export class ApplicationRepository implements IApplicationRepository {
     computeOrderedIds: (
       matching: { id: string; quality: number | null }[],
     ) => Promise<string[]> | string[],
+    debtScope: Prisma.ApplicationWhereInput = {},
   ): Promise<ApplicationSearchResultDto> {
     const { page = 0, pageSize = 15 } = filters;
     const safePage = Math.max(0, page);
@@ -238,7 +244,7 @@ export class ApplicationRepository implements IApplicationRepository {
         const records = pageIds.length
           ? await tx.application.findMany({
               where: { id: { in: pageIds } },
-              include: this.buildListInclude(filters.millesime),
+              include: this.buildListInclude(filters.millesime, debtScope),
             })
           : [];
         const byId = new Map(records.map((record) => [record.id, record]));
@@ -262,11 +268,13 @@ export class ApplicationRepository implements IApplicationRepository {
   }
 
   /**
-   * Millésime de campagne dette IT le plus récent enregistré, tous applications
-   * confondues. `null` s'il n'existe aucune évaluation.
+   * Millésime de campagne dette IT le plus récent dans le périmètre demandé. `null` s'il n'existe aucune évaluation.
    */
-  public async findLatestMillesime(): Promise<number | null> {
+  public async findLatestMillesime(
+    debtScope: Prisma.ApplicationWhereInput = {},
+  ): Promise<number | null> {
     const latest = await this.prisma.technicalDebtInfo.aggregate({
+      where: { application: debtScope },
       _max: { millesime: true },
     });
     return latest._max.millesime ?? null;
@@ -276,8 +284,11 @@ export class ApplicationRepository implements IApplicationRepository {
    * Millésimes de campagne dette IT disponibles, triés du plus récent au plus
    * ancien.
    */
-  public async findDistinctMillesimes(): Promise<number[]> {
+  public async findDistinctMillesimes(
+    debtScope: Prisma.ApplicationWhereInput = {},
+  ): Promise<number[]> {
     const rows = await this.prisma.technicalDebtInfo.findMany({
+      where: { application: debtScope },
       distinct: ["millesime"],
       select: { millesime: true },
       orderBy: { millesime: "desc" },
