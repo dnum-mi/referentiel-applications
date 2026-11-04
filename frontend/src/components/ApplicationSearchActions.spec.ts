@@ -62,8 +62,23 @@ beforeEach(() => {
 });
 
 describe("ApplicationSearchActions — synchronisation Grist", () => {
-  it("masque le bouton sans la capacité GristSync", async () => {
-    await renderWith([Permission.DATA_EXPORT]);
+  it("masque le bouton sans la capacité BetaFeatures", async () => {
+    await renderWith([Permission.DATA_EXPORT, Permission.GRIST_SYNC]);
+    expect(screen.queryByTestId("grist-sync-btn")).toBeNull();
+    expect(screen.queryByTestId("grist-sync-btn-mobile")).toBeNull();
+  });
+
+  it.each(["grist-sync-btn", "grist-sync-btn-mobile"])("affiche le badge bêta sur %s", async (testId) => {
+    await renderWith([Permission.BETA_FEATURES]);
+    const button = screen.getByTestId(testId);
+    expect(button).toHaveTextContent("Bêta");
+    expect(button).toHaveAccessibleName(/fonctionnalité bêta/);
+  });
+
+  it("retire les boutons lorsque l’accès bêta est révoqué", async () => {
+    await renderWith([Permission.BETA_FEATURES]);
+    grantedPermissions.value = [];
+    await flushPromises();
     expect(screen.queryByTestId("grist-sync-btn")).toBeNull();
     expect(screen.queryByTestId("grist-sync-btn-mobile")).toBeNull();
   });
@@ -74,7 +89,7 @@ describe("ApplicationSearchActions — synchronisation Grist", () => {
     ["sans clé d'API", { hasGristApiKey: false }],
   ])("désactive le bouton tant que le profil est %s", async (_, missing) => {
     Object.assign(user, missing);
-    await renderWith([Permission.GRIST_SYNC]);
+    await renderWith([Permission.BETA_FEATURES]);
 
     const button = screen.getByTestId("grist-sync-btn");
     expect(button).toBeDisabled();
@@ -87,7 +102,7 @@ describe("ApplicationSearchActions — synchronisation Grist", () => {
   });
 
   it("ouvre la modale de synchronisation", async () => {
-    await renderWith([Permission.GRIST_SYNC]);
+    await renderWith([Permission.BETA_FEATURES]);
     expect(screen.getByTestId("grist-sync-modal")).toHaveAttribute("opened", "false");
 
     await fireEvent.click(screen.getByTestId("grist-sync-btn"));
@@ -96,7 +111,7 @@ describe("ApplicationSearchActions — synchronisation Grist", () => {
   });
 
   it.each(["grist-sync-btn", "grist-sync-btn-mobile"])("rend le focus au bouton %s après annulation", async (testId) => {
-    await renderWith([Permission.GRIST_SYNC]);
+    await renderWith([Permission.BETA_FEATURES]);
     const button = screen.getByTestId(testId);
     button.focus();
     await fireEvent.click(button);
@@ -114,7 +129,7 @@ describe("ApplicationSearchActions — synchronisation Grist", () => {
         finishExport = resolve;
       }),
     );
-    await renderWith([Permission.DATA_EXPORT, Permission.GRIST_SYNC, Permission.BETA_FEATURES]);
+    await renderWith([Permission.DATA_EXPORT, Permission.BETA_FEATURES]);
     const htmlButton = screen.getByTestId("applications-export-html-btn");
     const excelButton = screen.getByTestId("application-export-btn");
     expect(screen.getByTestId("grist-sync-btn")).toBeEnabled();

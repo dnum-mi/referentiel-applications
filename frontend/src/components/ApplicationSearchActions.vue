@@ -81,7 +81,7 @@ const excelExportLabel = computed(
 );
 
 const hasGristSyncPermissions = computed(() => {
-  return userStore.hasPermissions([Permission.GRIST_SYNC]);
+  return canAccess(FeatureId.GRIST_SYNC);
 });
 
 // La synchronisation utilise l'instance, la clé d'API et les documents du profil.
@@ -93,8 +93,9 @@ const gristSyncTitle = computed(() =>
     ? "Synchroniser avec Grist les applications correspondant aux filtres actuels, dans les tables de votre choix"
     : "Renseignez votre connexion et vos documents Grist dans l'onglet « Synchronisation Grist » de votre profil pour synchroniser",
 );
-const gristSyncLabel = computed(() =>
-  isGristConfigured.value ? gristSyncTitle.value : `Synchroniser avec Grist. ${gristSyncTitle.value}`,
+const gristSyncLabel = computed(
+  () =>
+    `${isGristConfigured.value ? gristSyncTitle.value : `Synchroniser avec Grist. ${gristSyncTitle.value}`}${isBeta(FeatureId.GRIST_SYNC) ? " — fonctionnalité bêta" : ""}`,
 );
 
 const hasCreateApplicationsPermissions = computed(() => {
@@ -204,7 +205,6 @@ const hasQualityCampaignPermissions = computed(() => {
 
       <DsfrButton
         v-if="hasGristSyncPermissions"
-        label="Synchroniser avec Grist"
         icon="ri-refresh-line"
         secondary
         :disabled="!isGristConfigured"
@@ -214,11 +214,13 @@ const hasQualityCampaignPermissions = computed(() => {
         @click="openGristSync"
         :aria-label="gristSyncLabel"
         :title="gristSyncTitle"
-      ></DsfrButton>
+      >
+        Synchroniser avec Grist
+        <BetaBadge v-if="isBeta(FeatureId.GRIST_SYNC)" aria-hidden="true" />
+      </DsfrButton>
 
       <DsfrButton
         v-if="hasGristSyncPermissions"
-        label="Synchroniser avec Grist"
         icon="ri-refresh-line"
         secondary
         :disabled="!isGristConfigured"
@@ -228,7 +230,10 @@ const hasQualityCampaignPermissions = computed(() => {
         @click="openGristSync"
         :aria-label="gristSyncLabel"
         :title="gristSyncTitle"
-      ></DsfrButton>
+      >
+        Synchroniser avec Grist
+        <BetaBadge v-if="isBeta(FeatureId.GRIST_SYNC)" aria-hidden="true" />
+      </DsfrButton>
 
       <DsfrButton
         label="Créer une campagne qualité"

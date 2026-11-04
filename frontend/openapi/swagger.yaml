@@ -8258,6 +8258,7 @@ components:
     FeatureId:
       type: string
       enum:
+        - grist-sync
         - catalogue-excel-export
         - catalogue-html-export
         - import-report-html-export
