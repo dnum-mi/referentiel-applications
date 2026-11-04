@@ -1,3 +1,4 @@
+import { technicalDebtAccessWhere } from "src/common/utils/technical-debt-access.utils";
 import {
   BadRequestException,
   ConflictException,
@@ -136,7 +137,11 @@ export class GristService {
       requestor,
     );
     const applications = where
-      ? await this.applications.findSearchItems(where, { label: "asc" })
+      ? await this.applications.findSearchItems(
+          where,
+          { label: "asc" },
+          technicalDebtAccessWhere(requestor),
+        )
       : [];
     // Lignes sorties de la sélection mais conservées : relues sans les filtres de la page, dans le
     // seul périmètre du demandeur, pour que leurs colonnes RefApp restent à jour.
@@ -149,6 +154,7 @@ export class GristService {
         ? this.applications.findSearchItems(
             { AND: [scope, { id: { in: ids } }] },
             { label: "asc" },
+            technicalDebtAccessWhere(requestor),
           )
         : [];
     };

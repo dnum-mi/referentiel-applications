@@ -217,7 +217,7 @@ function service(
 }
 
 const filters = { shortName: "app" } as ApplicationSearchDto;
-const requestor = { id: "u1" } as Requestor;
+const requestor = { id: "u1", role: "READER" } as Requestor;
 /// Compte rendu de l'unique document du profil.
 const setup = async (
   client: GristClient,
@@ -641,7 +641,7 @@ describe("GristService.setup", () => {
     await sut.setup(filters, requestor);
 
     expect(buildScopedWhere).toHaveBeenCalledWith(filters, requestor);
-    expect(findSearchItems).toHaveBeenCalledWith(where, { label: "asc" });
+    expect(findSearchItems).toHaveBeenCalledWith(where, { label: "asc" }, {});
   });
 
   it("n'écrit aucune application si le demandeur ne peut en lire aucune", async () => {
@@ -726,6 +726,7 @@ describe("GristService.setup", () => {
     expect(findSearchItems).toHaveBeenLastCalledWith(
       { AND: [where, { id: { in: ["old"] } }] },
       { label: "asc" },
+      {},
     );
     expect((puts(calls)[1].body as { records: unknown[] }).records).toEqual([
       {

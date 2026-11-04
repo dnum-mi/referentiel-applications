@@ -11,6 +11,7 @@ import {
   pdmaFilledWhereClause,
 } from "src/common/utils/compliance-presence.utils";
 import { organizationWithinScope } from "src/common/utils/organization-scope.utils";
+import { technicalDebtAccessWhere } from "src/common/utils/technical-debt-access.utils";
 import { globalPermissions } from "src/permissions/delegated-auth";
 import { eolStatusWhere } from "src/technology/utils/eol-status";
 
@@ -76,6 +77,15 @@ export class PrismaQueryBuilder {
 
     // Build a single comprehensive where clause with all filters
     const where: { AND: Prisma.ApplicationWhereInput[] } = { AND: [] };
+
+    if (
+      filters.millesime != null ||
+      ["technicalMaturity", "businessMaturity", "costContainment"].includes(
+        filters.sortBy,
+      )
+    ) {
+      where.AND.push(technicalDebtAccessWhere(requestor));
+    }
 
     if (filters.technologyEolStatus) {
       // Un filtre sur les technologies constitue une lecture transverse, même

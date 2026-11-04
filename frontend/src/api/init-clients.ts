@@ -106,6 +106,10 @@ export function configureClients(toaster: { addErrorMessage: (message: string) =
         toaster.addErrorMessage(STEP_DOWN_MESSAGES[payload.reason]);
         return response;
       }
+      // La fiche affiche déjà cet accès restreint : pas de toast pour cette lecture automatique.
+      if (request?.method === "GET" && /\/applications\/[^/]+\/technical-debt-info$/.test(new URL(request.url).pathname)) {
+        return response;
+      }
       toaster.addErrorMessage(
         options.isAuthDowngraded?.()
           ? WEAK_AUTH_PERMISSION_MESSAGE
