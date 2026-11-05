@@ -56,3 +56,26 @@ Les parcours existants de création et d'édition sont conservés dans
 Les scénarios `PRM-11` et `RGA-01` / `RGA-02` vérifient aussi les droits sur la
 priorité de redémarrage et la navigation au clavier dans un vrai navigateur.
 Ils nécessitent le backend, Keycloak et les jeux de données principal et QA.
+
+## Protection des saisies non enregistrées
+
+La création et l’édition comparent les champs du formulaire à leur état initial.
+Les types MOA/MOE chargés automatiquement ne comptent pas comme une saisie ; une
+synchronisation MAIA demandée par l’utilisateur, elle, modifie le formulaire.
+Restaurer les valeurs initiales retire la protection.
+
+Annuler, fermer le dialogue ou naviguer dans l’application (y compris le retour
+arrière et les changements de paramètres) demande une seule confirmation DSFR.
+« Reprendre », Fermer ou Échap dans la confirmation conserve les valeurs et rend
+le focus au contrôle d’origine. Chaque ouverture de l’édition initialise une
+nouvelle session depuis les données courantes.
+
+Pendant l’enregistrement, les sorties internes sont bloquées. Un succès complet
+libère la navigation ; un échec conserve la saisie et sa protection, y compris
+lorsque la création a échoué après avoir créé l’application côté serveur.
+
+Le rechargement et le départ du navigateur utilisent `beforeunload` uniquement
+si le formulaire est modifié. Le navigateur impose le texte et exige généralement
+une interaction préalable. Cette boîte n’est pas garantie sur mobile, lors de
+l’arrêt du processus ou d’une fermeture forcée. Aucun brouillon persistant ni
+autosauvegarde n’est ajouté : ces situations peuvent entraîner une perte de saisie.

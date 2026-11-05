@@ -19,7 +19,6 @@ export function useApplicationFormState(initialData: ApplicationFormInitialData,
     tags: [...(initialData.tags ?? [])],
     businessDivisionIds: initialData.businessDivisions?.map((division) => division.id) ?? [],
   });
-  const initialStatus = form.value.status.status;
   const createContact = (): CreateActorDto => ({ actorTypeId: "", isGroup: false, email: "", firstname: "", lastname: "" });
   const moa = ref(createContact());
   const moe = ref(createContact());
@@ -32,23 +31,26 @@ export function useApplicationFormState(initialData: ApplicationFormInitialData,
     moe.value.actorTypeId = actorTypeStore.actorTypes.find((type) => type.code === "MOE")?.id ?? "";
   });
 
-  const isCreateFormDirty = computed(() => {
-    if (getMode() !== "create") return false;
-    const hasText = (value?: string) => !!value?.trim();
-    return (
-      [form.value.label, form.value.shortName, form.value.description, form.value.logo].some(hasText) ||
-      [...form.value.purposes, ...form.value.targetPopulations].some(hasText) ||
-      form.value.priorityRestart !== undefined ||
-      form.value.type !== undefined ||
-      !!form.value.tags?.length ||
-      !!form.value.businessDivisionIds?.length ||
-      form.value.status.status !== initialStatus ||
-      [moa.value, moe.value].some(
-        (contact) => !!contact.organizationId || [contact.email, contact.firstname, contact.lastname].some(hasText),
-      )
-    );
-  });
+  const snapshot = () =>
+    JSON.stringify({
+      application: form.value,
+      contacts:
+        getMode() === "create"
+          ? [moa.value, moe.value].map((contact) => ({
+              isGroup: contact.isGroup,
+              email: contact.email,
+              firstname: contact.firstname,
+              lastname: contact.lastname,
+              organizationId: contact.organizationId || undefined,
+            }))
+          : [],
+    });
+  const initialSnapshot = ref(snapshot());
+  const isFormDirty = computed(() => snapshot() !== initialSnapshot.value);
+  const markSaved = () => {
+    initialSnapshot.value = snapshot();
+  };
 
   const getData = () => ({ application: form.value, moa: moa.value, moe: moe.value });
-  return { form, moa, moe, isCreateFormDirty, getData };
+  return { form, moa, moe, isFormDirty, markSaved, getData };
 }

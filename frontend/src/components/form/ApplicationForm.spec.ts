@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/vue";
 import { ref } from "vue";
+import { createMemoryHistory, createRouter, type Router } from "vue-router";
 import type { ApplicationFormInitialData } from "@/models/Application";
 import ApplicationForm from "./ApplicationForm.vue";
 
@@ -35,11 +36,17 @@ vi.mock("./application/use-application-form-actions", () => ({
   }),
 }));
 
-function renderForm(mode: "create" | "edit" = "create", initialData: ApplicationFormInitialData = {}, container?: HTMLElement) {
+function renderForm(
+  mode: "create" | "edit" = "create",
+  initialData: ApplicationFormInitialData = {},
+  container?: HTMLElement,
+  router?: Router,
+) {
   return render(ApplicationForm, {
     container,
     props: { mode, initialData },
     global: {
+      plugins: router ? [router] : [],
       directives: { "use-mermaid": {} },
       stubs: {
         BusinessDivisionSearch: true,
@@ -217,6 +224,8 @@ describe("applicationForm — édition et annulation", () => {
     await fireEvent.update(screen.getByTestId("application-purpose-0"), "Objectif modifié");
     await fireEvent.click(screen.getByTestId("application-population-remove-0"));
     await fireEvent.click(screen.getByTestId("application-cancel-btn"));
+    expect(emitted().cancel).toBeUndefined();
+    await fireEvent.click(screen.getByTestId("application-cancel-modal-confirm"));
     expect(emitted().cancel).toHaveLength(1);
     expect(initialData.purposes).toEqual(["Objectif initial"]);
     expect(initialData.targetPopulations).toEqual(["Population initiale"]);
@@ -243,4 +252,96 @@ describe("applicationForm — édition et annulation", () => {
     await fireEvent.click(screen.getByTestId("application-cancel-modal-confirm"));
     expect(emitted().cancel).toHaveLength(1);
   });
+});
+
+const editData: ApplicationFormInitialData = {
+  id: "app",
+  label: "Application",
+  description: "Description",
+  myPerms: new Set(["AppWrite"]),
+};
+function unloadPrevented() {
+  const event = new Event("beforeunload", { cancelable: true });
+  window.dispatchEvent(event);
+  return event.defaultPrevented;
+}
+
+it.each(["create", "edit"] as const)("protège %s et retire la protection après restauration et démontage", async (mode) => {
+  const scene = renderForm(mode, mode === "edit" ? editData : {});
+  expect(unloadPrevented()).toBe(false);
+  await fireEvent.update(screen.getByTestId("application-label"), "Modifiée");
+  expect(unloadPrevented()).toBe(true);
+  await fireEvent.update(screen.getByTestId("application-label"), mode === "edit" ? "Application" : "");
+  expect(unloadPrevented()).toBe(false);
+  await fireEvent.update(screen.getByTestId("application-label"), "Modifiée");
+  scene.unmount();
+  expect(unloadPrevented()).toBe(false);
+});
+
+it("conserve la protection après échec et la retire avant le succès", async () => {
+  const scene = renderForm("edit", editData);
+  await fireEvent.update(screen.getByTestId("application-label"), "Modifiée");
+  await fireEvent.submit(screen.getByTestId("application-form"));
+  expect(scene.emitted().success).toBeUndefined();
+  expect(unloadPrevented()).toBe(true);
+  expect(screen.getByTestId("application-label")).toHaveValue("Modifiée");
+  mocks.save.mockResolvedValue({ id: "app" });
+  await fireEvent.submit(screen.getByTestId("application-form"));
+  await waitFor(() => expect(scene.emitted().success).toHaveLength(1));
+  expect(unloadPrevented()).toBe(false);
+});
+
+async function routingScene() {
+  const router = createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      { path: "/:id?", component: { template: "<div />" } },
+      { path: "/other/page", component: { template: "<div />" } },
+    ],
+  });
+  await router.push("/app");
+  await router.isReady();
+  const scene = renderForm("edit", editData, undefined, router);
+  await fireEvent.update(screen.getByTestId("application-label"), "Modifiée");
+  return { router, scene };
+}
+
+it.each(["/other/page", "/another-app"])("confirme la navigation vers %s une seule fois", async (destination) => {
+  const { router, scene } = await routingScene();
+  const first = router.push(destination);
+  await screen.findByTestId("application-cancel-modal");
+  await fireEvent.click(screen.getByTestId("application-cancel-btn"));
+  expect(screen.getAllByTestId("application-cancel-modal")).toHaveLength(1);
+  await fireEvent.click(screen.getByTestId("application-cancel-modal-close"));
+  await first;
+  expect(router.currentRoute.value.path).toBe("/app");
+  expect(screen.getByTestId("application-label")).toHaveValue("Modifiée");
+  const second = router.push(destination);
+  await screen.findByTestId("application-cancel-modal");
+  await fireEvent.click(screen.getByTestId("application-cancel-modal-confirm"));
+  await second;
+  expect(router.currentRoute.value.path).toBe(destination);
+  scene.unmount();
+  await router.push("/app");
+});
+
+it("bloque les sorties pendant la sauvegarde", async () => {
+  const { router, scene } = await routingScene();
+  submission.isSubmitting.value = true;
+  await router.push("/other/page");
+  expect(router.currentRoute.value.path).toBe("/app");
+  expect(screen.getByTestId("application-cancel-btn")).toBeDisabled();
+  expect(screen.queryByTestId("application-cancel-modal")).not.toBeInTheDocument();
+  expect(scene.emitted().cancel).toBeUndefined();
+  expect(unloadPrevented()).toBe(true);
+});
+
+it("ne redemande pas confirmation quand Annuler provoque une navigation", async () => {
+  const { router, scene } = await routingScene();
+  await fireEvent.click(screen.getByTestId("application-cancel-btn"));
+  await fireEvent.click(screen.getByTestId("application-cancel-modal-confirm"));
+  expect(scene.emitted().cancel).toHaveLength(1);
+  await router.push("/other/page");
+  expect(router.currentRoute.value.path).toBe("/other/page");
+  expect(screen.queryByTestId("application-cancel-modal")).not.toBeInTheDocument();
 });
