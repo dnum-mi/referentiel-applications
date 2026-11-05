@@ -1,10 +1,11 @@
 import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils";
-import { computed, nextTick, reactive } from "vue";
+import { computed, defineComponent, nextTick, reactive } from "vue";
 import type { ApplicationWithPerms } from "@/models/Application";
 import type { HostingDto, LabelDto } from "@/client/types.gen";
 import InformationsGenerales from "./InformationsGenerales.vue";
 
 const mocks = vi.hoisted(() => ({
+  requestCancel: vi.fn(),
   fetchHostings: vi.fn(),
   resetHostings: vi.fn(),
   deleteHosting: vi.fn(),
@@ -71,13 +72,22 @@ async function renderInfo() {
     global: {
       directives: { "use-mermaid": {} },
       stubs: {
-        ApplicationForm: true,
+        ApplicationForm: defineComponent({
+          emits: ["cancel", "success"],
+          setup(_, { expose }) {
+            expose({ requestCancel: mocks.requestCancel });
+          },
+          template: `<div data-testid="test-form"><button data-testid="test-confirm-cancel" @click="$emit('cancel')">Abandonner</button><button data-testid="test-success" @click="$emit('success')">Enregistré</button></div>`,
+        }),
         HostingModal: {
           emits: ["close", "hostingUpdated"],
           template:
             '<dialog open data-testid="hosting-modal"><button data-testid="test-hosting-save" @click="$emit(\'hostingUpdated\')">Modifier</button><button data-testid="test-hosting-close" @click="$emit(\'close\')">Annuler</button></dialog>',
         },
-        DsfrModal: { props: ["opened"], template: '<div v-if="opened" role="dialog"><slot /></div>' },
+        DsfrModal: {
+          props: ["opened"],
+          template: `<div v-if="opened" role="dialog"><button data-testid="test-modal-close" @click="$emit('close')">Fermer</button><slot /></div>`,
+        },
       },
     },
   });
@@ -183,4 +193,24 @@ it.each(["hosting", "label"] as const)("respecte le focus déplacé pendant la s
   await flushPromises();
   expect(outside).toHaveFocus();
   outside.remove();
+});
+
+it("délègue la fermeture au formulaire et ne démonte que sur annulation confirmée", async () => {
+  const wrapper = await renderInfo();
+  expect(wrapper.find('[data-testid="info-edit-form"]').exists()).toBe(false);
+  const opener = wrapper.get('[data-testid="info-edit-btn"]');
+  await opener.trigger("click");
+  const firstForm = wrapper.get('[data-testid="info-edit-form"]').element;
+  await wrapper.get('[data-testid="info-edit-modal"] [data-testid="test-modal-close"]').trigger("click");
+  expect(mocks.requestCancel).toHaveBeenCalledOnce();
+  expect(firstForm.isConnected).toBe(true);
+  await wrapper.get('[data-testid="test-confirm-cancel"]').trigger("click");
+  expect(firstForm.isConnected).toBe(false);
+  expect(opener.element).toHaveFocus();
+  await opener.trigger("click");
+  expect(wrapper.get('[data-testid="info-edit-form"]').element).not.toBe(firstForm);
+  await wrapper.get('[data-testid="test-success"]').trigger("click");
+  await flushPromises();
+  expect(wrapper.find('[data-testid="info-edit-form"]').exists()).toBe(false);
+  expect(wrapper.emitted("update:application")).toHaveLength(1);
 });
