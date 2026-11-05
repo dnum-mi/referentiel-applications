@@ -83,12 +83,12 @@ export class CompliancesSheetProcessor {
     for (let rowNumber = 2; rowNumber <= worksheet.rowCount; rowNumber++) {
       const getCell = makeCellReader(headerIndex, worksheet.getRow(rowNumber));
       const applicationId = getCell(columnLabels.applicationId);
-      const values = this.readValues(getCell);
-
-      // Ligne entièrement vide : ignorée silencieusement.
-      if (applicationId === "" && Object.keys(values).length === 0) continue;
-
       try {
+        const values = this.readValues(getCell);
+
+        // Ligne entièrement vide : ignorée silencieusement.
+        if (applicationId === "" && Object.keys(values).length === 0) continue;
+
         const entry = await this.processRow(
           rowNumber,
           applicationId,
@@ -121,9 +121,10 @@ export class CompliancesSheetProcessor {
   ): Record<string, string | number | boolean> {
     const values: Record<string, string | number | boolean> = {};
     for (const { key, coerce } of FIELDS) {
-      const raw = getCell(columnLabels[key] ?? key);
+      const column = columnLabels[key] ?? key;
+      const raw = getCell(column);
       if (raw === "") continue;
-      const value = this.coerceValue(coerce, raw);
+      const value = this.coerceValue(coerce, raw, column);
       if (value !== undefined) values[key] = value;
     }
     return values;
@@ -133,10 +134,11 @@ export class CompliancesSheetProcessor {
   private coerceValue(
     coerce: Coercion,
     raw: string,
+    column: string,
   ): string | number | boolean | undefined {
     switch (coerce) {
       case "boolean":
-        return coerceOuiNon(raw);
+        return coerceOuiNon(raw, column);
       case "number":
         return coerceNumber(raw);
       case "date":
