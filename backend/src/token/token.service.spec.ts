@@ -449,3 +449,65 @@ describe("TokenService.regenerate — échéance et statut (#2926)", () => {
     },
   );
 });
+
+describe("TokenService.create — capacités du compte de service", () => {
+  it.each([ServiceTokenMode.machine, ServiceTokenMode.delegated])(
+    "persiste et restitue les capacités à l'authentification (%s)",
+    async (serviceMode) => {
+      const account = {
+        id: "bot",
+        role: Roles.READER,
+        type: UserType.bot,
+        scopeOrganization: null,
+        additionalPermissions: [Permission.DataExport],
+      };
+      const token = {
+        id: "token",
+        name: "Service",
+        description: "Test",
+        role: Roles.READER,
+        serviceMode,
+        expiresAt: new Date(Date.now() + 60_000),
+        status: TokenStatus.active,
+        createdBy: { id: "admin", email: "admin@example.test" },
+        userImpersonate: account,
+      };
+      const prisma = {
+        user: { create: jest.fn().mockResolvedValue(account) },
+        token: {
+          findMany: jest.fn().mockResolvedValue([]),
+          create: jest.fn().mockResolvedValue(token),
+          findUnique: jest.fn().mockResolvedValue(token),
+        },
+      };
+      const service = new TokenService(
+        prisma as never,
+        { can: jest.fn().mockResolvedValue(true) } as never,
+        { assertCanAssignScopeToNewPrincipal: jest.fn() } as never,
+      );
+      await service.create(
+        { id: "admin", type: UserType.human, role: Roles.ADMIN } as Requestor,
+        false,
+        {
+          name: token.name,
+          description: token.description,
+          role: token.role,
+          expiresAt: token.expiresAt,
+          serviceMode,
+          scopeOrganizationId: "scope",
+          additionalPermissions: [Permission.DataExport, Permission.DataExport],
+        },
+      );
+      expect(prisma.user.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          role: Roles.READER,
+          scopeOrganizationId: "scope",
+          additionalPermissions: [Permission.DataExport],
+        }),
+      });
+      expect(
+        (await service.findUserByToken("secret"))?.additionalPermissions,
+      ).toEqual([Permission.DataExport]);
+    },
+  );
+});

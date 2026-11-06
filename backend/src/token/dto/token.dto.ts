@@ -1,9 +1,18 @@
 import { ApiProperty, ApiPropertyOptional, PickType } from "@nestjs/swagger";
-import { IsDateString, IsEnum, IsOptional, IsString } from "class-validator";
+import {
+  IsArray,
+  IsDateString,
+  IsEnum,
+  IsIn,
+  IsOptional,
+  IsString,
+} from "class-validator";
 import { OrganizationDto } from "src/organizations/dto/organizations.dto";
 import { PaginationDto } from "src/common/dto";
 import { TokenStatus } from "../domain/token-status.entity";
-import { Roles, ServiceTokenMode } from "@prisma/client";
+import { Permission, Roles, ServiceTokenMode } from "@prisma/client";
+
+import { DELEGABLE_PERMISSIONS } from "src/permissions/role-to-permissions";
 
 export const TokenKind = {
   personal: "personal",
@@ -154,6 +163,18 @@ export class CreateServiceTokenDto extends PickType(TokenDto, [
     description: "Role attribué a un utilisateur",
   })
   role: Roles;
+
+  @ApiPropertyOptional({
+    enum: Permission,
+    enumName: "Permission",
+    isArray: true,
+    description: "Capacités supplémentaires accordées au compte de service",
+  })
+  @IsOptional()
+  @IsArray()
+  @IsEnum(Permission, { each: true })
+  @IsIn(DELEGABLE_PERMISSIONS, { each: true })
+  additionalPermissions?: Permission[];
 
   @ApiPropertyOptional({
     enum: ServiceTokenMode,

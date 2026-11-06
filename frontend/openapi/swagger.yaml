@@ -8588,6 +8588,49 @@ components:
       required:
         - results
         - total
+    Permission:
+      type: string
+      enum:
+        - CreateApplication
+        - DeleteApplication
+        - CreateGlobalReport
+        - MDITList
+        - AppList
+        - DataExport
+        - BetaFeatures
+        - AdminPanelManage
+        - GlobalAdminManage
+        - ActorTypePost
+        - ActorTypeManage
+        - ActorTypeDelete
+        - OrganizationManage
+        - ColumnRead
+        - QualityCampaignManage
+        - MditCampaignManage
+        - TechnologyList
+        - GristSync
+        - AppRead
+        - AppWrite
+        - ActorRead
+        - ActorWrite
+        - ComplianceRead
+        - ComplianceWrite
+        - HostingRead
+        - HostingWrite
+        - RelationRead
+        - RelationWrite
+        - LinkRead
+        - LinkWrite
+        - AppWritePriority
+        - MetadataRead
+        - DataRead
+        - DataWrite
+        - TechnologyRead
+        - TechnologyWrite
+        - ReportRead
+        - ReportPost
+        - ReportManage
+      description: Capacités supplémentaires accordées au compte de service
     CreateServiceTokenDto:
       type: object
       properties:
@@ -8608,6 +8651,11 @@ components:
           example: 2023-12-31T23:59:59.999Z
           description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
             le futur
+        additionalPermissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Permission"
+          description: Capacités supplémentaires accordées au compte de service
         serviceMode:
           default: machine
           description: "Mode choisi par l'administrateur et immuable : machine pour un
@@ -8742,49 +8790,6 @@ components:
       required:
         - id
         - label
-    Permission:
-      type: string
-      enum:
-        - CreateApplication
-        - DeleteApplication
-        - CreateGlobalReport
-        - MDITList
-        - AppList
-        - DataExport
-        - BetaFeatures
-        - AdminPanelManage
-        - GlobalAdminManage
-        - ActorTypePost
-        - ActorTypeManage
-        - ActorTypeDelete
-        - OrganizationManage
-        - ColumnRead
-        - QualityCampaignManage
-        - MditCampaignManage
-        - TechnologyList
-        - GristSync
-        - AppRead
-        - AppWrite
-        - ActorRead
-        - ActorWrite
-        - ComplianceRead
-        - ComplianceWrite
-        - HostingRead
-        - HostingWrite
-        - RelationRead
-        - RelationWrite
-        - LinkRead
-        - LinkWrite
-        - AppWritePriority
-        - MetadataRead
-        - DataRead
-        - DataWrite
-        - TechnologyRead
-        - TechnologyWrite
-        - ReportRead
-        - ReportPost
-        - ReportManage
-      description: Liste des permissions supplémentaire accordé a un user
     AuthLevel:
       type: string
       enum:
