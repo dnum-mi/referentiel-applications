@@ -133,7 +133,7 @@ watch(
 
 <template>
   <div>
-    <div v-if="userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE])">
+    <div v-if="userStore.hasPermissions([Permission.REPORT_MANAGE])">
       <div v-if="!isEditing && rows.length" class="toRight">
         <DsfrButton label="Modifier" class="fr-mb-1w" @click="isEditing = true" />
       </div>
