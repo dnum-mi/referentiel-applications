@@ -105,7 +105,7 @@ onMounted(async () => {
             </td>
           </tr>
           <tr v-if="contactAdmin && !isGlobalAdmin">
-            <th scope="row">Administrateur</th>
+            <th scope="row">Contact de l'administrateur fonctionnel</th>
             <td data-testid="user-profile-contact-admin">
               <a :href="`mailto:${contactAdmin.email}`" data-testid="user-profile-contact-admin-link">{{ contactAdmin.email }}</a>
               <span class="fr-text--xs fr-ml-1w" data-testid="user-profile-contact-admin-source"
