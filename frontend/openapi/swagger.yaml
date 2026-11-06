@@ -8531,9 +8531,9 @@ components:
             le futur
         status:
           enum: &a41
-            - active
             - expired
             - revoked
+            - active
           type: string
           example: active
           description: Statut du token
