@@ -19,7 +19,7 @@
     "@types/pg": "^8.23.1",
     "exceljs": "^4.4.0",
     "pg": "^8.23.1",
-    "typescript": "^5.9.3"
+    "typescript": "^7.0.2"
   },
   "engines": {
     "node": "^22.18.0 || ^24.0.0"
