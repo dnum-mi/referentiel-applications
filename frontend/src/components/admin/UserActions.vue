@@ -11,8 +11,8 @@ import {
 import { Roles } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
 import { useUserStore } from "@/stores/userStore";
-import { RolesOptions, RolesScopes, RolesWording } from "@/utils/roles-utils";
-import type { DsfrCheckboxProps } from "@gouvminint/vue-dsfr";
+import { RolesOptions, RolesScopes } from "@/utils/roles-utils";
+import UserCapabilities from "./UserCapabilities.vue";
 import { computed, nextTick, ref } from "vue";
 import OrganizationSearchSelect from "../common/OrganizationSearchSelect.vue";
 import { useSubmissionFocus } from "@/composables/use-submission-focus";
@@ -106,34 +106,6 @@ const editingUser = ref<Required<UserEntity> | null>(null);
 const editingUserRole = ref<RolesType>(Roles.VISITOR);
 const editingOrganizationId = ref<string>("");
 const editingAdditionalPermissions = ref<Permission[]>([]);
-// Miroir des capacités héritées dans backend/src/permissions/role-to-permissions.ts.
-const inheritedPermissions = computed<Permission[]>(() => {
-  switch (editingUserRole.value) {
-    case Roles.ADMIN:
-      return [
-        Permission.MDIT_LIST,
-        Permission.CREATE_APPLICATION,
-        Permission.CREATE_GLOBAL_REPORT,
-        Permission.DATA_EXPORT,
-        Permission.TECHNOLOGY_LIST,
-      ];
-    case Roles.CONTRIBUTOR:
-      return [Permission.MDIT_LIST, Permission.CREATE_APPLICATION, Permission.CREATE_GLOBAL_REPORT];
-    case Roles.READER:
-      return [Permission.MDIT_LIST];
-    default:
-      return [];
-  }
-});
-const displayedAdditionalPermissions = computed<Permission[]>({
-  get: () => [...new Set([...editingAdditionalPermissions.value, ...inheritedPermissions.value])],
-  set: (permissions) => {
-    // Les droits hérités ne deviennent pas des délégations ; conserver celles déjà explicites.
-    editingAdditionalPermissions.value = permissions.filter(
-      (permission) => !inheritedPermissions.value.includes(permission) || editingAdditionalPermissions.value.includes(permission),
-    );
-  },
-});
 const editingScopePermissions = ref<string>("");
 const maiaSuggestion = ref<MaiaOrganizationSuggestionDto | null>(null);
 const maiaSuggestionState = ref<"idle" | "loading" | "ready" | "error">("idle");
@@ -275,61 +247,6 @@ async function syncFromMaia() {
     isSyncingFromMaia.value = false;
   }
 }
-
-const additionalPermissionsOptions = computed<Omit<DsfrCheckboxProps, "modelValue">[]>(() =>
-  [
-    {
-      label: "Créer une application",
-      value: Permission.CREATE_APPLICATION,
-      name: "capability-create-application",
-    },
-    {
-      label: "Créer un signalement global",
-      value: Permission.CREATE_GLOBAL_REPORT,
-      name: "capability-create-global-report",
-    },
-    {
-      label: "Export les données",
-      value: Permission.DATA_EXPORT,
-      name: "capability-create-data-export",
-    },
-    {
-      label: "Accéder aux fonctionnalités bêta",
-      value: Permission.BETA_FEATURES,
-      name: "capability-beta-features",
-      disabled: !userStore.hasPermissions([Permission.GLOBAL_ADMIN_MANAGE]),
-      hint: "Accès accordé explicitement, y compris pour les administrateurs. Les droits habituels de chaque fonctionnalité restent nécessaires.",
-    },
-    {
-      label: "Voir les données MDIT",
-      value: Permission.MDIT_LIST,
-      name: "capability-mdit-view",
-    },
-    {
-      label: "Gérer les campagnes de mise en qualité",
-      value: Permission.QUALITY_CAMPAIGN_MANAGE,
-      name: "capability-quality-campaign-manage",
-    },
-    {
-      label: "Gérer les campagnes dette IT",
-      value: Permission.MDIT_CAMPAIGN_MANAGE,
-      name: "capability-mdit-campaign-manage",
-    },
-    {
-      label: "Consulter les technologies",
-      value: Permission.TECHNOLOGY_LIST,
-      name: "capability-technology-list",
-      disabled: editingUserRole.value === Roles.VISITOR,
-      hint: "Disponible pour les niveaux Lecture totale, Écriture totale et Administrateur, dans leur périmètre.",
-    },
-  ].map((option) => ({
-    ...option,
-    disabled: option.disabled || inheritedPermissions.value.includes(option.value),
-    hint: inheritedPermissions.value.includes(option.value)
-      ? `Accès inclus dans le rôle ${RolesWording[editingUserRole.value]}, dans son périmètre.`
-      : option.hint,
-  })),
-);
 
 const isNotValidated = computed(() => {
   if (!maiaSuggestion.value?.organizationId) return false;
@@ -501,12 +418,10 @@ const isScopeDisabled = computed(() => {
         />
       </fieldset>
 
-      <DsfrCheckboxSet
-        v-model="displayedAdditionalPermissions"
-        legend="Capacités"
-        :options="additionalPermissionsOptions"
-        name="additional-permissions-checkbox"
-        data-testid="additional-permissions-checkbox"
+      <UserCapabilities
+        v-model="editingAdditionalPermissions"
+        :role="editingUserRole"
+        :can-grant-beta="userStore.hasPermissions([Permission.GLOBAL_ADMIN_MANAGE])"
       />
 
       <DsfrRadioButtonSet
