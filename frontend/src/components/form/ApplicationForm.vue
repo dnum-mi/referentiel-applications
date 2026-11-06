@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from "vue";
+import { computed, inject, nextTick, onBeforeUnmount, ref, watch } from "vue";
+import { routerKey } from "vue-router";
 import { type ApplicationDto, Permission } from "@/client/types.gen";
 import { useAppPermission } from "@/composables/use-app-permission";
 import type { ApplicationFormInitialData } from "@/models/Application";
@@ -21,7 +22,7 @@ import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = withDefaults(defineProps<{ mode?: ApplicationFormMode; initialData: ApplicationFormInitialData }>(), { mode: "create" });
 const emit = defineEmits<{ success: [application: ApplicationDto]; cancel: [] }>();
-const { form, moa, moe, isCreateFormDirty, getData } = useApplicationFormState(props.initialData, () => props.mode);
+const { form, moa, moe, isFormDirty, markSaved, getData } = useApplicationFormState(props.initialData, () => props.mode);
 const { errors, validateStep, validateAll } = useApplicationFormValidation(getData, () => props.mode);
 const { save, isSubmitting, saveError, syncContact, moaSyncing, moeSyncing, initialMoaOrganization, initialMoeOrganization } =
   useApplicationFormActions(
@@ -74,29 +75,84 @@ async function previousStep() {
 }
 
 async function handleSubmit() {
-  if (isSubmitting.value) return;
+  if (isSubmitting.value || cancelModalOpen.value) return;
   const issues = validateAll();
   if (issues.length) return focusErrors(issues);
   const application = await save();
-  if (application) emit("success", application);
+  if (application) {
+    markSaved();
+    emit("success", application);
+  }
 }
 
-function handleCancel(event: MouseEvent) {
-  if (!isCreateFormDirty.value) return emit("cancel");
-  cancelOrigin.value = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
+const router = inject(routerKey, undefined);
+let resolveLeave: ((leave: boolean) => void) | undefined;
+let cancelNavigationAllowed = false;
+
+function requestLeave(origin?: HTMLElement | null): Promise<boolean> {
+  if (isSubmitting.value || resolveLeave) return Promise.resolve(false);
+  if (!isFormDirty.value) return Promise.resolve(true);
+  cancelOrigin.value = origin ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
   cancelModalOpen.value = true;
+  return new Promise((resolve) => {
+    resolveLeave = resolve;
+  });
 }
+
+async function handleCancel(event?: MouseEvent) {
+  if (!(await requestLeave(event?.currentTarget instanceof HTMLElement ? event.currentTarget : null))) return;
+  // La page de création navigue en réponse à cancel : cette sortie est déjà confirmée.
+  cancelNavigationAllowed = true;
+  emit("cancel");
+}
+
+defineExpose({ requestCancel: handleCancel });
 
 async function closeCancelModal() {
   cancelModalOpen.value = false;
+  resolveLeave?.(false);
+  resolveLeave = undefined;
   await nextTick();
   cancelOrigin.value?.focus();
 }
 
 function confirmCancel() {
   cancelModalOpen.value = false;
-  emit("cancel");
+  resolveLeave?.(true);
+  resolveLeave = undefined;
 }
+
+const removeGuard = router?.beforeEach(() => {
+  if (cancelNavigationAllowed) {
+    cancelNavigationAllowed = false;
+    return true;
+  }
+  return requestLeave();
+});
+
+const removeAfterNavigation = router?.afterEach((to, from, failure) => {
+  // Une fiche ou un onglet peut changer sans démonter le composant conservé par KeepAlive.
+  if (!failure && to.fullPath !== from.fullPath && props.mode === "edit") emit("cancel");
+});
+
+function beforeUnload(event: BeforeUnloadEvent) {
+  event.preventDefault();
+  event.returnValue = "";
+}
+watch(
+  isFormDirty,
+  (dirty) => {
+    if (dirty) window.addEventListener("beforeunload", beforeUnload);
+    else window.removeEventListener("beforeunload", beforeUnload);
+  },
+  { flush: "sync" },
+);
+onBeforeUnmount(() => {
+  removeGuard?.();
+  removeAfterNavigation?.();
+  window.removeEventListener("beforeunload", beforeUnload);
+  resolveLeave?.(false);
+});
 </script>
 
 <template>
@@ -140,7 +196,14 @@ function confirmCancel() {
       @sync="syncContact('moe')"
     />
     <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
-      <DsfrButton type="button" secondary label="Annuler" data-testid="application-cancel-btn" @click="handleCancel" />
+      <DsfrButton
+        type="button"
+        secondary
+        :disabled="isSubmitting"
+        label="Annuler"
+        data-testid="application-cancel-btn"
+        @click="handleCancel"
+      />
       <DsfrButton
         v-if="isCreateMode && currentStep > 1"
         type="button"
@@ -170,9 +233,11 @@ function confirmCancel() {
   <DsfrModal
     :opened="cancelModalOpen"
     :origin="cancelOrigin ?? undefined"
-    title="Annuler la création de l'application"
+    :title="isCreateMode ? 'Annuler la création de l’application' : 'Abandonner les modifications'"
     size="sm"
     data-testid="application-cancel-modal"
+    @keydown.esc.stop.prevent="closeCancelModal"
+    @cancel.prevent="closeCancelModal"
     @close="closeCancelModal"
   >
     <p>Vous avez commencé à remplir le formulaire. Voulez-vous vraiment annuler et perdre les modifications en cours ?</p>

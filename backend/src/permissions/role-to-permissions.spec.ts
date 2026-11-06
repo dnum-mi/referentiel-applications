@@ -179,7 +179,7 @@ describe("roleToPermissions — GristSync non accordée par défaut", () => {
     }
   });
 
-  it("GristSync reste déléguable explicitement (additionalPermissions)", () => {
-    expect(DELEGABLE_PERMISSIONS).toContain(Permission.GristSync);
+  it("GristSync ne peut plus être déléguée", () => {
+    expect(DELEGABLE_PERMISSIONS).not.toContain(Permission.GristSync);
   });
 });

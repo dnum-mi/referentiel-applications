@@ -34,7 +34,7 @@ export function initialPersonalUser() {
     scopeOrganization: personalOrganizations[2],
     scopeOrganizationId: personalOrganizations[2].id,
     permissions: ["AppRead", "MetadataRead"],
-    additionalPermissions: ["CreateApplication", "GristSync"],
+    additionalPermissions: ["CreateApplication", "BetaFeatures"],
     authLevel: { downgraded: false },
     isBlocked: false,
     type: "human",

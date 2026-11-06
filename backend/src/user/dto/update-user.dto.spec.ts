@@ -20,9 +20,13 @@ describe("UpdateUserDto — additionalPermissions", () => {
       Permission.QualityCampaignManage,
       Permission.MditCampaignManage,
       Permission.TechnologyList,
-      Permission.GristSync,
+      Permission.BetaFeatures,
     ]);
     expect(errors).toHaveLength(0);
+  });
+
+  it("refuse l’ancienne capacité GristSync", async () => {
+    expect(await errorsFor([Permission.GristSync])).toHaveLength(1);
   });
 
   it("accepte une liste vide", async () => {

@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/vue";
 import { flushPromises } from "@vue/test-utils";
 import { defineComponent, nextTick, reactive, ref } from "vue";
+import { FeatureId, Permission } from "@/client";
 import UserProfilePage from "./UserProfilePage.vue";
 
 afterEach(() => cleanup());
@@ -8,6 +9,7 @@ afterEach(() => cleanup());
 const { hasPermissions } = vi.hoisted(() => ({ hasPermissions: vi.fn() }));
 
 vi.mock("@/stores/userStore", () => ({ useUserStore: () => ({ hasPermissions }) }));
+vi.mock("@/services/config", () => ({ getConfig: async () => ({ betaFeatures: [FeatureId.GRIST_SYNC] }) }));
 const route = reactive({ query: { tab: "" } });
 vi.mock("vue-router", () => ({ useRoute: () => route }));
 beforeEach(() => {
@@ -31,19 +33,22 @@ describe("UserProfilePage — onglet Synchronisation Grist", () => {
     route.query.tab = "tokens";
     await waitFor(() => expect(tokens).toHaveAttribute("aria-selected", "true"));
   });
-  it("affiche l'onglet avec la capacité GristSync", () => {
-    hasPermissions.mockReturnValue(true);
+  it("affiche l'onglet avec la capacité BetaFeatures", async () => {
+    hasPermissions.mockImplementation((permissions: Permission[]) => permissions.includes(Permission.BETA_FEATURES));
     renderPage();
 
-    expect(screen.getByRole("tab", { name: "Synchronisation Grist" })).toBeInTheDocument();
+    const tab = await screen.findByRole("tab", { name: /Synchronisation Grist/ });
+    expect(tab).toHaveTextContent("Bêta");
+    expect(tab).toHaveAccessibleName("Synchronisation Grist Bêta");
     expect(screen.getByTestId("user-profile-tab-grist")).toBeInTheDocument();
   });
 
-  it("masque l'onglet sans la capacité GristSync", () => {
-    hasPermissions.mockReturnValue(false);
+  it("masque l'onglet sans la capacité BetaFeatures", async () => {
+    hasPermissions.mockImplementation((permissions: Permission[]) => permissions.includes(Permission.GRIST_SYNC));
     renderPage();
+    await flushPromises();
 
-    expect(screen.queryByRole("tab", { name: "Synchronisation Grist" })).toBeNull();
+    expect(screen.queryByRole("tab", { name: /Synchronisation Grist/ })).toBeNull();
     expect(screen.queryByTestId("user-profile-tab-grist")).toBeNull();
   });
 });
@@ -78,7 +83,7 @@ describe("UserProfilePage — retrait de la permission Grist", () => {
   }
 
   async function openGrist() {
-    const tab = screen.getByRole("tab", { name: "Synchronisation Grist" });
+    const tab = await screen.findByRole("tab", { name: /Synchronisation Grist/ });
     await fireEvent.click(tab);
     await waitFor(() => expect(tab).toHaveAttribute("aria-selected", "true"));
     return tab;
@@ -87,7 +92,7 @@ describe("UserProfilePage — retrait de la permission Grist", () => {
   async function expectFirstTabSelected() {
     await waitFor(() => expect(screen.getByRole("tab", { name: "Mes informations" })).toHaveAttribute("aria-selected", "true"));
     expect(screen.getByRole("tabpanel", { name: "Mes informations" })).toBeVisible();
-    expect(screen.queryByRole("tab", { name: "Synchronisation Grist" })).toBeNull();
+    expect(screen.queryByRole("tab", { name: /Synchronisation Grist/ })).toBeNull();
   }
 
   it("revient au premier onglet et y restitue le focus si le champ Grist disparaît", async () => {
@@ -184,7 +189,7 @@ describe("UserProfilePage — retrait de la permission Grist", () => {
       const grist = await openGrist();
       expect(grist).toHaveFocus();
       expect(screen.getAllByRole("tab")).toHaveLength(4);
-      expect(screen.getByRole("tabpanel", { name: "Synchronisation Grist" })).toHaveClass("fr-tabs__panel--selected");
+      expect(screen.getByRole("tabpanel", { name: /Synchronisation Grist/ })).toHaveClass("fr-tabs__panel--selected");
     }
   });
 
@@ -224,12 +229,12 @@ describe("UserProfilePage — retrait de la permission Grist", () => {
     expect(last).toHaveFocus();
     await fireEvent.keyDown(last, { key: "Home" });
     expect(first).toHaveFocus();
-    expect(screen.queryByRole("tab", { name: "Synchronisation Grist" })).toBeNull();
+    expect(screen.queryByRole("tab", { name: /Synchronisation Grist/ })).toBeNull();
 
     allowed.value = true;
     await flushPromises();
     await fireEvent.keyDown(first, { key: "End" });
-    expect(screen.getByRole("tab", { name: "Synchronisation Grist" })).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByRole("tabpanel", { name: "Synchronisation Grist" })).toHaveClass("fr-tabs__panel--selected");
+    expect(screen.getByRole("tab", { name: /Synchronisation Grist/ })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tabpanel", { name: /Synchronisation Grist/ })).toHaveClass("fr-tabs__panel--selected");
   });
 });
