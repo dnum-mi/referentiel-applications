@@ -176,6 +176,7 @@ export class TokenService {
           email: `${nameSlug}-${Date.now()}@bot.internal`,
           role: data.role || Roles.VISITOR,
           type: UserType.bot,
+          additionalPermissions: [...new Set(data.additionalPermissions ?? [])],
           scopeOrganizationId: data.scopeOrganizationId || null,
         },
       });
