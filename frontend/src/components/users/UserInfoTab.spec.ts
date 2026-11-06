@@ -59,6 +59,7 @@ describe("UserInfoTab — administrateur à contacter", () => {
     renderTab();
 
     const link = await screen.findByTestId("user-profile-contact-admin-link");
+    expect(screen.getByRole("rowheader", { name: "Contact de l'administrateur fonctionnel" })).toBeInTheDocument();
     expect(link).toHaveAttribute("href", "mailto:admin.local@interieur.gouv.fr");
     expect(link).toHaveTextContent("admin.local@interieur.gouv.fr");
     expect(screen.getByTestId("user-profile-contact-admin-source")).toHaveTextContent("administrateur de votre périmètre");
