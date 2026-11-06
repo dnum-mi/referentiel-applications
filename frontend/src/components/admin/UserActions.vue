@@ -11,7 +11,7 @@ import {
 import { Roles } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
 import { useUserStore } from "@/stores/userStore";
-import { RolesOptions, RolesScopes } from "@/utils/roles-utils";
+import { RolesOptions, RolesScopes, RolesWording } from "@/utils/roles-utils";
 import type { DsfrCheckboxProps } from "@gouvminint/vue-dsfr";
 import { computed, nextTick, ref } from "vue";
 import OrganizationSearchSelect from "../common/OrganizationSearchSelect.vue";
@@ -106,19 +106,32 @@ const editingUser = ref<Required<UserEntity> | null>(null);
 const editingUserRole = ref<RolesType>(Roles.VISITOR);
 const editingOrganizationId = ref<string>("");
 const editingAdditionalPermissions = ref<Permission[]>([]);
-// L'accès hérité du rôle ADMIN est visible dans le formulaire, mais ne devient
-// pas une délégation persistante lors d'un changement de rôle ou d'une autre case.
+// Miroir des capacités héritées dans backend/src/permissions/role-to-permissions.ts.
+const inheritedPermissions = computed<Permission[]>(() => {
+  switch (editingUserRole.value) {
+    case Roles.ADMIN:
+      return [
+        Permission.MDIT_LIST,
+        Permission.CREATE_APPLICATION,
+        Permission.CREATE_GLOBAL_REPORT,
+        Permission.DATA_EXPORT,
+        Permission.TECHNOLOGY_LIST,
+      ];
+    case Roles.CONTRIBUTOR:
+      return [Permission.MDIT_LIST, Permission.CREATE_APPLICATION, Permission.CREATE_GLOBAL_REPORT];
+    case Roles.READER:
+      return [Permission.MDIT_LIST];
+    default:
+      return [];
+  }
+});
 const displayedAdditionalPermissions = computed<Permission[]>({
-  get: () =>
-    editingUserRole.value === Roles.ADMIN
-      ? [...new Set([...editingAdditionalPermissions.value, Permission.TECHNOLOGY_LIST])]
-      : editingAdditionalPermissions.value,
+  get: () => [...new Set([...editingAdditionalPermissions.value, ...inheritedPermissions.value])],
   set: (permissions) => {
-    const hasExplicitTechnologyAccess = editingAdditionalPermissions.value.includes(Permission.TECHNOLOGY_LIST);
-    editingAdditionalPermissions.value =
-      editingUserRole.value === Roles.ADMIN && !hasExplicitTechnologyAccess
-        ? permissions.filter((permission) => permission !== Permission.TECHNOLOGY_LIST)
-        : permissions;
+    // Les droits hérités ne deviennent pas des délégations ; conserver celles déjà explicites.
+    editingAdditionalPermissions.value = permissions.filter(
+      (permission) => !inheritedPermissions.value.includes(permission) || editingAdditionalPermissions.value.includes(permission),
+    );
   },
 });
 const editingScopePermissions = ref<string>("");
@@ -263,55 +276,60 @@ async function syncFromMaia() {
   }
 }
 
-const additionalPermissionsOptions = computed<Omit<DsfrCheckboxProps, "modelValue">[]>(() => [
-  {
-    label: "Créer une application",
-    value: Permission.CREATE_APPLICATION,
-    name: "capability-create-application",
-  },
-  {
-    label: "Créer un signalement global",
-    value: Permission.CREATE_GLOBAL_REPORT,
-    name: "capability-create-global-report",
-  },
-  {
-    label: "Export les données",
-    value: Permission.DATA_EXPORT,
-    name: "capability-create-data-export",
-  },
-  {
-    label: "Accéder aux fonctionnalités bêta",
-    value: Permission.BETA_FEATURES,
-    name: "capability-beta-features",
-    disabled: !userStore.hasPermissions([Permission.GLOBAL_ADMIN_MANAGE]),
-    hint: "Accès accordé explicitement, y compris pour les administrateurs. Les droits habituels de chaque fonctionnalité restent nécessaires.",
-  },
-  {
-    label: "Voir les données MDIT",
-    value: Permission.MDIT_LIST,
-    name: "capability-mdit-view",
-  },
-  {
-    label: "Gérer les campagnes de mise en qualité",
-    value: Permission.QUALITY_CAMPAIGN_MANAGE,
-    name: "capability-quality-campaign-manage",
-  },
-  {
-    label: "Gérer les campagnes dette IT",
-    value: Permission.MDIT_CAMPAIGN_MANAGE,
-    name: "capability-mdit-campaign-manage",
-  },
-  {
-    label: "Consulter les technologies",
-    value: Permission.TECHNOLOGY_LIST,
-    name: "capability-technology-list",
-    disabled: editingUserRole.value === Roles.VISITOR || editingUserRole.value === Roles.ADMIN,
-    hint:
-      editingUserRole.value === Roles.ADMIN
-        ? "Accès inclus dans le rôle Administrateur, dans son périmètre."
-        : "Disponible pour les niveaux Lecture totale, Écriture totale et Administrateur, dans leur périmètre.",
-  },
-]);
+const additionalPermissionsOptions = computed<Omit<DsfrCheckboxProps, "modelValue">[]>(() =>
+  [
+    {
+      label: "Créer une application",
+      value: Permission.CREATE_APPLICATION,
+      name: "capability-create-application",
+    },
+    {
+      label: "Créer un signalement global",
+      value: Permission.CREATE_GLOBAL_REPORT,
+      name: "capability-create-global-report",
+    },
+    {
+      label: "Export les données",
+      value: Permission.DATA_EXPORT,
+      name: "capability-create-data-export",
+    },
+    {
+      label: "Accéder aux fonctionnalités bêta",
+      value: Permission.BETA_FEATURES,
+      name: "capability-beta-features",
+      disabled: !userStore.hasPermissions([Permission.GLOBAL_ADMIN_MANAGE]),
+      hint: "Accès accordé explicitement, y compris pour les administrateurs. Les droits habituels de chaque fonctionnalité restent nécessaires.",
+    },
+    {
+      label: "Voir les données MDIT",
+      value: Permission.MDIT_LIST,
+      name: "capability-mdit-view",
+    },
+    {
+      label: "Gérer les campagnes de mise en qualité",
+      value: Permission.QUALITY_CAMPAIGN_MANAGE,
+      name: "capability-quality-campaign-manage",
+    },
+    {
+      label: "Gérer les campagnes dette IT",
+      value: Permission.MDIT_CAMPAIGN_MANAGE,
+      name: "capability-mdit-campaign-manage",
+    },
+    {
+      label: "Consulter les technologies",
+      value: Permission.TECHNOLOGY_LIST,
+      name: "capability-technology-list",
+      disabled: editingUserRole.value === Roles.VISITOR,
+      hint: "Disponible pour les niveaux Lecture totale, Écriture totale et Administrateur, dans leur périmètre.",
+    },
+  ].map((option) => ({
+    ...option,
+    disabled: option.disabled || inheritedPermissions.value.includes(option.value),
+    hint: inheritedPermissions.value.includes(option.value)
+      ? `Accès inclus dans le rôle ${RolesWording[editingUserRole.value]}, dans son périmètre.`
+      : option.hint,
+  })),
+);
 
 const isNotValidated = computed(() => {
   if (!maiaSuggestion.value?.organizationId) return false;
