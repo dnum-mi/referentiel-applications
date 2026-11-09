@@ -40,6 +40,7 @@ import { MditCampaignModule } from "./mdit-campaign/mdit-campaign.module";
 import { QualityCampaignModule } from "./quality-campaign/quality-campaign.module";
 import { RgaaModule } from "./rgaa/rgaa.module";
 import { TechnologyModule } from "./technology/technology.module";
+import { SbomModule } from "./sbom/sbom.module";
 import { DataCatalogModule } from "./data-catalog/data-catalogue.module";
 import { DataFamilyModule } from "./data-catalog/data-family/data-family.module";
 import { DataSensibilityModule } from "./data-catalog/data-sensibility/data-sensibility.module";
@@ -87,6 +88,7 @@ import { MaintenanceMiddleware } from "./maintenance/maintenance.middleware";
     TechnicalDebtInfoModule,
     RgaaModule,
     TechnologyModule,
+    SbomModule,
     StatusesModule,
     StatsModule,
     ReportModule,

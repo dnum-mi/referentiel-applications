@@ -1,0 +1,57 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.7",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-11-09T10:00:00Z",
+    "component": {
+      "type": "application",
+      "name": "RefApp example",
+      "version": "1.0.0",
+      "bom-ref": "application"
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "name": "express",
+      "version": "4.21.0",
+      "purl": "pkg:npm/express@4.21.0",
+      "bom-ref": "express-4",
+      "components": [
+        {
+          "type": "library",
+          "name": "accepts",
+          "version": "1.3.8",
+          "purl": "pkg:npm/accepts@1.3.8",
+          "bom-ref": "accepts"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "express",
+      "version": "5.1.0",
+      "purl": "pkg:npm/express@5.1.0",
+      "bom-ref": "express-5"
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "application",
+      "dependsOn": ["express-4", "express-5"]
+    },
+    {
+      "ref": "express-4",
+      "dependsOn": ["accepts"]
+    },
+    {
+      "ref": "express-5",
+      "dependsOn": []
+    },
+    {
+      "ref": "accepts",
+      "dependsOn": []
+    }
+  ]
+}

@@ -20,6 +20,8 @@ export const columnLabels: Record<string, string> = {
   "technologies.latestVersion": "Dernière version",
   "technologies.eolSource": "Source",
   "technologies.status": "Statut",
+  "technologies.source": "Provenance",
+  "technologies.sourceName": "Source SBOM",
 
   relationsAsSource: "Relations sortantes",
   "relationsAsSource.targetApplication.label": "Cibles liées (nom)",
@@ -108,4 +110,6 @@ export const technologyExportColumns = [
   { key: "technologies.latestVersion", width: 22 },
   { key: "technologies.eolSource", width: 24 },
   { key: "technologies.status", width: 35 },
+  { key: "technologies.source", width: 24 },
+  { key: "technologies.sourceName", width: 30 },
 ].map((column) => ({ ...column, header: columnLabels[column.key] }));

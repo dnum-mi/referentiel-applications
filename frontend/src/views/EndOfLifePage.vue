@@ -296,6 +296,10 @@ watch(
                 :data-testid="`end-of-life-badge-${technology.id}`"
               />
               <span class="fr-ml-1w">{{ technologyLabel(technology) }}</span>
+              <span v-if="technology.source === 'SBOM'" class="fr-text--xs fr-ml-1w" :data-testid="`end-of-life-sbom-${technology.id}`">
+                (SBOM<span v-if="technology.sourceName"> : {{ technology.sourceName }}</span
+                >)
+              </span>
               <span class="fr-text--xs fr-ml-1w">
                 <template v-if="technology.status === 'eoas-passed'">
                   support actif clos le {{ formatDate(technology.eoasDate) }}

@@ -340,6 +340,10 @@ export class ApplicationRepository implements IApplicationRepository {
         reports: true,
         statuses: true,
         technologies: true,
+        sbomSources: {
+          where: { active: true },
+          include: { currentImport: { include: { components: true } } },
+        },
         actors: {
           include: {
             actorType: true,

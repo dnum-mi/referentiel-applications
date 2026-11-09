@@ -55,7 +55,14 @@ export class ApplicationExportService {
     // n'accorde pas la lecture de la stack de toutes les fiches exportées.
     const authorizedApplications = await Promise.all(
       applications.map(async (application) => {
-        if (application.technologies.length === 0) return application;
+        if (
+          application.technologies.length === 0 &&
+          !application.sbomSources?.some(
+            (source) =>
+              source.active && source.currentImport?.components.length,
+          )
+        )
+          return application;
         const canReadTechnologies = await this.checkPermissions.can(
           [Permission.TechnologyRead],
           requestor,
@@ -63,7 +70,7 @@ export class ApplicationExportService {
         );
         return canReadTechnologies
           ? application
-          : { ...application, technologies: [] };
+          : { ...application, technologies: [], sbomSources: [] };
       }),
     );
 

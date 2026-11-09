@@ -252,6 +252,68 @@ describe("Même recherche et même périmètre dans les exports HTML et Excel", 
 
 describe("ApplicationExportService — lecture des technologies par fiche", () => {
   it.each(["Excel", "Html"] as const)(
+    "contrôle aussi TechnologyRead pour les applications uniquement SBOM dans l'export %s",
+    async (format) => {
+      const source = {
+        active: true,
+        name: "backend",
+        currentImport: { components: [{ product: "Composant privé" }] },
+      };
+      const applications = [
+        { id: "visible", technologies: [], sbomSources: [source] },
+        { id: "hidden", technologies: [], sbomSources: [source] },
+      ] as unknown as ApplicationWithAllRelations[];
+      const executeWithApps = jest.fn().mockResolvedValue(Buffer.from("xlsx"));
+      const executeHtmlWithApps = jest
+        .fn()
+        .mockResolvedValue(Buffer.from("html"));
+      const can = jest.fn(
+        async (permissions: Permission[], _: Requestor, id?: string) =>
+          !permissions.includes(Permission.TechnologyRead) || id === "visible",
+      );
+      const sut = new ApplicationExportService(
+        {
+          findAllWithFullRelations: jest.fn().mockResolvedValue(applications),
+        } as unknown as ApplicationRepository,
+        {
+          executeWithApps,
+          executeHtmlWithApps,
+        } as unknown as ExportApplicationsUseCase,
+        {
+          buildSearchWhere: jest.fn().mockResolvedValue({ AND: [] }),
+          buildOrderBy: jest.fn().mockReturnValue({ label: "asc" }),
+        } as unknown as PrismaQueryBuilder,
+        { can } as unknown as CheckPermissions,
+        {} as ApplicationSearchService,
+      );
+      if (format === "Excel")
+        await sut.exportSearchResultsToExcel(
+          new ApplicationSearchDto(),
+          requestor,
+        );
+      else
+        await sut.exportSearchResultsToHtml(
+          new ApplicationSearchDto(),
+          requestor,
+        );
+      const exporter =
+        format === "Excel" ? executeWithApps : executeHtmlWithApps;
+      const exported = exporter.mock
+        .calls[0][0] as ApplicationWithAllRelations[];
+      expect(exported[0].sbomSources).toEqual([source]);
+      expect(exported[1].sbomSources).toEqual([]);
+      expect(applications[1].sbomSources).toEqual([source]);
+      for (const id of ["visible", "hidden"]) {
+        expect(can).toHaveBeenCalledWith(
+          [Permission.TechnologyRead],
+          requestor,
+          id,
+        );
+      }
+    },
+  );
+
+  it.each(["Excel", "Html"] as const)(
     "contrôle TechnologyRead sur chaque application pour l’export %s sans modifier les données du dépôt",
     async (format) => {
       const technology = { product: "Produit privé" };

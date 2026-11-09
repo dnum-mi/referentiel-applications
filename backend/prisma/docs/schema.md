@@ -1383,6 +1383,65 @@ erDiagram
   DateTime sentAt
   Boolean wasSent
 }
+"SbomSource" {
+  String id PK
+  String applicationId FK
+  String(160) name
+  String(500) context "nullable"
+  Boolean active
+  Int revision
+  String currentImportId FK,UK "nullable"
+  DateTime createdAt
+  DateTime updatedAt
+}
+"SbomImport" {
+  String id PK
+  String applicationId FK
+  String sourceId FK "nullable"
+  String(160) sourceName
+  String(500) context "nullable"
+  String(255) projectVersion "nullable"
+  String format
+  String specVersion
+  String fingerprint
+  String fileHash
+  Int baseRevision
+  SbomImportStatus status
+  String createdBy
+  DateTime createdAt
+  DateTime expiresAt
+  DateTime committedAt "nullable"
+  String committedBy "nullable"
+  Int resultRevision "nullable"
+  Int componentCount
+  Json document
+  Json report
+}
+"SbomComponent" {
+  String id PK
+  String importId FK
+  String ref
+  String technology
+  String product
+  String version "nullable"
+  String purl "nullable"
+  String ecosystem "nullable"
+  String type
+  String identificationStatus
+}
+"SbomInventory" {
+  String applicationId PK,FK
+  Int revision
+}
+"InventoryEvent" {
+  String id PK
+  String applicationId FK
+  Int revision
+  String type
+  Json payload
+  DateTime createdAt
+  DateTime processedAt "nullable"
+}
 "TokenExpirationReminder" {
   String tokenId FK
   DateTime expiresAt
@@ -1415,6 +1474,9 @@ erDiagram
   DateTime endedAt "nullable"
 }
 "ActionLog" }o--o| "ImpersonationLog" : impersonationLog
+"SbomSource" |o--o| "SbomImport" : currentImport
+"SbomImport" }o--o| "SbomSource" : source
+"SbomComponent" }o--|| "SbomImport" : import
 ```
 
 ### `ActionLog`
@@ -1451,6 +1513,86 @@ Properties as follows:
 - `wasSent`
   > Faux si généré alors que les envois SMTP étaient désactivés : le contenu reste consultable
   > (notification in-app, historique admin) mais aucun e-mail réel n'est parti (#2411).
+
+### `SbomSource`
+
+Inventaire déclaré, distinct des technologies saisies manuellement.
+
+Properties as follows:
+
+- `id`:
+- `applicationId`:
+- `name`:
+- `context`:
+- `active`:
+- `revision`:
+- `currentImportId`:
+- `createdAt`:
+- `updatedAt`:
+
+### `SbomImport`
+
+Properties as follows:
+
+- `id`:
+- `applicationId`:
+- `sourceId`:
+- `sourceName`:
+- `context`:
+- `projectVersion`:
+- `format`:
+- `specVersion`:
+- `fingerprint`:
+- `fileHash`:
+- `baseRevision`:
+- `status`:
+- `createdBy`:
+- `createdAt`:
+- `expiresAt`:
+- `committedAt`:
+- `committedBy`:
+- `resultRevision`:
+- `componentCount`:
+- `document`:
+- `report`:
+
+### `SbomComponent`
+
+Properties as follows:
+
+- `id`:
+- `importId`:
+- `ref`:
+- `technology`:
+- `product`:
+- `version`:
+- `purl`:
+- `ecosystem`:
+- `type`:
+- `identificationStatus`:
+
+### `SbomInventory`
+
+Révision globale de l'inventaire, monotone même avec plusieurs sources.
+
+Properties as follows:
+
+- `applicationId`:
+- `revision`:
+
+### `InventoryEvent`
+
+Outbox durable consommable par l'analyse #3231 après commit.
+
+Properties as follows:
+
+- `id`:
+- `applicationId`:
+- `revision`:
+- `type`:
+- `payload`:
+- `createdAt`:
+- `processedAt`:
 
 ### `TokenExpirationReminder`
 

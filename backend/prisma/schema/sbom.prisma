@@ -1,0 +1,94 @@
+/// Inventaire déclaré, distinct des technologies saisies manuellement.
+model SbomSource {
+  id              String       @id @default(uuid())
+  applicationId   String
+  application     Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  name            String       @db.VarChar(160)
+  context         String?      @db.VarChar(500)
+  active          Boolean      @default(true)
+  revision        Int          @default(0)
+  currentImportId String?      @unique
+  currentImport   SbomImport?  @relation("CurrentSbomImport", fields: [currentImportId], references: [id], onDelete: SetNull)
+  imports         SbomImport[] @relation("SbomSourceImports")
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@unique([applicationId, name])
+  @@index([applicationId, active])
+}
+
+model SbomImport {
+  id             String           @id @default(uuid())
+  applicationId  String
+  application    Application      @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  sourceId       String?
+  source         SbomSource?      @relation("SbomSourceImports", fields: [sourceId], references: [id], onDelete: SetNull)
+  currentFor     SbomSource?      @relation("CurrentSbomImport")
+  sourceName     String           @db.VarChar(160)
+  context        String?          @db.VarChar(500)
+  projectVersion String?          @db.VarChar(255)
+  format         String
+  specVersion    String
+  fingerprint    String
+  fileHash       String
+  baseRevision   Int
+  status         SbomImportStatus @default(preview)
+  createdBy      String
+  createdAt      DateTime         @default(now())
+  expiresAt      DateTime
+  committedAt    DateTime?
+  committedBy    String?
+  resultRevision Int?
+  componentCount Int
+  document       Json
+  report         Json
+  components     SbomComponent[]
+
+  @@index([applicationId, sourceName, createdAt])
+  @@index([status, expiresAt])
+}
+
+enum SbomImportStatus {
+  preview
+  committed
+  unchanged
+}
+
+model SbomComponent {
+  id                   String     @id @default(uuid())
+  importId             String
+  import               SbomImport @relation(fields: [importId], references: [id], onDelete: Cascade)
+  ref                  String
+  technology           String
+  product              String
+  version              String?
+  purl                 String?
+  ecosystem            String?
+  type                 String
+  identificationStatus String
+
+  @@unique([importId, ref])
+  @@index([product])
+}
+
+/// Révision globale de l'inventaire, monotone même avec plusieurs sources.
+model SbomInventory {
+  applicationId String      @id
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  revision      Int         @default(0)
+}
+
+/// Outbox durable consommable par l'analyse #3231 après commit.
+model InventoryEvent {
+  id            String      @id @default(uuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  revision      Int
+  type          String      @default("inventory.changed")
+  payload       Json
+  createdAt     DateTime    @default(now())
+  processedAt   DateTime?
+
+  @@unique([applicationId, revision])
+  @@index([processedAt, createdAt])
+}

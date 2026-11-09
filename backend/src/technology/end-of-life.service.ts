@@ -97,16 +97,35 @@ export class EndOfLifeService {
   ) {
     const scopeWhere = this.buildScopeWhere(requestor);
     const technologyWhere = eolStatusWhere(filters.status, now);
+    const includeImported = filters.status === "all";
+    const importedWhere: Prisma.ApplicationWhereInput = {
+      sbomSources: {
+        some: {
+          active: true,
+          currentImport: { components: { some: {} } },
+        },
+      },
+    };
 
     const where: Prisma.ApplicationWhereInput = {
       // #2515 : une application supprimée n'a plus de fin de vie à signaler.
       ...ACTIVE_APPLICATION_WHERE,
-      technologies: { some: technologyWhere },
+      ...(includeImported ? {} : { technologies: { some: technologyWhere } }),
     };
 
     // Le périmètre imposé par le serveur est indépendant des filtres du client :
     // ni sa recherche (OR), ni son organisation, ni status=all ne peuvent l'élargir.
     if (scopeWhere) where.AND = [scopeWhere];
+    if (includeImported) {
+      // Cette présence appartient à la requête paginée et à son compteur : une
+      // application dont l'inventaire est uniquement importé doit être trouvée.
+      where.AND = [
+        ...(scopeWhere ? [scopeWhere] : []),
+        {
+          OR: [{ technologies: { some: technologyWhere } }, importedWhere],
+        },
+      ];
+    }
 
     if (filters.organization) {
       // Même lecture que la recherche d'applications : le rattachement passe par
@@ -144,12 +163,32 @@ export class EndOfLifeService {
           },
         },
       ];
+      if (includeImported) {
+        where.OR.push({
+          sbomSources: {
+            some: {
+              active: true,
+              currentImport: {
+                components: { some: { product: contains } },
+              },
+            },
+          },
+        });
+      }
     }
 
     return {
       where,
       include: {
         technologies: { where: technologyWhere },
+        ...(includeImported
+          ? {
+              sbomSources: {
+                where: { active: true },
+                include: { currentImport: { include: { components: true } } },
+              },
+            }
+          : {}),
         actors: { select: { organization: { select: { path: true } } } },
       },
       orderBy: this.buildOrderBy(filters),
@@ -223,11 +262,23 @@ export class EndOfLifeService {
         eolSource: TechnologyEolSource;
       }[];
       actors: { organization: { path: string } | null }[];
+      sbomSources?: {
+        active: boolean;
+        name: string;
+        currentImport?: {
+          components: {
+            id: string;
+            technology: string;
+            product: string;
+            version: string | null;
+          }[];
+        } | null;
+      }[];
     },
     now: Date,
   ): EndOfLifeApplicationDto {
-    const technologies = application.technologies
-      .map((technology) => {
+    const technologies: EndOfLifeTechnologyDto[] = application.technologies.map(
+      (technology) => {
         // null pour une technologie saine — atteignable uniquement avec le filtre
         // `all`, `technologyWhere` écartant les lignes saines dans les autres cas.
         const status = computeEolStatus(technology, now);
@@ -243,9 +294,30 @@ export class EndOfLifeService {
           // sans changer le classement, une date manuelle valant une date calculée.
           eolSource: technology.eolSource,
           status,
+          source: "manual",
+          sourceName: null,
         } satisfies EndOfLifeTechnologyDto;
-      })
-      .sort((a, b) => severityOf(a.status) - severityOf(b.status));
+      },
+    );
+    for (const source of application.sbomSources ?? []) {
+      if (!source.active) continue;
+      for (const component of source.currentImport?.components ?? []) {
+        technologies.push({
+          id: component.id,
+          technology: component.technology,
+          product: component.product,
+          version: component.version,
+          eolDate: null,
+          eoasDate: null,
+          latestVersion: null,
+          eolSource: "endoflife",
+          status: null,
+          source: "SBOM",
+          sourceName: source.name,
+        });
+      }
+    }
+    technologies.sort((a, b) => severityOf(a.status) - severityOf(b.status));
 
     const organizationPaths = [
       ...new Set(

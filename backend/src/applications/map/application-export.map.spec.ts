@@ -113,4 +113,48 @@ describe("export des technologies", () => {
       mapTechnologies({ id: "app", label: "Application", technologies: [] }),
     ).toEqual([]);
   });
+
+  it("exporte les sources actives séparément sans inventer de date ni d'alerte EOL", () => {
+    const source = (name: string, active = true) => ({
+      name,
+      active,
+      currentImport: {
+        components: [
+          { technology: "Bibliothèque", product: "lodash", version: null },
+        ],
+      },
+    });
+    const rows = mapTechnologies({
+      id: "app",
+      label: "Application",
+      technologies: [],
+      sbomSources: [
+        source("front"),
+        source("back"),
+        source("ancienne", false),
+        {
+          name: "vide",
+          active: true,
+          currentImport: null,
+        },
+      ],
+    });
+    expect(rows).toHaveLength(2);
+    expect(rows.map((row) => row["technologies.sourceName"])).toEqual([
+      "front",
+      "back",
+    ]);
+    for (const row of rows) {
+      expect(row).toMatchObject({
+        "technologies.product": "lodash",
+        "technologies.version": "",
+        "technologies.eolDate": "",
+        "technologies.eoasDate": "",
+        "technologies.eolSource": "",
+        "technologies.latestVersion": "",
+        "technologies.source": "SBOM",
+        "technologies.status": "Fin de vie non évaluée",
+      });
+    }
+  });
 });

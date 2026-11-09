@@ -19,7 +19,7 @@ import {
 export class EndOfLifeFiltersDto extends PaginationDto {
   @ApiPropertyOptional({
     description:
-      "Ne retenir que les technologies portant ce statut de fin de vie. Les trois statuts partitionnent la liste : une technologie déjà en fin de vie n'apparaît pas sous « fin de support actif ». `all` est un 4ᵉ filtre, non partitionnant : il lève la restriction et retourne aussi les technologies saines.",
+      "Ne retenir que les technologies portant ce statut de fin de vie. Les trois statuts partitionnent la liste : une technologie déjà en fin de vie n'apparaît pas sous « fin de support actif ». `all` lève la restriction et retourne aussi les technologies sans alerte et les composants des sources SBOM actives, dont la fin de vie n'est pas évaluée.",
     enum: EOL_STATUS_FILTERS,
   })
   @IsOptional()
@@ -58,6 +58,24 @@ export class EndOfLifeTechnologyDto {
   @IsString()
   product: string;
 
+  @ApiProperty({
+    description:
+      "Provenance de la technologie : saisie dans RefApp ou composant importé d'un SBOM.",
+    enum: ["manual", "SBOM"],
+  })
+  @IsIn(["manual", "SBOM"])
+  source: "manual" | "SBOM";
+
+  @ApiProperty({
+    description:
+      "Nom de la source SBOM ; null pour une technologie saisie dans RefApp.",
+    type: String,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  sourceName: string | null;
+
   @ApiProperty({ example: "13", required: false, nullable: true })
   @IsOptional()
   @IsString()
@@ -90,7 +108,7 @@ export class EndOfLifeTechnologyDto {
 
   @ApiProperty({
     description:
-      "Origine de la date : calculée via endoflife.date, ou saisie à la main quand endoflife.date ne pouvait pas répondre (#2454).",
+      "Origine de la date : calculée via endoflife.date ou saisie à la main. Pour un composant de source SBOM, la valeur endoflife est conservée par compatibilité mais les dates nulles ne constituent pas une évaluation de sa fin de vie.",
     enum: TechnologyEolSource,
     enumName: "TechnologyEolSource",
   })
@@ -134,7 +152,7 @@ export class EndOfLifeApplicationDto {
 
   @ApiProperty({
     description:
-      "Les technologies retenues par le filtre, triées par gravité décroissante. Avec le filtre `all`, ce sont TOUTES les technologies de l'application, pas seulement celles concernées par une fin de vie.",
+      "Les technologies retenues par le filtre, triées par gravité décroissante. Avec le filtre `all`, elles comprennent les saisies manuelles et les composants des imports courants de chaque source SBOM active, sans fusion entre sources.",
     type: [EndOfLifeTechnologyDto],
   })
   technologies: EndOfLifeTechnologyDto[];
