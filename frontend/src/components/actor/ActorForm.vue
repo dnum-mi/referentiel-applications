@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useMaiaRequest } from "@/composables/use-maia-request";
 import { isApiSuccess } from "@/api/api-result";
 import api from "@/api/index.js";
 import type { ActorTypeDto, CreateActorDto, OrganizationDto } from "@/client/types.gen.js";
@@ -13,6 +14,7 @@ import { useSubmissionFocus } from "@/composables/use-submission-focus";
 const props = defineProps({
   initialData: Object as PropType<CreateActorDto>,
   isSubmitting: Boolean,
+  opened: { type: Boolean, default: true },
   errorMessage: { type: String, default: "" },
   application: {
     type: Object as PropType<Application>,
@@ -30,38 +32,39 @@ useSubmissionFocus(() => props.isSubmitting);
 const organizationStore = useOrganizationStore();
 const toaster = useToasterStore();
 const initialOrganization = ref<OrganizationDto | null>(null);
-const isSyncingFromMaia = ref(false);
 
 async function syncFromMaiaByEmail() {
-  isSyncingFromMaia.value = true;
+  if (!props.opened || isSyncingFromMaia.value) return;
   if (!form.value.email) {
     toaster.addErrorMessage("L'email est requis pour synchroniser depuis MAIA");
-    isSyncingFromMaia.value = false;
     return;
   }
+  const request = maiaRequest.begin();
+  if (!request) return;
+  const contact = form.value;
   try {
     const response = await api.userControllerSyncOrganizationFromMaiaByEmail({ path: { email: form.value.email } });
+    if (!request.isCurrent()) return;
     if (isApiSuccess(response) && response.data) {
       const { organizationId: newOrgId, firstName, lastName } = response.data;
-      form.value.firstname = firstName;
-      form.value.lastname = lastName;
+      const org = newOrgId ? await organizationStore.getById(newOrgId) : null;
+      if (!request.isCurrent()) return;
+      contact.firstname = firstName;
+      contact.lastname = lastName;
       if (newOrgId) {
-        const org = await organizationStore.getById(newOrgId);
-        if (org) {
-          initialOrganization.value = org;
-        }
-        organizationId.value = newOrgId;
-
+        initialOrganization.value = org ?? null;
+        contact.organizationId = newOrgId;
         toaster.addSuccessMessage("Organisation synchronisée depuis MAIA");
       }
     } else {
       toaster.addErrorMessage("Erreur lors de la synchronisation MAIA (email non trouvé)");
     }
   } catch (error) {
+    if (!request.isCurrent()) return;
     console.error("Erreur lors de la synchronisation MAIA:", error);
     toaster.addErrorMessage("Erreur lors de la synchronisation MAIA");
   } finally {
-    isSyncingFromMaia.value = false;
+    request.finish();
   }
 }
 
@@ -70,6 +73,9 @@ const form = ref<CreateActorDto>({
   isGroup: false,
   applicationId: props.application.id,
 });
+
+const maiaRequest = useMaiaRequest([() => form.value, () => form.value.email, () => props.opened, () => props.application.id]);
+const isSyncingFromMaia = maiaRequest.isSyncing;
 
 // `computed` (et non une valeur figée) : la modale reste montée entre deux ouvertures (DsfrModal
 // ne fait que masquer son contenu), il faut donc réagir si `actorTypes` change pendant ce temps
@@ -97,8 +103,13 @@ const organizationId = computed({
 // resynchronise le formulaire et l'organisation initiale à chaque changement d'acteur édité
 // (ou passage édition -> création), plutôt qu'une seule fois au montage.
 watch(
-  () => props.initialData,
-  async (initialData) => {
+  () => [props.initialData, props.opened] as const,
+  async ([initialData, opened], _, onCleanup) => {
+    let current = true;
+    onCleanup(() => {
+      current = false;
+    });
+    if (!opened) return;
     form.value = {
       actorTypeId: "",
       isGroup: false,
@@ -109,7 +120,7 @@ watch(
     if (initialData?.organizationId) {
       try {
         const org = await organizationStore.getById(initialData.organizationId);
-        if (org) {
+        if (current && org) {
           initialOrganization.value = org;
         }
       } catch (error) {
@@ -117,7 +128,7 @@ watch(
       }
     }
   },
-  { immediate: true },
+  { immediate: true, flush: "sync" },
 );
 
 const isFormValid = computed(() => {
@@ -127,7 +138,7 @@ const isFormValid = computed(() => {
 const isGroup = computed(() => !!form.value.isGroup);
 
 function handleSubmit() {
-  if (props.isSubmitting || !isFormValid.value) return;
+  if (props.isSubmitting || isSyncingFromMaia.value || !isFormValid.value) return;
   const formData = {
     ...form.value,
     email: form.value.email?.trim() || "",
@@ -154,71 +165,74 @@ function handleSubmit() {
     <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="actor-form-error">
       <p v-if="errorMessage" class="fr-error-text">{{ errorMessage }}</p>
     </div>
-    <DsfrSelect
-      v-model="form.actorTypeId"
-      label="Type d'acteur"
-      required
-      :options="actorTypeOptions"
-      data-testid="actor-type-select"
-      class="fr-mb-3w"
-    />
+    <fieldset :disabled="isSyncingFromMaia" class="maia-fields" aria-label="Coordonnées de l’acteur">
+      <DsfrSelect
+        v-model="form.actorTypeId"
+        label="Type d'acteur"
+        required
+        :options="actorTypeOptions"
+        data-testid="actor-type-select"
+        class="fr-mb-3w"
+      />
 
-    <DsfrInput
-      v-model="form.email"
-      label="Email"
-      label-visible
-      type="email"
-      placeholder="exemple@domaine.com"
-      data-testid="actor-email-input"
-      class="fr-mb-3w"
-    />
-    <DsfrButton
-      type="button"
-      label="Synchroniser depuis MAIA (par email)"
-      size="sm"
-      tertiary
-      :disabled="isSyncingFromMaia || !form.email"
-      data-testid="admin-user-sync-maia-btn"
-      title="Synchroniser depuis MAIA (par email)"
-      aria-label="Synchroniser depuis MAIA (par email)"
-      @click="syncFromMaiaByEmail"
-      style="margin-bottom: 1rem"
-    />
+      <DsfrInput
+        v-model="form.email"
+        label="Email"
+        label-visible
+        type="email"
+        placeholder="exemple@domaine.com"
+        data-testid="actor-email-input"
+        class="fr-mb-3w"
+      />
+      <DsfrButton
+        type="button"
+        label="Synchroniser depuis MAIA (par email)"
+        :icon="isSyncingFromMaia ? { name: 'ri-refresh-line', animation: 'spin' } : undefined"
+        :aria-busy="isSyncingFromMaia"
+        size="sm"
+        tertiary
+        :disabled="isSyncingFromMaia || !form.email"
+        data-testid="admin-user-sync-maia-btn"
+        title="Synchroniser depuis MAIA (par email)"
+        aria-label="Synchroniser depuis MAIA (par email)"
+        @click="syncFromMaiaByEmail"
+        style="margin-bottom: 1rem"
+      />
 
-    <OrganizationSearchSelect
-      v-model="organizationId"
-      :initial-organization="initialOrganization"
-      data-testid="actor-organization"
-      class="fr-mb-3w"
-      required
-    />
+      <OrganizationSearchSelect
+        v-model="organizationId"
+        :initial-organization="initialOrganization"
+        data-testid="actor-organization"
+        class="fr-mb-3w"
+        required
+      />
 
-    <DsfrCheckbox
-      v-model="form.isGroup"
-      name="isGroup"
-      :value="true"
-      label="Cet acteur est rattaché(e) à une entité"
-      data-testid="actor-is-group-checkbox"
-      class="fr-mb-3w"
-    />
+      <DsfrCheckbox
+        v-model="form.isGroup"
+        name="isGroup"
+        :value="true"
+        label="Cet acteur est rattaché(e) à une entité"
+        data-testid="actor-is-group-checkbox"
+        class="fr-mb-3w"
+      />
 
-    <template v-if="!isGroup">
-      <fieldset class="fr-fieldset fr-mb-3w" aria-labelledby="actor-identity-legend">
-        <legend id="actor-identity-legend" class="fr-fieldset__legend">Identité de l'acteur</legend>
-        <div class="fr-fieldset__element">
-          <DsfrInput v-model="form.firstname" label="Prénom" label-visible placeholder="Prénom" data-testid="actor-firstname-input" />
-        </div>
-        <div class="fr-fieldset__element">
-          <DsfrInput v-model="form.lastname" label="Nom" label-visible placeholder="Nom de famille" data-testid="actor-lastname-input" />
-        </div>
-      </fieldset>
-    </template>
-
+      <template v-if="!isGroup">
+        <fieldset class="fr-fieldset fr-mb-3w" aria-labelledby="actor-identity-legend">
+          <legend id="actor-identity-legend" class="fr-fieldset__legend">Identité de l'acteur</legend>
+          <div class="fr-fieldset__element">
+            <DsfrInput v-model="form.firstname" label="Prénom" label-visible placeholder="Prénom" data-testid="actor-firstname-input" />
+          </div>
+          <div class="fr-fieldset__element">
+            <DsfrInput v-model="form.lastname" label="Nom" label-visible placeholder="Nom de famille" data-testid="actor-lastname-input" />
+          </div>
+        </fieldset>
+      </template>
+    </fieldset>
     <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
       <DsfrButton type="button" secondary label="Annuler" data-testid="actor-cancel-btn" @click="$emit('cancel')" />
       <DsfrButton
         type="submit"
-        :disabled="isSubmitting || !isFormValid"
+        :disabled="isSubmitting || isSyncingFromMaia || !isFormValid"
         :aria-busy="isSubmitting"
         :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'"
         data-testid="actor-submit-btn"
@@ -232,3 +246,12 @@ function handleSubmit() {
     </div>
   </form>
 </template>
+
+<style scoped>
+.maia-fields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+</style>

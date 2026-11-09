@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useMaiaRequest } from "@/composables/use-maia-request";
 import { isApiSuccess } from "@/api/api-result";
 import api from "@/api";
 import type { ActorDto, ActorTypeDto, CreateActorDto, OrganizationDto, UpdateActorDto } from "@/client/types.gen";
@@ -120,12 +121,18 @@ const editAllOrganizationId = computed({
 const isEditAllGroup = computed(() => !!editAllForm.value.isGroup);
 const replaceActorType = ref(false);
 const replaceOrganization = ref(false);
-const isSyncingFromMaia = ref(false);
+const maiaRequest = useMaiaRequest([
+  () => editAllForm.value,
+  () => editAllForm.value.email,
+  () => props.actor.id,
+  () => isEditAllModalOpen.value,
+]);
+const isSyncingFromMaia = maiaRequest.isSyncing;
 const editAllStatus = ref("");
 const editAllInitialOrganization = ref<OrganizationDto | null>(null);
 
 async function syncEditAllFromMaia() {
-  if (isSyncingFromMaia.value) return;
+  if (!isEditAllModalOpen.value || isSyncingFromMaia.value) return;
   editAllError.value = "";
   editAllStatus.value = "";
   const email = editAllForm.value.email?.trim();
@@ -133,19 +140,21 @@ async function syncEditAllFromMaia() {
     editAllError.value = "L'email est requis pour synchroniser depuis MAIA";
     return;
   }
-  isSyncingFromMaia.value = true;
+  const request = maiaRequest.begin();
+  if (!request) return;
+  const contact = editAllForm.value;
   try {
     const response = await api.userControllerSyncOrganizationFromMaiaByEmail({ path: { email } });
+    if (!request.isCurrent()) return;
     if (isApiSuccess(response) && response.data) {
       const { organizationId: newOrgId, firstName, lastName } = response.data;
-      editAllForm.value.firstname = firstName;
-      editAllForm.value.lastname = lastName;
+      const org = replaceOrganization.value && newOrgId ? await organizationStore.getById(newOrgId) : null;
+      if (!request.isCurrent()) return;
+      contact.firstname = firstName;
+      contact.lastname = lastName;
       if (replaceOrganization.value && newOrgId) {
-        const org = await organizationStore.getById(newOrgId);
-        if (org) {
-          editAllInitialOrganization.value = org;
-        }
-        editAllForm.value.organizationId = newOrgId;
+        editAllInitialOrganization.value = org ?? null;
+        contact.organizationId = newOrgId;
       }
       editAllStatus.value = "Synchronisation depuis MAIA effectuée";
     } else {
@@ -153,10 +162,11 @@ async function syncEditAllFromMaia() {
       else toaster.addErrorMessage("Erreur lors de la synchronisation MAIA");
     }
   } catch {
+    if (!request.isCurrent()) return;
     if (isEditAllModalOpen.value) editAllError.value = "Erreur lors de la synchronisation MAIA. Votre saisie est conservée.";
     else toaster.addErrorMessage("Erreur lors de la synchronisation MAIA");
   } finally {
-    isSyncingFromMaia.value = false;
+    request.finish();
   }
 }
 
@@ -186,7 +196,7 @@ function closeEditAllModal() {
 }
 
 async function saveAllByEmail() {
-  if (!props.actor.email || isSavingAll.value || selectedEditAppIds.value.length === 0) return;
+  if (!props.actor.email || isSavingAll.value || isSyncingFromMaia.value || selectedEditAppIds.value.length === 0) return;
   if (
     !window.confirm(
       `Confirmer la modification des acteurs avec l'email « ${props.actor.email} » dans les ${selectedEditAppIds.value.length} application(s) sélectionnée(s) ?\n\nNom : ${!isEditAllGroup.value ? [editAllForm.value.firstname, editAllForm.value.lastname].filter(Boolean).join(" ") || "Non renseigné" : "Acteur rattaché à une entité"}\nNouvel email : ${editAllForm.value.email?.trim() || "Non renseigné"}\n\nLes coordonnées et les options affichées seront enregistrées.`,
@@ -362,6 +372,7 @@ const actorDisplayName = computed(() => {
 
   <DsfrModal :opened="isEditModalOpen" title="Modifier cet acteur" data-testid="admin-edit-actor-modal" @close="closeEditModal">
     <ActorForm
+      :opened="isEditModalOpen"
       :initial-data="editInitialData"
       :is-submitting="isSaving"
       :error-message="editError"
@@ -389,117 +400,120 @@ const actorDisplayName = computed(() => {
       class="fr-mb-3w alert-wrap"
     />
 
-    <DsfrMultiselect
-      v-model="selectedEditAppIds"
-      label="Applications concernées"
-      :options="applicationMultiselectOptions"
-      :select-all="true"
-      button-label="Sélectionner les applications"
-      :disabled="isLoadingApplications"
-      data-testid="admin-actor-edit-all-apps"
-      class="fr-mb-3w"
-    />
+    <fieldset :disabled="isSyncingFromMaia" class="maia-fields" aria-label="Coordonnées des acteurs">
+      <DsfrMultiselect
+        v-model="selectedEditAppIds"
+        label="Applications concernées"
+        :options="applicationMultiselectOptions"
+        :select-all="true"
+        button-label="Sélectionner les applications"
+        :disabled="isLoadingApplications"
+        data-testid="admin-actor-edit-all-apps"
+        class="fr-mb-3w"
+      />
 
-    <hr class="separator" />
+      <hr class="separator" />
 
-    <DsfrCheckbox
-      v-model="replaceActorType"
-      name="replaceActorType"
-      :value="true"
-      label="Remplacer le type d'acteur"
-      data-testid="admin-actor-all-replace-type-checkbox"
-      class="fr-mb-1w checkbox-align"
-    />
-    <DsfrSelect
-      v-if="replaceActorType"
-      v-model="editAllForm.actorTypeId"
-      label="Type d'acteur"
-      required
-      :options="actorTypeOptions"
-      data-testid="admin-actor-all-type-select"
-      class="fr-mb-3w"
-    />
+      <DsfrCheckbox
+        v-model="replaceActorType"
+        name="replaceActorType"
+        :value="true"
+        label="Remplacer le type d'acteur"
+        data-testid="admin-actor-all-replace-type-checkbox"
+        class="fr-mb-1w checkbox-align"
+      />
+      <DsfrSelect
+        v-if="replaceActorType"
+        v-model="editAllForm.actorTypeId"
+        label="Type d'acteur"
+        required
+        :options="actorTypeOptions"
+        data-testid="admin-actor-all-type-select"
+        class="fr-mb-3w"
+      />
 
-    <hr class="separator" />
+      <hr class="separator" />
 
-    <DsfrInput
-      v-model="editAllForm.email"
-      label="Nouvel email"
-      label-visible
-      type="email"
-      placeholder="exemple@domaine.com"
-      data-testid="admin-actor-all-email-input"
-      class="fr-mb-1w"
-    />
-    <DsfrButton
-      type="button"
-      label="Synchroniser depuis MAIA (par email)"
-      size="sm"
-      tertiary
-      :disabled="!editAllForm.email"
-      :aria-disabled="isSyncingFromMaia || !editAllForm.email"
-      :aria-busy="isSyncingFromMaia"
-      data-testid="admin-actor-all-sync-maia-btn"
-      class="fr-mb-3w"
-      @click="syncEditAllFromMaia"
-    />
+      <DsfrInput
+        v-model="editAllForm.email"
+        label="Nouvel email"
+        label-visible
+        type="email"
+        placeholder="exemple@domaine.com"
+        data-testid="admin-actor-all-email-input"
+        class="fr-mb-1w"
+      />
+      <DsfrButton
+        type="button"
+        label="Synchroniser depuis MAIA (par email)"
+        :icon="isSyncingFromMaia ? { name: 'ri-refresh-line', animation: 'spin' } : undefined"
+        size="sm"
+        tertiary
+        :disabled="!editAllForm.email"
+        :aria-disabled="isSyncingFromMaia || !editAllForm.email"
+        :aria-busy="isSyncingFromMaia"
+        data-testid="admin-actor-all-sync-maia-btn"
+        class="fr-mb-3w"
+        @click="syncEditAllFromMaia"
+      />
 
-    <hr class="separator" />
+      <hr class="separator" />
 
-    <DsfrCheckbox
-      v-model="replaceOrganization"
-      name="replaceOrganization"
-      :value="true"
-      label="Remplacer l'organisation"
-      data-testid="admin-actor-all-replace-org-checkbox"
-      class="fr-mb-1w checkbox-align"
-    />
-    <OrganizationSearchSelect
-      v-if="replaceOrganization"
-      v-model="editAllOrganizationId"
-      :initial-organization="editAllInitialOrganization"
-      data-testid="admin-actor-all-organization"
-      class="fr-mb-3w"
-    />
+      <DsfrCheckbox
+        v-model="replaceOrganization"
+        name="replaceOrganization"
+        :value="true"
+        label="Remplacer l'organisation"
+        data-testid="admin-actor-all-replace-org-checkbox"
+        class="fr-mb-1w checkbox-align"
+      />
+      <OrganizationSearchSelect
+        v-if="replaceOrganization"
+        v-model="editAllOrganizationId"
+        :initial-organization="editAllInitialOrganization"
+        data-testid="admin-actor-all-organization"
+        class="fr-mb-3w"
+      />
 
-    <hr class="separator" />
+      <hr class="separator" />
 
-    <DsfrCheckbox
-      v-model="editAllForm.isGroup"
-      name="isGroupAll"
-      :value="true"
-      label="Cet acteur est rattaché(e) à une entité"
-      data-testid="admin-actor-all-is-group-checkbox"
-      class="fr-mb-3w checkbox-align"
-    />
-    <fieldset v-if="!isEditAllGroup" class="fr-fieldset fr-mb-3w">
-      <legend class="fr-fieldset__legend">Identité des acteurs</legend>
-      <div class="fr-fieldset__element">
-        <DsfrInput
-          v-model="editAllForm.firstname"
-          label="Prénom"
-          label-visible
-          placeholder="Prénom"
-          data-testid="admin-actor-all-firstname-input"
-          class="fr-mb-3w"
-        />
-      </div>
-      <div class="fr-fieldset__element">
-        <DsfrInput
-          v-model="editAllForm.lastname"
-          label="Nom"
-          label-visible
-          placeholder="Nom de famille"
-          data-testid="admin-actor-all-lastname-input"
-          class="fr-mb-3w"
-        />
-      </div>
+      <DsfrCheckbox
+        v-model="editAllForm.isGroup"
+        name="isGroupAll"
+        :value="true"
+        label="Cet acteur est rattaché(e) à une entité"
+        data-testid="admin-actor-all-is-group-checkbox"
+        class="fr-mb-3w checkbox-align"
+      />
+      <fieldset v-if="!isEditAllGroup" class="fr-fieldset fr-mb-3w">
+        <legend class="fr-fieldset__legend">Identité des acteurs</legend>
+        <div class="fr-fieldset__element">
+          <DsfrInput
+            v-model="editAllForm.firstname"
+            label="Prénom"
+            label-visible
+            placeholder="Prénom"
+            data-testid="admin-actor-all-firstname-input"
+            class="fr-mb-3w"
+          />
+        </div>
+        <div class="fr-fieldset__element">
+          <DsfrInput
+            v-model="editAllForm.lastname"
+            label="Nom"
+            label-visible
+            placeholder="Nom de famille"
+            data-testid="admin-actor-all-lastname-input"
+            class="fr-mb-3w"
+          />
+        </div>
+      </fieldset>
     </fieldset>
     <template #footer>
       <DsfrButton label="Annuler" secondary @click="closeEditAllModal" />
       <DsfrButton
         label="Modifier"
-        :disabled="isSavingAll || selectedEditAppIds.length === 0"
+        :disabled="isSavingAll || isSyncingFromMaia || selectedEditAppIds.length === 0"
         data-testid="admin-actor-save-all-btn"
         @click="saveAllByEmail"
       />
@@ -572,6 +586,12 @@ const actorDisplayName = computed(() => {
 </template>
 
 <style scoped>
+.maia-fields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
 .actions-row {
   display: flex;
   gap: 0.5rem;
