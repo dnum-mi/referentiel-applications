@@ -25,6 +25,7 @@ import { Permission } from "@prisma/client";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 import { UserId } from "src/common/decorators/user-id.decorator";
 import { PermissionGuard } from "src/common/guards/permission.guard";
+import { ApiErrorDto } from "src/common/dto/api-error.dto";
 import {
   PreviewSbomDto,
   SoftwareComponentsQueryDto,
@@ -43,10 +44,12 @@ import {
 
 @ApiTags("SBOM")
 @ApiResponse({
+  type: ApiErrorDto,
   status: 403,
   description: "Droit Technologie insuffisant sur cette application.",
 })
 @ApiResponse({
+  type: ApiErrorDto,
   status: 404,
   description:
     "Application, source ou import introuvable dans cette application.",
@@ -60,15 +63,18 @@ export class SbomController {
   @HttpCode(200)
   @ApiOkResponse({ schema: sbomPreviewSchema })
   @ApiResponse({
+    type: ApiErrorDto,
     status: 400,
     description: "Document invalide ou référence interne cassée.",
   })
   @ApiResponse({
+    type: ApiErrorDto,
     status: 413,
     description:
       "Limite de taille, composants, relations ou profondeur dépassée.",
   })
   @ApiResponse({
+    type: ApiErrorDto,
     status: 415,
     description: "Format ou version non pris en charge.",
   })
@@ -106,14 +112,21 @@ export class SbomController {
   @HttpCode(200)
   @ApiOkResponse({ schema: sbomCommitSchema })
   @ApiResponse({
+    type: ApiErrorDto,
     status: 409,
     description: "Source modifiée depuis l’analyse.",
   })
-  @ApiResponse({ status: 410, description: "Analyse expirée après 24 heures." })
+  @ApiResponse({
+    type: ApiErrorDto,
+    status: 410,
+    description: "Analyse expirée après 24 heures.",
+  })
   @RequiredPermissions([Permission.TechnologyWrite])
   @ApiOperation({
     summary:
       "Confirmer atomiquement une analyse SBOM, avec revérification des droits et de la révision",
+    description:
+      "L’identifiant de l’URL désigne l’analyse enregistrée. Aucun corps de requête n’est attendu.",
   })
   commit(
     @Param("applicationId") applicationId: string,
@@ -176,6 +189,7 @@ export class SbomController {
   @Patch("sbom-sources/:id")
   @ApiOkResponse({ schema: sbomSourceUpdateSchema })
   @ApiResponse({
+    type: ApiErrorDto,
     status: 409,
     description: "Source modifiée depuis la prévisualisation.",
   })

@@ -7600,20 +7600,42 @@ paths:
                             after: *a41
         "400":
           description: Document invalide ou référence interne cassée.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorDto"
         "403": &a43
           description: Droit Technologie insuffisant sur cette application.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorDto"
         "404": &a44
           description: Application, source ou import introuvable dans cette application.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorDto"
         "413":
           description: Limite de taille, composants, relations ou profondeur dépassée.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorDto"
         "415":
           description: Format ou version non pris en charge.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorDto"
       summary: Analyser un SBOM et prévisualiser les changements sans modifier
         l’inventaire
       tags: &a45
         - SBOM
   /api/v2/applications/{applicationId}/sbom-imports/{id}/commit:
     post:
+      description: L’identifiant de l’URL désigne l’analyse enregistrée. Aucun corps
+        de requête n’est attendu.
       operationId: SbomController_commit
       parameters:
         - name: applicationId
@@ -7650,8 +7672,16 @@ paths:
         "404": *a44
         "409":
           description: Source modifiée depuis l’analyse.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorDto"
         "410":
           description: Analyse expirée après 24 heures.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorDto"
       summary: Confirmer atomiquement une analyse SBOM, avec revérification des droits
         et de la révision
       tags: *a45
@@ -8087,6 +8117,10 @@ paths:
         "404": *a44
         "409":
           description: Source modifiée depuis la prévisualisation.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorDto"
       summary: Prévisualiser ou confirmer l’activation d’une source SBOM à révision
         constante
       tags: *a45
