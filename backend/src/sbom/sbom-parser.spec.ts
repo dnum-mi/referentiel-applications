@@ -105,6 +105,18 @@ describe("parseSbom", () => {
     }
   });
 
+  it.each(["constructor", "__proto__", "toString", "../../schema"])(
+    "rejects untrusted validator names %s before selecting a local schema",
+    (version) => {
+      expect(() => parse(minimalCdx({ specVersion: version }))).toThrow(
+        UnsupportedMediaTypeException,
+      );
+      expect(() => parse({ spdxVersion: version })).toThrow(
+        UnsupportedMediaTypeException,
+      );
+    },
+  );
+
   it("enforces official schemas, including component requirements and offline license references", () => {
     expect(() =>
       parse(minimalCdx({ components: [{ type: "library", "bom-ref": "x" }] })),

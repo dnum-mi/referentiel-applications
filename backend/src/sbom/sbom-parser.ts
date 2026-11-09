@@ -611,22 +611,34 @@ export function parseSbom(
     );
   }
   guardDepth(document);
-  let format: string;
-  let specVersion: string;
+  // Chaque branche produit des constantes : aucun nom de validateur ou de fichier
+  // n'est choisi directement à partir d'une chaîne fournie dans le document.
+  let format: "CycloneDX" | "SPDX";
+  let specVersion: "1.5" | "1.6" | "1.7" | "2.3";
   if (document.bomFormat === "CycloneDX") {
     format = "CycloneDX";
-    specVersion = text(document.specVersion) ?? "";
-    if (!["1.5", "1.6", "1.7"].includes(specVersion))
-      throw new UnsupportedMediaTypeException(
-        "Versions CycloneDX prises en charge : JSON 1.5, 1.6 et 1.7.",
-      );
-  } else if (typeof document.spdxVersion === "string") {
+    switch (document.specVersion) {
+      case "1.5":
+        specVersion = "1.5";
+        break;
+      case "1.6":
+        specVersion = "1.6";
+        break;
+      case "1.7":
+        specVersion = "1.7";
+        break;
+      default:
+        throw new UnsupportedMediaTypeException(
+          "Versions CycloneDX prises en charge : JSON 1.5, 1.6 et 1.7.",
+        );
+    }
+  } else if (document.spdxVersion === "SPDX-2.3") {
     format = "SPDX";
-    specVersion = document.spdxVersion.replace(/^SPDX-/, "");
-    if (document.spdxVersion !== "SPDX-2.3")
-      throw new UnsupportedMediaTypeException(
-        "Version SPDX prise en charge : JSON 2.3.",
-      );
+    specVersion = "2.3";
+  } else if (typeof document.spdxVersion === "string") {
+    throw new UnsupportedMediaTypeException(
+      "Version SPDX prise en charge : JSON 2.3.",
+    );
   } else {
     throw new UnsupportedMediaTypeException(
       "Formats pris en charge : CycloneDX JSON 1.5/1.6/1.7 et SPDX JSON 2.3.",
