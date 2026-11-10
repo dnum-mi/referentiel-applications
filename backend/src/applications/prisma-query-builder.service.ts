@@ -12,6 +12,7 @@ import {
 } from "src/common/utils/compliance-presence.utils";
 import { organizationWithinScope } from "src/common/utils/organization-scope.utils";
 import { globalPermissions } from "src/permissions/delegated-auth";
+import { homologationWhere } from "./homologation-filter";
 import { eolStatusWhere } from "src/technology/utils/eol-status";
 
 /**
@@ -499,6 +500,8 @@ export class PrismaQueryBuilder {
       condition: unknown;
       whereClause: Prisma.ApplicationWhereInput;
     }[];
+
+    where.AND.push(homologationWhere(filters));
 
     // Conformité (filtre par état). `compliance__in` reste un alias déprécié de "présent".
     const presentCriteria = [
