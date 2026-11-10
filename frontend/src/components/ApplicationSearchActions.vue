@@ -5,20 +5,22 @@ import { useRouter } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
 import { useApplicationStore } from "@/stores/applicationStore";
 import { useApplicationSearch } from "@/composables/use-application-search";
+import { useColumnPreferences } from "@/composables/use-column-preferences";
 import { useToasterStore } from "@/stores/toasterStore";
 import { routeNames } from "@/router/route-names";
 import ReportModal from "@/components/modal/ReportModal.vue";
 import CreateQualityCampaignModal from "@/components/modal/CreateQualityCampaignModal.vue";
 import GristSyncModal from "@/components/modal/GristSyncModal.vue";
 import ColumnCustomization from "@/components/ColumnCustomization.vue";
-import { FeatureId, Permission } from "@/client";
+import { FeatureId, Permission, type GristColumnField } from "@/client";
 import { useBetaFeatures } from "@/composables/use-beta-features";
 import BetaBadge from "@/components/BetaBadge.vue";
 
 const router = useRouter();
 const userStore = useUserStore();
 const applicationStore = useApplicationStore();
-const { filters } = useApplicationSearch();
+const { filters, total, isLoading, isSearchPending, error, filtersToQuery } = useApplicationSearch();
+const { availableColumns, visibleColumns } = useColumnPreferences();
 const toaster = useToasterStore();
 const { canAccess, isBeta, authorize, refreshAccess } = useBetaFeatures();
 
@@ -27,7 +29,9 @@ const isCreateCampaignOpen = ref(false);
 const isGristSyncOpen = ref(false);
 
 const reportStatusMessage = ref("");
-const exportFormat = ref<"Excel" | "HTML" | null>(null);
+type ExportFormat = "Excel" | "ExcelView" | "HTML";
+const exportFormat = ref<ExportFormat | null>(null);
+const exportFormatLabel = computed(() => (exportFormat.value === "ExcelView" ? "Excel de la vue" : exportFormat.value));
 
 let lastFocusedElement: Element | null = null;
 
@@ -49,18 +53,36 @@ const { open: openReport, close: closeReport } = createModalHandlers(isReportMis
 const { open: openCreateCampaign, close: closeCreateCampaign } = createModalHandlers(isCreateCampaignOpen);
 const { open: openGristSync, close: closeGristSync } = createModalHandlers(isGristSyncOpen);
 
-async function exportApplications(format: "Excel" | "HTML") {
-  const feature = format === "Excel" ? FeatureId.CATALOGUE_EXCEL_EXPORT : FeatureId.CATALOGUE_HTML_EXPORT;
-  if (exportFormat.value || !hasExportPermissions.value || !canAccess(feature)) return;
+function captureExcelView() {
+  const { page: _page, pageSize: _pageSize, ...selection } = filters.value;
+  return { selection, columns: visibleColumns.value.map(({ field }) => field as GristColumnField) };
+}
+
+async function exportApplications(format: ExportFormat) {
+  const isView = format === "ExcelView";
+  const feature = format === "HTML" ? FeatureId.CATALOGUE_HTML_EXPORT : FeatureId.CATALOGUE_EXCEL_EXPORT;
+  if (exportFormat.value || !hasExportPermissions.value || !canAccess(feature) || (isView && !canExportExcelView.value)) return;
+  const view = isView ? captureExcelView() : undefined;
   exportFormat.value = format;
   try {
     if (!(await authorize(feature, [Permission.DATA_EXPORT]))) return;
-    if (format === "Excel") await applicationStore.downloadExcel(filters.value);
-    else await applicationStore.downloadHtml(filters.value);
+    if (view) {
+      const { selection } = view;
+      // La sélection correspond au clic et les droits à la session revalidée.
+      const allowed = new Set(availableColumns.value.map(({ field }) => field));
+      const columns = view.columns.filter((field) => allowed.has(field));
+      if (!columns.length) return;
+      const cataloguePath = router.resolve({ name: routeNames.SEARCHAPP, query: filtersToQuery(selection) }).href;
+      await applicationStore.downloadExcel(selection, { columns, cataloguePath });
+    } else if (format === "Excel") {
+      await applicationStore.downloadExcel(filters.value);
+    } else {
+      await applicationStore.downloadHtml(filters.value);
+    }
   } catch (error) {
     await refreshAccess();
-    console.error(`Erreur lors de l'exportation ${format}`, error);
-    toaster.addErrorMessage(`Une erreur est survenue lors de l'exportation ${format}. Veuillez réessayer.`);
+    console.error(`Erreur lors de l'exportation ${exportFormatLabel.value}`, error);
+    toaster.addErrorMessage(`Une erreur est survenue lors de l'exportation ${exportFormatLabel.value}. Veuillez réessayer.`);
   } finally {
     exportFormat.value = null;
   }
@@ -71,14 +93,27 @@ const hasExportPermissions = computed(() => {
 });
 const hasExcelExportPermissions = computed(() => hasExportPermissions.value && canAccess(FeatureId.CATALOGUE_EXCEL_EXPORT));
 const hasHtmlExportPermissions = computed(() => hasExportPermissions.value && canAccess(FeatureId.CATALOGUE_HTML_EXPORT));
+const isSearchUpdating = computed(() => isSearchPending.value || isLoading.value);
+const canExportExcelView = computed(() => !isSearchUpdating.value && !error.value && visibleColumns.value.length > 0);
 const htmlExportLabel = computed(
   () =>
     `Exporter en HTML les applications correspondant aux filtres actuels${isBeta(FeatureId.CATALOGUE_HTML_EXPORT) ? " — fonctionnalité bêta" : ""}`,
 );
 const excelExportLabel = computed(
   () =>
-    `Exporter en Excel les applications correspondant aux filtres actuels${isBeta(FeatureId.CATALOGUE_EXCEL_EXPORT) ? " — fonctionnalité bêta" : ""}`,
+    `Exporter en Excel (classeur complet) les applications correspondant aux filtres actuels${isBeta(FeatureId.CATALOGUE_EXCEL_EXPORT) ? " — fonctionnalité bêta" : ""}`,
 );
+const excelViewTitle = computed(() => {
+  if (!visibleColumns.value.length) return "Sélectionnez au moins une colonne à exporter";
+  if (isSearchUpdating.value || error.value) return "Les résultats doivent être actualisés avant d’exporter la vue";
+  return "Exporter les colonnes affichées pour toutes les applications correspondant aux filtres actuels";
+});
+const excelViewText = computed(() =>
+  isSearchUpdating.value || error.value
+    ? "Exporter la vue en Excel"
+    : `Exporter la vue en Excel (${total.value} application${total.value === 1 ? "" : "s"})`,
+);
+const excelViewLabel = computed(() => `${excelViewText.value}${isBeta(FeatureId.CATALOGUE_EXCEL_EXPORT) ? " — fonctionnalité bêta" : ""}`);
 
 const hasGristSyncPermissions = computed(() => {
   return canAccess(FeatureId.GRIST_SYNC);
@@ -121,7 +156,7 @@ const hasQualityCampaignPermissions = computed(() => {
   <div class="fr-container-fluid" data-testid="application-search-actions">
     <output aria-live="polite" class="sr-only">{{ reportStatusMessage }}</output>
     <output class="fr-sr-only" aria-live="polite" aria-atomic="true">{{
-      exportFormat ? `Préparation de l’export ${exportFormat}…` : ""
+      exportFormatLabel ? `Préparation de l’export ${exportFormatLabel}…` : ""
     }}</output>
 
     <div class="actions">
@@ -159,6 +194,22 @@ const hasQualityCampaignPermissions = computed(() => {
         v-if="hasExcelExportPermissions"
         icon="ri-file-excel-2-line"
         secondary
+        data-testid="application-export-view-btn"
+        class="action-btn icon-left"
+        :aria-disabled="!!exportFormat || !canExportExcelView"
+        :aria-busy="exportFormat === 'ExcelView'"
+        @click="exportApplications('ExcelView')"
+        :aria-label="excelViewLabel"
+        :title="excelViewTitle"
+      >
+        {{ excelViewText }}
+        <BetaBadge v-if="isBeta(FeatureId.CATALOGUE_EXCEL_EXPORT)" aria-hidden="true" />
+      </DsfrButton>
+
+      <DsfrButton
+        v-if="hasExcelExportPermissions"
+        icon="ri-file-excel-2-line"
+        secondary
         data-testid="application-export-btn"
         class="action-btn icon-left hide-on-mobile"
         :aria-disabled="!!exportFormat"
@@ -167,7 +218,7 @@ const hasQualityCampaignPermissions = computed(() => {
         :aria-label="excelExportLabel"
         :title="excelExportLabel"
       >
-        Exporter en Excel
+        Exporter en Excel (classeur complet)
         <BetaBadge v-if="isBeta(FeatureId.CATALOGUE_EXCEL_EXPORT)" aria-hidden="true" />
       </DsfrButton>
 
@@ -183,7 +234,7 @@ const hasQualityCampaignPermissions = computed(() => {
         :aria-label="excelExportLabel"
         :title="excelExportLabel"
       >
-        Exporter en Excel
+        Exporter en Excel (classeur complet)
         <BetaBadge v-if="isBeta(FeatureId.CATALOGUE_EXCEL_EXPORT)" aria-hidden="true" />
       </DsfrButton>
 

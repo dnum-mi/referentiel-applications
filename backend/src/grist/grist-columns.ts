@@ -1,11 +1,13 @@
 import { ApplicationStatusLabels } from "src/applications/constants/enum-label";
-import { ApplicationRepository } from "src/applications/infrastructure/repository/application.repository";
+import type { ApplicationSearchItemDto } from "src/applications/dto/get-application.dto";
+import type { ApplicationRepository } from "src/applications/infrastructure/repository/application.repository";
 
 /// Ligne de la page de recherche, telle que la charge la synchronisation.
 export type GristApplication = Awaited<
   ReturnType<ApplicationRepository["findSearchItems"]>
 >[number];
-type Actor = GristApplication["actors"][number];
+type CatalogueApplication = GristApplication | ApplicationSearchItemDto;
+type Actor = CatalogueApplication["actors"][number];
 
 export type GristColumnDefinition = {
   /// Champ de la colonne dans la page de recherche (frontend/src/types/columns.ts).
@@ -18,7 +20,7 @@ export type GristColumnDefinition = {
   /// Colonne réservée aux détenteurs de ColumnRead, comme dans la page.
   restricted: boolean;
   /// Valeur affichée dans la page (ApplicationTableView.vue).
-  value: (app: GristApplication) => string | number | null;
+  value: (app: CatalogueApplication) => string | number | null;
 };
 
 /// Libellés courts des priorités, comme les badges de la page (restartPrioritiesConfig).
@@ -70,7 +72,7 @@ const suffixed = (value: number | null | undefined, unit: string) =>
   value == null ? "" : `${value}${unit}`;
 const yesNo = (value: boolean | null | undefined) =>
   value == null ? "" : value ? "Oui" : "Non";
-const hostingOptions = (app: GristApplication) =>
+const hostingOptions = (app: CatalogueApplication) =>
   app.hostings.map(({ hostingOption }) => hostingOption);
 
 /// Colonnes de la page de recherche, dans son ordre (AVAILABLE_COLUMNS). Les valeurs sont celles
@@ -172,7 +174,8 @@ export const GRIST_COLUMNS: GristColumnDefinition[] = [
     label: "Direction métier",
     type: "Text",
     restricted: false,
-    value: (app) => app.businessDivisions.map(({ label }) => label).join("\n"),
+    value: (app) =>
+      app.businessDivisions?.map(({ label }) => label).join("\n") ?? "",
   },
   {
     field: "rsimm",
@@ -249,7 +252,7 @@ export const GRIST_COLUMNS: GristColumnDefinition[] = [
     restricted: true,
     value: (app) => {
       const date = app.compliance?.homologation_date_end;
-      return date ? DATE_FR.format(date) : "";
+      return date ? DATE_FR.format(new Date(date)) : "";
     },
   },
   {
@@ -325,7 +328,7 @@ export const REFAPP_COLUMN_IDS = new Set([
 
 /// La recherche aplatit la dernière évaluation de dette technique (toSearchItem).
 function maturity(
-  app: GristApplication,
+  app: CatalogueApplication,
   key: "technicalMaturity" | "businessMaturity" | "costContainment",
 ): number | null {
   const debt = app.technicalDebtInfo as unknown as Record<

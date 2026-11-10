@@ -16,7 +16,9 @@ vi.mock("@/stores/toasterStore", () => ({ useToasterStore: () => ({ addErrorMess
 vi.mock("@/stores/applicationStore", () => ({ useApplicationStore: () => ({ downloadExcel: vi.fn(), downloadHtml: vi.fn() }) }));
 vi.mock("@/composables/use-application-search", async () => {
   const { ref } = await import("vue");
-  return { useApplicationSearch: () => ({ filters: ref({}) }) };
+  return {
+    useApplicationSearch: () => ({ filters: ref({}), total: ref(0), isLoading: ref(false), isSearchPending: ref(false), error: ref(null) }),
+  };
 });
 
 const grantedPermissions = ref<Permission[]>([Permission.DATA_EXPORT]);

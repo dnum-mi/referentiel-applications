@@ -86,6 +86,35 @@ describe("applicationStore.downloadExcel — délai du vrai client HTTP", () => 
     expect(new Uint8Array(await blob.arrayBuffer())).toEqual(workbookBytes);
   });
 
+  it("télécharge la vue via POST, avec ses filtres, ses colonnes et le délai Excel", async () => {
+    respondAfter(15_000);
+    const view = {
+      columns: ["quality", "label"],
+      cataloguePath: "/recherche-application?search=vue",
+    } as const;
+    const exported = useApplicationStore().downloadExcel(
+      { search: "vue", label: "", tag: [], sortBy: "quality", order: "desc" },
+      { ...view, columns: [...view.columns] },
+    );
+
+    await vi.advanceTimersByTimeAsync(10_001);
+    expect(downloadBlob).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(4_999);
+    await exported;
+
+    const [input] = vi.mocked(fetch).mock.calls[0];
+    const request = new Request(input);
+    const url = new URL(request.url);
+    expect(request.method).toBe("POST");
+    expect(url.pathname).toBe("/api/v2/applications/export/excel-view");
+    expect(Object.fromEntries(url.searchParams)).toEqual({ search: "vue", sortBy: "quality", order: "desc", pageSize: "0" });
+    expect(await request.json()).toEqual(view);
+    expect(downloadBlob).toHaveBeenCalledExactlyOnceWith(expect.any(Blob), expect.stringMatching(/^applications_vue_export_.*\.xlsx$/));
+    const [blob] = downloadBlob.mock.calls[0];
+    expect(blob.type).toBe(XLSX_TYPE);
+    expect(new Uint8Array(await blob.arrayBuffer())).toEqual(workbookBytes);
+  });
+
   it("interrompt un export après cinq minutes et conserve la cause sans télécharger", async () => {
     respondAfter(301_000);
     let settled = false;
