@@ -180,3 +180,33 @@ describe("AdminActorActions — confirmation personnelle", () => {
     expect(wrapper.find('[data-testid="admin-edit-all-actor-modal"]').exists()).toBe(true);
   });
 });
+
+it("verrouille l'édition groupée et ignore MAIA après réouverture pour un autre acteur", async () => {
+  let resolveOld!: (value: unknown) => void;
+  syncMaia.mockReturnValueOnce(
+    new Promise((resolve) => {
+      resolveOld = resolve;
+    }),
+  );
+  const wrapper = await renderActions();
+  await wrapper.get('[data-testid="admin-actor-edit-all-btn"]').trigger("click");
+  await flushPromises();
+  await wrapper.get('[data-testid="admin-actor-all-sync-maia-btn"]').trigger("click");
+  expect(wrapper.get('[data-testid="admin-actor-all-email-input"]').element).toBeDisabled();
+  expect(wrapper.get('[data-testid="admin-actor-all-lastname-input"]').element).toBeDisabled();
+  expect(wrapper.get('[data-testid="admin-actor-save-all-btn"]').element).toBeDisabled();
+  for (const checkbox of wrapper.findAll('fieldset input[type="checkbox"]')) expect(checkbox.element).toBeDisabled();
+  const cancel = wrapper.findAll("button").find((button) => button.text() === "Annuler")!;
+  expect(cancel.element).not.toBeDisabled();
+  await cancel.trigger("click");
+  await wrapper.setProps({ actor: { ...actor, id: "actor-2", firstname: "Autre" } });
+  await wrapper.get('[data-testid="admin-actor-edit-all-btn"]').trigger("click");
+  await flushPromises();
+  syncMaia.mockResolvedValueOnce({ response: { ok: true }, data: { firstName: "Nouveau", lastName: "MAIA", organizationId: null } });
+  await wrapper.get('[data-testid="admin-actor-all-sync-maia-btn"]').trigger("click");
+  await flushPromises();
+  resolveOld({ response: { ok: true }, data: { firstName: "Ancien", lastName: "Obsolète", organizationId: null } });
+  await flushPromises();
+  expect(wrapper.get('[data-testid="admin-actor-all-firstname-input"]').element).toHaveValue("Nouveau");
+  expect(wrapper.get('[data-testid="admin-actor-all-email-input"]').element).not.toBeDisabled();
+});

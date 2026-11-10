@@ -24,7 +24,7 @@ const props = withDefaults(defineProps<{ mode?: ApplicationFormMode; initialData
 const emit = defineEmits<{ success: [application: ApplicationDto]; cancel: [] }>();
 const { form, moa, moe, isFormDirty, markSaved, getData } = useApplicationFormState(props.initialData, () => props.mode);
 const { errors, validateStep, validateAll } = useApplicationFormValidation(getData, () => props.mode);
-const { save, isSubmitting, saveError, syncContact, moaSyncing, moeSyncing, initialMoaOrganization, initialMoeOrganization } =
+const { cancelMaia, save, isSubmitting, saveError, syncContact, moaSyncing, moeSyncing, initialMoaOrganization, initialMoeOrganization } =
   useApplicationFormActions(
     getData,
     () => props.mode,
@@ -75,7 +75,7 @@ async function previousStep() {
 }
 
 async function handleSubmit() {
-  if (isSubmitting.value || cancelModalOpen.value) return;
+  if (isSubmitting.value || moaSyncing.value || moeSyncing.value || cancelModalOpen.value) return;
   const issues = validateAll();
   if (issues.length) return focusErrors(issues);
   const application = await save();
@@ -103,6 +103,7 @@ async function handleCancel(event?: MouseEvent) {
   if (!(await requestLeave(event?.currentTarget instanceof HTMLElement ? event.currentTarget : null))) return;
   // La page de création navigue en réponse à cancel : cette sortie est déjà confirmée.
   cancelNavigationAllowed = true;
+  cancelMaia();
   emit("cancel");
 }
 
@@ -224,7 +225,7 @@ onBeforeUnmount(() => {
       <DsfrButton
         v-else
         type="submit"
-        :disabled="isSubmitting"
+        :disabled="isSubmitting || moaSyncing || moeSyncing"
         :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'"
         data-testid="application-submit-btn"
       />

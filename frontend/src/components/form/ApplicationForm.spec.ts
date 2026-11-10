@@ -25,6 +25,7 @@ vi.mock("@/stores/organizationStore", () => ({
 }));
 vi.mock("./application/use-application-form-actions", () => ({
   useApplicationFormActions: () => ({
+    cancelMaia: vi.fn(),
     save: mocks.save,
     syncContact: mocks.syncContact,
     isSubmitting: submission.isSubmitting,

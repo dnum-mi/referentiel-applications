@@ -1,3 +1,4 @@
+import { useMaiaRequest } from "@/composables/use-maia-request";
 import { isApiSuccess } from "@/api/api-result";
 import { ref } from "vue";
 import api from "@/api";
@@ -20,8 +21,10 @@ export function useApplicationFormActions(
   const organizationStore = useOrganizationStore();
   const isSubmitting = ref(false);
   const saveError = ref("");
-  const moaSyncing = ref(false);
-  const moeSyncing = ref(false);
+  const moaRequest = useMaiaRequest([() => getData().moa, () => getData().moa.email, getId]);
+  const moeRequest = useMaiaRequest([() => getData().moe, () => getData().moe.email, getId]);
+  const moaSyncing = moaRequest.isSyncing;
+  const moeSyncing = moeRequest.isSyncing;
   const initialMoaOrganization = ref<OrganizationDto | null>(null);
   const initialMoeOrganization = ref<OrganizationDto | null>(null);
 
@@ -47,7 +50,7 @@ export function useApplicationFormActions(
   }
 
   async function save(): Promise<ApplicationDto | undefined> {
-    if (isSubmitting.value) return;
+    if (isSubmitting.value || moaSyncing.value || moeSyncing.value) return;
     saveError.value = "";
     return withLoading(isSubmitting, async () => {
       const { application, moa, moe } = getData();
@@ -94,26 +97,36 @@ export function useApplicationFormActions(
       toaster.addErrorMessage("L'email est requis pour synchroniser depuis MAIA");
       return;
     }
-    await withLoading(isSyncing, async () => {
-      try {
-        const response = await api.userControllerSyncOrganizationFromMaiaByEmail({ path: { email } });
-        if (!isApiSuccess(response) || !response.data) {
-          toaster.addErrorMessage("Erreur lors de la synchronisation MAIA (email non trouvé)");
-          return;
-        }
-        const { organizationId, firstName, lastName } = response.data;
-        contact.firstname = firstName;
-        contact.lastname = lastName;
-        if (organizationId) {
-          initialOrganization.value = (await organizationStore.getById(organizationId)) ?? null;
-          contact.organizationId = organizationId;
-          toaster.addSuccessMessage(`Organisation ${role.toUpperCase()} synchronisée depuis MAIA`);
-        }
-      } catch {
-        toaster.addErrorMessage("Erreur lors de la synchronisation MAIA");
+    const request = (role === "moa" ? moaRequest : moeRequest).begin();
+    if (!request) return;
+    try {
+      const response = await api.userControllerSyncOrganizationFromMaiaByEmail({ path: { email } });
+      if (!request.isCurrent()) return;
+      if (!isApiSuccess(response) || !response.data) {
+        toaster.addErrorMessage("Erreur lors de la synchronisation MAIA (email non trouvé)");
+        return;
       }
-    });
+      const { organizationId, firstName, lastName } = response.data;
+      const organization = organizationId ? await organizationStore.getById(organizationId) : null;
+      if (!request.isCurrent()) return;
+      contact.firstname = firstName;
+      contact.lastname = lastName;
+      if (organizationId) {
+        initialOrganization.value = organization ?? null;
+        contact.organizationId = organizationId;
+        toaster.addSuccessMessage(`Organisation ${role.toUpperCase()} synchronisée depuis MAIA`);
+      }
+    } catch {
+      if (request.isCurrent()) toaster.addErrorMessage("Erreur lors de la synchronisation MAIA");
+    } finally {
+      request.finish();
+    }
   }
 
-  return { save, isSubmitting, saveError, syncContact, moaSyncing, moeSyncing, initialMoaOrganization, initialMoeOrganization };
+  function cancelMaia() {
+    moaRequest.invalidate();
+    moeRequest.invalidate();
+  }
+
+  return { cancelMaia, save, isSubmitting, saveError, syncContact, moaSyncing, moeSyncing, initialMoaOrganization, initialMoeOrganization };
 }

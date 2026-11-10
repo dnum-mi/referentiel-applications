@@ -2,16 +2,19 @@ import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils";
 import type { ActorTypeDto, CreateActorDto } from "@/client/types.gen";
 import ActorForm from "./ActorForm.vue";
 
-const { syncMaia } = vi.hoisted(() => ({ syncMaia: vi.fn() }));
+const { syncMaia, getOrganization } = vi.hoisted(() => ({ syncMaia: vi.fn(), getOrganization: vi.fn() }));
 vi.mock("@/api/index.js", () => ({
   default: { userControllerSyncOrganizationFromMaiaByEmail: syncMaia },
 }));
 vi.mock("@/stores/organizationStore", () => ({
-  useOrganizationStore: () => ({ getById: vi.fn().mockResolvedValue({ id: "org-1", path: "MI/DNUM" }) }),
+  useOrganizationStore: () => ({ getById: getOrganization }),
 }));
 vi.mock("@/stores/toasterStore", () => ({ useToasterStore: () => ({ addErrorMessage: vi.fn(), addSuccessMessage: vi.fn() }) }));
 enableAutoUnmount(afterEach);
-beforeEach(() => syncMaia.mockReset());
+beforeEach(() => {
+  syncMaia.mockReset();
+  getOrganization.mockReset().mockResolvedValue({ id: "org-1", path: "MI/DNUM" });
+});
 afterEach(() => vi.restoreAllMocks());
 
 const actorTypes: ActorTypeDto[] = [{ id: "type-1", code: "MOA", label: "Maîtrise d’ouvrage", isDefault: false }];
@@ -43,7 +46,8 @@ async function renderForm(editing = true) {
     global: {
       stubs: {
         OrganizationSearchSelect: {
-          props: ["modelValue"],
+          name: "OrganizationSearchSelect",
+          props: ["modelValue", "initialOrganization"],
           emits: ["update:modelValue"],
           template:
             '<label>Organisation<select :value="modelValue" @change="$emit(\'update:modelValue\', $event.target.value)"><option value="">Sélectionner</option><option value="org-1">MI/DNUM</option></select></label>',
@@ -126,5 +130,67 @@ describe("ActorForm — confirmation des modifications personnelles", () => {
         },
       ],
     ]);
+  });
+});
+
+function pendingResponse<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((done) => {
+    resolve = done;
+  });
+  return { promise, resolve };
+}
+
+it("verrouille tous les contrôles jusqu'au chargement de l'organisation, sans bloquer Annuler", async () => {
+  const wrapper = await renderForm();
+  const maia = pendingResponse<unknown>();
+  const org = pendingResponse<unknown>();
+  syncMaia.mockReturnValueOnce(maia.promise);
+  getOrganization.mockReturnValueOnce(org.promise);
+  await wrapper.get('[data-testid="admin-user-sync-maia-btn"]').trigger("click");
+  for (const control of wrapper.findAll("fieldset input, fieldset select, fieldset button")) expect(control.element).toBeDisabled();
+  expect(wrapper.get('[data-testid="actor-submit-btn"]').element).toBeDisabled();
+  expect(wrapper.get('[data-testid="actor-cancel-btn"]').element).not.toBeDisabled();
+  await wrapper.get("form").trigger("submit");
+  expect(wrapper.emitted("submit")).toBeUndefined();
+  maia.resolve({ response: { ok: true }, data: { firstName: "MAIA", lastName: "MAIA", organizationId: "org-2" } });
+  await flushPromises();
+  expect(wrapper.get('[data-testid="actor-email-input"]').element).toBeDisabled();
+  org.resolve({ id: "org-2", path: "MAIA" });
+  await flushPromises();
+  expect(wrapper.get('[data-testid="actor-firstname-input"]').element).toHaveValue("MAIA");
+  expect(wrapper.get('[data-testid="actor-email-input"]').element).not.toBeDisabled();
+});
+
+it("ignore les réponses inversées après fermeture et réouverture pour un autre acteur au même email", async () => {
+  const wrapper = await renderForm();
+  const old = pendingResponse<unknown>();
+  const current = pendingResponse<unknown>();
+  syncMaia.mockReturnValueOnce(old.promise).mockReturnValueOnce(current.promise);
+  await wrapper.get('[data-testid="admin-user-sync-maia-btn"]').trigger("click");
+  await wrapper.setProps({ opened: false });
+  await wrapper.setProps({ initialData: { ...initialData, firstname: "Autre" }, opened: true });
+  await wrapper.get('[data-testid="admin-user-sync-maia-btn"]').trigger("click");
+  current.resolve({ response: { ok: true }, data: { firstName: "Nouveau", lastName: "MAIA", organizationId: null } });
+  await flushPromises();
+  old.resolve({ response: { ok: true }, data: { firstName: "Ancien", lastName: "Obsolète", organizationId: "old-org" } });
+  await flushPromises();
+  expect(wrapper.get('[data-testid="actor-firstname-input"]').element).toHaveValue("Nouveau");
+  expect(getOrganization).not.toHaveBeenCalledWith("old-org");
+  expect(wrapper.get('[data-testid="actor-email-input"]').element).not.toBeDisabled();
+});
+
+it("ignore le chargement initial d'organisation d'un ancien acteur", async () => {
+  const wrapper = await renderForm();
+  const old = pendingResponse<unknown>();
+  getOrganization.mockReturnValueOnce(old.promise);
+  await wrapper.setProps({ initialData: { ...initialData, organizationId: "old-org" } });
+  await wrapper.setProps({ initialData: { ...initialData, organizationId: "org-1" } });
+  await flushPromises();
+  old.resolve({ id: "old-org", path: "Ancienne" });
+  await flushPromises();
+  expect(wrapper.findComponent({ name: "OrganizationSearchSelect" }).props("initialOrganization")).toEqual({
+    id: "org-1",
+    path: "MI/DNUM",
   });
 });
