@@ -103,6 +103,37 @@ describe("OrganizationSearchSelect", () => {
     wrapper.unmount();
   });
 
+  it("priorise les correspondances exactes et trie tous les résultats par chemin", async () => {
+    const exact = { id: "dgef", path: "/MININT/DGEF" };
+    const aliased = {
+      id: "immigration",
+      path: "/MI/Immigration",
+      maiaReferences: [{ maiaRef: "MININT/DGEF" }],
+    };
+    const offices = Array.from({ length: 55 }, (_, index) => ({
+      id: `office-${index}`,
+      path: `/MININT/DGEF/Bureau ${String(index).padStart(2, "0")}`,
+    }));
+    find.mockResolvedValue([exact, aliased, ...offices].reverse());
+
+    const wrapper = renderSearch();
+    await wrapper.get("input").setValue("minint/dgef");
+    await vi.advanceTimersByTimeAsync(300);
+
+    expect(wrapper.findAll("option").map((option) => option.element.value)).toEqual([
+      "",
+      exact.id,
+      aliased.id,
+      ...offices.map((office) => office.id),
+    ]);
+    expect(wrapper.get(`option[value="${aliased.id}"]`).text()).toBe("/MI/Immigration (MAIA : MININT/DGEF)");
+
+    await wrapper.get("select").setValue(aliased.id);
+    expect(wrapper.emitted("update:modelValue")).toEqual([[aliased.id]]);
+    expect(wrapper.get("input").element.value).toBe(aliased.path);
+    wrapper.unmount();
+  });
+
   it("annonce l'échec dans une alerte permanente, puis retrouve le statut de recherche sans perdre la sélection", async () => {
     let finish!: (value: (typeof organization)[]) => void;
     find
