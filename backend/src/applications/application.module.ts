@@ -9,6 +9,7 @@ import { StatusesModule } from "src/statuses/statuses.module";
 import { TagsModule } from "src/tag/tags.module";
 import { ApplicationController } from "./application.controller";
 import { ApplicationService } from "./application.service";
+import { ApplicationTableExportService } from "./application-table-export.service";
 import { ApplicationExportService } from "./export.service";
 import { ApplicationRepository } from "./infrastructure/repository/application.repository";
 import { ApplicationSearchService } from "./search/application-search.service";
@@ -29,6 +30,7 @@ import { ApplicationProductExportService } from "./product-export.service";
   providers: [
     ApplicationService,
     ApplicationExportService,
+    ApplicationTableExportService,
     ApplicationProductExportService,
     ApplicationViewService,
     ExportApplicationsUseCase,

@@ -162,15 +162,19 @@ export class SearchPage extends BasePage {
 
   /** Active une colonne via sa case dans la boîte de personnalisation. */
   async enableColumn(label: string): Promise<void> {
+    await this.setColumnSelection(label, true);
+  }
+
+  async setColumnSelection(label: string, selected: boolean): Promise<void> {
     // Case DSFR : l'<input> est masqué et piloté par v-model → on clique le <label> interactif.
     const box = this.columnsDialog().getByRole("checkbox", {
       name: label,
       exact: true,
     });
-    if (!(await box.isChecked())) {
+    if ((await box.isChecked()) !== selected) {
       await this.columnsDialog().getByText(label, { exact: true }).click();
-      await expect(box).toBeChecked();
     }
+    await expect(box).toBeChecked({ checked: selected });
   }
 
   /** L'en-tête de colonne est visible dans le tableau. */
@@ -766,6 +770,14 @@ export class SearchPage extends BasePage {
       this.byTestId(
         mobile ? "application-export-btn-mobile" : "application-export-btn",
       ).click(),
+    ]);
+    return download;
+  }
+
+  async exportExcelView() {
+    const [download] = await Promise.all([
+      this.page.waitForEvent("download"),
+      this.byTestId("application-export-view-btn").click(),
     ]);
     return download;
   }

@@ -42,7 +42,15 @@ vi.mock("@/stores/applicationStore", () => ({
 }));
 vi.mock("@/composables/use-application-search", async () => {
   const { ref } = await import("vue");
-  return { useApplicationSearch: () => ({ filters: ref({ shortName: "app" }) }) };
+  return {
+    useApplicationSearch: () => ({
+      filters: ref({ shortName: "app" }),
+      total: ref(0),
+      isLoading: ref(false),
+      isSearchPending: ref(false),
+      error: ref(null),
+    }),
+  };
 });
 
 const allPermissions = [Permission.DATA_EXPORT, Permission.BETA_FEATURES, Permission.APP_READ];
