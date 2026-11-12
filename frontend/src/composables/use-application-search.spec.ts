@@ -67,6 +67,25 @@ describe("useApplicationSearch — debounce partagé", () => {
     vi.useRealTimers();
   });
 
+  it("restaure, partage et réinitialise les filtres d’homologation", () => {
+    routeMock.query = {
+      homologationStatus: "dispensee",
+      homologationDateMode: "range",
+      homologationDateFrom: "2026-11-09",
+      homologationDateTo: "2026-11-10",
+    };
+    const search = scope.run(() => useApplicationSearch())!;
+    expect(search.filters.value).toMatchObject(routeMock.query);
+    search.setFilter({ page: 0 });
+    expect(replaceMock).toHaveBeenLastCalledWith({ query: routeMock.query });
+    search.resetFilters();
+    expect(search.filters.value.homologationStatus).toBeUndefined();
+    expect(search.filters.value.homologationDateMode).toBeUndefined();
+    expect(search.filters.value.homologationDateFrom).toBeUndefined();
+    expect(search.filters.value.homologationDateTo).toBeUndefined();
+    expect(replaceMock).toHaveBeenLastCalledWith({ query: {} });
+  });
+
   it("regroupe la saisie de deux composants pendant 300 ms", async () => {
     const [first, second] = scope.run(() => [useApplicationSearch(), useApplicationSearch()])!;
     const response = deferred<ReturnType<typeof searchResponse>>();

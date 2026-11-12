@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import HomologationFilter from "./HomologationFilter.vue";
 import { useApplicationSearch } from "@/composables/use-application-search";
 import {
   complianceBooleanCriteria,
@@ -90,6 +91,7 @@ function setState(criterion: ComplianceFilterCriterion, state: string | number) 
         </span>
       </template>
     </DsfrSelect>
+    <HomologationFilter />
   </fieldset>
 </template>
 

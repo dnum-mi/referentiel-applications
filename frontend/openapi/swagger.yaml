@@ -1191,6 +1191,45 @@ paths:
             enum:
               - asc
               - desc
+        - name: homologationStatus
+          required: false
+          in: query
+          description: Statut déclaré de l’homologation
+          schema:
+            type: string
+            enum:
+              - homologuee
+              - en_cours
+              - dispensee
+              - non_realisee
+              - a_mettre_en_place
+        - name: homologationDateMode
+          required: false
+          in: query
+          description: Expirée (homologuée, fin avant aujourd’hui à Paris), intervalle
+            inclusif ou date absente
+          schema:
+            type: string
+            enum:
+              - expired
+              - range
+              - missing
+        - name: homologationDateFrom
+          required: false
+          in: query
+          description: Première journée incluse (Europe/Paris)
+          schema:
+            pattern: ^\d{4}-\d{2}-\d{2}$
+            example: 2026-11-09
+            type: string
+        - name: homologationDateTo
+          required: false
+          in: query
+          description: Dernière journée incluse (Europe/Paris)
+          schema:
+            pattern: ^\d{4}-\d{2}-\d{2}$
+            example: 2026-11-09
+            type: string
         - name: search
           required: false
           in: query
@@ -1762,6 +1801,45 @@ paths:
             enum:
               - asc
               - desc
+        - name: homologationStatus
+          required: false
+          in: query
+          description: Statut déclaré de l’homologation
+          schema:
+            type: string
+            enum:
+              - homologuee
+              - en_cours
+              - dispensee
+              - non_realisee
+              - a_mettre_en_place
+        - name: homologationDateMode
+          required: false
+          in: query
+          description: Expirée (homologuée, fin avant aujourd’hui à Paris), intervalle
+            inclusif ou date absente
+          schema:
+            type: string
+            enum:
+              - expired
+              - range
+              - missing
+        - name: homologationDateFrom
+          required: false
+          in: query
+          description: Première journée incluse (Europe/Paris)
+          schema:
+            pattern: ^\d{4}-\d{2}-\d{2}$
+            example: 2026-11-09
+            type: string
+        - name: homologationDateTo
+          required: false
+          in: query
+          description: Dernière journée incluse (Europe/Paris)
+          schema:
+            pattern: ^\d{4}-\d{2}-\d{2}$
+            example: 2026-11-09
+            type: string
         - name: search
           required: false
           in: query
@@ -2237,6 +2315,45 @@ paths:
             enum:
               - asc
               - desc
+        - name: homologationStatus
+          required: false
+          in: query
+          description: Statut déclaré de l’homologation
+          schema:
+            type: string
+            enum:
+              - homologuee
+              - en_cours
+              - dispensee
+              - non_realisee
+              - a_mettre_en_place
+        - name: homologationDateMode
+          required: false
+          in: query
+          description: Expirée (homologuée, fin avant aujourd’hui à Paris), intervalle
+            inclusif ou date absente
+          schema:
+            type: string
+            enum:
+              - expired
+              - range
+              - missing
+        - name: homologationDateFrom
+          required: false
+          in: query
+          description: Première journée incluse (Europe/Paris)
+          schema:
+            pattern: ^\d{4}-\d{2}-\d{2}$
+            example: 2026-11-09
+            type: string
+        - name: homologationDateTo
+          required: false
+          in: query
+          description: Dernière journée incluse (Europe/Paris)
+          schema:
+            pattern: ^\d{4}-\d{2}-\d{2}$
+            example: 2026-11-09
+            type: string
         - name: search
           required: false
           in: query
@@ -2719,6 +2836,45 @@ paths:
             enum:
               - asc
               - desc
+        - name: homologationStatus
+          required: false
+          in: query
+          description: Statut déclaré de l’homologation
+          schema:
+            type: string
+            enum:
+              - homologuee
+              - en_cours
+              - dispensee
+              - non_realisee
+              - a_mettre_en_place
+        - name: homologationDateMode
+          required: false
+          in: query
+          description: Expirée (homologuée, fin avant aujourd’hui à Paris), intervalle
+            inclusif ou date absente
+          schema:
+            type: string
+            enum:
+              - expired
+              - range
+              - missing
+        - name: homologationDateFrom
+          required: false
+          in: query
+          description: Première journée incluse (Europe/Paris)
+          schema:
+            pattern: ^\d{4}-\d{2}-\d{2}$
+            example: 2026-11-09
+            type: string
+        - name: homologationDateTo
+          required: false
+          in: query
+          description: Dernière journée incluse (Europe/Paris)
+          schema:
+            pattern: ^\d{4}-\d{2}-\d{2}$
+            example: 2026-11-09
+            type: string
         - name: search
           required: false
           in: query
@@ -5835,6 +5991,45 @@ paths:
             enum:
               - asc
               - desc
+        - name: homologationStatus
+          required: false
+          in: query
+          description: Statut déclaré de l’homologation
+          schema:
+            type: string
+            enum:
+              - homologuee
+              - en_cours
+              - dispensee
+              - non_realisee
+              - a_mettre_en_place
+        - name: homologationDateMode
+          required: false
+          in: query
+          description: Expirée (homologuée, fin avant aujourd’hui à Paris), intervalle
+            inclusif ou date absente
+          schema:
+            type: string
+            enum:
+              - expired
+              - range
+              - missing
+        - name: homologationDateFrom
+          required: false
+          in: query
+          description: Première journée incluse (Europe/Paris)
+          schema:
+            pattern: ^\d{4}-\d{2}-\d{2}$
+            example: 2026-11-09
+            type: string
+        - name: homologationDateTo
+          required: false
+          in: query
+          description: Dernière journée incluse (Europe/Paris)
+          schema:
+            pattern: ^\d{4}-\d{2}-\d{2}$
+            example: 2026-11-09
+            type: string
         - name: search
           required: false
           in: query
@@ -7093,6 +7288,45 @@ paths:
             enum:
               - asc
               - desc
+        - name: homologationStatus
+          required: false
+          in: query
+          description: Statut déclaré de l’homologation
+          schema:
+            type: string
+            enum:
+              - homologuee
+              - en_cours
+              - dispensee
+              - non_realisee
+              - a_mettre_en_place
+        - name: homologationDateMode
+          required: false
+          in: query
+          description: Expirée (homologuée, fin avant aujourd’hui à Paris), intervalle
+            inclusif ou date absente
+          schema:
+            type: string
+            enum:
+              - expired
+              - range
+              - missing
+        - name: homologationDateFrom
+          required: false
+          in: query
+          description: Première journée incluse (Europe/Paris)
+          schema:
+            pattern: ^\d{4}-\d{2}-\d{2}$
+            example: 2026-11-09
+            type: string
+        - name: homologationDateTo
+          required: false
+          in: query
+          description: Dernière journée incluse (Europe/Paris)
+          schema:
+            pattern: ^\d{4}-\d{2}-\d{2}$
+            example: 2026-11-09
+            type: string
         - name: search
           required: false
           in: query

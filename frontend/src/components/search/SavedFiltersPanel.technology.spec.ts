@@ -108,3 +108,22 @@ describe("SavedFiltersPanel — filtre de fin de vie des technologies", () => {
     expect(setFilter).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ technologyEolStatus: undefined, page: 0 }));
   });
 });
+
+it("sauvegarde et restaure les critères d’homologation", async () => {
+  const homologation = {
+    homologationStatus: "dispensee",
+    homologationDateMode: "range",
+    homologationDateFrom: "2026-11-09",
+    homologationDateTo: "2026-11-10",
+  } as const;
+  Object.assign(filters.value, homologation);
+  savedFilterStore.savedFilters = [savedFilter(homologation)];
+  renderPanel();
+  await fireEvent.click(screen.getByTestId("save-filter-button"));
+  await fireEvent.update(screen.getByTestId("save-filter-name-input"), "Homologations");
+  await fireEvent.click(screen.getByTestId("confirm-save-filter-button"));
+  expect(savedFilterStore.saveFilter).toHaveBeenCalledWith("Homologations", expect.objectContaining(homologation));
+  filters.value = { ...structuredClone(DEFAULT_FILTERS) };
+  await fireEvent.click(screen.getByTestId("saved-filter-apply-saved-filter"));
+  expect(filters.value).toMatchObject({ ...homologation, page: 0 });
+});
