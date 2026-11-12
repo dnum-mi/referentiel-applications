@@ -3,13 +3,18 @@ import { LoggerService } from "src/logger/logger.service";
 import { ConfigService } from "@nestjs/config";
 import type { Transporter } from "nodemailer";
 import * as nodemailer from "nodemailer";
-import type { EmailLog } from "@prisma/client";
+import type { EmailLog, Permission, Roles } from "@prisma/client";
 import { EmailLogService } from "./email-log.service";
 import { EmailTemplateService } from "./email-templates.services";
 import { ReportStatus } from "@prisma/client";
 import { ReportStatusLabels } from "src/applications/constants/enum-label";
 import { escapeHtml } from "src/utils/escape-html.util";
 import { safeExportLink } from "src/utils/export.util";
+
+import {
+  RolesWording,
+  PERMISSIONS_LABELS,
+} from "src/permissions/permission-labels";
 
 @Injectable()
 export class EmailService {
@@ -377,8 +382,8 @@ export class EmailService {
   }: {
     to: string;
     userEmail: string;
-    role: string;
-    additionalPermissions: string[];
+    role: Roles;
+    additionalPermissions: Permission[];
     changedByEmail: string | null;
   }): Promise<EmailLog | null> {
     if (!to) {
@@ -394,9 +399,11 @@ export class EmailService {
       title: subject,
       headerTitle: "Référentiel des Applications",
       userEmail,
-      role,
+      role: RolesWording[role],
       additionalPermissions: additionalPermissions.length
-        ? additionalPermissions.join(", ")
+        ? additionalPermissions
+            .map((permission) => PERMISSIONS_LABELS[permission])
+            .join(", ")
         : "Aucune",
       changedByEmail: changedByEmail ?? "un administrateur",
       changeDate: new Date().toLocaleString("fr-FR"),
