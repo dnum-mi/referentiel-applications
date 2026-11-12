@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+import ExcelJS from "exceljs";
 import { skipIfOptionalDataMissing } from "../support/optional-data";
 import { test as base } from "@playwright/test";
 import { test, expect } from "../fixtures/test";
@@ -250,6 +252,71 @@ test.describe("Catalogue & recherche", () => {
     await search.open();
     const download = await search.exportExcel();
     expect(download.suggestedFilename()).toMatch(/\.(xlsx|xls)$/i);
+  });
+
+  test("CAT-21 - l'export Excel de la vue reprend les colonnes et toutes les lignes filtrées", async ({
+    page,
+    data,
+  }) => {
+    const prefix = `E2E-CAT-EXPORT-${randomUUID()}`;
+    const filter = `${prefix}-retenu`;
+    const labels = [`${filter}-A`, `${filter}-B`];
+    const createdIds: string[] = [];
+
+    try {
+      for (const label of [...labels, `${prefix}-écarté`]) {
+        createdIds.push((await data.createTestApplication(label)).id);
+      }
+
+      const search = new SearchPage(page);
+      await search.open(new URLSearchParams({ pageSize: "1" }));
+      await search.searchByLabel(filter);
+      await search.expectSearchApplied(filter);
+      await expect.poll(() => search.totalCount()).toBe(2);
+      await expect.poll(() => search.rowCount()).toBe(1);
+
+      await search.openColumnCustomization();
+      await search.setColumnSelection("Priorité", false);
+      await search.enableColumn("Direction métier");
+      await search.enableColumn("Statut");
+      await search.closeColumnCustomization();
+
+      const download = await search.exportExcelView();
+      expect(download.suggestedFilename()).toMatch(
+        /^applications_vue_export_\d{4}-\d{2}-\d{2}\.xlsx$/,
+      );
+      const path = test.info().outputPath(download.suggestedFilename());
+      await download.saveAs(path);
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.readFile(path);
+
+      expect(workbook.worksheets.map(({ name }) => name)).toEqual([
+        "Vue du catalogue",
+        "Contexte",
+      ]);
+      const [catalogue, context] = workbook.worksheets;
+      expect(
+        Array.from(
+          { length: catalogue.columnCount },
+          (_, index) => catalogue.getCell(1, index + 1).text,
+        ),
+      ).toEqual([
+        "IQ",
+        "Nom",
+        "Hébergement",
+        "Tags",
+        "Direction métier",
+        "Statut",
+      ]);
+      expect(catalogue.getColumn(2).values.slice(2)).toEqual(labels);
+      expect(catalogue.getColumn(6).values.slice(2)).toEqual([
+        "En construction",
+        "En construction",
+      ]);
+      expect(context.getColumn(2).values).toContain(filter);
+    } finally {
+      for (const id of createdIds) await data.removeApplication(id);
+    }
   });
 
   test("CAT-16 - bascule « Mes abonnements »", async ({ page, data }) => {

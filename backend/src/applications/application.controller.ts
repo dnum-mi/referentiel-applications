@@ -10,6 +10,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   Res,
   UseGuards,
 } from "@nestjs/common";
@@ -26,7 +27,7 @@ import {
   ApiParam,
   ApiTags,
 } from "@nestjs/swagger";
-import { Response } from "express";
+import { Request, Response } from "express";
 
 import { Permission } from "@prisma/client";
 import { RequiresBetaFeature } from "src/common/decorators/requires-beta-feature.decorator";
@@ -39,6 +40,7 @@ import { MetadatasService } from "src/metadatas/metadatas.service";
 import { Requestor } from "src/user/entities/user.entity";
 import { UserId } from "../common/decorators/user-id.decorator";
 import { ApplicationService } from "./application.service";
+import { ApplicationTableExportService } from "./application-table-export.service";
 import { ContactAdminDto } from "./dto/contact-admin.dto";
 import {
   CreateApplicationDto,
@@ -53,6 +55,7 @@ import {
   QualitySummaryDto,
 } from "./dto/get-application.dto";
 import { ApplicationSearchDto } from "./dto/search-application.dto";
+import { ExportApplicationViewDto } from "./dto/export-application-view.dto";
 import { ApplicationExportService } from "./export.service";
 import { ApplicationProductExportService } from "./product-export.service";
 import { HTML_EXPORT_CONTENT_TYPE } from "./export-html";
@@ -66,6 +69,7 @@ export class ApplicationController {
     private readonly applicationExportService: ApplicationExportService,
     private readonly metadataService: MetadatasService,
     private readonly productExportService: ApplicationProductExportService,
+    private readonly tableExportService: ApplicationTableExportService,
   ) {}
 
   @Post()
@@ -257,6 +261,60 @@ Vous devez fournir les informations suivantes :
     res.setHeader(
       "Content-Disposition",
       "attachment; filename=applications_export.xlsx",
+    );
+    res.setHeader("Cache-Control", "no-store");
+    res.send(buffer);
+  }
+
+  @Post("export/excel-view")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(PermissionGuard)
+  @RequiresBetaFeature(FeatureId.CatalogueExcelExport)
+  @RequiredPermissions([Permission.DataExport])
+  @ApiOperation({
+    summary: "Exporter la vue du catalogue en Excel",
+    description:
+      "Extrait de présentation avec les colonnes sélectionnées dans leur ordre, " +
+      "toutes les applications autorisées correspondant aux filtres et une feuille de contexte.",
+  })
+  @ApiOkResponse({
+    description: "Extrait Excel de la vue du catalogue",
+    content: {
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+        schema: { type: "string", format: "binary" },
+      },
+    },
+  })
+  @ApiForbiddenResponse({
+    description: "Droit d’export ou accès aux colonnes demandées manquant",
+  })
+  async exportExcelView(
+    @Query() searchParams: ApplicationSearchDto,
+    @Body() selection: ExportApplicationViewDto,
+    @Req() req: Request,
+    @Res() res: Response,
+    @UserId() requestorId: string,
+    @User() user: Requestor,
+  ) {
+    const buffer = await this.tableExportService.exportExcel(
+      searchParams,
+      selection,
+      user,
+      req.get("origin"),
+    );
+    await this.metadataService.createMetadata({
+      createdById: requestorId,
+      title: "de la vue du catalogue en Excel",
+      type: "export",
+    });
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=applications_vue_export.xlsx",
     );
     res.setHeader("Cache-Control", "no-store");
     res.send(buffer);

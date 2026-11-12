@@ -69,7 +69,12 @@ describe("useApplicationSearch — debounce partagé", () => {
 
   it("regroupe la saisie de deux composants pendant 300 ms", async () => {
     const [first, second] = scope.run(() => [useApplicationSearch(), useApplicationSearch()])!;
+    const response = deferred<ReturnType<typeof searchResponse>>();
+    searchMock.mockReturnValueOnce(response.promise);
     first.setFilter({ search: "ref" });
+    expect(first.isSearchPending.value).toBe(true);
+    expect(second.isSearchPending.value).toBe(true);
+    expect(first.isLoading.value).toBe(false);
     await nextTick();
     await vi.advanceTimersByTimeAsync(200);
     second.setFilter({ label: "refapp" });
@@ -80,6 +85,11 @@ describe("useApplicationSearch — debounce partagé", () => {
     expect(searchMock).toHaveBeenCalledExactlyOnceWith(
       expect.objectContaining({ query: expect.objectContaining({ search: "ref", label: "refapp" }) }),
     );
+    expect(first.isSearchPending.value).toBe(false);
+    expect(first.isLoading.value).toBe(true);
+    response.resolve(searchResponse());
+    await vi.advanceTimersByTimeAsync(0);
+    expect(first.isLoading.value).toBe(false);
   });
 
   it("une pagination lance une recherche unique et annule la saisie en attente", async () => {
@@ -140,6 +150,29 @@ describe("useApplicationSearch — debounce partagé", () => {
     expect(searchMock.mock.calls[0][0].query.search).toBeUndefined();
     await vi.advanceTimersByTimeAsync(300);
     expect(searchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("écrit une sélection vide de statuts dans l’URL sans changer les statuts par défaut", async () => {
+    const search = scope.run(() => useApplicationSearch())!;
+    expect(search.filters.value.currentStatus__in).toEqual(search.DEFAULT_FILTERS.currentStatus__in);
+    expect(search.filtersToQuery(search.filters.value)).not.toHaveProperty("currentStatus__in");
+
+    search.setFilter({ currentStatus__in: undefined, currentStatus__isNull: true });
+    await nextTick();
+    expect(replaceMock).toHaveBeenCalledExactlyOnceWith({ query: { currentStatus__in: "" } });
+    expect(search.filtersToQuery(search.filters.value)).toEqual({ currentStatus__in: "" });
+  });
+
+  it("rouvre une recherche limitée aux applications sans statut", async () => {
+    routeMock.query = { currentStatus__in: "" };
+    const search = scope.run(() => useApplicationSearch())!;
+    expect(search.filters.value.currentStatus__in).toBeUndefined();
+    expect(search.filters.value.currentStatus__isNull).toBe(true);
+    await search.searchApplications();
+    expect(searchMock).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ query: expect.objectContaining({ currentStatus__isNull: true }) }),
+    );
+    expect(searchMock.mock.calls[0][0].query).not.toHaveProperty("currentStatus__in");
   });
 
   it.each(["eol", "eol-soon", "eoas-passed"] as const)("rétablit le filtre technologies %s depuis l'URL", async (status) => {
@@ -274,6 +307,7 @@ describe("useApplicationSearch — debounce partagé", () => {
     await vi.advanceTimersByTimeAsync(100);
 
     userStore.user!.permissions = [Permission.APP_READ];
+    expect(search.isSearchPending.value).toBe(false);
     await vi.advanceTimersByTimeAsync(300);
 
     expect(searchMock).not.toHaveBeenCalled();
