@@ -1,3 +1,4 @@
+import type { CheckPermissions } from "src/common/service/check-permissions.service";
 import { NotificationType } from "@prisma/client";
 import { emailIn } from "src/common/utils/email.utils";
 import { BadRequestException, NotFoundException } from "@nestjs/common";
@@ -9,6 +10,7 @@ import { QualityCampaignService } from "./quality-campaign.service";
 
 function buildService(overrides: {
   prisma?: Partial<PrismaService>;
+  checkPermissions?: Partial<CheckPermissions>;
   applicationService?: Partial<ApplicationService>;
   emailService?: Partial<EmailService>;
   notificationService?: Partial<NotificationService>;
@@ -18,6 +20,7 @@ function buildService(overrides: {
     (overrides.applicationService ?? {}) as ApplicationService,
     (overrides.emailService ?? {}) as EmailService,
     (overrides.notificationService ?? {}) as NotificationService,
+    (overrides.checkPermissions ?? {}) as CheckPermissions,
   );
 }
 
@@ -616,5 +619,165 @@ describe("QualityCampaignService", () => {
       expect.any(String),
       expect.objectContaining({ emailLogId: undefined }),
     );
+  });
+});
+
+describe("QualityCampaignService — frozen targets", () => {
+  const targets = [
+    {
+      applicationId: "a",
+      iqAtStart: 50,
+      application: { label: "Improved", quality: 65 },
+    },
+    {
+      applicationId: "b",
+      iqAtStart: 50,
+      application: { label: "Stable", quality: 50 },
+    },
+    {
+      applicationId: "c",
+      iqAtStart: null,
+      application: { label: "Unknown start", quality: 40 },
+    },
+    {
+      applicationId: "d",
+      iqAtStart: 50,
+      application: { label: "Declined", quality: 30 },
+    },
+    {
+      applicationId: "e",
+      iqAtStart: 50,
+      application: { label: "Unknown current", quality: null },
+    },
+    {
+      applicationId: "f",
+      iqAtStart: 0,
+      application: { label: "Zero", quality: 0 },
+    },
+  ];
+  function setup() {
+    const campaign = { ...baseCampaign, sentAt: new Date(), targets };
+    const findUnique = jest.fn().mockResolvedValue(campaign);
+    const can = jest.fn().mockResolvedValue(true);
+    const search = jest.fn();
+    return {
+      campaign,
+      findUnique,
+      can,
+      search,
+      service: buildService({
+        prisma: { qualityCampaign: { findUnique } } as never,
+        checkPermissions: { can },
+        applicationService: { search },
+      }),
+    };
+  }
+  const query = { page: 0, pageSize: 15, order: "asc" as const };
+  it("uses the frozen population, preserves null/zero and agrees with impact aggregates", async () => {
+    const { service, campaign, search } = setup();
+    const result = await service.findTargets(campaign.id, query, {} as never);
+    expect(result.results.map((t) => [t.applicationId, t.delta])).toEqual([
+      ["d", -20],
+      ["b", 0],
+      ["f", 0],
+      ["a", 15],
+      ["c", null],
+      ["e", null],
+    ]);
+    const impact = await service.findOne(campaign.id);
+    expect(impact.targetCount).toBe(result.total);
+    expect(impact.averageDelta).toBe(-1.25);
+    expect(impact.averageIqAtStart).toBe(40);
+    expect(impact.averageIqCurrent).toBe(37);
+    campaign.filters = { iqLte: 1 };
+    expect(await service.findTargets(campaign.id, query, {} as never)).toEqual(
+      result,
+    );
+    expect(search).not.toHaveBeenCalled();
+  });
+  it.each([
+    ["positive", ["a"]],
+    ["stable_or_declining", ["d", "b", "f"]],
+    ["not_comparable", ["c", "e"]],
+  ] as const)("filters %s before pagination", async (progression, ids) => {
+    const { service } = setup();
+    const result = await service.findTargets(
+      "campaign-1",
+      { ...query, progression, pageSize: 1 },
+      {} as never,
+    );
+    expect(result.total).toBe(ids.length);
+    expect(result.results.map((t) => t.applicationId)).toEqual(ids.slice(0, 1));
+  });
+  it("sorts all targets before paging, keeps nulls last and ties deterministic", async () => {
+    const { service } = setup();
+    const result = await service.findTargets(
+      "campaign-1",
+      { ...query, order: "desc", page: 1, pageSize: 2 },
+      {} as never,
+    );
+    expect(result.results.map((t) => t.applicationId)).toEqual(["f", "d"]);
+    expect(
+      (
+        await service.findTargets(
+          "campaign-1",
+          { ...query, order: "desc", page: 2, pageSize: 2 },
+          {} as never,
+        )
+      ).results.map((t) => t.applicationId),
+    ).toEqual(["c", "e"]);
+  });
+  it.each([
+    ["label", "asc", ["d", "a", "b", "e", "c", "f"]],
+    ["label", "desc", ["f", "c", "e", "b", "a", "d"]],
+    ["iqAtStart", "asc", ["f", "a", "b", "d", "e", "c"]],
+    ["iqAtStart", "desc", ["a", "b", "d", "e", "f", "c"]],
+    ["iqCurrent", "asc", ["f", "d", "c", "b", "a", "e"]],
+    ["iqCurrent", "desc", ["a", "b", "c", "d", "f", "e"]],
+  ] as const)(
+    "sorts %s %s before pagination with unknown IQ last",
+    async (sortBy, order, expected) => {
+      const { service } = setup();
+      const all = await service.findTargets(
+        "campaign-1",
+        { ...query, sortBy, order },
+        {} as never,
+      );
+      expect(all.results.map((t) => t.applicationId)).toEqual(expected);
+      const page = await service.findTargets(
+        "campaign-1",
+        { ...query, sortBy, order, page: 1, pageSize: 2 },
+        {} as never,
+      );
+      expect(page.results.map((t) => t.applicationId)).toEqual(
+        expected.slice(2, 4),
+      );
+    },
+  );
+  it("excludes unreadable applications from both rows and total before pagination", async () => {
+    const { service, can } = setup();
+    can.mockImplementation(async (_permissions, _user, id) => id === "a");
+    const result = await service.findTargets(
+      "campaign-1",
+      { ...query, pageSize: 1 },
+      {} as never,
+    );
+    expect(result.total).toBe(1);
+    expect(result.results.map((t) => t.applicationId)).toEqual(["a"]);
+    expect(can).toHaveBeenCalledWith(["AppRead"], {}, "a");
+  });
+  it("rejects missing and unsent campaigns, but accepts sent campaigns marked scheduled", async () => {
+    const { service, findUnique, campaign } = setup();
+    await expect(
+      service.findTargets(campaign.id, query, {} as never),
+    ).resolves.toHaveProperty("total", 6);
+    findUnique.mockResolvedValueOnce(null);
+    await expect(
+      service.findTargets("missing", query, {} as never),
+    ).rejects.toThrow(NotFoundException);
+    findUnique.mockResolvedValueOnce({ ...campaign, sentAt: null });
+    await expect(
+      service.findTargets(campaign.id, query, {} as never),
+    ).rejects.toThrow(BadRequestException);
   });
 });

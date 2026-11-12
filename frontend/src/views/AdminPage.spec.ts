@@ -215,3 +215,16 @@ describe("adminPage (#2419, regroupement en tuiles thématiques)", () => {
     expect(screen.getByTestId("panel-app-perms-matrix")).toBeInTheDocument();
   });
 });
+
+it("ouvre directement l’onglet qualité au retour d’une campagne", () => {
+  hasPermissionsMock.mockReturnValue(true);
+  render(AdminPage, { props: { initialTab: "tab-quality-campaigns" } });
+  expect(screen.getByTestId("panel-quality-campaigns")).toBeInTheDocument();
+  expect(screen.queryByTestId("panel-users")).not.toBeInTheDocument();
+});
+it("ignore un onglet demandé sans la permission correspondante", () => {
+  hasPermissionsMock.mockImplementation((permissions: string[]) => permissions.includes(Permission.ADMIN_PANEL_MANAGE));
+  render(AdminPage, { props: { initialTab: "tab-quality-campaigns" } });
+  expect(screen.queryByTestId("panel-quality-campaigns")).not.toBeInTheDocument();
+  expect(screen.getByTestId("panel-users")).toBeInTheDocument();
+});

@@ -8761,6 +8761,74 @@ paths:
           description: Campagne non trouvée
       summary: Supprimer une campagne de mise en qualité
       tags: *a40
+  /api/v2/quality-campaigns/{id}/targets:
+    get:
+      operationId: QualityCampaignController_findTargets
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 0
+            default: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 15
+            type: number
+        - name: progression
+          required: false
+          in: query
+          schema:
+            type: string
+            enum:
+              - positive
+              - stable_or_declining
+              - not_comparable
+        - name: sortBy
+          required: false
+          in: query
+          schema:
+            default: delta
+            type: string
+            enum:
+              - label
+              - iqAtStart
+              - iqCurrent
+              - delta
+        - name: order
+          required: false
+          in: query
+          schema:
+            default: asc
+            type: string
+            enum:
+              - asc
+              - desc
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedQualityCampaignTargetDto"
+        "400":
+          description: Campagne non envoyée ou paramètres invalides
+        "403":
+          description: Gestion des campagnes non autorisée
+        "404":
+          description: Campagne non trouvée
+      summary: Consulter les cibles figées et leur progression
+      tags: *a40
   /api/v2/quality-campaigns/{id}/preview:
     get:
       operationId: QualityCampaignController_preview
@@ -13968,6 +14036,43 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/QualityCampaignDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
+    QualityCampaignTargetDto:
+      type: object
+      properties:
+        applicationId:
+          type: string
+        label:
+          type: string
+        iqAtStart:
+          type: number
+          nullable: true
+        iqCurrent:
+          type: number
+          nullable: true
+        delta:
+          type: number
+          nullable: true
+      required:
+        - applicationId
+        - label
+        - iqAtStart
+        - iqCurrent
+        - delta
+    PaginatedQualityCampaignTargetDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/QualityCampaignTargetDto"
         total:
           type: number
           description: Total number of items
