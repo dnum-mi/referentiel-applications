@@ -1,7 +1,7 @@
 import * as nodemailer from "nodemailer";
-import { ReportStatus } from "@prisma/client";
+import { Permission, ReportStatus, Roles } from "@prisma/client";
 import type { ConfigService } from "@nestjs/config";
-import type { EmailTemplateService } from "./email-templates.services";
+import { EmailTemplateService } from "./email-templates.services";
 import type { EmailLogService } from "./email-log.service";
 import type { LoggerService } from "src/logger/logger.service";
 import { EmailService } from "./email.service";
@@ -12,7 +12,10 @@ const sendMail = jest.fn();
 
 (nodemailer.createTransport as jest.Mock).mockReturnValue({ sendMail });
 
-const makeService = (enabled: boolean, { port = 587, secure = false } = {}) => {
+const makeService = (
+  enabled: boolean,
+  { port = 587, secure = false, realTemplates = false } = {},
+) => {
   const configValues: Record<string, unknown> = {
     "email.host": "smtp.example.com",
     "email.port": port,
@@ -49,7 +52,7 @@ const makeService = (enabled: boolean, { port = 587, secure = false } = {}) => {
 
   const service = new EmailService(
     configService,
-    templateService,
+    realTemplates ? new EmailTemplateService(logger) : templateService,
     emailLogService,
     logger,
   );
@@ -151,5 +154,50 @@ describe("EmailService — #2411 e-mail journalisé même quand les envois sont 
     expect(sendMail).not.toHaveBeenCalled();
     expect(emailLogService.log).not.toHaveBeenCalled();
     expect(result).toBeNull();
+  });
+});
+
+describe("Traduction des droits dans les e-mails", () => {
+  it.each([
+    [Roles.VISITOR, "Utilisateur"],
+    [Roles.READER, "Lecture totale"],
+    [Roles.CONTRIBUTOR, "Écriture totale"],
+    [Roles.ADMIN, "Administrateur"],
+  ])("traduit %s en HTML et en texte", async (role, label) => {
+    const { service, emailLogService } = makeService(false, {
+      realTemplates: true,
+    });
+    await service.sendUserPermissionsChangedNotification({
+      to: "user@example.com",
+      userEmail: "user@example.com",
+      role,
+      additionalPermissions: [Permission.DataExport, Permission.BetaFeatures],
+      changedByEmail: null,
+    });
+    const { html, text } = jest.mocked(emailLogService.log).mock.calls[0][0];
+    for (const content of [html, text]) {
+      expect(content).toContain(label);
+      expect(content).toContain("Exporter les données");
+      expect(content).toContain("Accéder aux fonctionnalités bêta");
+      expect(content).not.toContain(role);
+      expect(content).not.toContain("DataExport");
+      expect(content).not.toContain("BetaFeatures");
+    }
+  });
+
+  it("affiche Aucune sans permission supplémentaire", async () => {
+    const { service, emailLogService } = makeService(false, {
+      realTemplates: true,
+    });
+    await service.sendUserPermissionsChangedNotification({
+      to: "user@example.com",
+      userEmail: "user@example.com",
+      role: Roles.READER,
+      additionalPermissions: [],
+      changedByEmail: null,
+    });
+    const { html, text } = jest.mocked(emailLogService.log).mock.calls[0][0];
+    expect(html).toContain("Aucune");
+    expect(text).toContain("Aucune");
   });
 });

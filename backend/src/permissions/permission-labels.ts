@@ -1,0 +1,53 @@
+import type { Permission, Roles } from "@prisma/client";
+
+// Libellés alignés sur frontend/src/utils/roles-utils.ts.
+export const RolesWording: Record<Roles, string> = {
+  VISITOR: "Utilisateur",
+  READER: "Lecture totale",
+  CONTRIBUTOR: "Écriture totale",
+  ADMIN: "Administrateur",
+};
+
+export const PERMISSIONS_LABELS: Record<Permission, string> = {
+  // Permissions globales
+  CreateApplication: "Créer une application",
+  DeleteApplication: "Supprimer une application",
+  CreateGlobalReport: "Créer des signalements globaux",
+  AppList: "Voir la liste des applications",
+  MDITList: "Voir la liste des MDIT",
+  DataExport: "Exporter les données",
+  BetaFeatures: "Accéder aux fonctionnalités bêta",
+  AdminPanelManage: "Gérer le panneau d'administration",
+  GlobalAdminManage: "Gérer l'administration globale",
+  ActorTypePost: "Créer un type d'acteur",
+  ActorTypeManage: "Modifier un type d'acteur",
+  ActorTypeDelete: "Supprimer un type d'acteur",
+  ColumnRead: "Voir toutes les colonnes personnalisées",
+  OrganizationManage: "Gérer l'organisation",
+  QualityCampaignManage: "Gérer les campagnes de mise en qualité",
+  MditCampaignManage: "Gérer les campagnes dette IT",
+  TechnologyList: "Consulter les technologies",
+  GristSync: "Synchroniser avec Grist",
+  // Permissions applicatives
+  AppRead: "Voir les informations de base",
+  AppWrite: "Modifier les informations de base",
+  ActorRead: "Voir les acteurs",
+  ActorWrite: "Modifier les acteurs",
+  ComplianceRead: "Voir les conformités",
+  ComplianceWrite: "Modifier les conformités",
+  HostingRead: "Voir les hébergements",
+  HostingWrite: "Modifier les hébergements",
+  RelationRead: "Voir les relations",
+  RelationWrite: "Modifier les relations",
+  LinkRead: "Voir les liens",
+  LinkWrite: "Modifier les liens",
+  AppWritePriority: "Modifier la priorité de redémarrage",
+  MetadataRead: "Voir l'historique des modifications",
+  DataRead: "Voir les données de l'application",
+  DataWrite: "Modifier les données de l'application",
+  TechnologyRead: "Voir les technologies",
+  TechnologyWrite: "Modifier les technologies",
+  ReportRead: "Voir les signalements",
+  ReportPost: "Créer des signalements",
+  ReportManage: "Gérer les signalements",
+};
