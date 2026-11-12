@@ -8,12 +8,14 @@ export class PrismaQueryBuilder {
     filters: OrganizationFilterDto,
   ): Prisma.OrganizationWhereInput {
     if (filters.search) {
+      const match = { contains: filters.search, mode: "insensitive" } as const;
       const conditions: Prisma.OrganizationWhereInput[] = [
         {
           OR: [
-            { path: { contains: filters.search, mode: "insensitive" } },
-            { sigle: { contains: filters.search, mode: "insensitive" } },
-            { url: { contains: filters.search, mode: "insensitive" } },
+            { path: match },
+            { sigle: match },
+            { url: match },
+            { maiaReferences: { some: { maiaRef: match } } },
           ],
         },
       ];

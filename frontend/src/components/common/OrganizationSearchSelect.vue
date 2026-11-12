@@ -100,10 +100,7 @@ const selectOptions = computed(() => {
   const options = [];
 
   // Always allow empty option
-  options.push({
-    text: "",
-    value: "",
-  });
+  options.push({ text: "", value: "", path: "" });
 
   // Conserver la sélection pendant l'invalidation ou le chargement d'une autre recherche.
   const selectedOrganization = organizationStore.organizations[selectedOrganizationId.value] ?? props.initialOrganization;
@@ -111,17 +108,29 @@ const selectOptions = computed(() => {
     options.push({
       text: selectedOrganization.path,
       value: selectedOrganization.id,
+      path: selectedOrganization.path,
     });
   }
 
-  organizations.value.forEach((org) => {
-    options.push({
-      text: org.path,
-      value: org.id,
-    });
-  });
+  const query = searchQuery.value.toLowerCase();
+  const matches = organizations.value.map((org) => {
+    const path = org.path.toLowerCase();
+    const exactPath = path === query || path === `/${query}`;
+    const exactReference = org.maiaReferences?.find(({ maiaRef }) => maiaRef.toLowerCase() === query);
+    const reference =
+      exactReference ??
+      (path.includes(query) ? undefined : org.maiaReferences?.find(({ maiaRef }) => maiaRef.toLowerCase().includes(query)));
 
-  return options;
+    return {
+      text: reference && !exactPath ? `${org.path} (MAIA : ${reference.maiaRef})` : org.path,
+      value: org.id,
+      path: org.path,
+      priority: exactPath ? 0 : exactReference ? 1 : 2,
+    };
+  });
+  matches.sort((a, b) => a.priority - b.priority || a.path.localeCompare(b.path, "fr"));
+
+  return [...options, ...matches];
 });
 
 // Watch for external model value changes
@@ -139,8 +148,8 @@ watch(selectedOrganizationId, (newValue) => {
   // Update search query to show selected organization name
   if (newValue) {
     const selectedOrg = selectOptions.value.find((option) => option.value === newValue);
-    if (selectedOrg && selectedOrg.text) {
-      searchQuery.value = selectedOrg.text;
+    if (selectedOrg?.path) {
+      searchQuery.value = selectedOrg.path;
     }
   }
 });

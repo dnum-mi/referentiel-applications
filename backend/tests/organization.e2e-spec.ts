@@ -37,6 +37,26 @@ describe("Organizations", () => {
       .expect(200);
   });
 
+  it("/GET organizations - retrouve une organisation par son chemin MAIA", async () => {
+    const organization = await OrganizationFaker.create({
+      path: "/MI/Immigration",
+    });
+    await getPrismaClient().organizationMaiaReference.create({
+      data: { maiaRef: "MININT/DGEF", organizationId: organization.id },
+    });
+
+    const { body } = await request(app().getHttpServer())
+      .get("/organizations")
+      .query({ search: "minint/dgef", pageSize: 0 })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(200);
+
+    expect(body.total).toBe(1);
+    expect(body.results).toEqual([
+      expect.objectContaining({ id: organization.id, path: organization.path }),
+    ]);
+  });
+
   it("/GET organizations/:id", async () => {
     const organization = await OrganizationFaker.create();
     await request(app().getHttpServer())
