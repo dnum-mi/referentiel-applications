@@ -92,3 +92,19 @@ describe("isTabNavigation (RGAA 7.1 / 12.8 : pas de reprise du focus)", () => {
     expect(isTabNavigation(resolve("app-1", "tab-infos"), router.resolve({ name: routeNames.ACCUEIL }))).toBe(false);
   });
 });
+
+vi.mock("@/views/QualityCampaignTargetsPage.vue", () => ({ default: { template: "<div>Cibles</div>" } }));
+
+describe("cibles qualité — accès direct", () => {
+  afterEach(() => userStore.hasPermissions.mockReturnValue(false));
+  it("refuse l'accès sans délégation QualityCampaignManage", async () => {
+    userStore.hasPermissions.mockReturnValue(false);
+    await router.push("/administration/campagnes-qualite/campaign/cibles");
+    expect(router.currentRoute.value.name).toBe(routeNames.ACCUEIL);
+  });
+  it("accepte la délégation sans exiger de rôle administrateur", async () => {
+    userStore.hasPermissions.mockImplementation((permissions: string[]) => permissions.includes("QualityCampaignManage"));
+    await router.push("/administration/campagnes-qualite/campaign/cibles");
+    expect(router.currentRoute.value.name).toBe(routeNames.QUALITY_CAMPAIGN_TARGETS);
+  });
+});

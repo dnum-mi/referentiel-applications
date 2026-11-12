@@ -17,6 +17,7 @@ export const routeNames = {
   TIMEPAGE: "time",
   HISTORY: "historique",
   METADATADETAIL: "metadata-detail",
+  QUALITY_CAMPAIGN_TARGETS: "quality-campaign-targets",
   ADMINPAGE: "administration",
 
   SITEMAP: "plan-du-site",

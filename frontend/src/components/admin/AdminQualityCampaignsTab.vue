@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { routeNames } from "@/router/route-names";
 import { computed, onMounted, ref } from "vue";
 import type { QualityCampaignDto } from "@/client/types.gen";
 import { useQualityCampaignStore } from "@/stores/qualityCampaignStore";
@@ -136,6 +137,17 @@ onMounted(fetchCampaigns);
           @click="openSponsorsModal(row.actions)"
         />
         <span v-else>—</span>
+      </template>
+
+      <template #body-targetCount="{ data: row }">
+        <RouterLink
+          v-if="row.actions.sentAt"
+          :to="{ name: routeNames.QUALITY_CAMPAIGN_TARGETS, params: { id: row.actions.id } }"
+          :aria-label="`Voir les ${row.targetCount} cibles figées de ${row.name}`"
+        >
+          {{ row.targetCount }} — Cibles figées à l’envoi
+        </RouterLink>
+        <span v-else>{{ row.targetCount }} — Aperçu dynamique avant envoi</span>
       </template>
 
       <template #body-actions="{ data: row }">

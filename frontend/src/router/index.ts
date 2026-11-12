@@ -112,8 +112,19 @@ const routes = [
     meta: { requiresAuth: true, title: "Profil utilisateur - Référentiel des applications" },
   },
   {
+    path: "/administration/campagnes-qualite/:id/cibles",
+    name: routeNames.QUALITY_CAMPAIGN_TARGETS,
+    component: () => import("@/views/QualityCampaignTargetsPage.vue"),
+    meta: {
+      requiresAuth: true,
+      requiresQualityCampaignManage: true,
+      title: "Cibles de la campagne qualité - Référentiel des applications",
+    },
+  },
+  {
     name: routeNames.ADMINPAGE,
     path: "/administration",
+    props: (route: RouteLocationNormalized) => ({ initialTab: typeof route.query.tab === "string" ? route.query.tab : undefined }),
     component: () => import("@/views/AdminPage.vue"),
     meta: { requiresAuth: true, requiresAdmin: true, title: "Administration - Référentiel des applications" },
   },
@@ -198,6 +209,10 @@ router.beforeEach(async (to) => {
 
     if (to.meta.requiresTechnologyList && !userStore.canListTechnologies) {
       return { name: routeNames.ACCUEIL };
+    }
+
+    if (to.meta.requiresQualityCampaignManage && !userStore.hasPermissions([Permission.QUALITY_CAMPAIGN_MANAGE])) {
+      return { path: "/" };
     }
 
     if (to.meta.requiresAdmin) {

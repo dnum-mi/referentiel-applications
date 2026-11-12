@@ -4,7 +4,7 @@ import AdminTagsTab from "@/components/admin/AdminTagsTab.vue";
 import AdminBatchData from "@/components/admin/AdminBatchData.vue";
 import AdminOrganizationsTab from "@/components/admin/AdminOrganizationsTab.vue";
 import AdminActorsTab from "@/components/admin/AdminActorsTab.vue";
-import { markRaw, ref, type Component } from "vue";
+import { markRaw, ref, watch, type Component } from "vue";
 import AdminPermsMatrixTab from "@/components/admin/AdminPermsMatrixTab.vue";
 import AdminLabelSourcesTab from "@/components/admin/AdminLabelSourcesTab.vue";
 import AdminMditCampaignsTab from "@/components/admin/AdminMditCampaignsTab.vue";
@@ -45,6 +45,7 @@ interface DsfrTab {
   permissions?: Permission[];
 }
 
+const props = defineProps<{ initialTab?: string }>();
 const userStore = useUserStore();
 const activeTab = ref(0);
 
@@ -247,6 +248,17 @@ function selectTheme(id: AdminThemeId): void {
   selectedThemeId.value = id;
   activeTab.value = 0;
 }
+
+watch(
+  () => props.initialTab,
+  (id) => {
+    const tab = tabs.value.find((candidate) => candidate.tabId === id);
+    if (!tab) return;
+    selectedThemeId.value = tab.themeId;
+    activeTab.value = themeTabs.value.findIndex((candidate) => candidate.tabId === id);
+  },
+  { immediate: true },
+);
 
 const tabsStyle = ref({ "--tabs-height": "auto" });
 </script>
