@@ -81,6 +81,8 @@ function applicationFixture(overrides: Partial<EndOfLifeApplicationDto> = {}): E
         eoasDate: null,
         latestVersion: "15.5",
         eolSource: "endoflife",
+        source: "manual",
+        sourceName: null,
         status: "eol",
       },
     ],
@@ -109,6 +111,15 @@ describe("EndOfLifePage", () => {
   });
 
   afterEach(cleanup);
+
+  it("affiche la provenance d’une technologie importée par SBOM", async () => {
+    const application = applicationFixture();
+    const imported = { ...application.technologies[0], source: "SBOM" as const, sourceName: "backend-production" };
+    storeMock.applications.value = [{ ...application, technologies: [imported] }];
+    storeMock.total.value = 1;
+    render_();
+    expect(await screen.findByTestId("end-of-life-sbom-tech-1")).toHaveTextContent("SBOM : backend-production");
+  });
 
   it("ne charge aucune donnée lorsque l'accès est refusé", async () => {
     userStoreMock.canListTechnologies = false;
@@ -189,6 +200,8 @@ describe("EndOfLifePage", () => {
             eoasDate: null,
             latestVersion: null,
             eolSource: "manual",
+            source: "manual",
+            sourceName: null,
             status: "eol-soon",
           },
         ],
@@ -394,6 +407,8 @@ describe("EndOfLifePage", () => {
             eoasDate: new Date(Date.now() - day) as unknown as Date,
             latestVersion: "20.19.5",
             eolSource: "endoflife",
+            source: "manual",
+            sourceName: null,
             status: "eoas-passed",
           },
         ],
@@ -437,6 +452,8 @@ describe("EndOfLifePage — badges des technologies et tri (#3020, #2522)", () =
             eoasDate: null,
             latestVersion: "22.10.0",
             eolSource: "endoflife",
+            source: "manual",
+            sourceName: null,
             status: null as unknown as EndOfLifeApplicationDto["technologies"][number]["status"],
           },
         ],

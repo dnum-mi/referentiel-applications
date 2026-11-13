@@ -13,6 +13,13 @@ export type ApplicationWithAllRelations = Prisma.ApplicationGetPayload<{
     tags: true;
     statuses: true;
     technologies: true;
+    sbomSources: {
+      include: {
+        currentImport: {
+          include: { components: true };
+        };
+      };
+    };
     actors: {
       include: {
         actorType: true;

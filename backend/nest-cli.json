@@ -7,6 +7,10 @@
     "plugins": ["@nestjs/swagger"],
     "assets": [
       {
+        "include": "sbom/schemas/**/*.json",
+        "outDir": "dist/src"
+      },
+      {
         "include": "email/templates/**/*",
         "outDir": "dist/src"
       }

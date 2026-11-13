@@ -11,6 +11,7 @@ import type { TableColumn } from "@/types/table";
 import { computed, nextTick, onBeforeMount, ref } from "vue";
 import RefAppTable from "../RefAppTable.vue";
 import TechnologyForm from "./TechnologyForm.vue";
+import SbomInventory from "./SbomInventory.vue";
 import { useAppPermission } from "@/composables/use-app-permission";
 
 defineOptions({ inheritAttrs: false });
@@ -34,6 +35,7 @@ const technologyActions = ref<HTMLDivElement | null>(null);
 const technologyTable = ref<HTMLDivElement | null>(null);
 
 const canEdit = useAppPermission(() => props.application.myPerms, [Permission.TECHNOLOGY_WRITE]);
+const canRead = useAppPermission(() => props.application.myPerms, [Permission.TECHNOLOGY_READ]);
 
 const columns: TableColumn[] = [
   { field: "Technologie", header: "Technologie", sortable: true },
@@ -459,6 +461,8 @@ function cancelDelete() {
       </template>
     </RefAppTable>
   </div>
+
+  <SbomInventory v-if="canRead" :key="application.id" :application-id="application.id" :can-edit="canEdit" />
 
   <DsfrModal
     :opened="technologyModal.isModalOpen.value || technologyModal.isCreateModalOpen.value"

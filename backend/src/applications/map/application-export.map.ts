@@ -32,13 +32,24 @@ type ApplicationWithExportTechnologies = {
     latestVersion: string | null;
     eolSource: TechnologyEolSource;
   }[];
+  sbomSources?: {
+    active: boolean;
+    name: string;
+    currentImport?: {
+      components: {
+        technology: string;
+        product: string;
+        version: string | null;
+      }[];
+    } | null;
+  }[];
 };
 
 export function mapTechnologies(
   app: ApplicationWithExportTechnologies,
   now = new Date(),
 ) {
-  return (app.technologies ?? []).map((technology) => {
+  const manualRows = (app.technologies ?? []).map((technology) => {
     const status = computeEolStatus(technology, now);
     return {
       applicationId: app.id,
@@ -58,8 +69,29 @@ export function mapTechnologies(
       "technologies.status": status
         ? eolStatusLabels[status]
         : "Sans alerte de fin de vie",
+      "technologies.source": "Saisie manuelle",
+      "technologies.sourceName": "",
     };
   });
+  const importedRows = (app.sbomSources ?? [])
+    .filter((source) => source.active)
+    .flatMap((source) =>
+      (source.currentImport?.components ?? []).map((component) => ({
+        applicationId: app.id,
+        applicationLabel: app.label,
+        "technologies.technology": component.technology,
+        "technologies.product": component.product,
+        "technologies.version": component.version ?? "",
+        "technologies.eolDate": "",
+        "technologies.eoasDate": "",
+        "technologies.latestVersion": "",
+        "technologies.eolSource": "",
+        "technologies.status": "Fin de vie non évaluée",
+        "technologies.source": "SBOM",
+        "technologies.sourceName": source.name,
+      })),
+    );
+  return [...manualRows, ...importedRows];
 }
 
 export function getFullField(

@@ -330,6 +330,27 @@ ne donne pas à elle seule un nouveau droit de lecture sur la stack technique.
 
 Cette première version ne prend pas en charge la vue pour les utilisateurs standards (`VISITOR`) et n'ajoute pas les applications hors périmètre accessibles par un droit d'acteur. Les droits `TechnologyRead` et `TechnologyWrite` des fiches applications gardent leur fonctionnement : la nouvelle capacité n'accorde aucun droit d'écriture et son absence ne retire pas un droit existant sur une fiche.
 
+### 4.6. Inventaires et imports SBOM (#3219)
+
+Les imports SBOM réutilisent les droits applicatifs des technologies. Aucun nouveau droit global d'import n'est ajouté. Les contrôles du backend s'appliquent aussi aux appels API et ne dépendent pas de la visibilité des boutons dans l'interface.
+
+| Action                                                             | Droit requis                                                | Portée                                                                                                                                      |
+| ------------------------------------------------------------------ | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lire les composants courants, les sources et les rapports d'import | `TechnologyRead`                                            | Application de la route                                                                                                                     |
+| Analyser un fichier et confirmer un import                         | `TechnologyWrite`                                           | Application de la route, vérification à chaque appel                                                                                        |
+| Prévisualiser ou confirmer l'activation/désactivation d'une source | `TechnologyWrite`                                           | Application de la route                                                                                                                     |
+| Consulter les composants dans la vue transverse Technologies       | `TechnologyList` et profil autorisé au §4.5                 | Périmètre fonctionnel, sélection en base avant pagination et calcul du total                                                                |
+| Exporter la vue transverse                                         | `TechnologyList` **et** `DataExport`                        | Même sélection et mêmes filtres que la vue, sans pagination                                                                                 |
+| Exporter les composants dans le catalogue Excel/HTML               | `DataExport`, plus `TechnologyRead` pour chaque application | Les applications exportées conservent leurs propres droits de lecture des technologies ; les capacités bêta des formats restent applicables |
+
+L'analyse d'un fichier ne réserve pas les droits pour sa confirmation : si `TechnologyWrite` est retiré entre les deux requêtes, la confirmation est refusée avec `403`. Un droit de lecture ne permet ni l'import ni la désactivation d'une source. Un identifiant d'import ou de source appartenant à une autre application n'est pas utilisable en changeant l'identifiant de la route.
+
+Les composants importés restent distincts des technologies manuelles. L'import remplace uniquement l'inventaire de la source explicitement choisie. L'export du catalogue filtre aussi les applications dont l'inventaire contient exclusivement des composants SBOM : `DataExport` seul n'autorise pas leur lecture. La recherche d'un produit et le filtre `status=all` ne peuvent élargir le périmètre de la vue transverse.
+
+L'auteur de l'analyse (`createdBy`) et celui de la confirmation (`committedBy`) sont conservés séparément. L'événement `inventory.changed` porte l'auteur de la modification effective, qu'il s'agisse d'un import, d'une activation ou d'une désactivation ; un replay du commit ne réattribue pas cette action. Les données d'inventaire et l'événement durable sont enregistrés dans la même transaction. Cet événement prépare #3231, sans lancement d'analyse OSV ni notification de vulnérabilité dans #3219.
+
+Les formats, routes, limites et comportements de conflit sont détaillés dans [API et intégration — SBOM](./05-api.md#import-et-inventaire-sbom-3219). Le parcours de saisie figure dans le [guide utilisateur](./guide-utilisateur.md#comment-importer-les-dépendances-dune-application-avec-un-sbom-).
+
 ## 5. Permissions par type d'acteur
 
 La matrice `AppPermissions` (`backend/prisma/schema/permissions.prisma:5-52`) est en relation **1:1** avec `ActorType` (champ `actorTypeId @unique`, `onDelete: Cascade`). Chaque type d'acteur (MOA, MOE, RSSI, Architecte applicatif/technique, TMA, Exploitation, RSIMM, CPD, ProductOwner, ProductManager, Hébergement, Autre…) porte ainsi son propre jeu de booléens : `AppRead`, `AppWrite`, `AppWritePriority`, `ActorRead`/`ActorWrite`, `ComplianceRead`/`ComplianceWrite`, `HostingRead`/`HostingWrite`, `MetadataRead`, `RelationRead`/`RelationWrite`, `LinkRead`/`LinkWrite`, `ReportRead`/`ReportPost`/`ReportManage`.

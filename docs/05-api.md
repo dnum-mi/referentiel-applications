@@ -237,6 +237,9 @@ Inventaire **par module / ressource** (résumé : verbes et chemins principaux, 
 | `rgaa-compliances`    | `GET`, `POST`, `PATCH :id`, `DELETE :id`                         |
 | `reports`             | `POST`, `GET`, `GET :id`, `PATCH :id`, `DELETE :id`              |
 | `technologies`        | `POST`, `GET`, `GET eol-products`, `PATCH :id`, `DELETE :id`     |
+| `sbom-imports`        | `POST preview`, `POST :id/commit`, `GET :id`                     |
+| `sbom-sources`        | `GET`, `GET :id/imports`, `PATCH :id`                            |
+| `software-components` | `GET` — inventaire SBOM courant paginé                           |
 
 > `technologies` (#2454) : le corps de `POST` et de `PATCH :id` accepte `manualEolDate` (chaîne
 > `AAAA-MM-JJ`), fin de vie saisie à la main pour les cas où endoflife.date ne peut pas répondre.
@@ -250,6 +253,76 @@ Inventaire **par module / ressource** (résumé : verbes et chemins principaux, 
 > exige un schéma `http(s)`. La réponse expose `eolSource` (`endoflife` ou `manual`) et
 > `eolStatus` (`eol`, `eol-soon`, `eoas-passed` ou `null`, calculé à la lecture), comme
 > `GET /technologies/end-of-life`.
+
+### Import et inventaire SBOM (#3219)
+
+Le module `backend/src/sbom/` accepte **CycloneDX JSON 1.5, 1.6 et 1.7** et **SPDX JSON 2.3**. Le document est validé contre les schémas fournis avec le backend ; les références externes du document ne déclenchent pas de téléchargement. Un SBOM décrit un inventaire déclaré : les composants incomplets sont conservés avec des avertissements, sans inventer les identifiants ou versions manquants.
+
+Les routes suivantes sont relatives à `/api/v2`. Les réponses réussies sont en **HTTP 200**, y compris pour l'analyse et la confirmation.
+
+| Verbe et chemin                                             | Opération                                                                          | Permission sur l'application                    |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `POST /applications/:applicationId/sbom-imports/preview`    | Valider le fichier et calculer les changements, sans modifier l'inventaire courant | `TechnologyWrite`                               |
+| `POST /applications/:applicationId/sbom-imports/:id/commit` | Confirmer atomiquement l'analyse                                                   | `TechnologyWrite`, revérifiée lors de cet appel |
+| `GET /applications/:applicationId/sbom-sources`             | Sources actives/inactives et historique des imports confirmés                      | `TechnologyRead`                                |
+| `GET /applications/:applicationId/sbom-sources/:id/imports` | Historique paginé des imports confirmés d'une source                               | `TechnologyRead`                                |
+| `GET /applications/:applicationId/sbom-imports/:id`         | Rapport, composants et relations d'un import                                       | `TechnologyRead`                                |
+| `GET /applications/:applicationId/software-components`      | Composants des imports courants des sources actives                                | `TechnologyRead`                                |
+| `PATCH /applications/:applicationId/sbom-sources/:id`       | Prévisualiser ou confirmer l'activation/désactivation d'une source                 | `TechnologyWrite`                               |
+
+**Analyse.** `POST …/preview` reçoit un formulaire `multipart/form-data` avec un seul fichier JSON dans le champ `file`. Les champs texte sont :
+
+| Champ            | Contraintes                                                            | Sens                                                                                                           |
+| ---------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `sourceName`     | Obligatoire, 1 à 160 caractères après retrait des espaces de début/fin | Nom explicite de la source dans l'application, par exemple `backend` ; reprendre le même nom pour la remplacer |
+| `context`        | Facultatif, 500 caractères maximum                                     | Contexte de génération de l'inventaire                                                                         |
+| `projectVersion` | Facultatif, 255 caractères maximum                                     | Version du projet ; à défaut, celle reconnue dans le document                                                  |
+
+Le rapport retourne notamment `id`, `baseRevision`, `expiresAt`, `format`, `specVersion`, `totalComponents`, `warnings`, `unchanged`, `counts` et `changes`. Les compteurs distinguent `added`, `removed`, `changed` et `unchanged` ; le détail associe les valeurs avant/après pour les changements. L'identifiant `id` sert à la confirmation.
+
+**Confirmation.** L'analyse est valable **24 heures**. `POST …/:id/commit` ne reçoit pas de nouveau fichier ni de corps métier. Le serveur vérifie la révision de la source, puis enregistre les composants, désigne l'import courant et écrit l'événement d'inventaire dans la même transaction. La réponse contient `id`, `sourceId`, `revision` et `unchanged`. Répéter la confirmation du même import ne duplique ni les composants ni l'événement. Une nouvelle analyse identique, confirmée, conserve une trace de vérification sans remplacer l'import courant ni émettre de nouvel événement.
+
+Un remplacement ne concerne que la source désignée. Les autres sources, les versions coexistantes et les données manuelles de `/technologies` restent séparées. Les anciens imports confirmés restent consultables dans l'historique. Les outils de génération, éléments de provenance et composants explicitement exclus restent dans le détail du document avec leur `context` (`provenance` ou `excluded`), mais ne contribuent ni à l'inventaire actif, ni à `totalComponents`, ni au diff de cet inventaire. Les composants qui y contribuent portent `context: "inventory"`.
+
+**Conservation.** Un traitement toutes les dix minutes supprime au maximum 100 analyses expirées non confirmées par passage. Une analyse expirée encore présente donne `410` à la confirmation ; après purge, son identifiant donne `404`. Les imports confirmés ne sont pas supprimés par ce traitement. Pour un import identique, le document est compacté par référence à un import confirmé immuable : hash, auteur, date et rapport restent propres à la vérification, et la lecture du détail restitue les composants et relations du document de référence, même après un remplacement ultérieur de la source.
+
+**Exemple avec un token API autorisé.** `REFAPP_API` désigne l'adresse de l'API avec son préfixe `/api/v2`. `APPLICATION_ID` est l'application cible ; le token reste dans l'environnement de l'appelant.
+
+```sh
+curl --fail-with-body --request POST \
+  "$REFAPP_API/applications/$APPLICATION_ID/sbom-imports/preview" \
+  --header "x-refapp-token: $REFAPP_TOKEN" \
+  --form "sourceName=backend" \
+  --form "file=@sbom.cdx.json;type=application/json"
+```
+
+Après vérification du rapport, renseigner `IMPORT_ID` avec son `id`, puis confirmer :
+
+```sh
+curl --fail-with-body --request POST \
+  "$REFAPP_API/applications/$APPLICATION_ID/sbom-imports/$IMPORT_ID/commit" \
+  --header "x-refapp-token: $REFAPP_TOKEN"
+```
+
+**Consultation.** `GET …/software-components` retourne `{ total, results }`. `page` commence à `0` (maximum `1000000`), `pageSize` vaut `15` par défaut et doit être compris entre `1` et `100` ; `0` ne désactive pas la pagination sur cette route. `search` (255 caractères maximum) recherche sans distinction de casse dans le produit, la version et le PURL. Chaque composant conserve notamment son `ref`, son produit, sa version éventuelle, son PURL éventuel, son écosystème, son type, son état d'identification et `sourceName`. Le détail d'import donne aussi les relations et les avertissements ; le décompte courant exclut les sources inactives et les anciennes versions de leurs imports.
+
+**Historique.** `GET …/sbom-sources` fournit, pour chaque source, les vingt derniers imports confirmés dans `imports` et leur nombre total dans `importCount`. Pour les suivants, utiliser `GET …/sbom-sources/:id/imports?page=1&pageSize=20`, qui retourne `{ total, results }`, avec la même pagination bornée que les composants. L'ordre est du plus récent au plus ancien ; les analyses non confirmées ne sont pas incluses.
+
+**Activation d'une source.** Envoyer à `PATCH …/sbom-sources/:id` un objet comme `{ "active": false, "revision": 1, "preview": true }`. La prévisualisation renvoie `added`, `removed` et `revision` sans modifier l'inventaire. Après examen, renvoyer la même révision avec `preview: false` (ou sans ce champ) pour confirmer. `active: true` réactive l'import courant conservé. Une révision dépassée entraîne un conflit ; une opération qui ne change pas l'état ne réémet pas d'événement.
+
+| Statut d'erreur | Cas principal                                                                       | Action attendue                                                         |
+| --------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `400`           | Fichier absent, JSON ou schéma invalide, référence interne cassée, champs invalides | Corriger le document ou la requête                                      |
+| `401` / `403`   | Authentification absente ou droits insuffisants                                     | Vérifier l'identité et les droits sur l'application                     |
+| `404`           | Application, import ou source introuvable dans l'application demandée               | Vérifier les identifiants et leur rattachement                          |
+| `409`           | Source modifiée depuis l'analyse ou la prévisualisation                             | Refaire l'analyse/prévisualisation et examiner les nouveaux changements |
+| `410`           | Analyse expirée                                                                     | Refaire l'analyse                                                       |
+| `413`           | Limite de taille, nombre de composants, relations ou profondeur dépassée            | Réduire le document ou examiner les limites avec l'exploitation         |
+| `415`           | Format ou version non pris en charge                                                | Fournir un des formats JSON acceptés                                    |
+
+**Projection et analyses ultérieures.** `GET /technologies/end-of-life?status=all` et son export incluent les composants des sources actives, y compris les applications sans technologie manuelle. Leurs champs `source: "SBOM"` et `sourceName` indiquent la provenance. `status`, `eolDate`, `eoasDate` et `latestVersion` sont nuls : aucune fin de vie n'est déduite de l'import. Le champ historique `eolSource: "endoflife"` est conservé dans ce DTO par compatibilité et ne prouve pas une résolution externe. Les filtres EOL excluent ces composants non évalués.
+
+Chaque nouveau snapshot confirmé ou changement d'activation écrit un événement durable `inventory.changed` dans `InventoryEvent`, avec une révision croissante par application, dans la même transaction que l'inventaire. Un changement de provenance ou de relations peut produire un nouveau snapshot avec un diff d'inventaire vide ; les outils et composants exclus n'entrent pas dans les composants ajoutés, retirés ou modifiés du payload. L'événement signale une nouvelle révision à examiner, sans prouver une vulnérabilité. Cette outbox prépare le traitement prévu par **#3231** ; #3219 n'interroge pas OSV et ne détecte ni ne notifie de vulnérabilités. Une nouvelle source ou version importée ne déclenche pas non plus de requête endoflife.date.
 
 ### Acteurs & types d'acteurs
 
@@ -342,21 +415,25 @@ Aucun de ces endpoints ne fusionne les fiches.
 | `GET /technologies/end-of-life`        | Technologies par application, filtrables par fin de vie                     |
 | `GET /technologies/end-of-life/export` | Export Excel de toutes les applications correspondant aux filtres autorisés |
 
-Filtres : `status` (`eol`, `eol-soon`, `eoas-passed` — les trois partitionnent la liste — ou `all` pour inclure les technologies saines),
+Filtres : `status` (`eol`, `eol-soon`, `eoas-passed` — les trois partitionnent la liste — ou `all` pour inclure les technologies sans alerte et les composants SBOM non évalués),
 `organization` (chemin ou sigle d'un acteur, correspondance partielle), `search` (libellé
 d'application ou produit), plus la pagination usuelle (`page`, `pageSize`) et un tri limité à
 `sortBy=label` (défaut) ou `sortBy=shortName`, `order=asc|desc` — pas de tri par gravité, qui
 supposerait d'ordonner sur un agrégat de la relation.
 
 L'export accepte les mêmes filtres et le même tri, dont `status=all` pour inclure les technologies
-saines. Il ignore `page` et `pageSize`, exige **à la fois** `TechnologyList` et `DataExport` et conserve
+sans alerte et les composants des sources SBOM actives. Il ignore `page` et `pageSize`, exige **à la fois** `TechnologyList` et `DataExport` et conserve
 le périmètre du demandeur. Chaque technologie occupe une ligne de la feuille **Technologies**,
 avec son application, son produit, sa version, ses échéances et son statut calculé. Aucune
-résolution externe des dates n'est déclenchée par l'export.
+résolution externe des dates n'est déclenchée par l'export. Les colonnes **Provenance** et
+**Source SBOM** distinguent les saisies manuelles des composants importés ; ceux-ci portent
+la mention **Fin de vie non évaluée**, sans date ni origine EOL renseignée dans l'export.
 Seules les technologies retenues par le filtre sont restituées, triées par gravité décroissante.
 
-> Route accessible à tout utilisateur authentifié, comme `GET /metadatas` : `TechnologyRead`
-> n'existe qu'à l'échelle d'une application et ne peut pas garder une route sans `:applicationId`.
+L'accès à cette vue exige `TechnologyList` et un profil lecteur, contributeur ou administrateur.
+La sélection et son total sont bornés au périmètre fonctionnel avant pagination, y compris pour
+les composants SBOM. `TechnologyRead` reste le droit de lecture des inventaires sur une fiche.
+Voir la [matrice d'accès](./06-permissions-et-securite.md#45-accès-à-la-vue-transverse-technologies-2801).
 
 ### Filtres sauvegardés
 
@@ -470,6 +547,18 @@ Aucune valeur n'est codée en dur : le nom du claim et ses valeurs sont déclar�
 | `FOOTER_LINKS`             | Liens de pied de page (JSON).                                                             |
 | `WRITE_SWAGGER_YAML`       | Écrit `frontend/openapi/swagger.yaml` (sauf si `false`).                                  |
 | `ONLY_WRITE_SWAGGER`       | Génère le Swagger puis arrête le processus (build).                                       |
+
+### Import SBOM
+
+Ces limites sont lues au démarrage par `backend/src/sbom/sbom-limits.ts`. Toute valeur configurée doit être un entier positif ; une valeur invalide empêche le chargement du module.
+
+| Nom                   | Valeur par défaut   | Rôle                                                                                       |
+| --------------------- | ------------------- | ------------------------------------------------------------------------------------------ |
+| `SBOM_MAX_BYTES`      | `20971520` (20 Mio) | Taille maximale du fichier reçu en multipart, contrôlée avant son analyse                  |
+| `SBOM_MAX_COMPONENTS` | `50000`             | Nombre maximal de composants analysés, éléments de provenance et composants exclus compris |
+| `SBOM_MAX_RELATIONS`  | `200000`            | Nombre maximal de relations entre composants                                               |
+
+La profondeur JSON est en outre limitée à **128 niveaux**, indépendamment de ces variables. L'upload accepte un fichier, trois champs texte au maximum et 2 048 octets par champ texte ; les contraintes propres aux DTO restent applicables. Ajuster aussi la limite de requête du proxy inverse si l'exploitation augmente `SBOM_MAX_BYTES`.
 
 ### MAIA (référentiel d'organisations)
 

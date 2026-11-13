@@ -61,6 +61,56 @@ const application = {
 describe("Export des applications en XLSX et HTML", () => {
   const useCase = new ExportApplicationsUseCase(new ExcelBuilderService());
 
+  it("restitue les composants SBOM et leur provenance en XLSX et HTML sans alerte EOL", async () => {
+    const app = {
+      ...application,
+      sbomSources: ["front", "backend"].map((name) => ({
+        name,
+        active: true,
+        currentImport: {
+          components: [
+            {
+              technology: "Bibliothèque",
+              product: "Composant <importé>",
+              version: "1.2.3",
+            },
+          ],
+        },
+      })),
+    } as unknown as ApplicationWithAllRelations;
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(
+      (await useCase.executeWithApps([app])) as unknown as ExcelJS.Buffer,
+    );
+    const sheet = workbook.getWorksheet("Technologies");
+    expect(sheet.actualRowCount).toBe(4);
+    const headers = sheet.getRow(1).values;
+    expect(headers).toEqual(
+      expect.arrayContaining(["Provenance", "Source SBOM"]),
+    );
+    for (const rowNumber of [3, 4]) {
+      const row = sheet.getRow(rowNumber);
+      expect(row.values).toEqual(
+        expect.arrayContaining([
+          "Composant <importé>",
+          "1.2.3",
+          "SBOM",
+          "Fin de vie non évaluée",
+        ]),
+      );
+      expect(row.getCell(6).text).toBe("");
+      expect(row.getCell(7).text).toBe("");
+      expect(row.getCell(9).text).toBe("");
+    }
+    expect(sheet.getRow(3).values).toContain("front");
+    expect(sheet.getRow(4).values).toContain("backend");
+    const html = (await useCase.executeHtmlWithApps([app])).toString("utf-8");
+    expect(html).toContain("Composant &lt;importé&gt;");
+    expect(html).toContain("Fin de vie non évaluée");
+    expect(html).toContain("Source SBOM");
+    expect(html).toContain("backend");
+  });
+
   const construction: ApplicationStatus = {
     id: "status-construction",
     applicationId: application.id,

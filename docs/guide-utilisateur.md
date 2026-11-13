@@ -130,6 +130,45 @@ N'utilisez pas une autre source, par exemple une valeur demandée par le métier
 
 ---
 
+## Comment importer les dépendances d'une application avec un SBOM ?
+
+Un **SBOM** est un fichier qui décrit les composants logiciels d'un projet. RefApp peut l'importer pour renseigner les dépendances déclarées, leurs versions et leur provenance. Le contenu dépend du fichier fourni : un import ne garantit pas que toutes les dépendances réellement utilisées sont présentes.
+
+Les formats acceptés sont **CycloneDX JSON 1.5, 1.6 et 1.7**, ainsi que **SPDX JSON 2.3**. Les fichiers XML et les autres versions ne sont pas acceptés. Par défaut, un fichier peut contenir jusqu'à **20 Mio**, **50 000 composants** et **200 000 relations** entre composants. L'équipe d'exploitation peut ajuster ces limites.
+
+### Importer ou mettre à jour une source
+
+Vous devez disposer du droit de modifier les technologies de l'application. Pour consulter les composants et l'historique, vous devez également disposer du droit de lecture des technologies.
+
+1. Ouvrez la fiche de l'application, puis l'onglet **Technologies**.
+2. Dans **Dépendances importées par SBOM**, cliquez sur **Importer un SBOM**.
+3. Choisissez la **Source de l'inventaire**. Pour un premier import, créez une source avec un nom explicite, par exemple `backend` ou `frontend`. Pour mettre à jour un inventaire existant, sélectionnez sa source dans la liste.
+4. Ajoutez, si nécessaire, le **Contexte** et la **Version du projet**, puis sélectionnez le fichier JSON.
+5. Cliquez sur **Analyser le fichier**. L'analyse présente les ajouts, changements, retraits et composants inchangés. Elle ne modifie pas l'inventaire courant.
+6. Vérifiez le détail des changements et les avertissements, puis cliquez sur **Confirmer l'import**.
+
+L'analyse reste valable **24 heures**. Si elle a expiré, ou si quelqu'un a modifié la même source entre l'analyse et la confirmation, relancez l'analyse et examinez les nouveaux changements. Vos droits sont vérifiés de nouveau au moment de confirmer.
+
+Chaque source possède son propre inventaire. Remplacer le SBOM du `backend` met à jour uniquement cette source : les composants absents du nouveau fichier sont retirés de son inventaire courant. Les autres sources et les technologies saisies manuellement sont conservées. Plusieurs versions d'un même composant peuvent coexister, et un composant présent dans deux sources garde ses deux provenances.
+
+Si le fichier décrit le même inventaire, la confirmation conserve une trace de vérification sans dupliquer les composants.
+
+### Consulter les composants et l'historique
+
+La liste des composants est paginée et permet de rechercher un produit, une version ou un identifiant de paquet. La provenance **SBOM** et le nom de la source sont affichés. Les composants dont l'identification est incomplète restent consultables ; ils ne sont pas écartés silencieusement.
+
+Les outils qui ont produit le SBOM, les éléments d'historique et les composants explicitement exclus du projet restent consultables dans le détail de l'import. Ils ne sont pas comptés parmi les dépendances actives de l'application.
+
+Dans **Sources et historique**, vous pouvez consulter les imports confirmés, leurs composants et leurs relations. Pour retirer une source de l'inventaire courant, cliquez sur **Prévisualiser la désactivation**, vérifiez le nombre de composants concernés, puis sur **Confirmer la désactivation**. Son historique est conservé. Vous pouvez réactiver cette source en la sélectionnant lors d'un nouvel import.
+
+### Retrouver ces données dans la vue Technologies et les exports
+
+La vue **Technologies**, avec le filtre **Toutes les technologies**, inclut les composants des sources SBOM actives dans votre périmètre autorisé. Les exports les distinguent avec les colonnes **Provenance** et **Source SBOM**. L'accès à cette vue et le droit d'export sont distincts des droits sur la fiche ; contactez votre administrateur si nécessaire.
+
+L'import SBOM ne calcule pas de fin de vie pour les composants importés et ne recherche pas encore les failles de sécurité. Une date absente ou la mention **Fin de vie non évaluée** ne signifie donc pas qu'un composant est à jour ou sans vulnérabilité. Les filtres de fin de vie ne retiennent pas ces composants non évalués.
+
+---
+
 ## Besoin d'aide ?
 
 Si ce guide ne répond pas à votre question, contactez l'administrateur indiqué dans **Mon profil**. Vous pouvez aussi cliquer sur **Contacter l'équipe** dans RefApp.

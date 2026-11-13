@@ -32,6 +32,10 @@ model Application {
   rgaaCompliances   RgaaCompliance[]
   /// Stack technique (0 à N technologies + versions)
   technologies      TechnologyStack[]
+  sbomSources       SbomSource[]
+  sbomImports       SbomImport[]
+  sbomInventory     SbomInventory?
+  inventoryEvents   InventoryEvent[]
   /// Signalements pour cette application
   reports           Report[]
   /// Ressources externes liées à cette application

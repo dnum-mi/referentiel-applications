@@ -39,6 +39,8 @@ describe("Test Swagger documentation", () => {
   it("test all paths and responses", () => {
     const pathsAllowedWithoutBody = [
       "/users/me/subscribe/{appId}",
+      // Le commit confirme l’analyse déjà enregistrée et identifiée dans l’URL.
+      "/applications/{applicationId}/sbom-imports/{id}/commit",
       "/applications/{applicationId}/export/powerpoint",
       "/applications/{applicationId}/export/html",
       "/applications/{applicationId}/compliances/ecoindex/scan",

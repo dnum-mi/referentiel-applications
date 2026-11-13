@@ -13,3 +13,6 @@ frontend/playwright-report/trace
 
 # Exact rendered accessibility fixtures, verified by SHA256
 qa/at-windows/fixtures/
+
+# Official SBOM schemas preserved byte-for-byte (SHA-256 in their README)
+backend/src/sbom/schemas/*.json

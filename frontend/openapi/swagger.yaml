@@ -8056,9 +8056,10 @@ paths:
           in: query
           description: "Ne retenir que les technologies portant ce statut de fin de vie.
             Les trois statuts partitionnent la liste : une technologie déjà en
-            fin de vie n'apparaît pas sous « fin de support actif ». `all` est
-            un 4ᵉ filtre, non partitionnant : il lève la restriction et retourne
-            aussi les technologies saines."
+            fin de vie n'apparaît pas sous « fin de support actif ». `all` lève
+            la restriction et retourne aussi les technologies sans alerte et les
+            composants des sources SBOM actives, dont la fin de vie n'est pas
+            évaluée."
           schema:
             type: string
             enum:
@@ -8151,9 +8152,10 @@ paths:
           in: query
           description: "Ne retenir que les technologies portant ce statut de fin de vie.
             Les trois statuts partitionnent la liste : une technologie déjà en
-            fin de vie n'apparaît pas sous « fin de support actif ». `all` est
-            un 4ᵉ filtre, non partitionnant : il lève la restriction et retourne
-            aussi les technologies saines."
+            fin de vie n'apparaît pas sous « fin de support actif ». `all` lève
+            la restriction et retourne aussi les technologies sans alerte et les
+            composants des sources SBOM actives, dont la fin de vie n'est pas
+            évaluée."
           schema:
             type: string
             enum:
@@ -8188,6 +8190,655 @@ paths:
           description: Capacité Technologie absente, rôle ou périmètre non autorisé
       summary: Technologies utilisées par les applications, fins de vie ou non
       tags: *a36
+  /api/v2/applications/{applicationId}/sbom-imports/preview:
+    post:
+      operationId: SbomController_preview
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - sourceName
+              properties:
+                file:
+                  type: string
+                  format: binary
+                sourceName:
+                  type: string
+                  maxLength: 160
+                context:
+                  type: string
+                  maxLength: 500
+                projectVersion:
+                  type: string
+                  maxLength: 255
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - id
+                  - sourceName
+                  - baseRevision
+                  - expiresAt
+                  - format
+                  - specVersion
+                  - warnings
+                  - counts
+                  - changes
+                  - totalComponents
+                  - unchanged
+                properties:
+                  id: &a37
+                    type: string
+                  sourceName: *a37
+                  baseRevision: &a39
+                    type: integer
+                  expiresAt: &a38
+                    type: string
+                    format: date-time
+                  createdAt: *a38
+                  status:
+                    type: string
+                    enum:
+                      - preview
+                      - committed
+                      - unchanged
+                  format: *a37
+                  specVersion: *a37
+                  projectVersion: &a40
+                    type: string
+                    nullable: true
+                  totalComponents: *a39
+                  unchanged:
+                    type: boolean
+                  warnings:
+                    type: array
+                    items: *a37
+                  counts:
+                    type: object
+                    required:
+                      - added
+                      - removed
+                      - changed
+                      - unchanged
+                    properties:
+                      added: *a39
+                      removed: *a39
+                      changed: *a39
+                      unchanged: *a39
+                  changes:
+                    type: object
+                    required:
+                      - added
+                      - removed
+                      - changed
+                      - unchanged
+                    properties:
+                      added:
+                        type: array
+                        items: &a41
+                          type: object
+                          required:
+                            - ref
+                            - product
+                            - version
+                          properties:
+                            ref: *a37
+                            product: *a37
+                            version: *a40
+                      removed:
+                        type: array
+                        items: *a41
+                      unchanged: *a39
+                      changed:
+                        type: array
+                        items:
+                          type: object
+                          required:
+                            - before
+                            - after
+                          properties:
+                            before: *a41
+                            after: *a41
+        "400":
+          description: Document invalide ou référence interne cassée.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorDto"
+        "403": &a43
+          description: Droit Technologie insuffisant sur cette application.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorDto"
+        "404": &a44
+          description: Application, source ou import introuvable dans cette application.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorDto"
+        "413":
+          description: Limite de taille, composants, relations ou profondeur dépassée.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorDto"
+        "415":
+          description: Format ou version non pris en charge.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorDto"
+      summary: Analyser un SBOM et prévisualiser les changements sans modifier
+        l’inventaire
+      tags: &a45
+        - SBOM
+  /api/v2/applications/{applicationId}/sbom-imports/{id}/commit:
+    post:
+      description: L’identifiant de l’URL désigne l’analyse enregistrée. Aucun corps
+        de requête n’est attendu.
+      operationId: SbomController_commit
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - id
+                  - sourceId
+                  - revision
+                  - unchanged
+                properties:
+                  id: &a42
+                    type: string
+                  sourceId: *a42
+                  revision:
+                    type: integer
+                  unchanged:
+                    type: boolean
+        "403": *a43
+        "404": *a44
+        "409":
+          description: Source modifiée depuis l’analyse.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorDto"
+        "410":
+          description: Analyse expirée après 24 heures.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorDto"
+      summary: Confirmer atomiquement une analyse SBOM, avec revérification des droits
+        et de la révision
+      tags: *a45
+  /api/v2/applications/{applicationId}/sbom-sources:
+    get:
+      operationId: SbomController_sources
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - id
+                    - name
+                    - context
+                    - active
+                    - revision
+                    - currentImportId
+                    - componentCount
+                    - updatedAt
+                    - imports
+                    - importCount
+                  properties:
+                    id: &a46
+                      type: string
+                    name: *a46
+                    context: &a47
+                      type: string
+                      nullable: true
+                    active:
+                      type: boolean
+                    revision: &a48
+                      type: integer
+                    currentImportId: *a47
+                    componentCount: *a48
+                    updatedAt: &a49
+                      type: string
+                      format: date-time
+                    importCount: *a48
+                    imports:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id: *a46
+                          createdAt: *a49
+                          format: *a46
+                          specVersion: *a46
+                          componentCount: *a48
+                          status: *a46
+        "403": *a43
+        "404": *a44
+      summary: Consulter les sources SBOM et l’historique des imports confirmés
+      tags: *a45
+  /api/v2/applications/{applicationId}/sbom-sources/{id}/imports:
+    get:
+      operationId: SbomController_sourceHistory
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 0
+            maximum: 1000000
+            default: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 15
+            type: number
+        - name: search
+          required: false
+          in: query
+          schema:
+            maxLength: 255
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - total
+                  - results
+                properties:
+                  total: &a51
+                    type: integer
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - id
+                        - createdAt
+                        - format
+                        - specVersion
+                        - componentCount
+                        - status
+                      properties:
+                        id: &a50
+                          type: string
+                        createdAt:
+                          type: string
+                          format: date-time
+                        format: *a50
+                        specVersion: *a50
+                        componentCount: *a51
+                        status: *a50
+        "403": *a43
+        "404": *a44
+      summary: Consulter l’historique paginé d’une source SBOM
+      tags: *a45
+  /api/v2/applications/{applicationId}/sbom-imports/{id}:
+    get:
+      operationId: SbomController_importDetail
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - id
+                  - sourceName
+                  - baseRevision
+                  - expiresAt
+                  - format
+                  - specVersion
+                  - warnings
+                  - counts
+                  - changes
+                  - totalComponents
+                  - unchanged
+                properties:
+                  id: &a52
+                    type: string
+                  sourceName: *a52
+                  baseRevision: &a54
+                    type: integer
+                  expiresAt: &a53
+                    type: string
+                    format: date-time
+                  createdAt: *a53
+                  status:
+                    type: string
+                    enum:
+                      - preview
+                      - committed
+                      - unchanged
+                  format: *a52
+                  specVersion: *a52
+                  projectVersion: &a55
+                    type: string
+                    nullable: true
+                  totalComponents: *a54
+                  unchanged:
+                    type: boolean
+                  warnings:
+                    type: array
+                    items: *a52
+                  counts:
+                    type: object
+                    required:
+                      - added
+                      - removed
+                      - changed
+                      - unchanged
+                    properties:
+                      added: *a54
+                      removed: *a54
+                      changed: *a54
+                      unchanged: *a54
+                  changes:
+                    type: object
+                    required:
+                      - added
+                      - removed
+                      - changed
+                      - unchanged
+                    properties:
+                      added:
+                        type: array
+                        items: &a56
+                          type: object
+                          required:
+                            - ref
+                            - product
+                            - version
+                          properties:
+                            ref: *a52
+                            product: *a52
+                            version: *a55
+                      removed:
+                        type: array
+                        items: *a56
+                      unchanged: *a54
+                      changed:
+                        type: array
+                        items:
+                          type: object
+                          required:
+                            - before
+                            - after
+                          properties:
+                            before: *a56
+                            after: *a56
+                  components:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - ref
+                        - product
+                        - version
+                        - purl
+                        - ecosystem
+                        - technology
+                        - type
+                        - identificationStatus
+                        - context
+                      properties:
+                        id: *a52
+                        ref: *a52
+                        product: *a52
+                        version: *a55
+                        purl: *a55
+                        ecosystem: *a55
+                        technology: *a52
+                        type: *a52
+                        importId: *a52
+                        sourceName: *a52
+                        context:
+                          type: string
+                          enum:
+                            - inventory
+                            - provenance
+                            - excluded
+                        identificationStatus:
+                          type: string
+                          enum:
+                            - identified
+                            - incomplete
+                  relations:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - from
+                        - to
+                        - type
+                        - resolved
+                      properties:
+                        from: *a52
+                        to: *a52
+                        type: *a52
+                        resolved:
+                          type: boolean
+        "403": *a43
+        "404": *a44
+      summary: Consulter le rapport, les composants et les relations d’un import SBOM
+      tags: *a45
+  /api/v2/applications/{applicationId}/software-components:
+    get:
+      operationId: SbomController_components
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 0
+            maximum: 1000000
+            default: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 15
+            type: number
+        - name: search
+          required: false
+          in: query
+          schema:
+            maxLength: 255
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - total
+                  - results
+                properties:
+                  total:
+                    type: integer
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - ref
+                        - product
+                        - version
+                        - purl
+                        - ecosystem
+                        - technology
+                        - type
+                        - identificationStatus
+                        - context
+                      properties:
+                        id: &a57
+                          type: string
+                        ref: *a57
+                        product: *a57
+                        version: &a58
+                          type: string
+                          nullable: true
+                        purl: *a58
+                        ecosystem: *a58
+                        technology: *a57
+                        type: *a57
+                        importId: *a57
+                        sourceName: *a57
+                        context:
+                          type: string
+                          enum:
+                            - inventory
+                            - provenance
+                            - excluded
+                        identificationStatus:
+                          type: string
+                          enum:
+                            - identified
+                            - incomplete
+        "403": *a43
+        "404": *a44
+      summary: Consulter les composants des sources SBOM actives, avec pagination
+      tags: *a45
+  /api/v2/applications/{applicationId}/sbom-sources/{id}:
+    patch:
+      operationId: SbomController_updateSource
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSbomSourceDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    required:
+                      - removed
+                      - added
+                      - revision
+                    properties:
+                      removed: &a59
+                        type: integer
+                      added: *a59
+                      revision: *a59
+                  - type: object
+                    required:
+                      - id
+                      - revision
+                    properties:
+                      id:
+                        type: string
+                      revision: *a59
+        "403": *a43
+        "404": *a44
+        "409":
+          description: Source modifiée depuis la prévisualisation.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorDto"
+      summary: Prévisualiser ou confirmer l’activation d’une source SBOM à révision
+        constante
+      tags: *a45
   /api/v2/stats/iq-avg/period:
     get:
       description: "
@@ -8318,7 +8969,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/PaginatedReportDto"
       summary: Récupérer tous les signalements
-      tags: &a37
+      tags: &a60
         - Reports
     post:
       operationId: ReportsController_create
@@ -8337,7 +8988,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReportDto"
       summary: Créer un signalement
-      tags: *a37
+      tags: *a60
   /api/v2/reports/{id}:
     patch:
       operationId: ReportsController_update
@@ -8368,7 +9019,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReportDto"
       summary: Mettre à jour un signalement
-      tags: *a37
+      tags: *a60
   /api/v2/applications/{applicationId}/reports:
     post:
       operationId: ApplicationReportsController_create
@@ -8393,7 +9044,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReportDto"
       summary: Demande de modification pour une fiche application
-      tags: &a38
+      tags: &a61
         - ApplicationReports
     get:
       description: Renvoie la liste paginée des signalements pour une application donnée.
@@ -8457,7 +9108,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/PaginatedReportDto"
       summary: Récupérer tous les signalements pour une application
-      tags: *a38
+      tags: *a61
   /api/v2/applications/{applicationId}/reports/{id}:
     get:
       operationId: ApplicationReportsController_findOne
@@ -8481,7 +9132,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReportDto"
       summary: Récupérer un signalement spécifique par ID
-      tags: *a38
+      tags: *a61
     patch:
       operationId: ApplicationReportsController_update
       parameters:
@@ -8517,7 +9168,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReportDto"
       summary: Mettre à jour un signalement
-      tags: *a38
+      tags: *a61
     delete:
       operationId: ApplicationReportsController_remove
       parameters:
@@ -8536,7 +9187,7 @@ paths:
         "204":
           description: Signalement supprimé avec succès
       summary: Supprimer un signalement
-      tags: *a38
+      tags: *a61
   /api/v2/saved-filters:
     get:
       description: Renvoie les filtres de recherche d'applications sauvegardés par
@@ -8553,7 +9204,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/SavedFilterDto"
       summary: Lister ses filtres sauvegardés
-      tags: &a39
+      tags: &a62
         - SavedFilters
     post:
       description: Sauvegarde les filtres courants sous un nom. Si un filtre du même
@@ -8574,7 +9225,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/SavedFilterDto"
       summary: Sauvegarder un filtre
-      tags: *a39
+      tags: *a62
   /api/v2/saved-filters/{id}:
     patch:
       operationId: SavedFilterController_rename
@@ -8617,7 +9268,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiErrorDto"
       summary: Renommer un filtre personnel sans modifier ses critères
-      tags: *a39
+      tags: *a62
     delete:
       operationId: SavedFilterController_remove
       parameters:
@@ -8633,7 +9284,7 @@ paths:
         "404":
           description: Filtre sauvegardé non trouvé
       summary: Supprimer un filtre sauvegardé
-      tags: *a39
+      tags: *a62
   /api/v2/quality-campaigns:
     post:
       operationId: QualityCampaignController_create
@@ -8652,7 +9303,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/QualityCampaignDto"
       summary: Créer une campagne de mise en qualité
-      tags: &a40
+      tags: &a63
         - Quality Campaigns
     get:
       operationId: QualityCampaignController_findAll
@@ -8700,7 +9351,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/PaginatedQualityCampaignDto"
       summary: Lister les campagnes de mise en qualité
-      tags: *a40
+      tags: *a63
   /api/v2/quality-campaigns/{id}:
     get:
       operationId: QualityCampaignController_findOne
@@ -8720,7 +9371,7 @@ paths:
         "404":
           description: Campagne non trouvée
       summary: Détail d'une campagne de mise en qualité, avec son impact
-      tags: *a40
+      tags: *a63
     patch:
       operationId: QualityCampaignController_update
       parameters:
@@ -8745,7 +9396,7 @@ paths:
         "404":
           description: Campagne non trouvée
       summary: Modifier une campagne de mise en qualité
-      tags: *a40
+      tags: *a63
     delete:
       operationId: QualityCampaignController_remove
       parameters:
@@ -8760,7 +9411,7 @@ paths:
         "404":
           description: Campagne non trouvée
       summary: Supprimer une campagne de mise en qualité
-      tags: *a40
+      tags: *a63
   /api/v2/quality-campaigns/{id}/preview:
     get:
       operationId: QualityCampaignController_preview
@@ -8781,7 +9432,7 @@ paths:
           description: Campagne non trouvée
       summary: Aperçu à la volée des applications actuellement matchées par le filtre
         de la campagne
-      tags: *a40
+      tags: *a63
   /api/v2/quality-campaigns/{id}/status:
     patch:
       operationId: QualityCampaignController_updateStatus
@@ -8808,7 +9459,7 @@ paths:
           description: Campagne non trouvée
       summary: Changer librement le statut de la campagne (planifiée / en cours /
         terminée), dans n'importe quel sens
-      tags: *a40
+      tags: *a63
   /api/v2/quality-campaigns/{id}/send:
     post:
       operationId: QualityCampaignController_send
@@ -8829,7 +9480,7 @@ paths:
           description: Campagne non trouvée
       summary: Déclencher immédiatement l'envoi de la campagne aux acteurs des
         applications ciblées
-      tags: *a40
+      tags: *a63
   /api/v2/quality-campaigns/{id}/send-sponsor-report:
     post:
       operationId: QualityCampaignController_sendSponsorReport
@@ -8850,7 +9501,7 @@ paths:
           description: Campagne non trouvée
       summary: Envoyer au sponsor de la campagne un email récapitulatif de l'impact
         courant
-      tags: *a40
+      tags: *a63
   /api/v2/health-check:
     get:
       description: Exécute une requête basique vers la base de données pour vérifier
@@ -9245,7 +9896,7 @@ components:
           description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
             le futur
         status:
-          enum: &a41
+          enum: &a64
             - active
             - expired
             - revoked
@@ -9413,7 +10064,7 @@ components:
           description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
             le futur
         status:
-          enum: *a41
+          enum: *a64
           type: string
           example: active
           description: Statut du token
@@ -10332,7 +10983,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: &a42
+          example: &a65
             - population 1
             - population 2
           description: population associated with the application
@@ -10343,7 +10994,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: &a43
+          example: &a66
             - finance
             - HR
           description: Purposes of the application
@@ -10356,7 +11007,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: &a44
+          example: &a67
             - tag1
             - tag2
           type: array
@@ -10693,7 +11344,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: &a45
+          enum: &a68
             - 96
             - 72
             - 48
@@ -10724,7 +11375,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: &a46
+          enum: &a69
             - OK
             - KO
           type: string
@@ -10735,7 +11386,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: &a47
+          enum: &a70
             - 48
             - 24
             - 2
@@ -10755,7 +11406,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: &a48
+          enum: &a71
             - S3
             - LOCAL
             - EXTERNE
@@ -10766,7 +11417,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: &a49
+          enum: &a72
             - OK
             - KO
           type: string
@@ -10776,7 +11427,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: &a50
+          enum: &a73
             - homologuee
             - en_cours
             - dispensee
@@ -11118,7 +11769,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: *a42
+          example: *a65
           description: population associated with the application
           type: array
           items:
@@ -11127,7 +11778,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: *a43
+          example: *a66
           description: Purposes of the application
           type: array
           items:
@@ -11138,7 +11789,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: *a44
+          example: *a67
           type: array
           items:
             type: string
@@ -12312,7 +12963,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: *a45
+          enum: *a68
           example: 4
           description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
         dima_is_hno:
@@ -12336,7 +12987,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a46
+          enum: *a69
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -12345,7 +12996,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: *a47
+          enum: *a70
           example: 24
           description: PDMA duration in hours (one of 48, 24, 2, 0)
         pdma_data_types:
@@ -12361,7 +13012,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a48
+          enum: *a71
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -12369,7 +13020,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a49
+          enum: *a72
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -12377,7 +13028,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a50
+          enum: *a73
           type: string
           description: Homologation status
         homologation_date_end:
@@ -12413,7 +13064,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: *a45
+          enum: *a68
           example: 4
           description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
         dima_is_hno:
@@ -12437,7 +13088,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a46
+          enum: *a69
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -12446,7 +13097,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: *a47
+          enum: *a70
           example: 24
           description: PDMA duration in hours (one of 48, 24, 2, 0)
         pdma_data_types:
@@ -12462,7 +13113,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a48
+          enum: *a71
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -12470,7 +13121,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a49
+          enum: *a72
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -12478,7 +13129,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a50
+          enum: *a73
           type: string
           description: Homologation status
         homologation_date_end:
@@ -13434,7 +14085,7 @@ components:
             - $ref: "#/components/schemas/TechnologyEolSource"
         eolStatus:
           nullable: true
-          enum: &a51
+          enum: &a74
             - eol
             - eol-soon
             - eoas-passed
@@ -13567,6 +14218,17 @@ components:
         product:
           type: string
           example: PostgreSQL
+        source:
+          enum:
+            - manual
+            - SBOM
+          type: string
+          description: "Provenance de la technologie : saisie dans RefApp ou composant
+            importé d'un SBOM."
+        sourceName:
+          type: string
+          nullable: true
+          description: Nom de la source SBOM ; null pour une technologie saisie dans RefApp.
         version:
           type: string
           nullable: true
@@ -13584,13 +14246,15 @@ components:
           nullable: true
           example: "15.5"
         eolSource:
-          description: "Origine de la date : calculée via endoflife.date, ou saisie à la
-            main quand endoflife.date ne pouvait pas répondre (#2454)."
+          description: "Origine de la date : calculée via endoflife.date ou saisie à la
+            main. Pour un composant de source SBOM, la valeur endoflife est
+            conservée par compatibilité mais les dates nulles ne constituent pas
+            une évaluation de sa fin de vie."
           allOf:
             - $ref: "#/components/schemas/TechnologyEolSource"
         status:
           nullable: true
-          enum: *a51
+          enum: *a74
           type: string
           description: Statut calculé côté serveur, pour que la fiche et la vue transverse
             classent une technologie de la même façon. null si la technologie ne
@@ -13600,6 +14264,8 @@ components:
         - id
         - technology
         - product
+        - source
+        - sourceName
         - eolSource
         - status
     EndOfLifeApplicationDto:
@@ -13626,15 +14292,15 @@ components:
             type: string
         technologies:
           description: Les technologies retenues par le filtre, triées par gravité
-            décroissante. Avec le filtre `all`, ce sont TOUTES les technologies
-            de l'application, pas seulement celles concernées par une fin de
-            vie.
+            décroissante. Avec le filtre `all`, elles comprennent les saisies
+            manuelles et les composants des imports courants de chaque source
+            SBOM active, sans fusion entre sources.
           type: array
           items:
             $ref: "#/components/schemas/EndOfLifeTechnologyDto"
         worstStatus:
           nullable: true
-          enum: *a51
+          enum: *a74
           type: string
           description: Statut le plus grave parmi les technologies retenues — sert au tri
             et à la pastille de synthèse. null si aucune des technologies
@@ -13661,6 +14327,22 @@ components:
       required:
         - results
         - total
+    UpdateSbomSourceDto:
+      type: object
+      properties:
+        active:
+          type: boolean
+          description: État désiré de la source
+        revision:
+          type: number
+          minimum: 0
+          description: Révision affichée lors de la prévisualisation
+        preview:
+          type: boolean
+          default: false
+      required:
+        - active
+        - revision
     GetIqAvgGroupedDto:
       type: object
       properties:
@@ -14049,7 +14731,7 @@ components:
           description: Version du backend
           example: v1.86.0
         etat:
-          enum: &a52
+          enum: &a75
             - OK
             - KO
           type: string
@@ -14071,7 +14753,7 @@ components:
           description: Version du backend
           example: v1.86.0
         etat:
-          enum: *a52
+          enum: *a75
           type: string
           description: État de la connexion à la base de données
           example: OK

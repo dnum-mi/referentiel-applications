@@ -26,6 +26,8 @@ describe("Exports Excel des technologies (#2524)", () => {
     "Dernière version",
     "Source",
     "Statut",
+    "Provenance",
+    "Source SBOM",
   ];
   const past = new Date("2020-01-01T00:00:00.000Z");
   const distant = new Date("2099-01-01T00:00:00.000Z");
@@ -268,6 +270,8 @@ describe("Exports Excel des technologies (#2524)", () => {
           "13.22",
           "endoflife.date",
           "Fin de vie dépassée",
+          "Saisie manuelle",
+          "",
         ]);
         expect(rows).toContainEqual([
           directId,
@@ -280,6 +284,8 @@ describe("Exports Excel des technologies (#2524)", () => {
           "",
           "Saisie manuelle",
           "Fin de vie proche",
+          "Saisie manuelle",
+          "",
         ]);
         expect(rows.find((row) => row[3] === `${prefix}-support`)?.[9]).toBe(
           "Fin de support actif dépassée",

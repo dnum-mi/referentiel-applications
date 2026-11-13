@@ -124,7 +124,19 @@ describe("EndOfLifeService — construction de la requête", () => {
     const { service, paginate } = makeService();
     await service.findApplications({ status: "all" }, makeRequestor());
     const { where, include } = paginate.mock.calls[0][0];
-    expect(where.technologies.some).toEqual({});
+    expect(where.AND).toContainEqual({
+      OR: [
+        { technologies: { some: {} } },
+        {
+          sbomSources: {
+            some: {
+              active: true,
+              currentImport: { components: { some: {} } },
+            },
+          },
+        },
+      ],
+    });
     expect(include.technologies.where).toEqual({});
   });
 });
@@ -313,6 +325,185 @@ describe("EndOfLifeService — applications supprimées (#2515)", () => {
   });
 });
 
+describe("EndOfLifeService — inventaires SBOM (#3219)", () => {
+  const component = {
+    id: "component-current",
+    technology: "Bibliothèque",
+    product: "lodash",
+    version: "4.17.21",
+  };
+  const sbomSource = (name: string, active = true) => ({
+    active,
+    name,
+    currentImport: { components: [{ ...component, id: `component-${name}` }] },
+  });
+
+  it("recherche les composants importés en base dans le périmètre avant la pagination", async () => {
+    const { service, paginate } = makeService();
+    await service.findApplications(
+      { status: "all", search: "lodash", page: 2, pageSize: 1 },
+      scopedRequestor(Roles.READER, "MI/DNUM"),
+    );
+    const query = paginate.mock.calls[0][0];
+    expect(query.page).toBe(2);
+    expect(query.pageSize).toBe(1);
+    expect(query.where.AND[0].OR[0].actors.some.organization.OR).toEqual([
+      { path: { equals: "MI/DNUM", mode: "insensitive" } },
+      { path: { startsWith: "MI/DNUM/", mode: "insensitive" } },
+    ]);
+    expect(query.where.OR).toContainEqual({
+      sbomSources: {
+        some: {
+          active: true,
+          currentImport: {
+            components: {
+              some: { product: { contains: "lodash", mode: "insensitive" } },
+            },
+          },
+        },
+      },
+    });
+    expect(query.include.sbomSources).toEqual({
+      where: { active: true },
+      include: { currentImport: { include: { components: true } } },
+    });
+  });
+
+  it("conserve les applications uniquement importées, le total et les sources séparées", async () => {
+    const { service, paginate } = makeService();
+    paginate.mockResolvedValue({
+      results: [
+        {
+          id: "sbom-only",
+          label: "Application importée",
+          shortName: null,
+          technologies: [],
+          actors: [],
+          sbomSources: [
+            sbomSource("front"),
+            sbomSource("back"),
+            sbomSource("ancienne", false),
+          ],
+        },
+      ],
+      total: 12,
+    });
+    const result = await service.findApplications(
+      { status: "all", page: 2, pageSize: 1 },
+      makeRequestor(),
+    );
+    expect(result.total).toBe(12);
+    expect(result.results).toHaveLength(1);
+    expect(result.results[0].worstStatus).toBeNull();
+    expect(result.results[0].technologies).toEqual(
+      ["front", "back"].map((name) => ({
+        ...component,
+        id: `component-${name}`,
+        eolDate: null,
+        eoasDate: null,
+        latestVersion: null,
+        eolSource: "endoflife",
+        status: null,
+        source: "SBOM",
+        sourceName: name,
+      })),
+    );
+  });
+
+  it("exporte l'inventaire importé avec le même périmètre sans limiter à la page demandée", async () => {
+    const findMany = jest.fn().mockResolvedValue([
+      {
+        id: "sbom-only",
+        label: "Application importée",
+        technologies: [],
+        sbomSources: [sbomSource("backend")],
+      },
+    ]);
+    const buildWorkbook = jest.fn().mockResolvedValue(Buffer.from("xlsx"));
+    const service = new EndOfLifeService(
+      { application: { findMany } } as unknown as PrismaService,
+      { buildWorkbook } as unknown as ExcelBuilderService,
+    );
+    await service.exportApplications(
+      { status: "all", search: "lodash", page: 2, pageSize: 1 },
+      scopedRequestor(Roles.READER, "MI/DNUM"),
+    );
+    const query = findMany.mock.calls[0][0];
+    expect(query).not.toHaveProperty("page");
+    expect(query).not.toHaveProperty("skip");
+    expect(query).not.toHaveProperty("take");
+    expect(query.where.AND[0].OR[0].actors.some.organization.OR[0]).toEqual({
+      path: { equals: "MI/DNUM", mode: "insensitive" },
+    });
+    expect(query.include.sbomSources.where).toEqual({ active: true });
+    expect(buildWorkbook.mock.calls[0][0][0].rows).toEqual([
+      expect.objectContaining({
+        applicationId: "sbom-only",
+        "technologies.product": "lodash",
+        "technologies.source": "SBOM",
+        "technologies.sourceName": "backend",
+        "technologies.status": "Fin de vie non évaluée",
+      }),
+    ]);
+  });
+
+  it.each([undefined, "eol", "eol-soon", "eoas-passed"] as const)(
+    "ne mêle pas les composants SBOM non évalués au filtre EOL %s",
+    async (status) => {
+      const { service, paginate } = makeService();
+      await service.findApplications(
+        { status, search: "lodash" },
+        makeRequestor(),
+      );
+      const query = paginate.mock.calls[0][0];
+      expect(query.where.technologies.some).toBeDefined();
+      expect(
+        query.where.OR.some((clause: object) => "sbomSources" in clause),
+      ).toBe(false);
+      expect(query.include.sbomSources).toBeUndefined();
+    },
+  );
+
+  it("ne fusionne pas un composant importé et une technologie manuelle du même produit", async () => {
+    const { service, paginate } = makeService();
+    paginate.mockResolvedValue({
+      results: [
+        {
+          id: "mixed",
+          label: "Application mixte",
+          shortName: null,
+          actors: [],
+          technologies: [
+            {
+              ...component,
+              id: "manual",
+              eolDate: past,
+              eoasDate: null,
+              latestVersion: null,
+              eolSource: "manual",
+            },
+          ],
+          sbomSources: [sbomSource("front")],
+        },
+      ],
+      total: 1,
+    });
+    const result = await service.findApplications(
+      { status: "all" },
+      makeRequestor(),
+    );
+    expect(
+      result.results[0].technologies.map(({ source, status }) => ({
+        source,
+        status,
+      })),
+    ).toEqual([
+      { source: "manual", status: "eol" },
+      { source: "SBOM", status: null },
+    ]);
+  });
+});
+
 describe("EndOfLifeService — périmètre fonctionnel (#2801)", () => {
   it.each([Roles.READER, Roles.CONTRIBUTOR, Roles.ADMIN])(
     "%s sans périmètre conserve une vue globale",
@@ -367,14 +558,14 @@ describe("EndOfLifeService — périmètre fonctionnel (#2801)", () => {
     );
 
     const { where } = paginate.mock.calls[1][0];
-    expect(where.AND).toEqual(scope);
+    expect(where.AND).toEqual(expect.arrayContaining(scope));
     expect(where.actors.some.organization.OR).toContainEqual({
       path: { contains: "AUTRE", mode: "insensitive" },
     });
     expect(where.OR).toContainEqual({
       label: { contains: "PostgreSQL", mode: "insensitive" },
     });
-    expect(where.technologies.some).toEqual({});
+    expect(where.technologies).toBeUndefined();
   });
 
   it.each([undefined, null, organization("")])(
