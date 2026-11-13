@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.105.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.104.0...v1.105.0) (2026-11-12)
+
+
+### Features
+
+* add homologation filters and update search functionality ([#3235](https://github.com/dnum-mi/referentiel-applications/issues/3235)) ([d195a54](https://github.com/dnum-mi/referentiel-applications/commit/d195a54acf7de0f59516c27f941f2d53c44a2983))
+* enhance MAIA synchronization handling in Actor and Application forms ([#3234](https://github.com/dnum-mi/referentiel-applications/issues/3234)) ([92f5e8c](https://github.com/dnum-mi/referentiel-applications/commit/92f5e8c0ac0526921a97fcd8f09bf06c0abec44e))
+* export the filtered catalogue view to Excel ([#3238](https://github.com/dnum-mi/referentiel-applications/issues/3238)) ([d4faa4f](https://github.com/dnum-mi/referentiel-applications/commit/d4faa4f6bdff379f1c58032bb2c50993f09b538b))
+
+
+### Bug Fixes
+
+* sort organizations and match MAIA aliases ([#3236](https://github.com/dnum-mi/referentiel-applications/issues/3236)) ([c5edb18](https://github.com/dnum-mi/referentiel-applications/commit/c5edb18c973f2ce4e794d48e3e98917ab5d389fe))
+
 ## [1.104.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.103.0...v1.104.0) (2026-11-06)
 
 
