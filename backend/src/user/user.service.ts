@@ -28,6 +28,11 @@ import { DELEGATED_AUTH } from "src/permissions/delegated-auth";
 import { impersonateWithinCeiling } from "src/permissions/impersonation-auth";
 import { encryptGristApiKey } from "src/grist/grist-api-key";
 
+import {
+  RolesWording,
+  PERMISSIONS_LABELS,
+} from "src/permissions/permission-labels";
+
 @Injectable()
 export class UserService {
   constructor(
@@ -204,9 +209,11 @@ export class UserService {
           changedByEmail: requestor.email ?? null,
         });
       const changeDetails = [
-        roleChanged ? `rôle : ${previousUser?.role} → ${user.role}` : null,
+        roleChanged
+          ? `rôle : ${previousUser ? RolesWording[previousUser.role] : "Non renseigné"} → ${RolesWording[user.role]}`
+          : null,
         permissionsChanged
-          ? `permissions supplémentaires : ${user.additionalPermissions.length ? user.additionalPermissions.join(", ") : "aucune"}`
+          ? `permissions supplémentaires : ${user.additionalPermissions.length ? user.additionalPermissions.map((permission) => PERMISSIONS_LABELS[permission]).join(", ") : "aucune"}`
           : null,
       ]
         .filter(Boolean)
