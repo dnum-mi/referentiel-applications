@@ -17,6 +17,76 @@ export type AppTab =
 
 /** Page Object — Fiche application (`/applications/:id/:tab?`). */
 export class ApplicationPage extends BasePage {
+  async expectNamedValidationErrors(
+    form: "application" | "label" | "link" | "dima",
+    keyboard: boolean,
+  ): Promise<void> {
+    const submit = async (testId: string) => {
+      const button = this.byTestId(testId);
+      await expect(button).toBeEnabled();
+      if (keyboard) {
+        await button.focus();
+        await button.press("Enter");
+      } else await button.click();
+    };
+    const error = async (field: Locator, message: string) => {
+      await expect(field).toHaveAttribute("aria-invalid", "true");
+      await expect(field).toHaveAccessibleDescription(message);
+      const id = await field.getAttribute("aria-describedby");
+      expect(id).toBeTruthy();
+      await expect(this.page.locator(`[id="${id}"]`)).toBeVisible();
+    };
+    if (form === "application") {
+      await this.openInfoEdit();
+      const name = this.byTestId("application-label");
+      await name.fill("");
+      await submit("application-submit-btn");
+      await error(name, "Le nom de l'application est obligatoire.");
+      await expect(name).toBeFocused();
+    } else if (form === "label") {
+      await this.byTestId("info-add-label-btn").click();
+      await submit("label-submit-btn");
+      const value = this.byTestId("label-value-input");
+      await error(value, "Veuillez compléter le champ : Valeur");
+      await expect(value).toBeFocused();
+    } else if (form === "link") {
+      await this.openTab("tab-links");
+      await this.byTestId("link-add-btn").click();
+      await submit("link-submit-btn");
+      const type = this.byTestId("link-type-select").and(
+        this.page.locator("select"),
+      );
+      const url = this.byTestId("link-url-input");
+      await error(type, "Veuillez compléter le champ : Type de lien");
+      await error(url, "Veuillez compléter le champ : URL");
+      await error(
+        this.byTestId("link-description-input"),
+        "Veuillez compléter le champ : Description",
+      );
+      await expect(type).toBeFocused();
+      await type.selectOption("documentation");
+      await this.byTestId("link-description-input").fill("Documentation");
+      await url.fill("pas-une-url");
+      await submit("link-submit-btn");
+      await error(url, "Veuillez saisir une URL valide dans le champ : URL");
+      await expect(url).toBeFocused();
+    } else {
+      await this.openTab("tab-compliances");
+      await this.openComplianceEdit(
+        "Délai d'Indisponibilité Maximale Admissible (DIMA)",
+      );
+      await submit("compliance-submit-btn");
+      const duration = this.byTestId("compliance-dima-duration").and(
+        this.page.locator("select"),
+      );
+      await error(
+        duration,
+        "Veuillez compléter le champ : Durée d'interruption maximale",
+      );
+      await expect(duration).toBeFocused();
+    }
+  }
+
   private async confirmActorEdit(
     button: Locator,
     firstname: string,
