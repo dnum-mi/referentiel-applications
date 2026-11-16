@@ -198,6 +198,7 @@ const mandatoryLinks = computed(() => [
     // RGAA-015 : ouverture dans un nouvel onglet mentionnée dans l'intitulé.
     label: "Contact Tchap",
     title: "Contact Tchap - nouvelle fenêtre",
+    "aria-label": "Contact Tchap - nouvelle fenêtre",
     href: "https://www.tchap.gouv.fr/#/room/!ydoKqFOXRAQPQYFvqa:agent.interieur.tchap.gouv.fr?via=agent.interieur.tchap.gouv.fr",
     target: "_blank",
     to: undefined,

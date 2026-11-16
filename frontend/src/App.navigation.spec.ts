@@ -30,7 +30,7 @@ vi.mock("@/composables/use-maintenance-mode", () => ({ useMaintenanceMode: () =>
 
 enableAutoUnmount(afterEach);
 
-async function renderApp() {
+async function renderApp(renderFooter = false) {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [{ path: "/", name: routeNames.ACCUEIL, component: { template: "<h1>Accueil</h1>" } }],
@@ -39,7 +39,13 @@ async function renderApp() {
   const wrapper = shallowMount(App, {
     global: {
       plugins: [router],
-      stubs: { DsfrHeader: defineComponent({ template: '<header><slot name="mainnav" /></header>' }), RouterView: false },
+      stubs: {
+        DsfrHeader: defineComponent({ template: '<header><slot name="mainnav" /></header>' }),
+        RouterView: false,
+        RouterLink: true,
+        DsfrFooter: !renderFooter,
+        DsfrFooterLink: !renderFooter,
+      },
     },
   });
   await flushPromises();
@@ -48,6 +54,20 @@ async function renderApp() {
 
 beforeEach(() => {
   Object.assign(session, { authenticated: false, sessionInitialized: true, hasApplicationAccess: false, canListTechnologies: false });
+});
+
+it("annonce la nouvelle fenêtre du lien Tchap dans le pied de page rendu", async () => {
+  const wrapper = await renderApp(true);
+  const link = wrapper.get('footer a[href^="https://www.tchap.gouv.fr/"]');
+
+  expect(link.text()).toBe("Contact Tchap");
+  expect(link.attributes("href")).toBe(
+    "https://www.tchap.gouv.fr/#/room/!ydoKqFOXRAQPQYFvqa:agent.interieur.tchap.gouv.fr?via=agent.interieur.tchap.gouv.fr",
+  );
+  expect(link.attributes("target")).toBe("_blank");
+  expect(link.attributes("title")).toBe("Contact Tchap - nouvelle fenêtre");
+  expect(link.attributes("aria-label")).toBe("Contact Tchap - nouvelle fenêtre");
+  expect(link.element).toHaveAccessibleName("Contact Tchap - nouvelle fenêtre");
 });
 
 it.each([false, true])("retire le bandeau public et son lien d'évitement, session initialisée = %s", async (initialized) => {

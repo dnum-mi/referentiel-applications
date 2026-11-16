@@ -2,6 +2,22 @@ diff --git a/dist/vue-dsfr.js b/dist/vue-dsfr.js
 index a437ecea2645779b318954776838c39739b1610c..c7732f253ac6c5bfbe8ef91e19ac54c1e64ef3b0 100644
 --- a/dist/vue-dsfr.js
 +++ b/dist/vue-dsfr.js
+@@ -1588,6 +1588,7 @@
+ 			[String(e.icon)]: p.value
+ 		}] }, f.value, {
+ 			target: e.target,
++			title: e.title,
+ 			onClick: withModifiers(e.onClick, ["stop"])
+ 		}), {
+ 			default: withCtx(() => [
+@@ -1606,6 +1607,7 @@
+ 		}, 16, [
+ 			"class",
+ 			"target",
++			"title",
+ 			"onClick"
+ 		]));
+ 	}
 @@ -2990,7 +2990,7 @@ var FocusTrapProps = defineFocusTrapProps({
  		let r = e, i = n, a = useSlots(), p = toRef(r, "languageSelector"), m = ref(!1), h = ref(!1), g = ref(!1), _ = () => {
  			g.value = !1, m.value = !1, h.value = !1, document.getElementById("button-menu")?.focus();
