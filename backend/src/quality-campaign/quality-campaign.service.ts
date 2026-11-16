@@ -6,6 +6,7 @@ import {
 } from "@nestjs/common";
 import {
   NotificationType,
+  Permission,
   Prisma,
   QualityCampaign,
   QualityCampaignStatus,
@@ -22,6 +23,11 @@ import { NotificationService } from "src/notification/notification.service";
 import { roleToPermissions } from "src/permissions/role-to-permissions";
 import { PrismaService } from "src/prisma/prisma.service";
 import type { Requestor } from "src/user/entities/user.entity";
+import { CheckPermissions } from "src/common/service/check-permissions.service";
+import {
+  QualityCampaignTargetDto,
+  QualityCampaignTargetQueryDto,
+} from "./dto/quality-campaign-target.dto";
 import { PaginationDto } from "src/common/dto";
 import {
   CreateQualityCampaignDto,
@@ -104,6 +110,7 @@ export class QualityCampaignService {
     private readonly applicationService: ApplicationService,
     private readonly emailService: EmailService,
     private readonly notificationService: NotificationService,
+    private readonly checkPermissions: CheckPermissions,
   ) {}
 
   async create(
@@ -153,6 +160,80 @@ export class QualityCampaignService {
     requestor: Requestor = SYSTEM_REQUESTOR,
   ): Promise<QualityCampaignDto> {
     return this.toDtoWithLiveTargetCount(await this.getRaw(id), requestor);
+  }
+
+  async findTargets(
+    id: string,
+    query: QualityCampaignTargetQueryDto,
+    requestor: Requestor,
+  ) {
+    const campaign = await this.getRaw(id);
+    if (!campaign.sentAt) {
+      throw new BadRequestException(
+        "Les cibles ne sont figées qu'à l'envoi de la campagne.",
+      );
+    }
+    const canReadAll = await this.checkPermissions.can(
+      [Permission.AppRead],
+      requestor,
+    );
+    const targets: QualityCampaignTargetDto[] = [];
+    // shortcut: tri en mémoire comme le bilan existant, passer en SQL si les campagnes deviennent volumineuses.
+    for (const target of campaign.targets) {
+      if (
+        !canReadAll &&
+        !(await this.checkPermissions.can(
+          [Permission.AppRead],
+          requestor,
+          target.applicationId,
+        ))
+      )
+        continue;
+      const iqCurrent = target.application.quality;
+      const delta =
+        target.iqAtStart != null && iqCurrent != null
+          ? iqCurrent - target.iqAtStart
+          : null;
+      if (query.progression === "positive" && (delta === null || delta <= 0))
+        continue;
+      if (
+        query.progression === "stable_or_declining" &&
+        (delta === null || delta > 0)
+      )
+        continue;
+      if (query.progression === "not_comparable" && delta !== null) continue;
+      targets.push({
+        applicationId: target.applicationId,
+        label: target.application.label,
+        iqAtStart: target.iqAtStart,
+        iqCurrent,
+        delta,
+      });
+    }
+    targets.sort((a, b) => {
+      const field = query.sortBy ?? "delta";
+      const left = a[field];
+      const right = b[field];
+      if (left === null && right !== null) return 1;
+      if (right === null && left !== null) return -1;
+      const difference =
+        typeof left === "string" && typeof right === "string"
+          ? left.localeCompare(right, "fr", {
+              sensitivity: "base",
+              numeric: true,
+            })
+          : Number(left ?? 0) - Number(right ?? 0);
+      return (
+        difference * (query.order === "desc" ? -1 : 1) ||
+        a.applicationId.localeCompare(b.applicationId)
+      );
+    });
+    const page = query.page ?? 0;
+    const pageSize = query.pageSize ?? 15;
+    return {
+      results: targets.slice(page * pageSize, (page + 1) * pageSize),
+      total: targets.length,
+    };
   }
 
   async update(id: string, dto: UpdateQualityCampaignDto) {
