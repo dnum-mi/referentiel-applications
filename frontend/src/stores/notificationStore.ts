@@ -21,10 +21,16 @@ export const useNotificationStore = defineStore("notificationStore", () => {
       const response = await api.notificationControllerFindAll({
         query: { page, pageSize, sortBy: "createdAt", order, type },
       });
-      if (response.data && currentRequest === requestId) {
-        notifications.value = response.data.results;
-        total.value = response.data.total;
+      if (currentRequest !== requestId) return false;
+      if (!isApiSuccess(response) || !response.data) throw new Error("Réponse de notifications invalide");
+      notifications.value = response.data.results;
+      total.value = response.data.total;
+      return true;
+    } catch {
+      if (currentRequest === requestId) {
+        useToasterStore().addErrorMessage("Les notifications n’ont pas pu être chargées. Veuillez réessayer.");
       }
+      return false;
     } finally {
       if (currentRequest === requestId) isLoading.value = false;
     }
