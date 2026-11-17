@@ -25,6 +25,7 @@ const labelSourceSearch = ref("");
 const isSubmitting = ref(false);
 const submissionError = ref("");
 useSubmissionFocus(isSubmitting);
+const formElement = ref<HTMLFormElement | null>(null);
 const valueError = ref<string | undefined>(undefined);
 const toaster = useToasterStore();
 
@@ -71,7 +72,11 @@ watch(labelSourcesList, setInitialValues, { immediate: true });
 async function handleSubmit() {
   submissionError.value = "";
   valueError.value = labelForm.value.value.trim() ? undefined : "Veuillez compléter le champ : Valeur";
-  if (valueError.value) return;
+  if (valueError.value) {
+    await nextTick();
+    formElement.value?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+    return;
+  }
 
   isSubmitting.value = true;
   try {
@@ -122,7 +127,7 @@ async function handleSubmit() {
         :description="props.errorMessage"
       />
     </div>
-    <form data-testid="label-form" @submit.prevent="handleSubmit">
+    <form ref="formElement" novalidate data-testid="label-form" @submit.prevent="handleSubmit">
       <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="label-form-error">
         <p v-if="submissionError" class="fr-error-text">{{ submissionError }}</p>
       </div>
@@ -141,6 +146,7 @@ async function handleSubmit() {
           label="Valeur"
           class="fr-mb-3w"
           :error-message="valueError"
+          :aria-invalid="valueError ? true : undefined"
           data-testid="label-value-input"
         />
         <DsfrInput

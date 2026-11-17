@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, nextTick } from "vue";
 import type { PropType } from "vue";
 import type { LinkDto } from "@/client/types.gen";
 import { linkTypesDict } from "@/constants/dictionary";
@@ -19,6 +19,7 @@ const props = defineProps({
 const emit = defineEmits(["submit", "cancel"]);
 useSubmissionFocus(() => props.isSubmitting);
 
+const formElement = ref<HTMLFormElement | null>(null);
 const form = ref({ ...props.initialData });
 
 const typeError = ref<string | undefined>(undefined);
@@ -33,29 +34,41 @@ const linkTypes = computed(() => [
   })),
 ]);
 
-function handleSubmit() {
+async function handleSubmit() {
+  if (props.isSubmitting) return;
   typeError.value = form.value.type ? undefined : "Veuillez compléter le champ : Type de lien";
   linkError.value = form.value.link ? undefined : "Veuillez compléter le champ : URL";
+  if (!linkError.value && formElement.value?.querySelector<HTMLInputElement>('input[type="url"]')?.validity.typeMismatch) {
+    linkError.value = "Veuillez saisir une URL valide dans le champ : URL";
+  }
   descriptionError.value = form.value.description ? undefined : "Veuillez compléter le champ : Description";
-  if (typeError.value || linkError.value || descriptionError.value) return;
+  if (typeError.value || linkError.value || descriptionError.value) {
+    await nextTick();
+    formElement.value?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+    return;
+  }
 
   emit("submit", form.value);
 }
 </script>
 
 <template>
-  <form data-testid="link-form" @submit.prevent="handleSubmit">
+  <form ref="formElement" novalidate data-testid="link-form" @submit.prevent="handleSubmit">
     <p class="fr-text--sm fr-mb-3w" data-testid="required-fields-hint">Tous les champs avec un * sont obligatoires</p>
-    <DsfrSelect
-      v-model="form.type"
-      class="fr-mb-3w"
-      :options="linkTypes"
-      label="Type de lien"
-      label-visible
-      required
-      :error-message="typeError"
-      data-testid="link-type-select"
-    />
+    <DsfrInputGroup :error-message="typeError" class="fr-mb-3w">
+      <template #default="{ descriptionId, isInvalid }">
+        <DsfrSelect
+          v-model="form.type"
+          :options="linkTypes"
+          label="Type de lien"
+          label-visible
+          required
+          :aria-describedby="descriptionId"
+          :aria-invalid="isInvalid ? true : undefined"
+          data-testid="link-type-select"
+        />
+      </template>
+    </DsfrInputGroup>
     <DsfrInputGroup
       v-model="form.link"
       class="fr-mb-3w"
@@ -64,6 +77,7 @@ function handleSubmit() {
       label-visible
       required
       :error-message="linkError"
+      :aria-invalid="linkError ? true : undefined"
       data-testid="link-url-input"
     />
     <DsfrInputGroup
@@ -74,6 +88,7 @@ function handleSubmit() {
       required
       is-textarea
       :error-message="descriptionError"
+      :aria-invalid="descriptionError ? true : undefined"
       data-testid="link-description-input"
     />
 

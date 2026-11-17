@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { isApiSuccess } from "@/api/api-result";
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, nextTick } from "vue";
 import {
   dimaDurationHoursOptions,
   pdmaDurationHoursOptions,
@@ -35,6 +35,8 @@ const form = ref<Partial<ComplianceDto>>({});
 const submitting = ref(false);
 useSubmissionFocus(submitting);
 const formError = ref("");
+const formElement = ref<HTMLFormElement | null>(null);
+const formatErrors = ref<Record<string, string>>({});
 const dimaDurationError = ref<string | undefined>(undefined);
 
 const isHomologationHomologuee = computed(() => form.value.homologation_status === "homologuee");
@@ -88,7 +90,19 @@ async function save() {
   if (props.type === "dima") {
     dimaDurationError.value =
       form.value.dima_duration_hours == null ? "Veuillez compléter le champ : Durée d'interruption maximale" : undefined;
-    if (dimaDurationError.value) return;
+  }
+
+  formatErrors.value = {};
+  for (const input of formElement.value?.querySelectorAll<HTMLInputElement>('input[type="url"], input[type="date"]') ?? []) {
+    if (input.willValidate && !input.validity.valid) {
+      const label = input.labels?.[0]?.textContent?.trim();
+      formatErrors.value[input.name] = `Veuillez saisir ${input.type === "url" ? "une URL" : "une date"} valide dans le champ : ${label}`;
+    }
+  }
+  if (dimaDurationError.value || Object.keys(formatErrors.value).length) {
+    await nextTick();
+    formElement.value?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+    return;
   }
 
   submitting.value = true;
@@ -143,7 +157,7 @@ async function save() {
 </script>
 
 <template>
-  <form data-testid="compliance-form" @submit.prevent="save">
+  <form ref="formElement" novalidate data-testid="compliance-form" @submit.prevent="save">
     <p v-if="type === 'dima'" class="fr-text--sm fr-mb-3w" data-testid="required-fields-hint">* = champs obligatoires</p>
     <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="compliance-form-error">
       <p v-if="formError" class="fr-error-text">{{ formError }}</p>
@@ -151,18 +165,23 @@ async function save() {
     <AppLoader v-if="submitting" data-testid="compliance-loader" />
     <div :inert="submitting">
       <template v-if="type === 'dima'">
-        <DsfrSelect
-          :model-value="form.dima_duration_hours"
-          @update:model-value="($event) => (form.dima_duration_hours = toOptionalDimaDuration($event))"
-          :options="dimaDurationHoursOptions"
-          label="Durée d'interruption maximale"
-          label-visible
-          required
-          default-unselected-text="Choisir..."
-          :disabled="!canEdit"
-          :error-message="dimaDurationError"
-          data-testid="compliance-dima-duration"
-        />
+        <DsfrInputGroup :error-message="dimaDurationError">
+          <template #default="{ descriptionId, isInvalid }">
+            <DsfrSelect
+              :model-value="form.dima_duration_hours"
+              @update:model-value="($event) => (form.dima_duration_hours = toOptionalDimaDuration($event))"
+              :options="dimaDurationHoursOptions"
+              label="Durée d'interruption maximale"
+              label-visible
+              required
+              default-unselected-text="Choisir..."
+              :disabled="!canEdit"
+              :aria-describedby="descriptionId"
+              :aria-invalid="isInvalid ? true : undefined"
+              data-testid="compliance-dima-duration"
+            />
+          </template>
+        </DsfrInputGroup>
         <DsfrCheckbox
           v-model="form.dima_is_hno"
           name="dima_is_hno"
@@ -202,8 +221,11 @@ async function save() {
           :disabled="!canEdit"
           data-testid="compliance-dima-recovery-manager"
         />
-        <DsfrInput
+        <DsfrInputGroup
           v-model="form.dima_last_test_date"
+          name="dima_last_test_date"
+          :error-message="formatErrors.dima_last_test_date"
+          :aria-invalid="formatErrors.dima_last_test_date ? true : undefined"
           :label="complianceFieldLabels.last_test_date"
           type="date"
           label-visible
@@ -252,8 +274,11 @@ async function save() {
           default-unselected-text="Choisir..."
           data-testid="compliance-pdma-backup-storage"
         />
-        <DsfrInput
+        <DsfrInputGroup
           v-model="form.pdma_last_test_date"
+          name="pdma_last_test_date"
+          :error-message="formatErrors.pdma_last_test_date"
+          :aria-invalid="formatErrors.pdma_last_test_date ? true : undefined"
           label="Date du dernier test"
           type="date"
           label-visible
@@ -293,9 +318,12 @@ async function save() {
           :disabled="!canEdit"
           data-testid="compliance-homologation-status"
         />
-        <DsfrInput
+        <DsfrInputGroup
           v-if="showHomologationDateEnd || isHomologationHomologuee"
           v-model="form.homologation_date_end"
+          name="homologation_date_end"
+          :error-message="formatErrors.homologation_date_end"
+          :aria-invalid="formatErrors.homologation_date_end ? true : undefined"
           :label="complianceFieldLabels.date_end"
           type="date"
           label-visible
@@ -328,8 +356,11 @@ async function save() {
       </template>
 
       <template v-else-if="type === 'eco_index'">
-        <DsfrInput
+        <DsfrInputGroup
           v-model="form.eco_index_target_url"
+          name="eco_index_target_url"
+          :error-message="formatErrors.eco_index_target_url"
+          :aria-invalid="formatErrors.eco_index_target_url ? true : undefined"
           :label="complianceFieldLabels.eco_index_target_url"
           label-visible
           type="url"
