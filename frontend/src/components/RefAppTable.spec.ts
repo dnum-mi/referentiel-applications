@@ -6,6 +6,23 @@ import { primeVueFrenchLocale } from "@/constants/primevue-locale";
 import { defineComponent, h, ref } from "vue";
 
 describe("RefAppTable", () => {
+  it("affiche un message statique après le retrait de la dernière ligne", async () => {
+    const wrapper = mount(RefAppTable, {
+      props: {
+        items: [{ label: "Dernier signalement" }],
+        columns: [{ field: "label", header: "Signalement" }],
+        emptyMessage: "Aucun signalement proposé.",
+      },
+      global: { plugins: [[PrimeVue, { unstyled: true }]] },
+    });
+    expect(wrapper.get("tbody").text()).toBe("Dernier signalement");
+    await wrapper.setProps({ items: [] });
+    const message = wrapper.get("tbody p");
+    expect(message.text()).toBe("Aucun signalement proposé.");
+    expect(message.element.closest('output, [role="status"], [aria-live]')).toBeNull();
+    wrapper.unmount();
+  });
+
   it("nomme les cases selon leur état réel et synchronise la sélection individuelle et globale", async () => {
     const items = [
       { id: "1", label: "Alpha" },
@@ -188,6 +205,10 @@ describe("RefAppTable", () => {
     expect(document.activeElement).toBe(last.element);
     expect(last.attributes("aria-disabled")).toBe("true");
     expect(last.element.disabled).toBe(false);
+    expect(wrapper.get('[data-testid="pagination-page-status"]').attributes()).toMatchObject({
+      "aria-live": "polite",
+      "aria-atomic": "true",
+    });
     expect(wrapper.get('[data-testid="pagination-page-status"]').text()).toBe("Page 3 sur 3");
     expect(wrapper.findAll("tbody tr")).toHaveLength(2);
     const events = wrapper.emitted("page")?.length;
