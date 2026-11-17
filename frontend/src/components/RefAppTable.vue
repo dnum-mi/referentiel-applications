@@ -307,7 +307,7 @@ watch(
         />
       </template>
       <template #empty>
-        <output class="fr-py-2w fr-text--center" aria-live="polite" style="display: block">{{ emptyMessage }}</output>
+        <p class="fr-py-2w fr-text--center">{{ emptyMessage }}</p>
       </template>
 
       <Column
