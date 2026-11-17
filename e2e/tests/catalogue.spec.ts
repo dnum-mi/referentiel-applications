@@ -242,16 +242,34 @@ test.describe("Catalogue & recherche", () => {
     await search.expectEmptyState();
   });
 
-  test("CAT-15 - export Excel (admin)", async ({ page, data }) => {
-    expect(
-      await data.firstApplication(),
-      "Aucune application dans le jeu de données",
-    ).toBeTruthy();
+  test("CAT-15 - export Excel de tout le catalogue autorisé malgré un filtre actif", async ({
+    page,
+    data,
+  }) => {
+    const prefix = `E2E-CAT-COMPLETE-${randomUUID()}`;
+    const retainedLabel = `${prefix}-retenu`;
+    const createdIds: string[] = [];
+    try {
+      for (const label of [retainedLabel, `${prefix}-écarté`]) {
+        createdIds.push((await data.createTestApplication(label)).id);
+      }
+      const search = new SearchPage(page);
+      await search.open();
+      await search.searchByLabel(retainedLabel);
+      await search.expectSearchApplied(retainedLabel);
+      await expect.poll(() => search.totalCount()).toBe(1);
 
-    const search = new SearchPage(page);
-    await search.open();
-    const download = await search.exportExcel();
-    expect(download.suggestedFilename()).toMatch(/\.(xlsx|xls)$/i);
+      const download = await search.exportExcel();
+      expect(download.suggestedFilename()).toMatch(/\.(xlsx|xls)$/i);
+      const path = test.info().outputPath(download.suggestedFilename());
+      await download.saveAs(path);
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.readFile(path);
+      const exportedIds = workbook.worksheets[0].getColumn(1).values.slice(2);
+      expect(exportedIds).toEqual(expect.arrayContaining(createdIds));
+    } finally {
+      for (const id of createdIds) await data.removeApplication(id);
+    }
   });
 
   test("CAT-21 - l'export Excel de la vue reprend les colonnes et toutes les lignes filtrées", async ({
