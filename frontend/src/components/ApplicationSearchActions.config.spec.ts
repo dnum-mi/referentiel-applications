@@ -51,7 +51,11 @@ it.each([
   for (const testId of ["application-export-btn", "application-export-btn-mobile"]) {
     expect(screen.getByTestId(testId)).toBeInTheDocument();
     expect(screen.getByTestId(testId)).not.toHaveTextContent("Bêta");
+    expect(screen.getByTestId(testId)).toHaveTextContent("Exporter la vue complète");
+    expect(screen.getByTestId(testId)).toHaveAccessibleName(/^Exporter la vue complète/);
   }
+  expect(screen.getByTestId("application-export-view-btn")).toHaveTextContent("Exporter la vue filtrée");
+  expect(screen.getByTestId("application-export-view-btn")).toHaveAccessibleName("Exporter la vue filtrée (0 applications)");
   expect(screen.queryByTestId("applications-export-html-btn")).toBeNull();
   expect(apiGetConfig).toHaveBeenCalledTimes(2);
 });
