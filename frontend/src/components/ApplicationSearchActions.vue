@@ -97,8 +97,6 @@ async function exportApplications(format: ExportFormat) {
 const hasExportPermissions = computed(() => {
   return userStore.hasPermissions([Permission.DATA_EXPORT]);
 });
-const hasExcelExportPermissions = computed(() => hasExportPermissions.value && canAccess(FeatureId.CATALOGUE_EXCEL_EXPORT));
-const hasHtmlExportPermissions = computed(() => hasExportPermissions.value && canAccess(FeatureId.CATALOGUE_HTML_EXPORT));
 const isSearchUpdating = computed(() => isSearchPending.value || isLoading.value);
 const canExportExcelView = computed(() => !isSearchUpdating.value && !error.value && visibleColumns.value.length > 0);
 const htmlExportLabel = computed(
@@ -196,12 +194,13 @@ const hasQualityCampaignPermissions = computed(() => {
       </DsfrButton>
 
       <DsfrButton
-        v-if="hasExcelExportPermissions"
+        v-if="canAccess(FeatureId.CATALOGUE_EXCEL_EXPORT)"
         icon="ri-file-excel-2-line"
         secondary
         data-testid="application-export-view-btn"
         class="action-btn icon-left"
-        :aria-disabled="!!exportFormat || !canExportExcelView"
+        :disabled="!hasExportPermissions"
+        :aria-disabled="!hasExportPermissions || !!exportFormat || !canExportExcelView"
         :aria-busy="exportFormat === 'ExcelView'"
         @click="exportApplications('ExcelView')"
         :aria-label="excelViewLabel"
@@ -212,12 +211,13 @@ const hasQualityCampaignPermissions = computed(() => {
       </DsfrButton>
 
       <DsfrButton
-        v-if="hasExcelExportPermissions"
+        v-if="canAccess(FeatureId.CATALOGUE_EXCEL_EXPORT)"
         icon="ri-file-excel-2-line"
         secondary
         data-testid="application-export-btn"
         class="action-btn icon-left hide-on-mobile"
-        :aria-disabled="!!exportFormat"
+        :disabled="!hasExportPermissions"
+        :aria-disabled="!hasExportPermissions || !!exportFormat"
         :aria-busy="!!exportFormat"
         @click="exportApplications('Excel')"
         :aria-label="excelExportLabel"
@@ -228,12 +228,13 @@ const hasQualityCampaignPermissions = computed(() => {
       </DsfrButton>
 
       <DsfrButton
-        v-if="hasExcelExportPermissions"
+        v-if="canAccess(FeatureId.CATALOGUE_EXCEL_EXPORT)"
         icon="ri-file-excel-2-line"
         secondary
         data-testid="application-export-btn-mobile"
         class="action-btn icon-left show-on-mobile"
-        :aria-disabled="!!exportFormat"
+        :disabled="!hasExportPermissions"
+        :aria-disabled="!hasExportPermissions || !!exportFormat"
         :aria-busy="!!exportFormat"
         @click="exportApplications('Excel')"
         :aria-label="excelExportLabel"
@@ -244,12 +245,13 @@ const hasQualityCampaignPermissions = computed(() => {
       </DsfrButton>
 
       <DsfrButton
-        v-if="hasHtmlExportPermissions"
+        v-if="canAccess(FeatureId.CATALOGUE_HTML_EXPORT)"
         icon="fr-icon-download-line"
         secondary
         data-testid="applications-export-html-btn"
         class="action-btn icon-left"
-        :aria-disabled="!!exportFormat"
+        :disabled="!hasExportPermissions"
+        :aria-disabled="!hasExportPermissions || !!exportFormat"
         :aria-busy="!!exportFormat"
         @click="exportApplications('HTML')"
         :aria-label="htmlExportLabel"
