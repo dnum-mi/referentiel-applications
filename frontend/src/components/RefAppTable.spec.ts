@@ -6,17 +6,19 @@ import { primeVueFrenchLocale } from "@/constants/primevue-locale";
 import { defineComponent, h, ref } from "vue";
 
 describe("RefAppTable", () => {
-  it("affiche un message statique après le retrait de la dernière ligne", async () => {
+  it.each([false, true])("affiche un message vide statique, après retrait de la dernière ligne : %s", async (removeLastRow) => {
     const wrapper = mount(RefAppTable, {
       props: {
-        items: [{ label: "Dernier signalement" }],
-        columns: [{ field: "label", header: "Signalement" }],
+        items: removeLastRow ? [{ description: "Signalement" }] : [],
+        columns: [{ field: "description", header: "Description" }],
         emptyMessage: "Aucun signalement proposé.",
       },
       global: { plugins: [[PrimeVue, { unstyled: true }]] },
     });
-    expect(wrapper.get("tbody").text()).toBe("Dernier signalement");
-    await wrapper.setProps({ items: [] });
+    if (removeLastRow) {
+      expect(wrapper.get("tbody").text()).toBe("Signalement");
+      await wrapper.setProps({ items: [] });
+    }
     const message = wrapper.get("tbody p");
     expect(message.text()).toBe("Aucun signalement proposé.");
     expect(message.element.closest('output, [role="status"], [aria-live]')).toBeNull();
