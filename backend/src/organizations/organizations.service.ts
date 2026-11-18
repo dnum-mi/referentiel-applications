@@ -36,12 +36,14 @@ export class OrganizationsService extends BaseService<
   async find(
     filters: OrganizationFilterDto,
   ): Promise<PaginatedResponseDto<OrganizationDto>> {
-    const { page, pageSize } = filters;
+    const { page, pageSize, order = "asc" } = filters;
+    const sortBy = filters.sortBy === "sigle" ? "sigle" : "path";
     const where = this.queryBuilder.buildSearchWhere(filters);
     return this.findAll({
       where,
       page,
       pageSize,
+      orderBy: [{ [sortBy]: order }, { id: "asc" }],
       include: {
         maiaReferences: true,
         businessDivision: true,

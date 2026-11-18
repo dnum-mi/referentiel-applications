@@ -5,6 +5,7 @@ import { useRouter } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
 import { useApplicationStore } from "@/stores/applicationStore";
 import { useApplicationSearch } from "@/composables/use-application-search";
+import type { Filters } from "@/composables/use-application-search";
 import { useColumnPreferences } from "@/composables/use-column-preferences";
 import { useToasterStore } from "@/stores/toasterStore";
 import { routeNames } from "@/router/route-names";
@@ -54,7 +55,11 @@ const { open: openCreateCampaign, close: closeCreateCampaign } = createModalHand
 const { open: openGristSync, close: closeGristSync } = createModalHandlers(isGristSyncOpen);
 
 function captureExcelView() {
-  const { page: _page, pageSize: _pageSize, ...selection } = filters.value;
+  const { page: _page, pageSize: _pageSize, ...currentSelection } = filters.value;
+  // Les filtres sont plats ; copier les tableaux accepte aussi leurs proxys Vue.
+  const selection = Object.fromEntries(
+    Object.entries(currentSelection).map(([key, value]) => [key, Array.isArray(value) ? [...value] : value]),
+  ) as Filters;
   return { selection, columns: visibleColumns.value.map(({ field }) => field as GristColumnField) };
 }
 
@@ -75,7 +80,8 @@ async function exportApplications(format: ExportFormat) {
       const cataloguePath = router.resolve({ name: routeNames.SEARCHAPP, query: filtersToQuery(selection) }).href;
       await applicationStore.downloadExcel(selection, { columns, cataloguePath });
     } else if (format === "Excel") {
-      await applicationStore.downloadExcel(filters.value);
+      // L'API exclut par défaut les fiches sans IQ, même sans filtre de recherche.
+      await applicationStore.downloadExcel({ iq__isNull: true });
     } else {
       await applicationStore.downloadHtml(filters.value);
     }
@@ -99,19 +105,18 @@ const htmlExportLabel = computed(
 );
 const excelExportLabel = computed(
   () =>
-    `Exporter en Excel (classeur complet) les applications correspondant aux filtres actuels${isBeta(FeatureId.CATALOGUE_EXCEL_EXPORT) ? " — fonctionnalité bêta" : ""}`,
+    `Exporter la vue complète en Excel, un classeur de toutes les applications autorisées sans les filtres actuels${isBeta(FeatureId.CATALOGUE_EXCEL_EXPORT) ? " — fonctionnalité bêta" : ""}`,
 );
 const excelViewTitle = computed(() => {
   if (!visibleColumns.value.length) return "Sélectionnez au moins une colonne à exporter";
   if (isSearchUpdating.value || error.value) return "Les résultats doivent être actualisés avant d’exporter la vue";
   return "Exporter les colonnes affichées pour toutes les applications correspondant aux filtres actuels";
 });
-const excelViewText = computed(() =>
-  isSearchUpdating.value || error.value
-    ? "Exporter la vue en Excel"
-    : `Exporter la vue en Excel (${total.value} application${total.value === 1 ? "" : "s"})`,
-);
-const excelViewLabel = computed(() => `${excelViewText.value}${isBeta(FeatureId.CATALOGUE_EXCEL_EXPORT) ? " — fonctionnalité bêta" : ""}`);
+const excelViewText = "Exporter la vue filtrée";
+const excelViewLabel = computed(() => {
+  const count = isSearchUpdating.value || error.value ? "" : ` (${total.value} application${total.value === 1 ? "" : "s"})`;
+  return `${excelViewText}${count}${isBeta(FeatureId.CATALOGUE_EXCEL_EXPORT) ? " — fonctionnalité bêta" : ""}`;
+});
 
 const hasGristSyncPermissions = computed(() => {
   return canAccess(FeatureId.GRIST_SYNC);
@@ -218,7 +223,7 @@ const hasQualityCampaignPermissions = computed(() => {
         :aria-label="excelExportLabel"
         :title="excelExportLabel"
       >
-        Exporter en Excel (classeur complet)
+        Exporter la vue complète
         <BetaBadge v-if="isBeta(FeatureId.CATALOGUE_EXCEL_EXPORT)" aria-hidden="true" />
       </DsfrButton>
 
@@ -235,7 +240,7 @@ const hasQualityCampaignPermissions = computed(() => {
         :aria-label="excelExportLabel"
         :title="excelExportLabel"
       >
-        Exporter en Excel (classeur complet)
+        Exporter la vue complète
         <BetaBadge v-if="isBeta(FeatureId.CATALOGUE_EXCEL_EXPORT)" aria-hidden="true" />
       </DsfrButton>
 
