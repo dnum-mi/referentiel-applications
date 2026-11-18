@@ -2,6 +2,7 @@ import { DsfrSelect } from "@gouvminint/vue-dsfr";
 import Aura from "@primevue/themes/aura";
 import PrimeVue from "primevue/config";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/vue";
+import { flushPromises } from "@vue/test-utils";
 import { reactive } from "vue";
 import { createMemoryHistory, createRouter } from "vue-router";
 import { NotificationType, type NotificationDto } from "@/client/types.gen";
@@ -48,7 +49,7 @@ beforeEach(() => {
   store.total = 2;
   store.unreadCount = 2;
   store.isLoading = false;
-  store.fetchNotifications.mockReset().mockResolvedValue(undefined);
+  store.fetchNotifications.mockReset().mockResolvedValue(true);
   store.markAllAsRead.mockReset().mockImplementation(async () => {
     store.unreadCount = 0;
     return true;
@@ -185,6 +186,86 @@ it("filtre par type, vide la sélection puis revient à Tous", async () => {
   expect(screen.getByText(/concerne toutes vos notifications/)).toBeInTheDocument();
   await fireEvent.update(select, "");
   expect(store.fetchNotifications).toHaveBeenLastCalledWith(0, 15, "desc", undefined);
+});
+
+describe("Notifications — annonce du résultat du filtrage", () => {
+  it("annonce zéro résultat sans reprendre le focus et garde le message du tableau statique", async () => {
+    renderPage();
+    const status = screen.getByTestId("notifications-results-status");
+    expect(status).toHaveAttribute("role", "status");
+    expect(status).toHaveAttribute("aria-atomic", "true");
+    await waitFor(() => expect(status).toHaveTextContent("2 notification(s)"));
+    store.fetchNotifications.mockImplementationOnce(async () => {
+      store.notifications = [];
+      store.total = 0;
+      return true;
+    });
+    const select = screen.getByRole("combobox", { name: "Type d’événement" });
+    select.focus();
+    await fireEvent.update(select, NotificationType.ACTOR_ADDED);
+    await waitFor(() => expect(status).toHaveTextContent("0 notification(s)"));
+    expect(screen.getByTestId("notifications-results-status")).toBe(status);
+    expect(select).toHaveFocus();
+    const empty = screen.getByText("Aucune notification pour ce type d’événement.");
+    expect(empty.tagName).toBe("P");
+    expect(empty.closest('output, [role="status"], [aria-live]')).toBeNull();
+  });
+
+  it("renouvelle l'annonce lorsque deux filtres successifs ne renvoient aucun résultat", async () => {
+    store.notifications = [];
+    store.total = 0;
+    renderPage();
+    const status = screen.getByTestId("notifications-results-status");
+    await waitFor(() => expect(status).toHaveTextContent("0 notification(s)"));
+    const select = screen.getByRole("combobox", { name: "Type d’événement" });
+    for (const type of [NotificationType.ACTOR_ADDED, ""]) {
+      let finish!: (result: boolean) => void;
+      store.fetchNotifications.mockImplementationOnce(() => new Promise<boolean>((resolve) => (finish = resolve)));
+      select.focus();
+      await fireEvent.update(select, type);
+      expect(status).toBeEmptyDOMElement();
+      finish(true);
+      await waitFor(() => expect(status).toHaveTextContent("0 notification(s)"));
+      expect(select).toHaveFocus();
+    }
+    expect(screen.getByText("Vous n’avez aucune notification.")).toBeInTheDocument();
+  });
+
+  it("ne transforme pas une recherche refusée en annonce de résultats", async () => {
+    renderPage();
+    const status = screen.getByTestId("notifications-results-status");
+    await waitFor(() => expect(status).toHaveTextContent("2 notification(s)"));
+    store.fetchNotifications.mockResolvedValueOnce(false);
+    const select = screen.getByRole("combobox", { name: "Type d’événement" });
+    select.focus();
+    await fireEvent.update(select, NotificationType.ACTOR_ADDED);
+    expect(status).toBeEmptyDOMElement();
+    expect(select).toHaveFocus();
+    expect(store.notifications).toHaveLength(2);
+  });
+
+  it("attend la recherche la plus récente avant d'annoncer son résultat", async () => {
+    renderPage();
+    const status = screen.getByTestId("notifications-results-status");
+    await waitFor(() => expect(status).toHaveTextContent("2 notification(s)"));
+    let finishOld!: (result: boolean) => void;
+    let finishLatest!: (result: boolean) => void;
+    store.fetchNotifications
+      .mockImplementationOnce(() => new Promise<boolean>((resolve) => (finishOld = resolve)))
+      .mockImplementationOnce(() => new Promise<boolean>((resolve) => (finishLatest = resolve)));
+    const select = screen.getByRole("combobox", { name: "Type d’événement" });
+    select.focus();
+    await fireEvent.update(select, NotificationType.ACTOR_ADDED);
+    await fireEvent.update(select, NotificationType.REPORT_CREATED);
+    finishOld(true);
+    await flushPromises();
+    expect(status).toBeEmptyDOMElement();
+    store.notifications = [];
+    store.total = 0;
+    finishLatest(true);
+    await waitFor(() => expect(status).toHaveTextContent("0 notification(s)"));
+    expect(select).toHaveFocus();
+  });
 });
 
 it("conserve le type pendant la pagination et le tri, puis revient en première page au changement de type", async () => {

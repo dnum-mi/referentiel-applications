@@ -56,10 +56,12 @@ const isDeleting = ref(false);
 const deleteError = ref("");
 const isMarkingAllAsRead = ref(false);
 const operationStatus = ref("");
+const resultsStatus = ref("");
 const pageTitle = ref<HTMLElement | null>(null);
 const notificationTable = ref<{ $el?: HTMLElement } | null>(null);
 let deleteTrigger: Element | null = null;
 let deleteIndex = 0;
+let latestLoad = 0;
 
 async function focusAfterOperation(origin: Element | null, target: HTMLElement | null, trigger?: Element | null) {
   await nextTick();
@@ -80,13 +82,18 @@ async function markAllAsRead() {
 }
 
 async function load() {
+  const request = ++latestLoad;
+  resultsStatus.value = "";
   selection.value = [];
-  await notificationStore.fetchNotifications(
+  const succeeded = await notificationStore.fetchNotifications(
     currentPage.value,
     itemsPerPage.value,
     sortOrder.value === 1 ? "asc" : "desc",
     selectedType.value || undefined,
   );
+  // Laisser le statut se vider avant de réannoncer un nombre identique.
+  await nextTick();
+  if (succeeded && request === latestLoad) resultsStatus.value = `${notificationStore.total} notification(s)`;
 }
 
 function onTypeChange() {
@@ -214,6 +221,7 @@ onMounted(load);
       data-testid="notifications-type-filter"
       @update:model-value="onTypeChange"
     />
+    <p role="status" aria-atomic="true" class="fr-sr-only" data-testid="notifications-results-status">{{ resultsStatus }}</p>
     <p v-if="notificationStore.unreadCount > 0" class="fr-text--sm">
       « Tout marquer comme lu » concerne toutes vos notifications, même celles masquées par le filtre.
     </p>

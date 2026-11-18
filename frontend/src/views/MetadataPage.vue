@@ -28,9 +28,11 @@ const sortOrder = ref(-1);
 const createdAtGte = ref<string>("");
 const createdAtLte = ref<string>("");
 const dateErrors = ref<{ from?: string; to?: string }>({});
+const filtersForm = ref<HTMLFormElement | null>(null);
 
-function isValidDateTime(value: string): boolean {
-  return !value || !Number.isNaN(new Date(value).getTime());
+function isValidDateTime(value: string, input: HTMLInputElement | null | undefined): boolean {
+  // Une saisie native partielle peut avoir une valeur vide mais rester invalide.
+  return input?.validity.valid !== false && (!value || !Number.isNaN(new Date(value).getTime()));
 }
 
 const metadataStore = useMetadataStore();
@@ -47,10 +49,6 @@ const columnToFieldKeyMap: Record<string, string> = {
   Description: "description",
 };
 
-watch([currentPage, pageSize], () => {
-  fetchData();
-});
-
 // RGAA-007 : titre de page explicite reflétant la pagination courante.
 watch(currentPage, (page) => setPageTitle(`Modifications - page ${page + 1}`), { immediate: true });
 
@@ -60,7 +58,7 @@ function convertLocalToUTC(localDateTimeString: string): string {
   return localDate.toISOString();
 }
 
-function fetchData() {
+async function fetchData() {
   const filters: Parameters<typeof metadataStore.fetchMetadatasGlobal>[0] = {
     page: currentPage.value,
     pageSize: pageSize.value,
@@ -72,18 +70,18 @@ function fetchData() {
 
   isLoading.value = true;
   // Le store notifie les erreurs et vide les résultats obsolètes.
-  return metadataStore
-    .fetchMetadatasGlobal(filters)
-    .catch(() => {})
-    .then(() => {
-      data.value = {
-        results: metadataStore.metadatas,
-        total: metadataStore.total,
-      } as PaginatedMetadataDto;
-    })
-    .finally(() => {
-      isLoading.value = false;
-    });
+  try {
+    await metadataStore.fetchMetadatasGlobal(filters);
+    return true;
+  } catch {
+    return false;
+  } finally {
+    data.value = {
+      results: metadataStore.metadatas,
+      total: metadataStore.total,
+    } as PaginatedMetadataDto;
+    isLoading.value = false;
+  }
 }
 
 // RGAA-064 (7.5 / 12.8) : annoncer le nombre de résultats aux TA + focus sur le tableau.
@@ -93,39 +91,51 @@ const tableRegion = ref<HTMLElement | null>(null);
 async function applyFilters() {
   if (isLoading.value) return;
   dateErrors.value = {};
-  if (!isValidDateTime(createdAtGte.value)) {
+  const fromInput = filtersForm.value?.querySelector<HTMLInputElement>("#history-date-from");
+  const toInput = filtersForm.value?.querySelector<HTMLInputElement>("#history-date-to");
+  if (!isValidDateTime(createdAtGte.value, fromInput)) {
     dateErrors.value.from = "Date de début – veuillez saisir une date et une heure valides, exemple : 23/05/2026 14:30";
   }
-  if (!isValidDateTime(createdAtLte.value)) {
+  if (!isValidDateTime(createdAtLte.value, toInput)) {
     dateErrors.value.to = "Date de fin – veuillez saisir une date et une heure valides, exemple : 23/05/2026 14:30";
   }
-  if (dateErrors.value.from || dateErrors.value.to) return;
+  if (dateErrors.value.from || dateErrors.value.to) {
+    await nextTick();
+    (dateErrors.value.from ? fromInput : toInput)?.focus();
+    return;
+  }
 
   const origin = document.activeElement;
+  resultsAnnouncement.value = "";
   currentPage.value = 0;
-  await fetchData();
+  if (!(await fetchData())) return;
   resultsAnnouncement.value = `${data.value.total} résultat(s)`;
   await nextTick();
   if (document.activeElement === origin || document.activeElement === document.body) tableRegion.value?.focus();
 }
 
-function clearFilters() {
+async function clearFilters() {
   if (isLoading.value) return;
+  // Réinitialiser aussi les segments natifs invalides, même si v-model vaut déjà "".
+  filtersForm.value?.reset();
   createdAtGte.value = "";
   createdAtLte.value = "";
   sortField.value = "Date";
   sortOrder.value = -1;
-  applyFilters();
+  await nextTick();
+  await applyFilters();
 }
 
 // Pagination handlers
 function handlePageChange(newPage: number) {
   currentPage.value = newPage;
+  fetchData();
 }
 
 function handlePageSizeChange(newPageSize: number) {
   pageSize.value = newPageSize;
   currentPage.value = 0;
+  fetchData();
 }
 
 function onSort(event: TableSortEvent) {
@@ -177,28 +187,32 @@ const metadataTableRows = computed(() =>
     <h1>Modifications</h1>
 
     <!-- Filters and Sorting form -->
-    <form class="fr-mb-4w" @submit.prevent="applyFilters">
+    <form ref="filtersForm" class="fr-mb-4w" novalidate @submit.prevent="applyFilters">
       <h3>Filtres</h3>
 
       <!-- Date filters -->
       <div class="fr-grid-row fr-grid-row--gutters fr-mb-1w">
         <div class="fr-col-12 fr-col-md-4">
           <DsfrInputGroup
+            id="history-date-from"
             v-model="createdAtGte"
             label="Date de début"
             label-visible
             type="datetime-local"
             :error-message="dateErrors.from"
+            :aria-invalid="!!dateErrors.from"
             data-testid="history-filter-date-from"
           />
         </div>
         <div class="fr-col-12 fr-col-md-4">
           <DsfrInputGroup
+            id="history-date-to"
             v-model="createdAtLte"
             label="Date de fin"
             label-visible
             type="datetime-local"
             :error-message="dateErrors.to"
+            :aria-invalid="!!dateErrors.to"
             data-testid="history-filter-date-to"
           />
         </div>
@@ -231,57 +245,58 @@ const metadataTableRows = computed(() =>
       <p v-if="resultsAnnouncement">{{ resultsAnnouncement }}</p>
     </div>
 
-    <div v-if="metadataTableRows.length === 0" class="text-center fr-mb-3w" data-testid="history-empty">
-      <p>Aucune donnée recensée.</p>
-    </div>
-
-    <div v-else ref="tableRegion" tabindex="-1" data-testid="history-table-region">
-      <RefAppTable
-        :items="metadataTableRows"
-        :columns="columns"
-        :loading="isLoading"
-        :lazy="true"
-        :total-records="data.total"
-        :sort-field="sortField"
-        :sort-order="sortOrder"
-        data-testid="history-table"
-        empty-message="Aucune donnée recensée."
-        @sort="onSort"
-      >
-        <template #body-Actions="{ data: row }">
-          <router-link
-            :to="{ name: 'metadata-detail', params: { id: row.Actions.id }, query: { from: route.fullPath } }"
-            class="fr-btn fr-btn--secondary fr-btn--sm"
-            data-testid="history-see-more-button"
-          >
-            Voir plus
-          </router-link>
-        </template>
-
-        <template #body-Application="{ data: row }">
-          <template v-if="row.Application && row.Application.to">
-            <router-link :to="row.Application.to" :data-testid="`history-row-${row.Application.id}-application`">
-              {{ row.Application.label }}
+    <div ref="tableRegion" tabindex="-1" data-testid="history-table-region">
+      <div v-if="metadataTableRows.length === 0" class="text-center fr-mb-3w" data-testid="history-empty">
+        <p>Aucune donnée recensée.</p>
+      </div>
+      <template v-else>
+        <RefAppTable
+          :items="metadataTableRows"
+          :columns="columns"
+          :loading="isLoading"
+          :lazy="true"
+          :total-records="data.total"
+          :sort-field="sortField"
+          :sort-order="sortOrder"
+          data-testid="history-table"
+          empty-message="Aucune donnée recensée."
+          @sort="onSort"
+        >
+          <template #body-Actions="{ data: row }">
+            <router-link
+              :to="{ name: 'metadata-detail', params: { id: row.Actions.id }, query: { from: route.fullPath } }"
+              class="fr-btn fr-btn--secondary fr-btn--sm"
+              data-testid="history-see-more-button"
+            >
+              Voir plus
             </router-link>
           </template>
-          <template v-else>
-            <span :data-testid="`history-row-${row.Application.id}-application`">{{ row.Application.label }}</span>
+
+          <template #body-Application="{ data: row }">
+            <template v-if="row.Application && row.Application.to">
+              <router-link :to="row.Application.to" :data-testid="`history-row-${row.Application.id}-application`">
+                {{ row.Application.label }}
+              </router-link>
+            </template>
+            <template v-else>
+              <span :data-testid="`history-row-${row.Application.id}-application`">{{ row.Application.label }}</span>
+            </template>
           </template>
-        </template>
 
-        <template #body-Type="{ data: row }">
-          <DsfrTag :class="row.Type.class" :label="row.Type.label" :data-testid="`history-row-${row.Type.id}-type`" />
-        </template>
-      </RefAppTable>
+          <template #body-Type="{ data: row }">
+            <DsfrTag :class="row.Type.class" :label="row.Type.label" :data-testid="`history-row-${row.Type.id}-type`" />
+          </template>
+        </RefAppTable>
 
-      <PaginationFooter
-        :total-filtered="data.total"
-        :limit="pageSize"
-        :page="currentPage"
-        data-testid="history-pagination-footer"
-        @update:limit="handlePageSizeChange"
-        @update:page="handlePageChange"
-      />
+        <PaginationFooter
+          :total-filtered="data.total"
+          :limit="pageSize"
+          :page="currentPage"
+          data-testid="history-pagination-footer"
+          @update:limit="handlePageSizeChange"
+          @update:page="handlePageChange"
+        />
+      </template>
     </div>
   </div>
 </template>
