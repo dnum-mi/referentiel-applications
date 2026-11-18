@@ -223,7 +223,7 @@ describe("applicationStore — synchronisation Grist", () => {
   });
 });
 
-describe("applicationStore.downloadExcel — filtres technologies", () => {
+describe("applicationStore.downloadExcel — sélection exportée", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     exportExcelMock.mockReset();
@@ -231,6 +231,16 @@ describe("applicationStore.downloadExcel — filtres technologies", () => {
   });
 
   afterEach(() => vi.restoreAllMocks());
+
+  it("demande le catalogue complet avec les fiches sans IQ et sans filtre d'écran ni pagination", async () => {
+    exportExcelMock.mockResolvedValueOnce({ response: { ok: true }, data: new Blob(["xlsx"]) });
+    await useApplicationStore().downloadExcel({ iq__isNull: true });
+    expect(exportExcelMock).toHaveBeenCalledExactlyOnceWith({
+      query: { iq__isNull: true, pageSize: 0 },
+      parseAs: "blob",
+      fetch: expect.any(Function),
+    });
+  });
 
   it("conserve le statut technologies et les autres filtres pour exporter toutes les pages", async () => {
     exportExcelMock.mockResolvedValueOnce({ response: { ok: true }, data: new Blob(["xlsx"]) });

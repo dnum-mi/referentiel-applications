@@ -92,6 +92,34 @@ describe("Exports du catalogue", () => {
     expect(ids).toEqual(createdIds);
   });
 
+  it("exporte tout le catalogue autorisé, y compris les applications sans IQ, avec la sélection neutre de la vue complète", async () => {
+    const owner = await UserFaker.create({ role: Roles.ADMIN });
+    const withoutQuality = await ApplicationFaker.create(owner);
+    await getPrismaClient().application.update({
+      where: { id: withoutQuality.id },
+      data: {
+        label: `Hors-filtre-${withoutQuality.id}`,
+        quality: null,
+      },
+    });
+
+    const fullQuery = { iq__isNull: "true", pageSize: 0 };
+    const allIds = await exportedIds(fullQuery);
+    expect(allIds).toEqual(
+      expect.arrayContaining([...createdIds, withoutQuality.id]),
+    );
+    expect(await exportedIds({ search: prefix })).not.toContain(
+      withoutQuality.id,
+    );
+
+    const visitor = await UserFaker.create({ role: Roles.VISITOR });
+    await request(app().getHttpServer())
+      .get("/applications/export/excel")
+      .query(fullQuery)
+      .set("Authorization", `Bearer ${getToken(visitor)}`)
+      .expect(403);
+  });
+
   it("exporte les mêmes lignes et le même tri en HTML sans limiter la pagination", async () => {
     const response = await request(app().getHttpServer())
       .get("/applications/export/html")

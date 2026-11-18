@@ -166,7 +166,7 @@ describe("ApplicationSearchActions — synchronisation Grist", () => {
     await vi.waitFor(() => expect(htmlButton).toHaveAttribute("aria-disabled", "false"));
     expect(htmlButton).toBeEnabled();
     await fireEvent.click(excelButton);
-    await vi.waitFor(() => expect(downloadExcel).toHaveBeenCalledExactlyOnceWith({ shortName: "app" }));
+    await vi.waitFor(() => expect(downloadExcel).toHaveBeenCalledExactlyOnceWith({ iq__isNull: true }));
   });
 
   it("conserve l'erreur et le réessai de l'export HTML", async () => {
@@ -204,13 +204,15 @@ describe("ApplicationSearchActions — accès bêta de l'export Excel", () => {
     await renderWith([Permission.DATA_EXPORT, Permission.BETA_FEATURES]);
     for (const testId of ["application-export-btn", "application-export-btn-mobile"]) {
       const button = screen.getByTestId(testId);
+      expect(button).toHaveTextContent("Exporter la vue complète");
+      expect(button).toHaveAccessibleName(/^Exporter la vue complète/);
       expect(button).toHaveTextContent("Bêta");
       expect(button).toHaveAccessibleName(/fonctionnalité bêta/);
       expect(button.querySelector(".fr-badge")?.tagName).toBe("SPAN");
       expect(button.querySelector(".fr-badge")).toHaveAttribute("aria-hidden", "true");
     }
     await fireEvent.click(screen.getByTestId("application-export-btn-mobile"));
-    await vi.waitFor(() => expect(downloadExcel).toHaveBeenCalledExactlyOnceWith({ shortName: "app" }));
+    await vi.waitFor(() => expect(downloadExcel).toHaveBeenCalledExactlyOnceWith({ iq__isNull: true }));
     expect(fetchUser).toHaveBeenCalledTimes(1);
     expect(getConfig).toHaveBeenLastCalledWith({ refresh: true });
   });
@@ -247,7 +249,7 @@ describe("ApplicationSearchActions — accès bêta de l'export Excel", () => {
       expect(screen.queryByTestId("applications-export-html-btn")).toBeNull();
       await fireEvent.click(button);
       await flushPromises();
-      expect(downloadExcel).toHaveBeenCalledExactlyOnceWith({ shortName: "app" });
+      expect(downloadExcel).toHaveBeenCalledExactlyOnceWith({ iq__isNull: true });
     },
   );
 
@@ -280,8 +282,42 @@ describe("ApplicationSearchActions — accès bêta de l'export Excel", () => {
       expect(screen.getByTestId(testId)).not.toHaveAccessibleName(/bêta/);
     }
     await fireEvent.click(screen.getByTestId("application-export-btn"));
-    await vi.waitFor(() => expect(downloadExcel).toHaveBeenCalledExactlyOnceWith({ shortName: "app" }));
+    await vi.waitFor(() => expect(downloadExcel).toHaveBeenCalledExactlyOnceWith({ iq__isNull: true }));
   });
+
+  it.each(["application-export-btn", "application-export-btn-mobile"])(
+    "exporte tout le catalogue autorisé sans reprendre aucun filtre ou tri de l'écran (%s)",
+    async (testId) => {
+      filters.value = {
+        search: "retenu",
+        tag: ["exemple"],
+        myApplications: true,
+        subscribersEmail: true,
+        organization: "MI/DNUM",
+        currentStatus__in: ["deleted"],
+        iqGte: 90,
+        iqLte: 95,
+        iq__isNull: false,
+        technologyEolStatus: "eol",
+        page: 2,
+        pageSize: 1,
+        sortBy: "quality",
+        order: "desc",
+      };
+      await renderWith([Permission.DATA_EXPORT, Permission.BETA_FEATURES]);
+      fetchUser.mockImplementationOnce(async () => {
+        filters.value = { search: "modifié pendant la revalidation", myApplications: true };
+        return true;
+      });
+      const button = screen.getByTestId(testId);
+      expect(button).toHaveTextContent("Exporter la vue complète");
+      expect(button).toHaveAccessibleName(/^Exporter la vue complète en Excel.*toutes les applications autorisées/);
+      await fireEvent.click(button);
+      await vi.waitFor(() => expect(downloadExcel).toHaveBeenCalledExactlyOnceWith({ iq__isNull: true }));
+      expect(filtersToQuery).not.toHaveBeenCalled();
+      expect(fetchUser).toHaveBeenCalledOnce();
+    },
+  );
 });
 
 describe("ApplicationSearchActions — export Excel de la vue", () => {
@@ -301,8 +337,9 @@ describe("ApplicationSearchActions — export Excel de la vue", () => {
     });
 
     const viewButton = screen.getByTestId("application-export-view-btn");
-    expect(viewButton).toHaveTextContent("42 applications");
-    expect(viewButton).toHaveAccessibleName("Exporter la vue en Excel (42 applications) — fonctionnalité bêta");
+    expect(viewButton).toHaveTextContent("Exporter la vue filtrée");
+    expect(viewButton).not.toHaveTextContent("42 applications");
+    expect(viewButton).toHaveAccessibleName("Exporter la vue filtrée (42 applications) — fonctionnalité bêta");
     await fireEvent.click(viewButton);
     await vi.waitFor(() => {
       expect(downloadExcel).toHaveBeenCalledExactlyOnceWith(selection, {
@@ -316,9 +353,10 @@ describe("ApplicationSearchActions — export Excel de la vue", () => {
     expect(filters.value).toEqual(fullFilters);
 
     const completeButton = screen.getByTestId("application-export-btn");
-    expect(completeButton).toHaveAccessibleName(/Exporter en Excel \(classeur complet\)/);
+    expect(completeButton).toHaveTextContent("Exporter la vue complète");
+    expect(completeButton).toHaveAccessibleName(/^Exporter la vue complète/);
     await fireEvent.click(completeButton);
-    await vi.waitFor(() => expect(downloadExcel).toHaveBeenLastCalledWith(fullFilters));
+    await vi.waitFor(() => expect(downloadExcel).toHaveBeenLastCalledWith({ iq__isNull: true }));
     expect(downloadExcel).toHaveBeenCalledTimes(2);
   });
 
@@ -352,6 +390,28 @@ describe("ApplicationSearchActions — export Excel de la vue", () => {
     );
   });
 
+  it.each([false, true])("fige les filtres multiples modifiés sur place, y compris un tableau déjà proxifié (%s)", async (proxied) => {
+    filters.value = { tag: ["au clic"], sortBy: "label", order: "desc", page: 1, pageSize: 2 };
+    if (proxied) filters.value = { ...filters.value };
+    useColumnPreferences().setVisibleColumns(["label"]);
+    filtersToQuery.mockReturnValue({ tag: "au clic", sortBy: "label", order: "desc" });
+    const cataloguePath = "/recherche-application?tag=au%20clic&sortBy=label&order=desc";
+    resolve.mockReturnValue({ href: cataloguePath });
+    await renderWith([Permission.DATA_EXPORT, Permission.BETA_FEATURES]);
+    fetchUser.mockImplementationOnce(async () => {
+      filters.value.tag?.push("ajouté ensuite");
+      return true;
+    });
+    await fireEvent.click(screen.getByTestId("application-export-view-btn"));
+    await vi.waitFor(() =>
+      expect(downloadExcel).toHaveBeenCalledExactlyOnceWith(
+        { tag: ["au clic"], sortBy: "label", order: "desc" },
+        { columns: ["label"], cataloguePath },
+      ),
+    );
+    expect(filters.value.tag).toEqual(["au clic", "ajouté ensuite"]);
+  });
+
   it("ne déclenche pas d’export sans colonne affichée", async () => {
     useColumnPreferences().setVisibleColumns(["moa"]);
     await renderWith([Permission.DATA_EXPORT, Permission.BETA_FEATURES]);
@@ -369,13 +429,13 @@ describe("ApplicationSearchActions — export Excel de la vue", () => {
     await renderWith([Permission.DATA_EXPORT, Permission.BETA_FEATURES]);
     const button = screen.getByTestId("application-export-view-btn");
     expect(button).toHaveAttribute("aria-disabled", "true");
-    expect(button).not.toHaveTextContent("42 applications");
+    expect(button).not.toHaveAccessibleName(/42 applications/);
     await fireEvent.click(button);
     expect(fetchUser).not.toHaveBeenCalled();
     expect(downloadExcel).not.toHaveBeenCalled();
     total.value = 3;
     isSearchPending.value = false;
-    await vi.waitFor(() => expect(button).toHaveTextContent("3 applications"));
+    await vi.waitFor(() => expect(button).toHaveAccessibleName("Exporter la vue filtrée (3 applications) — fonctionnalité bêta"));
     expect(button).toHaveAttribute("aria-disabled", "false");
   });
 });

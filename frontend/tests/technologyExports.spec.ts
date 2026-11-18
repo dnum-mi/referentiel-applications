@@ -29,6 +29,7 @@ async function prepareSession(page: Page, canExport = true, beta = false) {
     technologyExports: [] as URL[],
     applications: [] as URL[],
     applicationExports: [] as URL[],
+    applicationViewExports: [] as URL[],
   };
 
   await page.route("**/api/v2/**", async (route) => {
@@ -82,9 +83,12 @@ async function prepareSession(page: Page, canExport = true, beta = false) {
     } else if (url.pathname.endsWith("/applications/export/excel")) {
       requests.applicationExports.push(url);
       await route.fulfill({ contentType: excelContentType, body: excelBytes });
+    } else if (url.pathname.endsWith("/applications/export/excel-view")) {
+      requests.applicationViewExports.push(url);
+      await route.fulfill({ contentType: excelContentType, body: excelBytes });
     } else if (url.pathname.endsWith("/applications")) {
       requests.applications.push(url);
-      await route.fulfill({ json: { results: [], total: 0, averageIq: 0 } });
+      await route.fulfill({ json: { results: [], total: 0, averageIq: 0, technicalDebtPoints: [] } });
     } else {
       await route.fulfill({ json: url.pathname.endsWith("/unread-count") ? { count: 0 } : [] });
     }
@@ -143,7 +147,7 @@ test("la consultation Technologies sans DataExport ne propose aucun télécharge
   expect(requests.technologyExports).toEqual([]);
 });
 
-test("le filtre de fin de vie du catalogue est partagé par l'URL, la recherche et l'export", async ({ page }) => {
+test("la vue filtrée conserve le filtre de fin de vie et la vue complète exporte sans filtre", async ({ page }) => {
   const requests = await prepareSession(page, true, true);
   await page.goto("/recherche-application?page=2&technologyEolStatus=eol");
   const filter = page.getByTestId("technology-filter-eol-status");
@@ -157,10 +161,24 @@ test("le filtre de fin de vie du catalogue est partagé par l'URL, la recherche 
   await expect.poll(() => requests.applications.at(-1)?.searchParams.get("technologyEolStatus")).toBe("eoas-passed");
 
   const downloadPromise = page.waitForEvent("download");
-  await page.getByTestId("application-export-btn").click();
+  const completeButton = page.getByTestId("application-export-btn");
+  await expect(completeButton).toContainText("Exporter la vue complète");
+  await expect(completeButton).toHaveAccessibleName(/^Exporter la vue complète/);
+  await completeButton.click();
   await expectExcelDownload(await downloadPromise, /^applications_export_\d{4}-\d{2}-\d{2}\.xlsx$/);
   expect(requests.applicationExports).toHaveLength(1);
-  expect(requests.applicationExports[0].searchParams.get("technologyEolStatus")).toBe("eoas-passed");
+  expect(Object.fromEntries(requests.applicationExports[0].searchParams)).toEqual({ iq__isNull: "true", pageSize: "0" });
+
+  const viewDownloadPromise = page.waitForEvent("download");
+  const filteredButton = page.getByTestId("application-export-view-btn");
+  await expect(filteredButton).toContainText("Exporter la vue filtrée");
+  await expect(filteredButton).toHaveAccessibleName(/^Exporter la vue filtrée/);
+  await filteredButton.click();
+  await expectExcelDownload(await viewDownloadPromise, /^applications_vue_export_\d{4}-\d{2}-\d{2}\.xlsx$/);
+  expect(requests.applicationViewExports).toHaveLength(1);
+  expect(requests.applicationViewExports[0].searchParams.get("technologyEolStatus")).toBe("eoas-passed");
+  expect(requests.applicationViewExports[0].searchParams.get("pageSize")).toBe("0");
+  expect(requests.applicationViewExports[0].searchParams.has("page")).toBe(false);
 
   await page.getByTestId("sidebar-reset-filters-button").click();
   await expect(filter).toHaveValue("");
