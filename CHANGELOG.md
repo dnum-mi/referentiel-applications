@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.106.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.105.0...v1.106.0) (2026-11-18)
+
+
+### Features
+
+* add functionality to retrieve and display quality campaign targets ([#3259](https://github.com/dnum-mi/referentiel-applications/issues/3259)) ([ff63857](https://github.com/dnum-mi/referentiel-applications/commit/ff638576a36ebddae225f4b7c34bedb38f8c88dd))
+* implement named validation errors for application forms ([#3277](https://github.com/dnum-mi/referentiel-applications/issues/3277)) ([42431db](https://github.com/dnum-mi/referentiel-applications/commit/42431dbba3aa49356e0d693e8631327281defcec))
+* update application export buttons to disable instead of hide based on permissions ([#3281](https://github.com/dnum-mi/referentiel-applications/issues/3281)) ([5cbd48a](https://github.com/dnum-mi/referentiel-applications/commit/5cbd48a61d5483b775c61dfb96515102768e8146))
+
+
+### Bug Fixes
+
+* **a11y:** corriger les quatre écarts RGAA restants ([#3278](https://github.com/dnum-mi/referentiel-applications/issues/3278)) ([91421c6](https://github.com/dnum-mi/referentiel-applications/commit/91421c691ece64fd6035c012cb9574c022c0fb4d))
+* add "Contact Tchap" link in footer with accessibility attributes and tests ([#3274](https://github.com/dnum-mi/referentiel-applications/issues/3274)) ([ee75307](https://github.com/dnum-mi/referentiel-applications/commit/ee75307dc452a5c8d966e0364dca1e8e4a649e35))
+* enhance email service with role and permission translations in notifications ([#3262](https://github.com/dnum-mi/referentiel-applications/issues/3262)) ([eb9cc35](https://github.com/dnum-mi/referentiel-applications/commit/eb9cc3566ce5ff3e6493eba4392570bc46c73f89))
+* sort organizations and clarify catalogue exports ([#3280](https://github.com/dnum-mi/referentiel-applications/issues/3280)) ([bb7d5eb](https://github.com/dnum-mi/referentiel-applications/commit/bb7d5ebde7e832febb7e9ef1aa0e8cd8a37dca0e))
+* update empty message display in RefAppTable component for better accessibility ([#3279](https://github.com/dnum-mi/referentiel-applications/issues/3279)) ([36c0222](https://github.com/dnum-mi/referentiel-applications/commit/36c022219d25bfd6cad8195452d2b150d6cb5ead))
+
 ## [1.105.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.104.0...v1.105.0) (2026-11-12)
 
 
