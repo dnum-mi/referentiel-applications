@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.107.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.106.0...v1.107.0) (2026-11-20)
+
+
+### Features
+
+* refactor application priority permissions and related components ([#3305](https://github.com/dnum-mi/referentiel-applications/issues/3305)) ([f1534bc](https://github.com/dnum-mi/referentiel-applications/commit/f1534bcba4c902b4a0f2ac080422823b28801194))
+
 ## [1.106.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.105.0...v1.106.0) (2026-11-18)
 
 
