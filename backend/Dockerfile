@@ -1,5 +1,5 @@
 # node:24-alpine3.24 (Node 24.21.0), index multi-architecture
-FROM node@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS base
+FROM node@sha256:e18c3ccdf7d71619990b0e85639f506e2028a95410999cab24cc373cbd10e0ac AS base
 
 ARG VERSION
 ENV VERSION=${VERSION:-main}
