@@ -293,6 +293,13 @@ describe("enregistrement d'une application", () => {
     expect(mocks.createActor).toHaveBeenCalledTimes(2);
   });
 
+  it("transmet explicitement null pour effacer la priorité", async () => {
+    const state = setup("edit");
+    state.data.value.application.priorityRestart = null;
+    await state.save();
+    expect(mocks.patchApplication).toHaveBeenCalledWith(expect.objectContaining({ priorityRestart: null }));
+  });
+
   it("retourne et met en cache la réponse réelle de l'édition sans recréer les contacts", async () => {
     const state = setup("edit");
     const updated: ApplicationWithPerms = {

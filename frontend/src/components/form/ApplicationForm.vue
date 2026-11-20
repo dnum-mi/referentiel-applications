@@ -40,7 +40,7 @@ const isCreateMode = computed(() => props.mode === "create");
 const hasAppWrite = useAppPermission(() => props.initialData.myPerms, [Permission.APP_WRITE]);
 const hasAppWritePriority = useAppPermission(() => props.initialData.myPerms, [Permission.APP_WRITE_PRIORITY]);
 const canEditBase = computed(() => isCreateMode.value || hasAppWrite.value);
-const canEditPriorityRestart = computed(() => isCreateMode.value || hasAppWritePriority.value);
+const canEditPriorityRestart = hasAppWritePriority;
 const currentStep = ref<ApplicationFormStep>(1);
 const formElement = ref<HTMLFormElement | null>(null);
 const mainStep = ref<ApplicationStepHandle | null>(null);

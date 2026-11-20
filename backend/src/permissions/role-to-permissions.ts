@@ -70,7 +70,7 @@ const SCOPED_ADMIN_EXCLUDED_PERMISSIONS: ReadonlySet<Permission> = new Set([
 /**
  * Permissions qu'un administrateur peut déléguer individuellement à un utilisateur (couche 2,
  * `User.additionalPermissions`). Liste FERMÉE : tout ce qui n'y figure pas (AdminPanelManage,
- * DeleteApplication, permissions applicatives…) est refusé par le DTO de mise à jour (#2498),
+ * DeleteApplication, autres permissions applicatives…) est refusé par le DTO de mise à jour (#2498),
  * pour qu'une délégation ne puisse jamais fabriquer un super-administrateur.
  * Miroir de la liste proposée par le panneau d'administration (UserActions.vue).
  *
@@ -79,6 +79,7 @@ const SCOPED_ADMIN_EXCLUDED_PERMISSIONS: ReadonlySet<Permission> = new Set([
  * toujours être ajoutées explicitement ici, même pour un administrateur.
  */
 export const DELEGABLE_PERMISSIONS: readonly Permission[] = [
+  Permission.AppWritePriority,
   Permission.CreateApplication,
   Permission.CreateGlobalReport,
   Permission.DataExport,
@@ -147,7 +148,6 @@ const WRITE_APP_PERMISSIONS = new Set([
   Permission.HostingWrite,
   Permission.RelationWrite,
   Permission.LinkWrite,
-  Permission.AppWritePriority,
   Permission.DataWrite,
   Permission.TechnologyWrite,
 ]);

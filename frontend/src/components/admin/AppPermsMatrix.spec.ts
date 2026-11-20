@@ -12,7 +12,6 @@ const permissions: AppPermsDto = {
   actorTypeId: "moa",
   AppRead: true,
   AppWrite: false,
-  AppWritePriority: true,
   ActorRead: true,
   ActorWrite: false,
   ComplianceRead: true,
@@ -51,7 +50,8 @@ it("identifie le type d’acteur comme en-tête de ligne et conserve les noms vi
   expect(save.text()).toBe("Enregistrer les modifications");
   expect(save.attributes("aria-label")).toBeUndefined();
   expect(wrapper.find('button[aria-label="Recharger la matrice des permissions"]').exists()).toBe(false);
-  expect(row.get('[id="moa-PriorityRestart"]').attributes("aria-label")).toContain("Maîtrise d’ouvrage");
+  expect(row.find('[id="moa-PriorityRestart"]').exists()).toBe(false);
+  expect(wrapper.text()).not.toContain("Priorit. Redémarr.");
 });
 
 it("garde les actions focalisables mais refuse sauvegarde et rechargement pendant une requête", async () => {

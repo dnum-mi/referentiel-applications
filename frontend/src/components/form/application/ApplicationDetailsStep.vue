@@ -45,9 +45,10 @@ async function removePopulation(index: number) {
     </h3>
 
     <DsfrSelect
-      v-model="form.priorityRestart"
+      :model-value="form.priorityRestart"
+      @update:model-value="form.priorityRestart = priorityRestartLabelsOptions.find((option) => option.value === $event)?.value ?? null"
       :disabled="!canEditPriorityRestart"
-      :options="priorityRestartLabelsOptions"
+      :options="[{ value: null, text: 'Non renseignée' }, ...priorityRestartLabelsOptions]"
       label="Priorité de redémarrage"
       default-unselected-text="Sélectionner une priorité"
       data-testid="application-priority-restart"

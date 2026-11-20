@@ -54,7 +54,6 @@ function escapeHtml(value: string): string {
 const PERM_FIELDS: Record<string, string> = {
   AppRead: "Informations - Lecture",
   AppWrite: "Informations - Écriture",
-  AppWritePriority: "Prioritisation et redémarrage",
   HostingRead: "Hébergements - Lecture",
   HostingWrite: "Hébergements - Écriture",
   LinkRead: "Liens - Lecture",
@@ -142,14 +141,16 @@ export class ActorTypeService extends BaseService<
     }
   }
 
-  public async getPermsMatrix(): Promise<AppPermissions[]> {
-    return this.prisma.appPermissions.findMany();
+  public async getPermsMatrix(): Promise<AppPermsDto[]> {
+    return this.prisma.appPermissions.findMany({
+      omit: { AppWritePriority: true },
+    });
   }
 
   public async updatePermsMatrix(
     matrix: AppPermsDto[],
     requestorId: string,
-  ): Promise<AppPermissions[]> {
+  ): Promise<AppPermsDto[]> {
     const oldMatrix = await this.getPermsMatrix();
     const actorTypes = await this.prisma.actorType.findMany();
     const actorTypeMap = new Map(actorTypes.map((at) => [at.id, at]));

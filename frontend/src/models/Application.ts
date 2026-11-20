@@ -5,7 +5,7 @@ import type {
   ApplicationStatus,
   ApplicationStatusDto,
   ApplicationType,
-  AppPermsDto,
+  ApplicationControllerGetMyPermsResponse,
   BusinessDivisionDto,
   ComplianceDto,
   ContactAdminDto,
@@ -65,7 +65,7 @@ export type Relation = RelationDto & {
 };
 
 // refer directly to columns in database
-export type APP_PERMISSIONS = Exclude<keyof AppPermsDto, "actorTypeId">;
+export type APP_PERMISSIONS = ApplicationControllerGetMyPermsResponse[number];
 
 // Permissions de lecture composant la "lecture totale" d'une application, en miroir de
 // READ_APP_PERMISSIONS (backend/src/permissions/role-to-permissions.ts) : un utilisateur qui ne

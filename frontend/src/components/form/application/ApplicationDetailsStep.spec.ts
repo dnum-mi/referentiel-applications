@@ -22,6 +22,18 @@ function renderDetails() {
 }
 
 describe("ApplicationDetailsStep", () => {
+  it("permet d’effacer une priorité puis d’en choisir une nouvelle", async () => {
+    const { wrapper, model } = renderDetails();
+    const select = wrapper.get('[data-testid="application-priority-restart"]');
+    await select.setValue("R1");
+    expect(model.priorityRestart).toBe("R1");
+    await select.setValue("");
+    expect(model.priorityRestart).toBeNull();
+    expect(select.get("option:checked").text()).toBe("Non renseignée");
+    await select.setValue("R3");
+    expect(model.priorityRestart).toBe("R3");
+  });
+
   it.each([
     ["population", "targetPopulations"],
     ["purpose", "purposes"],

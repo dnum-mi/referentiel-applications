@@ -38,6 +38,11 @@ const displayedAdditionalPermissions = computed<Permission[]>({
 const additionalPermissionsOptions = computed<Omit<DsfrCheckboxProps, "modelValue">[]>(() =>
   [
     {
+      label: "Modifier la priorité de redémarrage",
+      value: Permission.APP_WRITE_PRIORITY,
+      name: "capability-app-write-priority",
+    },
+    {
       label: "Créer une application",
       value: Permission.CREATE_APPLICATION,
       name: "capability-create-application",

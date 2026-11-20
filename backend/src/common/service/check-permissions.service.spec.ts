@@ -320,3 +320,26 @@ describe("CheckPermissions.can — fonction pure (B22)", () => {
     expect(permissions.has(Permission.AppWrite)).toBe(false);
   });
 });
+
+describe("AppWritePriority — capacité individuelle uniquement (#3260)", () => {
+  it.each(["acteur", "défaut"])(
+    "ignore l’ancienne matrice %s et conserve la lecture",
+    async (source) => {
+      const matrix = { ...READ_ONLY_MATRIX, AppWritePriority: true };
+      const { service } = makeService(
+        source === "acteur"
+          ? { emailActors: [{ actorType: { appPermissions: [matrix] } }] }
+          : { defaultActorTypePermissions: matrix },
+      );
+      const user = baseUser();
+      expect(
+        await service.can([Permission.AppWritePriority], user, "app-1"),
+      ).toBe(false);
+      expect(await service.can([Permission.AppRead], user, "app-1")).toBe(true);
+      user.additionalPermissions = [Permission.AppWritePriority];
+      expect(
+        await service.can([Permission.AppWritePriority], user, "app-1"),
+      ).toBe(true);
+    },
+  );
+});

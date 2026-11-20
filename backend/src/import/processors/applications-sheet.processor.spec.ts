@@ -218,7 +218,7 @@ describe("ApplicationsSheetProcessor", () => {
     expect(report.summary.created).toBe(1);
     expect(report.summary.errors).toBe(0);
     expect(applicationService.createApplication).toHaveBeenCalledWith(
-      "user-1",
+      requestor,
       // `tags` doit être un tableau (défaut []) : `createApplication` le passe à `findByNames`.
       expect.objectContaining({ label: "Nouvelle App", tags: [] }),
     );
@@ -262,7 +262,7 @@ describe("ApplicationsSheetProcessor", () => {
 
     expect(report.summary.created).toBe(1);
     expect(applicationService.createApplication).toHaveBeenCalledWith(
-      "user-1",
+      requestor,
       expect.objectContaining({
         tags: ["a", "b", "c"],
         priorityRestart: "R0",
