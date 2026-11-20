@@ -102,10 +102,10 @@ Vous devez fournir les informations suivantes :
   @RequiredPermissions([Permission.CreateApplication])
   public async create(
     @Body() createApplicationDto: CreateApplicationDto,
-    @UserId() requestorId: string,
+    @User() requestor: Requestor,
   ) {
     const newApplication = await this.applicationService.createApplication(
-      requestorId,
+      requestor,
       createApplicationDto,
     );
     return newApplication;

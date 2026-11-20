@@ -149,10 +149,8 @@ test.describe("Permissions & rôles", () => {
     }
   });
 
-  // #2529 a fermé `additionalPermissions` (permissions globales déléguables) à une liste FERMÉE
-  // qui exclut désormais `AppWrite`/`AppWritePriority` (permissions applicatives, couche 3) : le
-  // rôle global reste le bon levier pour PRM-10 (`roleToAppPermissions` donne les deux droits
-  // d'écriture applicatifs sans organisation de périmètre), cf. `role-to-permissions.ts`.
+  // Le rôle Contributeur accorde AppWrite. Depuis #3260, AppWritePriority exige
+  // une capacité individuelle explicite.
   test("PRM-10 - un Contributeur peut éditer une fiche", async ({
     browser,
     data,
@@ -179,48 +177,15 @@ test.describe("Permissions & rôles", () => {
     }
   });
 
-  // `AppWrite`/`AppWritePriority` sont désormais uniquement accordables par acteur (couche 3, via
-  // le type d'acteur et sa matrice) : un rôle global donne toujours les deux ensemble
-  // (`WRITE_APP_PERMISSIONS`). On dissocie donc via un type d'acteur dédié dont on force la
-  // matrice à `AppWritePriority: true / AppWrite: false`, puis un acteur portant l'e-mail du
-  // compte de test sur l'application — restauré/supprimé en fin de test.
   test("PRM-11 - AppWritePriority dissociée de AppWrite", async ({
     browser,
     data,
   }) => {
     const app = await data.firstApplication();
     expect(app, "Aucune application dans le jeu de données").toBeTruthy();
-
-    const actorTypes = await data.actorTypes();
-    const typeId = actorTypes?.[actorTypes.length - 1]?.id;
-    expect(typeId, "Aucun type d'acteur disponible").toBeTruthy();
-
-    const matrix = await data.permsMatrix();
-    const original = matrix?.find((entry) => entry.actorTypeId === typeId);
-    expect(
-      !matrix || !original,
-      "Type d'acteur introuvable dans la matrice",
-    ).toBeFalsy();
-
-    await data.resetUser(USER_EMAIL);
-    let actor: { id: string } | null = null;
     const ctx = await browser.newContext();
     try {
-      await data.updatePermsMatrix(
-        matrix!.map((entry) =>
-          entry.actorTypeId === typeId
-            ? { ...entry, AppWrite: false, AppWritePriority: true }
-            : entry,
-        ),
-      );
-      actor = await data.createActor(app!.id, {
-        email: USER_EMAIL,
-        firstname: "E2E-PRM11",
-        lastname: "Priority",
-        actorTypeId: typeId,
-      });
-      expect(actor, "Impossible de créer l'acteur de test").toBeTruthy();
-
+      await data.setUserAdditionalPermissions(USER_EMAIL, ["AppWritePriority"]);
       const userPage = await ctx.newPage();
       await loginAs(userPage, "user");
       const fiche = new ApplicationPage(userPage);
@@ -230,14 +195,6 @@ test.describe("Permissions & rôles", () => {
       await fiche.expectBaseFieldsReadonly();
     } finally {
       await ctx.close();
-      if (actor) await data.deleteActor(app!.id, actor.id).catch(() => {});
-      if (original) {
-        await data.updatePermsMatrix(
-          matrix!.map((entry) =>
-            entry.actorTypeId === typeId ? original : entry,
-          ),
-        );
-      }
       await data.resetUser(USER_EMAIL);
     }
   });

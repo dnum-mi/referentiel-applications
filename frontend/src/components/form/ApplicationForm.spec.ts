@@ -84,6 +84,15 @@ function expectLinkedError(input: HTMLElement, message: string) {
 }
 
 describe("applicationForm — validation et navigation accessibles", () => {
+  it.each([false, true])("contrôle la priorité dès la création (permission : %s)", async (granted) => {
+    renderForm("create", { myPerms: new Set(granted ? ["AppWritePriority"] : []) });
+    await fillMainStep();
+    await next();
+    const select = screen.getByTestId("application-priority-restart");
+    if (granted) expect(select).toBeEnabled();
+    else expect(select).toBeDisabled();
+  });
+
   it("annonce les erreurs de la première étape et place le focus sur le premier champ invalide", async () => {
     renderForm();
     await next();

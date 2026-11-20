@@ -21,6 +21,7 @@ describe("UpdateUserDto — additionalPermissions", () => {
       Permission.MditCampaignManage,
       Permission.TechnologyList,
       Permission.BetaFeatures,
+      Permission.AppWritePriority,
     ]);
     expect(errors).toHaveLength(0);
   });

@@ -12,7 +12,7 @@ application** (la portée / _scope_ de l'utilisateur est prise en compte). Voir
 L'import applique, **ligne par ligne**, exactement les **mêmes permissions et la même portée** que
 l'API correspondante (via `CheckPermissions.can(permission, requestor, applicationId)`). Conséquences :
 
-- un **administrateur global** (rôle `ADMIN` sans `scopeOrganization`) peut tout importer ;
+- un **administrateur global** (rôle `ADMIN` sans `scopeOrganization`) peut importer les données, sous réserve des capacités dédiées aux champs ;
 - un **administrateur scopé** (rôle `ADMIN` avec une `scopeOrganization`) ne peut créer/modifier que
   les données des applications **de son périmètre** ; les lignes hors périmètre sont **refusées** ;
 - toute ligne refusée est **consignée dans le rapport d'exécution** avec un motif explicite
@@ -30,8 +30,13 @@ l'API correspondante (via `CheckPermissions.can(permission, requestor, applicati
 | **Conformités**  | création / mise à jour | `ComplianceWrite`   | applicative | sur l'application de rattachement       |
 
 > Note `priorityRestart` (Applications) : la protection fine du champ priorité de redémarrage
-> (`AppWritePriority`) reste assurée par `ApplicationService.update`, qui résout lui-même les
-> permissions applicatives sur l'application ciblée.
+> (`AppWritePriority`) est assurée par `ApplicationService` dès la création et en modification.
+> Aucun rôle ne l’accorde automatiquement. À la création, seule la capacité individuelle permet
+> de renseigner la priorité ; sinon elle est enregistrée à `null`. En modification, seule la capacité
+> individuelle accorde aussi ce droit ; les anciennes attributions par matrice sont ignorées.
+> Sans ce droit, la priorité envoyée est ignorée. Une cellule vide conserve le comportement
+> existant : elle ne modifie pas la priorité. L’effacement explicite est disponible dans le
+> formulaire (« Non renseignée ») et par l’API (`priorityRestart: null`).
 
 ## Où c'est implémenté
 

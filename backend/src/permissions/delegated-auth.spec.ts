@@ -377,11 +377,11 @@ describe("CheckPermissions — plafond du service après les acteurs (#1988)", (
   it("ne joint pas l'écriture d'un acteur humain et une lecture distincte du service", async () => {
     const { check } = makeCheckPermissions({
       actorSource: "email",
-      matrix: { AppWritePriority: true },
+      matrix: { AppWrite: true },
     });
     const person = human();
     const service = machine({ role: Roles.READER });
-    const required = [Permission.AppWritePriority, Permission.HostingRead];
+    const required = [Permission.AppWrite, Permission.HostingRead];
 
     expect(await check.can(required, person, "app-id")).toBe(true);
     expect(await check.can([Permission.HostingRead], service, "app-id")).toBe(

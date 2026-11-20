@@ -252,7 +252,7 @@ export class ApplicationsSheetProcessor {
       status: { status: DEFAULT_CREATE_STATUS },
     });
     await validateImportDto(dto);
-    await this.applicationService.createApplication(requestor.id, dto);
+    await this.applicationService.createApplication(requestor, dto);
     return { sheet: this.sheetName, row, status: "created", identifier };
   }
 

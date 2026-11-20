@@ -10412,6 +10412,7 @@ components:
           items:
             type: string
         priorityRestart:
+          nullable: true
           allOf:
             - $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
@@ -11196,6 +11197,7 @@ components:
           items:
             type: string
         priorityRestart:
+          nullable: true
           allOf:
             - $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
@@ -12264,8 +12266,6 @@ components:
           type: boolean
         AppWrite:
           type: boolean
-        AppWritePriority:
-          type: boolean
         ActorRead:
           type: boolean
         ActorWrite:
@@ -12306,7 +12306,6 @@ components:
         - actorTypeId
         - AppRead
         - AppWrite
-        - AppWritePriority
         - ActorRead
         - ActorWrite
         - ComplianceRead
