@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, ref } from "vue";
+import { computed, nextTick, ref } from "vue";
 import type { QualityCampaignDto, UpdateQualityCampaignStatusDto } from "@/client/types.gen";
 import { useQualityCampaignStore } from "@/stores/qualityCampaignStore";
 import SponsorEmailsInput from "@/components/form/SponsorEmailsInput.vue";
@@ -38,6 +38,10 @@ const editingSponsorEmails = ref<string[]>([]);
 const editingMessage = ref("");
 const editingStartDate = ref("");
 const editingEndDate = ref("");
+const editFields = ref<HTMLDivElement | null>(null);
+const hasAttemptedSave = ref(false);
+const nameError = computed(() => (hasAttemptedSave.value && !editingName.value.trim() ? "Le nom de la campagne est requis." : undefined));
+const startDateError = computed(() => (hasAttemptedSave.value && !editingStartDate.value ? "La date de début est requise." : undefined));
 
 function toDateInputValue(value?: Date | string | null) {
   if (!value) return "";
@@ -51,7 +55,7 @@ function openEditModal() {
   editingStartDate.value = toDateInputValue(props.campaign.startDate);
   editingEndDate.value = toDateInputValue(props.campaign.endDate);
   errorMessage.value = "";
-  areSponsorEmailsValid.value = true;
+  hasAttemptedSave.value = false;
   isEditModalOpen.value = true;
 }
 
@@ -72,16 +76,11 @@ function closeDeleteModal() {
 
 async function saveCampaign(event: MouseEvent) {
   if (isSaving.value) return;
-  if (!editingName.value.trim()) {
-    errorMessage.value = "Le nom de la campagne est requis.";
-    return;
-  }
-  if (!editingStartDate.value) {
-    errorMessage.value = "La date de début est requise.";
-    return;
-  }
-  if (!areSponsorEmailsValid.value) {
-    errorMessage.value = "Un ou plusieurs emails sponsors sont invalides.";
+  errorMessage.value = "";
+  hasAttemptedSave.value = true;
+  if (nameError.value || startDateError.value || !areSponsorEmailsValid.value) {
+    await nextTick();
+    editFields.value?.querySelector<HTMLInputElement>('input[aria-invalid="true"]')?.focus();
     return;
   }
 
@@ -211,62 +210,70 @@ async function changeStatus(status: UpdateQualityCampaignStatusDto["status"]) {
     data-testid="admin-edit-quality-campaign-modal"
     @close="closeEditModal"
   >
-    <DsfrAlert
-      alert
-      v-if="errorMessage"
-      type="error"
-      :description="errorMessage"
-      small
-      class="fr-mb-3w"
-      data-testid="quality-campaign-form-error"
-    />
+    <div ref="editFields">
+      <p class="fr-text--sm fr-mb-3w" data-testid="required-fields-hint">* = champs obligatoires</p>
 
-    <DsfrInputGroup
-      v-model="editingName"
-      class="fr-mb-3w"
-      label="Nom de la campagne"
-      label-visible
-      required
-      data-testid="quality-campaign-name"
-    />
+      <DsfrAlert
+        alert
+        v-if="errorMessage"
+        type="error"
+        :description="errorMessage"
+        small
+        class="fr-mb-3w"
+        data-testid="quality-campaign-form-error"
+      />
 
-    <p class="fr-text--sm fr-mb-1w">Sponsors (optionnel)</p>
-    <p class="fr-text--sm fr-hint-text fr-mb-1w">Destinataires des rapports de résultats de la campagne</p>
-    <SponsorEmailsInput
-      v-model="editingSponsorEmails"
-      testid-prefix="quality-campaign-sponsor-email"
-      @update:valid="(valid) => (areSponsorEmailsValid = valid)"
-    />
+      <DsfrInputGroup
+        v-model="editingName"
+        class="fr-mb-3w"
+        label="Nom de la campagne"
+        label-visible
+        required
+        :error-message="nameError"
+        :aria-invalid="nameError ? true : undefined"
+        data-testid="quality-campaign-name"
+      />
 
-    <DsfrInputGroup
-      v-model="editingMessage"
-      class="fr-mb-3w"
-      is-textarea
-      label="Message incitatif (optionnel)"
-      hint="Inclus dans l'email de relance envoyé aux acteurs"
-      label-visible
-      data-testid="quality-campaign-message"
-    />
+      <p class="fr-text--sm fr-mb-1w">Sponsors (optionnel)</p>
+      <p class="fr-text--sm fr-hint-text fr-mb-1w">Destinataires des rapports de résultats de la campagne</p>
+      <SponsorEmailsInput
+        v-model="editingSponsorEmails"
+        testid-prefix="quality-campaign-sponsor-email"
+        @update:valid="(valid) => (areSponsorEmailsValid = valid)"
+      />
 
-    <DsfrInputGroup
-      v-model="editingStartDate"
-      class="fr-mb-3w"
-      type="date"
-      label="Date de début"
-      hint="Déclenche l'envoi automatique aux acteurs (tant que la campagne n'a pas déjà été envoyée)"
-      label-visible
-      required
-      data-testid="quality-campaign-start-date"
-    />
+      <DsfrInputGroup
+        v-model="editingMessage"
+        class="fr-mb-3w"
+        is-textarea
+        label="Message incitatif (optionnel)"
+        hint="Inclus dans l'email de relance envoyé aux acteurs"
+        label-visible
+        data-testid="quality-campaign-message"
+      />
 
-    <DsfrInputGroup
-      v-model="editingEndDate"
-      class="fr-mb-3w"
-      type="date"
-      label="Date de fin (optionnel)"
-      label-visible
-      data-testid="quality-campaign-end-date"
-    />
+      <DsfrInputGroup
+        v-model="editingStartDate"
+        class="fr-mb-3w"
+        type="date"
+        label="Date de début"
+        hint="Déclenche l'envoi automatique aux acteurs (tant que la campagne n'a pas déjà été envoyée)"
+        label-visible
+        required
+        :error-message="startDateError"
+        :aria-invalid="startDateError ? true : undefined"
+        data-testid="quality-campaign-start-date"
+      />
+
+      <DsfrInputGroup
+        v-model="editingEndDate"
+        class="fr-mb-3w"
+        type="date"
+        label="Date de fin (optionnel)"
+        label-visible
+        data-testid="quality-campaign-end-date"
+      />
+    </div>
 
     <template #footer>
       <DsfrButtonGroup :inline-layout-when="true" :reverse="true">

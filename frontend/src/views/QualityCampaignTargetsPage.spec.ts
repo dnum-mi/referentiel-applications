@@ -40,7 +40,6 @@ async function render(url = "/campaign/cibles") {
         stubs: {
           RefAppTable: Table,
           QualityCampaignTargetDetails: true,
-          DsfrButton: { props: ["label"], template: "<button>{{ label }}</button>" },
         },
       },
     },
@@ -133,6 +132,50 @@ it("laisse consulter les cibles si les informations de campagne ne se chargent p
   const { wrapper } = await render();
   expect(wrapper.text()).toContain("Le nom et la date de la campagne n’ont pas pu être chargés");
   expect(wrapper.get('a[href="/applications/a"]').text()).toBe("Améliorée");
+});
+
+it("attend aussi les informations de campagne avant d'autoriser une nouvelle actualisation", async () => {
+  const { wrapper } = await render();
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => (release = resolve));
+  findCampaign.mockImplementationOnce(async () => {
+    await pending;
+    return { data: { name: "Campagne actualisée" }, response: { ok: true } };
+  });
+  const refresh = wrapper.get('[data-testid="campaign-targets-refresh"]');
+  await refresh.trigger("click");
+  await flushPromises();
+  expect(refresh.attributes("aria-disabled")).toBe("true");
+  expect(refresh.attributes("disabled")).toBeUndefined();
+  await refresh.trigger("click");
+  expect(findTargets).toHaveBeenCalledTimes(2);
+  expect(findCampaign).toHaveBeenCalledTimes(2);
+  release();
+  await flushPromises();
+  expect(refresh.attributes("aria-disabled")).toBe("false");
+  expect(wrapper.get("h1").text()).toBe("Campagne actualisée");
+});
+
+it("garde Réessayer pendant l'attente et ne relance pas une requête concurrente", async () => {
+  findTargets.mockRejectedValueOnce(new Error("network"));
+  const { wrapper } = await render();
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => (release = resolve));
+  findTargets.mockImplementationOnce(async () => {
+    await pending;
+    return { data: { results: rows, total: 3 }, response: { ok: true } };
+  });
+  const retry = wrapper.get('[role="alert"] button');
+  await retry.trigger("click");
+  expect(wrapper.get('[role="alert"]').text()).toContain("Impossible de charger");
+  expect(retry.attributes("aria-disabled")).toBe("true");
+  expect(retry.attributes("disabled")).toBeUndefined();
+  await retry.trigger("click");
+  expect(findTargets).toHaveBeenCalledTimes(2);
+  release();
+  await flushPromises();
+  expect(wrapper.find('[role="alert"]').exists()).toBe(false);
+  expect(wrapper.text()).toContain("Améliorée");
 });
 
 it.each(["label", "iqAtStart", "iqCurrent"])("trie par %s et restaure ce tri depuis l’URL", async (sortBy) => {

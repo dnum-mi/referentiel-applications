@@ -60,6 +60,7 @@ function updateSponsor(index: number, value: string | number | undefined) {
         :label="`Email du sponsor ${index + 1}`"
         label-visible
         :error-message="errorFor(sponsorEmail)"
+        :aria-invalid="errorFor(sponsorEmail) ? true : undefined"
         :data-testid="`${testidPrefix}-${index}`"
         @update:model-value="(value) => updateSponsor(index, value)"
       />

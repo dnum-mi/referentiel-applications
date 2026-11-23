@@ -240,7 +240,7 @@ watch(
           secondary
           icon="ri-download-line"
           :label="isExporting ? 'Préparation de l’export…' : 'Exporter en Excel'"
-          :disabled="isExporting"
+          :aria-disabled="isExporting"
           :aria-busy="isExporting"
           title="Exporter toutes les applications correspondant aux filtres et au tri actuels"
           data-testid="end-of-life-export-excel"

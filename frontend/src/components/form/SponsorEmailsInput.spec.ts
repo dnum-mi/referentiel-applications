@@ -40,3 +40,22 @@ describe("SponsorEmailsInput — regroupement des adresses", () => {
     expect(fields[1].element).toHaveAccessibleName("Email du sponsor 2");
   });
 });
+
+it("associe l'erreur de format au vrai champ sponsor puis la retire après correction", async () => {
+  const wrapper = mount(SponsorEmailsInput, {
+    attachTo: document.body,
+    props: { modelValue: ["incorrect", "valide@example.test"] },
+    global: { stubs: { VIcon: true } },
+  });
+  const fields = wrapper.findAll<HTMLInputElement>("input");
+  expect(fields[0].element).toHaveAttribute("aria-invalid", "true");
+  expect(fields[0].element).toHaveAccessibleDescription("Email invalide. Format attendu – ex : exemple@mail.fr");
+  expect(fields[1].attributes("aria-invalid")).toBeUndefined();
+  expect(wrapper.emitted("update:valid")?.at(-1)).toEqual([false]);
+  await fields[0].setValue("corrige@example.test");
+  expect(fields[0].attributes("aria-invalid")).toBeUndefined();
+  expect(fields[0].attributes("aria-describedby")).toBeUndefined();
+  expect(fields[1].element).toHaveValue("valide@example.test");
+  expect(wrapper.emitted("update:valid")?.at(-1)).toEqual([true]);
+  expect(wrapper.text()).not.toContain("Email invalide.");
+});
