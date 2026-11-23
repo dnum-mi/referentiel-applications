@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Le miroir Azure peut télécharger les dépendances WebKit assez lentement pour
+# Les miroirs Azure et EC2 peuvent télécharger les dépendances WebKit assez lentement pour
 # épuiser le budget du job avant ses tests. Garder les dépôts Ubuntu officiels.
 if [[ "${RUNNER_OS:-}" == "Linux" ]]; then
   while IFS= read -r -d '' source; do
     sudo sed -i -E \
-      's#https?://azure\.archive\.ubuntu\.com/#https://archive.ubuntu.com/#g' \
+      's#https?://(azure|[a-z0-9-]+\.ec2)\.archive\.ubuntu\.com/#https://archive.ubuntu.com/#g' \
       "$source"
   done < <(
     find /etc/apt -type f \
