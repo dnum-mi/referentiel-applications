@@ -63,6 +63,8 @@ async function renderGraph() {
   const data = filteredGraph.value;
   if (!graphContainer.value || !data || props.viewMode !== "graph") return;
   const activeElement = document.activeElement;
+  const isFirstRender = !graphContainer.value.querySelector("svg");
+  const scrollLeft = graphContainer.value.scrollLeft;
   const focusedNodeId =
     activeElement instanceof SVGElement && graphContainer.value.contains(activeElement) ? activeElement.dataset.nodeId : null;
   graphInstance.value?.cleanup();
@@ -86,6 +88,19 @@ async function renderGraph() {
         nodeHref: (nodeId) => router.resolve({ name: "application", params: { id: nodeId } }).href,
       },
     );
+    if (isFirstRender) {
+      const root = Array.from(graphContainer.value.querySelectorAll<SVGAElement>("a[data-node-id]")).find(
+        (node) => node.dataset.nodeId === data.rootId,
+      );
+      if (root && graphContainer.value.scrollWidth > graphContainer.value.clientWidth) {
+        const rootBounds = root.getBoundingClientRect();
+        const containerBounds = graphContainer.value.getBoundingClientRect();
+        graphContainer.value.scrollLeft =
+          rootBounds.left + rootBounds.width / 2 - containerBounds.left - graphContainer.value.clientWidth / 2;
+      }
+    } else {
+      graphContainer.value.scrollLeft = scrollLeft;
+    }
     if (focusedNodeId) {
       const replacement = Array.from(graphContainer.value.querySelectorAll<SVGAElement>("a[data-node-id]")).find(
         (node) => node.dataset.nodeId === focusedNodeId,
@@ -124,7 +139,84 @@ onBeforeUnmount(() => {
 <template>
   <section class="relation-network" :aria-labelledby="`${id}-title`" :aria-busy="isLoading">
     <h3 :id="`${id}-title`" class="fr-h4">Réseau de relations</h3>
+    <p :id="descriptionId" class="fr-sr-only">
+      Réseau des applications liées selon la profondeur et les types de relation sélectionnés. Une liste complète et une aide à la
+      navigation sont disponibles après le graphe.
+    </p>
     <div class="relation-graph-wrapper">
+      <div class="network-content">
+        <div class="network-toolbar fr-mb-2w">
+          <output aria-live="polite" aria-atomic="true" data-testid="relations-graph-status">
+            <template v-if="isLoading">Chargement du réseau de relations…</template>
+            <template v-else-if="filteredGraph"
+              >{{ filteredGraph.nodes.length }} applications et {{ filteredGraph.edges.length }} relations affichées, profondeur
+              {{ loadedDepth }}.</template
+            >
+          </output>
+          <a v-if="filteredGraph && props.viewMode === 'graph'" class="fr-link" :href="`#${transcriptionId}`">
+            Consulter la liste complète du graphe
+          </a>
+        </div>
+        <p v-if="error" role="alert">{{ error }}</p>
+        <DsfrButton v-if="error && !graphData" secondary @click="fetchGraphData">Réessayer le chargement du réseau</DsfrButton>
+        <template v-if="filteredGraph && props.viewMode === 'graph'">
+          <section
+            ref="graphContainer"
+            :id="`${id}-svg-container`"
+            class="graph-container"
+            aria-label="Graphe des relations, zone défilante"
+            :aria-describedby="descriptionId"
+            tabindex="0"
+          ></section>
+          <div class="graph-actions fr-mt-1w" role="group" aria-label="Commandes principales du graphe">
+            <DsfrButton secondary :disabled="!graphInstance || isLoading" @click="graphInstance?.zoomIn()">Zoomer</DsfrButton>
+            <DsfrButton secondary :disabled="!graphInstance || isLoading" @click="graphInstance?.zoomOut()">Dézoomer</DsfrButton>
+            <DsfrButton secondary :disabled="!graphInstance || isLoading" @click="graphInstance?.resetZoom()">
+              Réinitialiser le zoom
+            </DsfrButton>
+            <DsfrButton secondary :disabled="!graphInstance || isLoading" @click="graphInstance?.exportSVG()">Exporter en SVG</DsfrButton>
+          </div>
+        </template>
+        <details v-if="props.viewMode === 'graph'" class="navigation-help fr-mt-2w">
+          <summary class="fr-text--bold">Aide à la navigation</summary>
+          <p class="fr-mt-2w">
+            Dans le graphe, Entrée ouvre la fiche de l’application. Majuscule et les flèches déplacent un nœud. La molette et le
+            glisser-déposer permettent de zoomer et de déplacer la vue ou les nœuds. Les commandes ci-dessous offrent les mêmes possibilités
+            au clavier et sans glisser-déposer. La liste complète présente les mêmes applications, leur statut et leurs relations, à la
+            profondeur et avec les filtres choisis.
+          </p>
+          <h4 class="fr-h6">Déplacer la vue</h4>
+          <div class="control-buttons">
+            <DsfrButton secondary :disabled="!graphInstance || isLoading" @click="graphInstance?.pan(80, 0)"
+              >Déplacer la vue à gauche</DsfrButton
+            >
+            <DsfrButton secondary :disabled="!graphInstance || isLoading" @click="graphInstance?.pan(-80, 0)"
+              >Déplacer la vue à droite</DsfrButton
+            >
+            <DsfrButton secondary :disabled="!graphInstance || isLoading" @click="graphInstance?.pan(0, 80)"
+              >Déplacer la vue vers le haut</DsfrButton
+            >
+            <DsfrButton secondary :disabled="!graphInstance || isLoading" @click="graphInstance?.pan(0, -80)"
+              >Déplacer la vue vers le bas</DsfrButton
+            >
+          </div>
+          <fieldset class="node-movement fr-mt-2w" :disabled="!graphInstance || isLoading">
+            <legend class="fr-h6">Déplacer un nœud</legend>
+            <label class="fr-label" :for="`${id}-selected-node`">Nœud à déplacer dans le graphe</label>
+            <select class="fr-select fr-mb-1w" :id="`${id}-selected-node`" v-model="selectedNodeId">
+              <option v-for="node in filteredGraph?.nodes || []" :key="node.id" :value="node.id">
+                {{ node.label || node.id }}{{ node.id === filteredGraph?.rootId ? " (application racine)" : "" }}
+              </option>
+            </select>
+            <div class="control-buttons">
+              <DsfrButton secondary @click="graphInstance?.moveNode(selectedNodeId, -20, 0)">Déplacer le nœud à gauche</DsfrButton>
+              <DsfrButton secondary @click="graphInstance?.moveNode(selectedNodeId, 20, 0)">Déplacer le nœud à droite</DsfrButton>
+              <DsfrButton secondary @click="graphInstance?.moveNode(selectedNodeId, 0, -20)">Déplacer le nœud vers le haut</DsfrButton>
+              <DsfrButton secondary @click="graphInstance?.moveNode(selectedNodeId, 0, 20)">Déplacer le nœud vers le bas</DsfrButton>
+            </div>
+          </fieldset>
+        </details>
+      </div>
       <div class="sidebar fr-p-2w">
         <div class="depth-controls fr-input-group">
           <label class="fr-label" :for="`${id}-depth-range`">Profondeur du réseau : {{ depth }}</label>
@@ -171,79 +263,14 @@ onBeforeUnmount(() => {
             </label>
           </div>
         </fieldset>
-        <div v-if="props.viewMode === 'graph'" class="graph-controls">
-          <h4 class="fr-h5">Contrôles du graphe</h4>
-          <div class="control-buttons">
-            <DsfrButton secondary :disabled="!graphInstance || isLoading" @click="graphInstance?.zoomIn()">Zoomer</DsfrButton>
-            <DsfrButton secondary :disabled="!graphInstance || isLoading" @click="graphInstance?.zoomOut()">Dézoomer</DsfrButton>
-            <DsfrButton secondary :disabled="!graphInstance || isLoading" @click="graphInstance?.pan(80, 0)"
-              >Déplacer la vue à gauche</DsfrButton
-            >
-            <DsfrButton secondary :disabled="!graphInstance || isLoading" @click="graphInstance?.pan(-80, 0)"
-              >Déplacer la vue à droite</DsfrButton
-            >
-            <DsfrButton secondary :disabled="!graphInstance || isLoading" @click="graphInstance?.pan(0, 80)"
-              >Déplacer la vue vers le haut</DsfrButton
-            >
-            <DsfrButton secondary :disabled="!graphInstance || isLoading" @click="graphInstance?.pan(0, -80)"
-              >Déplacer la vue vers le bas</DsfrButton
-            >
-            <DsfrButton secondary :disabled="!graphInstance || isLoading" @click="graphInstance?.resetZoom()"
-              >Réinitialiser le zoom</DsfrButton
-            >
-            <DsfrButton secondary :disabled="!graphInstance || isLoading" @click="graphInstance?.exportSVG()">Exporter en SVG</DsfrButton>
-          </div>
-          <fieldset class="node-movement fr-mt-2w" :disabled="!graphInstance || isLoading">
-            <legend class="fr-h6">Déplacer un nœud</legend>
-            <label class="fr-label" :for="`${id}-selected-node`">Nœud à déplacer dans le graphe</label>
-            <select class="fr-select fr-mb-1w" :id="`${id}-selected-node`" v-model="selectedNodeId">
-              <option v-for="node in filteredGraph?.nodes || []" :key="node.id" :value="node.id">
-                {{ node.label || node.id }}{{ node.id === filteredGraph?.rootId ? " (application racine)" : "" }}
-              </option>
-            </select>
-            <div class="control-buttons">
-              <DsfrButton secondary @click="graphInstance?.moveNode(selectedNodeId, -20, 0)">Déplacer le nœud à gauche</DsfrButton>
-              <DsfrButton secondary @click="graphInstance?.moveNode(selectedNodeId, 20, 0)">Déplacer le nœud à droite</DsfrButton>
-              <DsfrButton secondary @click="graphInstance?.moveNode(selectedNodeId, 0, -20)">Déplacer le nœud vers le haut</DsfrButton>
-              <DsfrButton secondary @click="graphInstance?.moveNode(selectedNodeId, 0, 20)">Déplacer le nœud vers le bas</DsfrButton>
-            </div>
-          </fieldset>
-        </div>
       </div>
-      <div class="network-content">
-        <p :id="descriptionId">
-          La liste complète présente toutes les applications, leur statut et les relations à la profondeur choisie, avec les mêmes filtres
-          que le graphe.
-          <template v-if="props.viewMode === 'graph'"
-            >Dans le graphe, Entrée ouvre le lien de l’application. Majuscule et les flèches déplacent un nœud. Vous pouvez aussi utiliser
-            la molette et le glisser-déposer, ou les commandes à côté du graphe pour déplacer la vue et chaque nœud. Les liens de la liste
-            complète ouvrent les mêmes applications.</template
-          >
-        </p>
-        <output class="fr-mb-2w" aria-live="polite" aria-atomic="true" data-testid="relations-graph-status">
-          <template v-if="isLoading">Chargement du réseau de relations…</template>
-          <template v-else-if="filteredGraph"
-            >{{ filteredGraph.nodes.length }} applications et {{ filteredGraph.edges.length }} relations affichées, profondeur
-            {{ loadedDepth }}.</template
-          >
-        </output>
-        <p v-if="error" role="alert">{{ error }}</p>
-        <DsfrButton v-if="error && !graphData" secondary @click="fetchGraphData">Réessayer le chargement du réseau</DsfrButton>
-        <template v-if="filteredGraph">
-          <template v-if="props.viewMode === 'graph'">
-            <a class="fr-link fr-mb-2w" :href="`#${transcriptionId}`">Consulter la liste complète du graphe</a>
-            <section
-              ref="graphContainer"
-              :id="`${id}-svg-container`"
-              class="graph-container"
-              aria-label="Graphe des relations, zone défilante"
-              :aria-describedby="descriptionId"
-              tabindex="0"
-            ></section>
-          </template>
-          <RelationGraphList :graph="filteredGraph" :depth="loadedDepth" :id="transcriptionId" class="fr-mt-3w" />
-        </template>
-      </div>
+      <RelationGraphList
+        v-if="filteredGraph"
+        :graph="filteredGraph"
+        :depth="loadedDepth"
+        :id="transcriptionId"
+        class="network-transcription"
+      />
     </div>
   </section>
 </template>
@@ -253,23 +280,28 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 .relation-graph-wrapper {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(14rem, 19rem);
+  grid-template-areas: "content sidebar" "transcription sidebar";
   gap: 1.5rem;
-  align-items: flex-start;
+  align-items: start;
 }
 .sidebar {
+  grid-area: sidebar;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  flex: 0 1 19rem;
   min-width: 0;
 }
 .network-content {
-  flex: 1;
+  grid-area: content;
   min-width: 0;
 }
+.network-transcription {
+  grid-area: transcription;
+}
 .graph-container {
-  height: 600px;
+  height: clamp(20rem, 60vh, 37.5rem);
   width: 100%;
   border: 1px solid var(--border-default-grey);
   overflow: auto;
@@ -288,10 +320,23 @@ onBeforeUnmount(() => {
   width: 100%;
   max-width: 8rem;
 }
+.network-toolbar,
+.graph-actions,
 .control-buttons {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+}
+.network-toolbar {
+  justify-content: space-between;
+}
+.navigation-help {
+  padding: 1rem;
+  border: 1px solid var(--border-default-grey);
+}
+.navigation-help summary {
+  cursor: pointer;
 }
 .legend {
   min-width: 0;
@@ -317,10 +362,10 @@ output {
 }
 @media (max-width: 62rem) {
   .relation-graph-wrapper {
-    flex-direction: column;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "content" "sidebar" "transcription";
   }
   .sidebar {
-    flex: auto;
     width: 100%;
   }
   .network-content {

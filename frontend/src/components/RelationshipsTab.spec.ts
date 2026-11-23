@@ -1,10 +1,12 @@
 import { createPinia, setActivePinia } from "pinia";
 import { computed, defineComponent, type PropType } from "vue";
 import { enableAutoUnmount, flushPromises, shallowMount } from "@vue/test-utils";
+import { DsfrButtonGroup } from "@gouvminint/vue-dsfr";
 import { RelationType, type RelationDto } from "@/client";
 import type { ApplicationWithPerms } from "@/models/Application";
 import { useRelationStore } from "@/stores/relationStore";
 import RelationshipsTab from "./RelationshipsTab.vue";
+import RelationshipGraph from "./RelationShipGraph.vue";
 
 const { fetchRelations, addErrorMessage, addSuccessMessage } = vi.hoisted(() => ({
   fetchRelations: vi.fn(),
@@ -57,10 +59,38 @@ function renderTab(id = "app-a") {
     },
   });
 }
+async function showList(wrapper: ReturnType<typeof renderTab>) {
+  wrapper
+    .findComponent(DsfrButtonGroup)
+    .props("buttons")
+    ?.find((button) => button.label === "Liste")
+    ?.onClick?.(new MouseEvent("click"));
+  await flushPromises();
+}
 enableAutoUnmount(afterEach);
 beforeEach(() => {
   setActivePinia(createPinia());
   vi.clearAllMocks();
+});
+
+describe("RelationshipsTab — vue principale", () => {
+  it("ouvre le graphe et propose les deux vues avec des libellés et un état actif explicites", async () => {
+    fetchRelations.mockResolvedValueOnce(response("app-a", "Relation A"));
+    const wrapper = renderTab();
+    await flushPromises();
+    const buttons = wrapper.findComponent(DsfrButtonGroup).props("buttons");
+    expect(buttons?.map(({ label, iconOnly, "aria-pressed": pressed }) => ({ label, iconOnly, pressed }))).toEqual([
+      { label: "Graphe", iconOnly: false, pressed: true },
+      { label: "Liste", iconOnly: false, pressed: false },
+    ]);
+    const graph = wrapper.findComponent(RelationshipGraph);
+    expect(graph.props("viewMode")).toBe("graph");
+    await showList(wrapper);
+    expect(graph.exists()).toBe(true);
+    expect(graph.props("viewMode")).toBe("list");
+    expect(wrapper.find('[data-testid="relations-table"]').exists()).toBe(true);
+    expect(wrapper.findComponent(DsfrButtonGroup).props("buttons")?.[1]["aria-pressed"]).toBe(true);
+  });
 });
 
 describe("RelationshipsTab — navigation concurrente (#2951)", () => {
@@ -77,6 +107,7 @@ describe("RelationshipsTab — navigation concurrente (#2951)", () => {
     expect(wrapper.text()).not.toContain("Ancienne relation A");
     b.resolve(response("app-b", "Relation courante B"));
     await flushPromises();
+    await showList(wrapper);
     expect(wrapper.find('[data-testid="relationship-loader"]').exists()).toBe(false);
     expect(wrapper.text()).toContain("Relation courante B");
     expect(wrapper.text()).not.toContain("Ancienne relation A");
@@ -87,6 +118,7 @@ describe("RelationshipsTab — navigation concurrente (#2951)", () => {
     fetchRelations.mockResolvedValueOnce(response("app-a", "Ancienne relation A")).mockReturnValueOnce(b.promise);
     const wrapper = renderTab();
     await flushPromises();
+    await showList(wrapper);
     expect(wrapper.text()).toContain("Ancienne relation A");
     await wrapper.setProps({ application: application("app-b") });
     expect(wrapper.text()).not.toContain("Ancienne relation A");
@@ -117,6 +149,7 @@ describe("RelationshipsTab — navigation concurrente (#2951)", () => {
     firstA.resolve(response("app-a", "Ancienne relation A"));
     b.reject(new Error("Ancien refus de B"));
     await flushPromises();
+    await showList(wrapper);
     expect(wrapper.text()).toContain("Nouvelle relation A");
     expect(wrapper.text()).not.toContain("Ancienne relation A");
     expect(wrapper.find('[data-testid="relationship-loader"]').exists()).toBe(false);
@@ -145,6 +178,7 @@ describe("RelationshipsTab — navigation concurrente (#2951)", () => {
     current.resolve(response("app-a", "Instance courante"));
     first.reject(new Error("Ancienne instance"));
     await flushPromises();
+    await showList(currentWrapper);
     expect(currentWrapper.text()).toContain("Instance courante");
     expect(useRelationStore().activeApplicationId).toBe("app-a");
     expect(addErrorMessage).not.toHaveBeenCalled();
