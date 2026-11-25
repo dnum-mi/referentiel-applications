@@ -1,34 +1,13 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { authority, prepareSession } from "./utils";
 
 // Contrat navigateur avec réponses API contrôlées. Les tests Supertest couvrent
 // séparément le middleware réel ; ces fixtures ne qualifient pas Passage2.
-const authority = "https://sso.example.test";
-const storageKey = `oidc.user:${authority}:refapp-test`;
 const weak = {
   statusCode: 403,
   strongAuthRequired: true,
   authLevel: { level: "weak", downgraded: true, reason: "weak-method" },
 };
-
-async function prepareSession(page: Page, profile: Record<string, string> = {}) {
-  await page.addInitScript(
-    ({ storageKey, profile }) => {
-      if (!sessionStorage.getItem(storageKey)) {
-        sessionStorage.setItem(
-          storageKey,
-          JSON.stringify({
-            access_token: "test-session",
-            token_type: "Bearer",
-            scope: "openid profile email",
-            profile: { sub: "test-user", ...profile },
-            expires_at: Math.floor(Date.now() / 1000) + 3600,
-          }),
-        );
-      }
-    },
-    { storageKey, profile },
-  );
-}
 
 test("ne monte aucune vue protégée pendant la vérification, ni après le refus ou F5", async ({ page }, testInfo) => {
   await prepareSession(page);
