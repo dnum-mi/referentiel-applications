@@ -50,6 +50,7 @@ export class MetadatasController {
     return this.metadataService.findOne(id, {
       application: true,
       createdBy: true,
+      impersonator: true,
     });
   }
 }

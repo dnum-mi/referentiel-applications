@@ -45,7 +45,7 @@
 
 ### CRU-05 — Modifier les informations générales et vérifier la répercussion ✅
 
-- **Datafeature** : une application existante, utilisateur avec `AppWrite`.
+- **Datafeature** : une application de test dédiée, un utilisateur avec `AppWrite` et la permission individuelle `AppWritePriority`.
 - **Action** : onglet `tab-infos` → `info-edit-btn` → modifier `application-label`,
   `application-description` et `application-priority-restart` → enregistrer.
 - **Résultat attendu** : toast de succès ; les nouvelles valeurs s'affichent sur la fiche ; le nouveau

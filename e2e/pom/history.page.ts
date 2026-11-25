@@ -75,6 +75,25 @@ export class HistoryPage extends BasePage {
     await expect(this.page).toHaveURL(/\/metadatas\//);
   }
 
+  async openModificationByAuthor(path: string, author: string): Promise<void> {
+    const row = this.rows().filter({
+      has: this.page.locator(`a[href^="${path}?"]`),
+    });
+    await this.expectHasRows();
+    const next = this.pagination().getByTestId("pagination-next");
+    while (!(await row.count()) && (await next.isEnabled())) {
+      const firstLink = this.seeMore().first();
+      const previousHref = await firstLink.getAttribute("href");
+      await next.click();
+      await expect(firstLink).not.toHaveAttribute("href", previousHref!);
+    }
+    await expect(
+      row.getByRole("cell", { name: author, exact: true }),
+    ).toBeVisible();
+    await row.getByTestId("history-see-more-button").click();
+    await expect(this.page).toHaveURL((url) => url.pathname === path);
+  }
+
   /** Indique si une 2ᵉ page d'historique est proposée par la pagination. */
   async hasSecondPage(): Promise<boolean> {
     return (await this.pageLink("2").count()) > 0;
@@ -122,6 +141,10 @@ export class MetadataDetailPage extends BasePage {
     await expect(this.author()).toBeVisible();
     await expect(this.date()).toBeVisible();
     await expect(this.description()).toBeVisible();
+  }
+
+  async expectAuthor(author: string): Promise<void> {
+    await expect(this.author()).toHaveText(author);
   }
 
   /** Détail introuvable : message d'erreur ou « non trouvée ». */

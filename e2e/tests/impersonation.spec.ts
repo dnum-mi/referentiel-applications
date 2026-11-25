@@ -1,6 +1,14 @@
+import { randomUUID } from "node:crypto";
 import { test, expect } from "../fixtures/test";
 import { DataFeature } from "../fixtures/datafeature";
-import { AdminPage, ApplicationPage, loginAs, switchTo } from "../pom";
+import {
+  AdminPage,
+  ApplicationPage,
+  HistoryPage,
+  MetadataDetailPage,
+  loginAs,
+  switchTo,
+} from "../pom";
 import { captureStepScreenshot } from "../support/screenshots";
 
 const ADMIN_EMAIL = "admin@example.com";
@@ -161,50 +169,60 @@ test.describe("Impersonation", () => {
     page,
     data,
   }) => {
-    const inScope = await data.getUser("qa-target@example.com");
-    expect(
-      inScope,
-      "Fixture QA absente — `pnpm db:seed:qa` requis.",
-    ).toBeTruthy();
+    const target = "qa-target@example.com";
+    const editorType = (await data.actorTypes())?.find(
+      (type) => type.code === "QA_GROUP",
+    );
+    expect(editorType, "Type d'acteur QA avec AppWrite absent").toBeTruthy();
 
-    const ts = Date.now();
-    const label = `E2E-IMP09-${ts}`;
-    const appRef = await data.createTestApplication(label);
-    // La cible doit pouvoir modifier l'application : promue CONTRIBUTOR le temps du test.
-    await data.setUserRole("qa-target@example.com", "CONTRIBUTOR");
+    const app = await data.createTestApplication(`E2E-IMP09-${randomUUID()}`);
+    const admin = new AdminPage(page);
+    const fiche = new ApplicationPage(page);
+    const history = new HistoryPage(page);
+    const detail = new MetadataDetailPage(page);
+
+    async function checkEdit(description: string, author: string) {
+      await fiche.open(app.id, "tab-infos");
+      await fiche.editInfos({ description });
+      await fiche.expectDescription(description);
+      await fiche.expectLastModificationAuthor(author);
+      await fiche.openTab("tab-modifications");
+      const path = await fiche.latestModificationPathByAuthor(author);
+
+      // L'historique global et le détail sont réservés à l'administrateur.
+      await admin.stopImpersonationIfActive();
+      await history.open();
+      await history.openModificationByAuthor(path, author);
+      await detail.expectAuthor(author);
+      await detail.expectDescriptionContains(description);
+    }
 
     try {
-      await loginAs(page, "admin");
-      const admin = new AdminPage(page);
+      const actor = await data.createActor(app.id, {
+        actorTypeId: editorType!.id,
+        email: target,
+      });
+      expect(
+        actor,
+        "Impossible de rattacher qa-target à la fiche",
+      ).toBeTruthy();
       await admin.open();
-      await admin.impersonateUser("qa-target@example.com");
-      await admin.expectImpersonationBanner("qa-target@example.com");
-
-      // Modification faite SOUS l'identité de qa-target.
-      const fiche = new ApplicationPage(page);
-      await fiche.open(appRef.id);
-      await fiche.editInfos(
-        label,
-        `Description sous impersonation ${ts}`,
-        "R1",
+      await admin.impersonateUser(target);
+      await admin.expectImpersonationBanner(target);
+      await checkEdit(
+        "Description sous impersonation",
+        `${target} (via ${ADMIN_EMAIL})`,
       );
-
-      // Le bandeau « Dernière modification de la fiche » de l'aperçu affiche aussi l'admin réel.
-      const banner = page.getByTestId("application-metadata-highlight");
-      await expect(banner).toContainText("qa-target@example.com");
-      await expect(banner).toContainText("(via admin@example.com)");
-
-      // L'historique attribue la modification à la cible ET affiche l'admin réel.
-      await fiche.openTab("tab-modifications");
-      const table = page.getByTestId("modifications-table");
-      await expect(table).toContainText("qa-target@example.com");
-      await expect(table).toContainText("(via admin@example.com)");
-
-      await admin.stopImpersonation();
-      await admin.expectNotImpersonating();
+      await checkEdit(
+        "Description après arrêt de l’impersonation",
+        ADMIN_EMAIL,
+      );
     } finally {
-      await data.setUserRole("qa-target@example.com", "READER").catch(() => {});
-      await data.removeApplication(appRef.id).catch(() => {});
+      try {
+        await admin.stopImpersonationIfActive();
+      } finally {
+        expect(await data.removeApplication(app.id)).toBe(true);
+      }
     }
   });
 
