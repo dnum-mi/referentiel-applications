@@ -239,7 +239,7 @@ watch(
           type="button"
           secondary
           icon="ri-download-line"
-          :label="isExporting ? 'Préparation de l’export…' : 'Exporter en Excel'"
+          :label="isExporting ? 'Préparation de l’export…' : 'Exporter'"
           :disabled="isExporting"
           :aria-busy="isExporting"
           title="Exporter toutes les applications correspondant aux filtres et au tri actuels"

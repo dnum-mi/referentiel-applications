@@ -30,7 +30,7 @@ const exportCases = [
     id: "catalogue-excel",
     scene: "catalogue",
     button: "application-export-btn",
-    name: "Exporter en Excel",
+    name: "Exporter la vue complète",
     file: "synthetic-catalogue.xlsx",
     pending: "Préparation de l’export Excel",
     error:
@@ -50,7 +50,7 @@ const exportCases = [
     id: "catalogue-excel-mobile",
     scene: "catalogue",
     button: "application-export-btn-mobile",
-    name: "Exporter en Excel",
+    name: "Exporter la vue complète",
     file: "synthetic-catalogue.xlsx",
     pending: "Préparation de l’export Excel",
     error:
