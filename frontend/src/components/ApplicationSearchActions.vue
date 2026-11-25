@@ -105,7 +105,7 @@ const htmlExportLabel = computed(
 );
 const excelExportLabel = computed(
   () =>
-    `Exporter la vue complète en Excel, un classeur de toutes les applications autorisées sans les filtres actuels${isBeta(FeatureId.CATALOGUE_EXCEL_EXPORT) ? " — fonctionnalité bêta" : ""}`,
+    `Exporter la vue complète, un classeur de toutes les applications autorisées sans les filtres actuels${isBeta(FeatureId.CATALOGUE_EXCEL_EXPORT) ? " — fonctionnalité bêta" : ""}`,
 );
 const excelViewTitle = computed(() => {
   if (!visibleColumns.value.length) return "Sélectionnez au moins une colonne à exporter";

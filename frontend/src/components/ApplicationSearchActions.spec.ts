@@ -311,7 +311,7 @@ describe("ApplicationSearchActions — accès bêta de l'export Excel", () => {
       });
       const button = screen.getByTestId(testId);
       expect(button).toHaveTextContent("Exporter la vue complète");
-      expect(button).toHaveAccessibleName(/^Exporter la vue complète en Excel.*toutes les applications autorisées/);
+      expect(button).toHaveAccessibleName(/^Exporter la vue complète, un classeur de toutes les applications autorisées/);
       await fireEvent.click(button);
       await vi.waitFor(() => expect(downloadExcel).toHaveBeenCalledExactlyOnceWith({ iq__isNull: true }));
       expect(filtersToQuery).not.toHaveBeenCalled();
