@@ -20,6 +20,7 @@ import ImpersonationBanner from "./components/ImpersonationBanner.vue";
 import WeakAuthBanner from "./components/WeakAuthBanner.vue";
 import AppToaster from "./components/AppToaster.vue";
 import AppUpdateNotice from "./components/AppUpdateNotice.vue";
+import FooterVersionLink from "./components/FooterVersionLink.vue";
 import { useScheme } from "@gouvminint/vue-dsfr";
 import { useRgaaGlobalA11y } from "./composables/use-rgaa-a11y";
 import { accessibilityDeclaration } from "./constants/accessibility-declaration";
@@ -64,16 +65,6 @@ useNotificationPolling();
 
 const appVersion = __APP_VERSION__;
 const environmentLabel = computed(() => appConfig.value?.environmentLabel);
-
-// RGAA-016 : pas d'emoji « 📦 » lu tel quel par les lecteurs d'écran.
-// RGAA-015 : mention « nouvelle fenêtre » (le lien s'ouvre dans un nouvel onglet).
-const versionLink = computed(() => ({
-  label: appVersion,
-  title: `Version ${appVersion} - nouvelle fenêtre`,
-  href: `https://github.com/dnum-mi/referentiel-applications/releases/tag/${appVersion}`,
-  target: "_blank",
-  to: undefined,
-}));
 
 interface QuickLink {
   label: string;
@@ -191,7 +182,7 @@ const ecosystemLinks = computed(() => {
       title: link.title?.includes("nouvelle fenêtre") ? link.title : `${link.title ?? link.label} - nouvelle fenêtre`,
     }));
 });
-const mandatoryLinks = computed(() => [
+const mandatoryLinks = [
   { label: accessibilityDeclaration.complianceMention, title: "Aller à la page d'accessibilité", to: { name: routeNames.ACCESSIBILITE } },
   { label: "Plan du site", title: "Aller au plan du site", to: { name: routeNames.SITEMAP } },
   {
@@ -211,8 +202,7 @@ const mandatoryLinks = computed(() => [
     icon: "fr-icon-mail-line",
     to: undefined,
   },
-  versionLink.value,
-]);
+];
 const scheme = useScheme();
 function changeTheme() {
   if (!scheme) return;
@@ -304,7 +294,6 @@ const { needRefresh, updateServiceWorker } = useAppUpdate();
   <DsfrFooter
     id="footer"
     :logo-text="logoText"
-    desc-text="Référentiel des applications du ministère de l'Intérieur : recensement des applications, de leurs données et de leurs relations."
     :operator-img-src="operatorImgSrc"
     :operator-img-alt="operatorImgAlt"
     :operator-img-style="operatorImgStyle"
@@ -314,7 +303,13 @@ const { needRefresh, updateServiceWorker } = useAppUpdate();
     :after-mandatory-links="afterMandatoryLinks"
     :operator-to="homeLink"
     data-testid="footer"
-  />
+  >
+    <template #description>
+      Référentiel des applications du ministère de l'Intérieur : recensement des applications, de leurs données et de leurs relations.
+      <br />
+      <FooterVersionLink :version="appVersion" />
+    </template>
+  </DsfrFooter>
 
   <AppToaster
     v-if="userStore.hasApplicationAccess || (!userStore.authenticated && !userStore.isAuthDowngraded)"
