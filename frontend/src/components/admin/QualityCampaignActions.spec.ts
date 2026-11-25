@@ -31,7 +31,7 @@ const campaign = {
 const success = () => ({ data: campaign, response: { ok: true } });
 enableAutoUnmount(afterEach);
 
-function renderActions() {
+function renderActions(persistModal = false) {
   return mount(QualityCampaignActions, {
     attachTo: document.body,
     props: { campaign },
@@ -40,7 +40,9 @@ function renderActions() {
       stubs: {
         DsfrModal: {
           props: ["opened"],
-          template: '<section v-if="opened" role="dialog"><slot /><slot name="footer" /></section>',
+          template: persistModal
+            ? '<section v-show="opened" role="dialog"><slot /><slot name="footer" /></section>'
+            : '<section v-if="opened" role="dialog"><slot /><slot name="footer" /></section>',
         },
         VIcon: true,
       },
@@ -249,6 +251,94 @@ describe("QualityCampaignActions — confirmation des données personnelles", ()
     finish();
     await flushPromises();
   });
+});
+
+describe("QualityCampaignActions — erreurs des champs", () => {
+  it("associe les erreurs aux vrais champs et suit leur ordre jusqu'à une sauvegarde valide", async () => {
+    vi.spyOn(globalThis, "confirm").mockReturnValue(true);
+    const wrapper = renderActions();
+    await wrapper.get('[data-testid="admin-quality-campaign-edit-btn"]').trigger("click");
+    expect(wrapper.get('[data-testid="required-fields-hint"]').text()).toBe("* = champs obligatoires");
+    const name = wrapper.get<HTMLInputElement>('[data-testid="quality-campaign-name"]');
+    const sponsor = wrapper.get<HTMLInputElement>('[data-testid="quality-campaign-sponsor-email-0"]');
+    const startDate = wrapper.get<HTMLInputElement>('[data-testid="quality-campaign-start-date"]');
+    const message = wrapper.get<HTMLTextAreaElement>('[data-testid="quality-campaign-message"]');
+    const save = wrapper.get<HTMLButtonElement>('[data-testid="admin-quality-campaign-save-btn"]');
+    await name.setValue(" ");
+    await sponsor.setValue("email-invalide");
+    await startDate.setValue("");
+    await message.setValue("Message à conserver");
+    expect(name.attributes("aria-invalid")).toBeUndefined();
+    expect(startDate.attributes("aria-invalid")).toBeUndefined();
+    save.element.focus();
+    await save.trigger("click");
+    await flushPromises();
+
+    expect(updateCampaign).not.toHaveBeenCalled();
+    expect(name.element).toHaveFocus();
+    expect(name.element).toHaveAttribute("aria-invalid", "true");
+    expect(name.element).toHaveAccessibleDescription("Le nom de la campagne est requis.");
+    expect(startDate.element).toHaveAttribute("aria-invalid", "true");
+    expect(startDate.element).toHaveAccessibleDescription("La date de début est requise.");
+    expect(startDate.element).toHaveAccessibleName(/Déclenche l'envoi automatique aux acteurs/);
+    expect(sponsor.element).toHaveAttribute("aria-invalid", "true");
+    expect(sponsor.element).toHaveAccessibleDescription("Email invalide. Format attendu – ex : exemple@mail.fr");
+    expect(message.element).toHaveValue("Message à conserver");
+
+    await name.setValue("Campagne corrigée");
+    expect(name.attributes("aria-invalid")).toBeUndefined();
+    expect(name.attributes("aria-describedby")).toBeUndefined();
+    expect(wrapper.text()).not.toContain("Le nom de la campagne est requis.");
+    save.element.focus();
+    await save.trigger("click");
+    await flushPromises();
+    expect(sponsor.element).toHaveFocus();
+    expect(updateCampaign).not.toHaveBeenCalled();
+
+    await sponsor.setValue("corrige@example.test");
+    expect(sponsor.attributes("aria-invalid")).toBeUndefined();
+    expect(sponsor.attributes("aria-describedby")).toBeUndefined();
+    save.element.focus();
+    await save.trigger("click");
+    await flushPromises();
+    expect(startDate.element).toHaveFocus();
+    expect(updateCampaign).not.toHaveBeenCalled();
+    expect(name.element).toHaveValue("Campagne corrigée");
+    expect(message.element).toHaveValue("Message à conserver");
+
+    await startDate.setValue("2026-11-24");
+    expect(startDate.attributes("aria-invalid")).toBeUndefined();
+    expect(startDate.attributes("aria-describedby")).toBeUndefined();
+    expect(startDate.element).toHaveAccessibleName(/Déclenche l'envoi automatique aux acteurs/);
+    await save.trigger("click");
+    await flushPromises();
+    expect(updateCampaign).toHaveBeenCalledExactlyOnceWith({
+      path: { id: campaign.id },
+      body: {
+        name: "Campagne corrigée",
+        sponsorEmails: ["corrige@example.test"],
+        message: "Message à conserver",
+        startDate: new Date("2026-11-24"),
+        endDate: null,
+      },
+    });
+    expect(wrapper.find('[data-testid="admin-edit-quality-campaign-modal"]').exists()).toBe(false);
+  });
+});
+
+it("conserve la garde des sponsors invalides lors de la réouverture d'une modale persistante", async () => {
+  const wrapper = renderActions(true);
+  await wrapper.setProps({ campaign: { ...campaign, sponsorEmails: ["email-invalide"] } });
+  const open = wrapper.get('[data-testid="admin-quality-campaign-edit-btn"]');
+  await open.trigger("click");
+  await wrapper.get('[data-testid="admin-quality-campaign-cancel-btn"]').trigger("click");
+  await open.trigger("click");
+  const save = wrapper.get<HTMLButtonElement>('[data-testid="admin-quality-campaign-save-btn"]');
+  save.element.focus();
+  await save.trigger("click");
+  await flushPromises();
+  expect(updateCampaign).not.toHaveBeenCalled();
+  expect(wrapper.get('[data-testid="quality-campaign-sponsor-email-0"]').element).toHaveFocus();
 });
 
 describe("QualityCampaignActions — erreurs associées aux champs (#3322)", () => {

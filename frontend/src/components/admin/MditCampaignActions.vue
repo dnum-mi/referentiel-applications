@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { isApiSuccess } from "@/api/api-result";
-import { computed, ref } from "vue";
+import { computed, nextTick, ref } from "vue";
 import type { MditCampaignDto } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
 import api from "@/api";
@@ -26,6 +26,7 @@ const editingYear = ref<number | undefined>(undefined);
 const editingLabel = ref<string>("");
 const editingActive = ref<boolean>(true);
 const errorMessage = ref<string>("");
+const editFields = ref<HTMLDivElement | null>(null);
 const validationAttempted = ref(false);
 const yearError = computed(() => {
   const year = Number(editingYear.value);
@@ -35,11 +36,11 @@ const yearError = computed(() => {
 });
 
 function openEditModal() {
-  validationAttempted.value = false;
   editingYear.value = props.campaign?.year;
   editingLabel.value = props.campaign?.label || "";
   editingActive.value = props.campaign?.isActive ?? true;
   errorMessage.value = "";
+  validationAttempted.value = false;
   isEditModalOpen.value = true;
 }
 
@@ -58,11 +59,15 @@ function closeDeleteModal() {
 
 async function saveCampaign() {
   if (isSaving.value) return;
-  validationAttempted.value = true;
   errorMessage.value = "";
-  if (yearError.value) return;
-  const year = Number(editingYear.value);
+  validationAttempted.value = true;
+  if (yearError.value) {
+    await nextTick();
+    editFields.value?.querySelector<HTMLInputElement>('input[aria-invalid="true"]')?.focus();
+    return;
+  }
 
+  const year = Number(editingYear.value);
   isSaving.value = true;
 
   const body = {
@@ -144,53 +149,55 @@ async function deleteCampaign() {
     :data-testid="!campaign?.id ? 'admin-create-campaign-modal' : 'admin-edit-campaign-modal'"
     @close="closeEditModal"
   >
-    <p class="fr-text--sm fr-mb-3w" data-testid="required-fields-hint">* = champs obligatoires</p>
-    <p class="fr-text--sm fr-hint-text fr-mb-3w" style="white-space: normal">
-      Une campagne correspond à un millésime (année) de collecte de la dette IT. La campagne active la plus récente est présentée par défaut
-      dans le diagramme Time.
-    </p>
+    <div ref="editFields">
+      <p class="fr-text--sm fr-mb-3w" data-testid="required-fields-hint">* = champs obligatoires</p>
+      <p class="fr-text--sm fr-hint-text fr-mb-3w" style="white-space: normal">
+        Une campagne correspond à un millésime (année) de collecte de la dette IT. La campagne active la plus récente est présentée par
+        défaut dans le diagramme Time.
+      </p>
 
-    <DsfrAlert
-      alert
-      v-if="errorMessage"
-      type="error"
-      :description="errorMessage"
-      small
-      class="fr-mb-3w"
-      data-testid="campaign-form-error"
-    />
+      <DsfrAlert
+        alert
+        v-if="errorMessage"
+        type="error"
+        :description="errorMessage"
+        small
+        class="fr-mb-3w"
+        data-testid="campaign-form-error"
+      />
 
-    <DsfrInputGroup
-      v-model.number="editingYear"
-      :error-message="yearError"
-      :aria-invalid="yearError ? true : undefined"
-      class="fr-mb-3w"
-      type="number"
-      label="Millésime (année)"
-      hint="Année sur 4 chiffres, entre 2000 et 2100 (ex. 2027)"
-      label-visible
-      required
-      :min="2000"
-      :max="2100"
-      data-testid="campaign-year"
-    />
+      <DsfrInputGroup
+        v-model.number="editingYear"
+        class="fr-mb-3w"
+        type="number"
+        label="Millésime (année)"
+        hint="Année sur 4 chiffres, entre 2000 et 2100 (ex. 2027)"
+        label-visible
+        required
+        :min="2000"
+        :max="2100"
+        :error-message="yearError"
+        :aria-invalid="yearError ? true : undefined"
+        data-testid="campaign-year"
+      />
 
-    <DsfrInputGroup
-      v-model="editingLabel"
-      class="fr-mb-3w"
-      label="Libellé (optionnel)"
-      hint="Texte affiché dans le sélecteur de campagne ; à défaut, l'année est utilisée"
-      label-visible
-      data-testid="campaign-label"
-    />
+      <DsfrInputGroup
+        v-model="editingLabel"
+        class="fr-mb-3w"
+        label="Libellé (optionnel)"
+        hint="Texte affiché dans le sélecteur de campagne ; à défaut, l'année est utilisée"
+        label-visible
+        data-testid="campaign-label"
+      />
 
-    <DsfrToggleSwitch
-      :model-value="editingActive"
-      label="Campagne active"
-      hint="Seules les campagnes actives apparaissent dans le sélecteur du diagramme Time"
-      data-testid="campaign-active"
-      @update:model-value="editingActive = $event"
-    />
+      <DsfrToggleSwitch
+        :model-value="editingActive"
+        label="Campagne active"
+        hint="Seules les campagnes actives apparaissent dans le sélecteur du diagramme Time"
+        data-testid="campaign-active"
+        @update:model-value="editingActive = $event"
+      />
+    </div>
 
     <template #footer>
       <DsfrButtonGroup :inline-layout-when="true" :reverse="true">
