@@ -6,7 +6,7 @@ const repositoryUrl = "https://github.com/dnum-mi/referentiel-applications";
 it("indique visiblement la version et sa destination, avec le changement de langue sur le mot anglais", () => {
   const link = mount(FooterVersionLink, { props: { version: "development" } });
 
-  expect(link.get("span").text()).toBe("Version : development sur GitHub");
+  expect(link.text()).toBe("Version : development sur GitHub (nouvelle fenêtre)");
   expect(link.get('[lang="en"]').text()).toBe("development");
   expect(link.element).toHaveAccessibleName("Version : development sur GitHub (nouvelle fenêtre)");
   expect(link.attributes("target")).toBe("_blank");

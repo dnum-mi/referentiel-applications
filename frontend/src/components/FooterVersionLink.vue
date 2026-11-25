@@ -13,9 +13,6 @@ const href = computed(() => {
 
 <template>
   <a :href="href" target="_blank" rel="noopener noreferrer" class="fr-link fr-link--sm">
-    <span
-      >Version : <span :lang="versionLanguage">{{ version }}</span> sur GitHub</span
-    >
-    <span class="fr-sr-only">&nbsp;(nouvelle fenêtre)</span>
+    Version : <span :lang="versionLanguage">{{ version }}</span> sur GitHub (nouvelle fenêtre)
   </a>
 </template>
