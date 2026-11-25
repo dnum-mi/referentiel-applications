@@ -5,7 +5,7 @@ import { useRelationStore } from "@/stores/relationStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import type { TableColumn } from "@/types/table";
 import type { DataTablePageEvent } from "primevue/datatable";
-import { computed, ref, watch } from "vue";
+import { computed, nextTick, ref, useId, watch } from "vue";
 import RefAppTable from "./RefAppTable.vue";
 import RelationshipGraph from "./RelationShipGraph.vue";
 import { Permission, type RelationDto } from "@/client";
@@ -74,28 +74,37 @@ const isDeleteDisabled = computed(() => selectedRelationIds.value.length === 0);
 const pageSize = ref(10);
 const firstIndex = computed(() => currentPage.value * pageSize.value);
 
-const viewMode = ref<"list" | "graph">("list");
+const viewMode = ref<"list" | "graph">("graph");
+const managementId = `relations-management-${useId()}`;
+const managementSection = ref<HTMLDetailsElement | null>(null);
 function setViewMode(mode: "list" | "graph") {
   viewMode.value = mode;
+}
+
+async function openRelationManagement() {
+  setViewMode("list");
+  await nextTick();
+  managementSection.value?.focus();
+  managementSection.value?.scrollIntoView({ block: "start" });
 }
 
 // --- Boutons principaux ---
 const mainButtons = computed(() => [
   {
-    label: "Liste",
-    title: "Vue liste des relations",
-    icon: "fr-icon-list-unordered",
-    onClick: () => setViewMode("list"),
-    tertiary: viewMode.value !== "list",
-    "aria-pressed": viewMode.value === "list",
-  },
-  {
     label: "Graphe",
+    iconOnly: false,
     title: "Vue graphe des relations",
-    icon: "fr-icon-eye-line",
     onClick: () => setViewMode("graph"),
     tertiary: viewMode.value !== "graph",
     "aria-pressed": viewMode.value === "graph",
+  },
+  {
+    label: "Liste",
+    iconOnly: false,
+    title: "Vue liste des relations",
+    onClick: () => setViewMode("list"),
+    tertiary: viewMode.value !== "list",
+    "aria-pressed": viewMode.value === "list",
   },
 ]);
 
@@ -175,7 +184,8 @@ watch(
     </div>
     <div class="fr-col main-buttons-row" aria-hidden="false">
       <div>
-        <DsfrButtonGroup :buttons="mainButtons" />
+        <DsfrButtonGroup :buttons="mainButtons" class="fr-btns-group--inline" inline-layout-when="always" aria-label="Vue des relations" />
+        <DsfrButton v-if="viewMode === 'graph'" secondary @click="openRelationManagement">Gérer les relations directes</DsfrButton>
         <DsfrButton v-bind="addRelationButton" />
       </div>
     </div>
@@ -183,7 +193,7 @@ watch(
   <RelationshipGraph v-if="!isLoading" :application-id="props.application.id" :view-mode="viewMode" :refresh-key="graphRefreshKey" />
 
   <!-- List View -->
-  <details v-if="!isLoading && viewMode === 'list'" class="fr-mt-4w" open>
+  <details v-if="!isLoading && viewMode === 'list'" :id="managementId" ref="managementSection" class="fr-mt-4w" tabindex="-1" open>
     <summary class="fr-h4">Gérer les relations directes de l’application</summary>
     <p>
       Cette section permet de modifier les relations directes. La liste complète du réseau, à la profondeur choisie, est présentée
@@ -395,10 +405,27 @@ input[type="checkbox"] {
   align-items: center;
 }
 
-.main-buttons-row .fr-btn,
-.main-buttons-row .fr-btn-group,
-.main-buttons-row .fr-btns {
+.main-buttons-row :deep(.fr-btns-group) {
   display: flex;
+  flex-flow: row wrap;
+  gap: 0.5rem;
+  margin: 0;
   align-items: center;
+}
+.main-buttons-row :deep(.fr-btns-group > li) {
+  padding: 0;
+}
+.main-buttons-row :deep(.fr-btns-group .fr-btn) {
+  margin: 0;
+}
+
+@media (max-width: 48rem) {
+  [data-testid="relations-header"] {
+    gap: 1rem;
+  }
+  .main-buttons-row {
+    flex-basis: 100%;
+    justify-content: flex-start;
+  }
 }
 </style>

@@ -120,7 +120,7 @@ jobs:
           retention-days: 1
 
   test-frontend-browser-accessibility:
-    name: Frontend Browser Accessibility (Chromium)
+    name: Frontend Browser Accessibility
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
@@ -142,14 +142,19 @@ jobs:
       - name: Generate API client
         working-directory: frontend
         run: pnpm api:generate
-      - name: Install Chromium
+      - name: Install accessibility test browsers
         timeout-minutes: 10
         working-directory: frontend
-        run: bash ../.github/scripts/install-playwright-browsers.sh chromium
+        run: bash ../.github/scripts/install-playwright-browsers.sh chromium firefox webkit
       - name: Test browser accessibility without retries
         timeout-minutes: 5
         working-directory: frontend
         run: pnpm test:browser:accessibility --workers=1 --retries=0 --reporter=list,html
+      # Chromium couvre ce lot dans la commande précédente ; compléter les deux moteurs.
+      - name: Test campaign focus in Firefox and WebKit without retries
+        timeout-minutes: 5
+        working-directory: frontend
+        run: pnpm exec playwright test --config tests/browser/campaign-errors-focus.config.ts --project=firefox --project=webkit --workers=1 --retries=0 --reporter=list,html
       - name: Upload accessibility failure diagnostics
         if: ${{ failure() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

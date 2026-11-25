@@ -346,7 +346,7 @@ describe("EndOfLifePage", () => {
     await fireEvent.update(screen.getByTestId("end-of-life-filter-organization"), " MI/DNUM ");
     await fireEvent.update(screen.getByTestId("end-of-life-filter-search"), " PostgreSQL ");
     await fireEvent.click(screen.getByRole("button", { name: "Application" }));
-    await fireEvent.click(screen.getByTestId("end-of-life-export-excel"));
+    await fireEvent.click(screen.getByRole("button", { name: "Exporter" }));
     expect(storeMock.downloadExcel).toHaveBeenCalledExactlyOnceWith({
       status: "eol-soon",
       organization: "MI/DNUM",
@@ -358,11 +358,14 @@ describe("EndOfLifePage", () => {
     });
   });
 
-  it("désactive l'export et annonce sa préparation pendant l'envoi", async () => {
+  it("garde l'export focalisable et bloque une nouvelle activation pendant sa préparation", async () => {
     render_();
     storeMock.isExporting.value = true;
-    await waitFor(() => expect(screen.getByTestId("end-of-life-export-excel")).toBeDisabled());
+    await waitFor(() => expect(screen.getByTestId("end-of-life-export-excel")).toHaveAttribute("aria-disabled", "true"));
     const button = screen.getByTestId("end-of-life-export-excel");
+    expect(button).not.toBeDisabled();
+    button.focus();
+    expect(button).toHaveFocus();
     expect(button).toHaveAttribute("aria-busy", "true");
     expect(button).toHaveTextContent("Préparation de l’export…");
     await fireEvent.click(button);

@@ -42,6 +42,12 @@ async function renderGraph() {
   return { ...rendered, router };
 }
 
+async function openNavigationHelp(container: Element) {
+  const help = container.querySelector("details")!;
+  help.open = true;
+  await fireEvent(help, new Event("toggle"));
+}
+
 describe("Relations — navigation et alternative du réseau", () => {
   beforeEach(() => {
     fetchGraph
@@ -51,6 +57,20 @@ describe("Relations — navigation et alternative du réseau", () => {
       );
   });
   afterEach(cleanup);
+
+  it("présente le graphe avant une aide fermée et garde la transcription directement accessible", async () => {
+    const { container } = await renderGraph();
+    const graph = screen.getByRole("region", { name: "Graphe des relations, zone défilante" });
+    const help = container.querySelector("details")!;
+    expect(help).not.toHaveAttribute("open");
+    expect(graph.compareDocumentPosition(help) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(graph).toHaveAccessibleDescription(/Réseau des applications liées/);
+    expect(screen.getByRole("link", { name: "Consulter la liste complète du graphe" })).toHaveAttribute(
+      "href",
+      `#${screen.getByTestId("relations-graph-transcription").id}`,
+    );
+    expect(screen.getByTestId("relations-graph-transcription").closest("details")).toBeNull();
+  });
 
   it("conserve les cinq applications et quatre relations quand on passe du graphe profondeur 2 à la liste", async () => {
     const { rerender, container } = await renderGraph();
@@ -65,6 +85,13 @@ describe("Relations — navigation et alternative du réseau", () => {
     expect(within(transcription).getAllByRole("link", { name: "Schmeler" })).toHaveLength(2);
     expect(transcription.querySelectorAll("tbody tr")).toHaveLength(4);
     expect(within(transcription).getByRole("table")).toHaveAccessibleName("Relations du réseau — profondeur 2 (4 relations)");
+    expect(fetchGraph).toHaveBeenCalledTimes(2);
+    await fireEvent.click(screen.getAllByRole("checkbox")[0]);
+    await rerender({ applicationId: "root", viewMode: "graph" });
+    await flushPromises();
+    expect(screen.getByRole("spinbutton")).toHaveValue(2);
+    expect(screen.getAllByRole("checkbox")[0]).not.toBeChecked();
+    expect(container.querySelectorAll("svg a[data-node-id]")).toHaveLength(3);
     expect(fetchGraph).toHaveBeenCalledTimes(2);
   });
 
@@ -116,6 +143,7 @@ describe("Relations — navigation et alternative du réseau", () => {
     await fireEvent.click(screen.getByRole("button", { name: "Zoomer" }));
     expect(viewport.getAttribute("transform")).toContain("scale(1.25)");
     const zoomTransform = viewport.getAttribute("transform");
+    await openNavigationHelp(container);
     await fireEvent.click(screen.getByRole("button", { name: "Déplacer la vue à gauche" }));
     expect(viewport.getAttribute("transform")).not.toBe(zoomTransform);
     await fireEvent.click(screen.getByRole("button", { name: "Réinitialiser le zoom" }));
@@ -127,6 +155,7 @@ describe("Relations — navigation et alternative du réseau", () => {
 
   it("déplace chaque nœud depuis des commandes HTML et conserve ou réinitialise la sélection selon les filtres", async () => {
     const { container } = await renderGraph();
+    await openNavigationHelp(container);
     const selection = screen.getByRole("combobox", { name: "Nœud à déplacer dans le graphe" });
     await fireEvent.update(selection, "b");
     const node = container.querySelector('svg a[data-node-id="b"]')!;
