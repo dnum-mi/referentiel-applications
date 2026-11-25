@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, ref } from "vue";
+import { computed, nextTick, ref } from "vue";
 import type { QualityCampaignDto, UpdateQualityCampaignStatusDto } from "@/client/types.gen";
 import { useQualityCampaignStore } from "@/stores/qualityCampaignStore";
 import SponsorEmailsInput from "@/components/form/SponsorEmailsInput.vue";
@@ -38,6 +38,11 @@ const editingSponsorEmails = ref<string[]>([]);
 const editingMessage = ref("");
 const editingStartDate = ref("");
 const editingEndDate = ref("");
+const validationAttempted = ref(false);
+const nameError = computed(() =>
+  validationAttempted.value && !editingName.value.trim() ? "Le nom de la campagne est requis." : undefined,
+);
+const startDateError = computed(() => (validationAttempted.value && !editingStartDate.value ? "La date de début est requise." : undefined));
 
 function toDateInputValue(value?: Date | string | null) {
   if (!value) return "";
@@ -45,6 +50,7 @@ function toDateInputValue(value?: Date | string | null) {
 }
 
 function openEditModal() {
+  validationAttempted.value = false;
   editingName.value = props.campaign.name;
   editingSponsorEmails.value = [...props.campaign.sponsorEmails];
   editingMessage.value = props.campaign.message ?? "";
@@ -72,18 +78,9 @@ function closeDeleteModal() {
 
 async function saveCampaign(event: MouseEvent) {
   if (isSaving.value) return;
-  if (!editingName.value.trim()) {
-    errorMessage.value = "Le nom de la campagne est requis.";
-    return;
-  }
-  if (!editingStartDate.value) {
-    errorMessage.value = "La date de début est requise.";
-    return;
-  }
-  if (!areSponsorEmailsValid.value) {
-    errorMessage.value = "Un ou plusieurs emails sponsors sont invalides.";
-    return;
-  }
+  validationAttempted.value = true;
+  errorMessage.value = "";
+  if (nameError.value || startDateError.value || !areSponsorEmailsValid.value) return;
 
   const sponsorEmails = editingSponsorEmails.value.map((email) => email.trim()).filter(Boolean);
   const currentSponsorEmails = props.campaign.sponsorEmails.map((email) => email.trim()).filter(Boolean);
@@ -99,7 +96,6 @@ async function saveCampaign(event: MouseEvent) {
   }
 
   isSaving.value = true;
-  errorMessage.value = "";
   try {
     const updated = await store.updateCampaign(props.campaign.id, {
       name: editingName.value.trim(),
@@ -221,8 +217,12 @@ async function changeStatus(status: UpdateQualityCampaignStatusDto["status"]) {
       data-testid="quality-campaign-form-error"
     />
 
+    <p class="fr-text--sm fr-mb-3w">* = champs obligatoires</p>
+
     <DsfrInputGroup
       v-model="editingName"
+      :error-message="nameError"
+      :aria-invalid="nameError ? true : undefined"
       class="fr-mb-3w"
       label="Nom de la campagne"
       label-visible
@@ -250,6 +250,8 @@ async function changeStatus(status: UpdateQualityCampaignStatusDto["status"]) {
 
     <DsfrInputGroup
       v-model="editingStartDate"
+      :error-message="startDateError"
+      :aria-invalid="startDateError ? true : undefined"
       class="fr-mb-3w"
       type="date"
       label="Date de début"
