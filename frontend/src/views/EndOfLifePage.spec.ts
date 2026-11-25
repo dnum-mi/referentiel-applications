@@ -346,7 +346,7 @@ describe("EndOfLifePage", () => {
     await fireEvent.update(screen.getByTestId("end-of-life-filter-organization"), " MI/DNUM ");
     await fireEvent.update(screen.getByTestId("end-of-life-filter-search"), " PostgreSQL ");
     await fireEvent.click(screen.getByRole("button", { name: "Application" }));
-    await fireEvent.click(screen.getByTestId("end-of-life-export-excel"));
+    await fireEvent.click(screen.getByRole("button", { name: "Exporter" }));
     expect(storeMock.downloadExcel).toHaveBeenCalledExactlyOnceWith({
       status: "eol-soon",
       organization: "MI/DNUM",
