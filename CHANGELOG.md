@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.107.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.106.0...v1.107.0) (2026-11-25)
+
+
+### Features
+
+* implement focus management for invalid fields and enhance accessibility in campaign forms ([#3366](https://github.com/dnum-mi/referentiel-applications/issues/3366)) ([a4f9269](https://github.com/dnum-mi/referentiel-applications/commit/a4f92690f02e394fd90f322c9a12f78b3a7793b7))
+* prioritize application relation graph ([#3334](https://github.com/dnum-mi/referentiel-applications/issues/3334)) ([8efd2a7](https://github.com/dnum-mi/referentiel-applications/commit/8efd2a7f08871c35655a470c0fa4eb40b36ca747))
+* refactor application priority permissions and related components ([#3305](https://github.com/dnum-mi/referentiel-applications/issues/3305)) ([f1534bc](https://github.com/dnum-mi/referentiel-applications/commit/f1534bcba4c902b4a0f2ac080422823b28801194))
+
+
+### Bug Fixes
+
+* associate campaign errors and preserve keyboard focus ([#3335](https://github.com/dnum-mi/referentiel-applications/issues/3335)) ([c7b4004](https://github.com/dnum-mi/referentiel-applications/commit/c7b4004c32ab519d93bfabf989466dc22e1c8fe2))
+* associate campaign errors with fields and clarify validation messages ([#3356](https://github.com/dnum-mi/referentiel-applications/issues/3356)) ([b3378fd](https://github.com/dnum-mi/referentiel-applications/commit/b3378fd7a031c8fd72d5c0278e511d7c590c7fe0))
+* clarify the accessible footer version link ([#3362](https://github.com/dnum-mi/referentiel-applications/issues/3362)) ([d474e69](https://github.com/dnum-mi/referentiel-applications/commit/d474e69f95ed24028b10e88dbe127453d07aa1cd))
+* resolve manual RGAA audit findings ([#3364](https://github.com/dnum-mi/referentiel-applications/issues/3364)) ([4a006fe](https://github.com/dnum-mi/referentiel-applications/commit/4a006fe5b032ea8085d9aa6b54ce3ae2bda42cb7))
+* simplify export labels ([#3336](https://github.com/dnum-mi/referentiel-applications/issues/3336)) ([e9f1bcc](https://github.com/dnum-mi/referentiel-applications/commit/e9f1bcc3014688f428af78beda348312aac348bc))
+* test CRU-05 and IMP-09 ([#3368](https://github.com/dnum-mi/referentiel-applications/issues/3368)) ([1549158](https://github.com/dnum-mi/referentiel-applications/commit/154915891a8d8ffa30a630a4d19c3913fb418563))
+* update effect to patched release ([#3367](https://github.com/dnum-mi/referentiel-applications/issues/3367)) ([1aef807](https://github.com/dnum-mi/referentiel-applications/commit/1aef807fcadeaa2a7e513d04a868d059b9332cf4))
+
 ## [1.106.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.105.0...v1.106.0) (2026-11-18)
 
 
