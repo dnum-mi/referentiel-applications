@@ -348,7 +348,14 @@ export class ApplicationPage extends BasePage {
     await expect(this.byTestId("quality-index")).toBeVisible();
   }
 
+  private async selectRelationsList(): Promise<void> {
+    await this.tabContent("tab-relations")
+      .getByRole("button", { name: "Liste", exact: true })
+      .click();
+  }
+
   async expectRelationsWithTarget(): Promise<void> {
+    await this.selectRelationsList();
     await expect(this.byTestId("relations-table")).toBeVisible();
     await expect(this.byTestId("relation-target-link").first()).toBeVisible();
   }
@@ -357,6 +364,7 @@ export class ApplicationPage extends BasePage {
     targetId: string,
     targetLabel: string,
   ): Promise<void> {
+    await this.selectRelationsList();
     const row = this.byTestId("relations-table")
       .locator("tbody tr")
       .filter({
@@ -1123,6 +1131,7 @@ export class ApplicationPage extends BasePage {
   }
 
   async editFirstRelationType(typeLabel: string): Promise<void> {
+    await this.selectRelationsList();
     await this.byTestId("relation-edit-btn").first().click();
     await expect(this.byTestId("relation-edit-modal")).toBeVisible();
     await this.byTestId("edit-relation-type-select").selectOption({
@@ -1133,6 +1142,7 @@ export class ApplicationPage extends BasePage {
   }
 
   async deleteSelectedRelations(): Promise<void> {
+    await this.selectRelationsList();
     const rows = this.byTestId("relations-table").locator("tbody tr");
     await rows.first().locator("input[type=checkbox]").check();
     await this.byTestId("relation-delete-selected-btn").click();
@@ -1146,12 +1156,14 @@ export class ApplicationPage extends BasePage {
   }
 
   async expectRelationsTableContains(text: string): Promise<void> {
+    await this.selectRelationsList();
     await expect(
       this.byTestId("relations-table").locator("tr", { hasText: text }).first(),
     ).toBeVisible();
   }
 
   async expectRelationsEmpty(): Promise<void> {
+    await this.selectRelationsList();
     await expect(this.byTestId("relations-empty")).toBeVisible();
   }
 
