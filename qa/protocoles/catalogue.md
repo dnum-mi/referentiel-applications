@@ -67,10 +67,10 @@
 - **Action** : activer `my-apps-filter-toggle`.
 - **Résultat attendu** : la liste se restreint aux applications de l'utilisateur ; l'URL est mise à jour.
 
-### CAT-11 — Bascule vue tableau / cartes ✅
+### CAT-11 — Catalogue complet sur petit écran ✅
 
-- **Action** : basculer l'affichage.
-- **Résultat attendu** : `application-table-view` ↔ `application-card-view` ; mêmes données.
+- **Action** : relever les en-têtes et les valeurs d'une ligne à 1280 px, puis passer à 320 et 720 px. Donner le focus à la zone du tableau, la faire défiler avec les flèches, puis activer le tri IQ avec Entrée.
+- **Résultat attendu** : mêmes colonnes sélectionnées, valeurs et commandes de tri à toutes les largeurs. Le défilement est contenu dans le tableau et accessible au clavier ; la page ne déborde pas horizontalement. Le tri met à jour l'URL et conserve le focus de sa commande.
 
 ### CAT-12 — Persistance des filtres après rechargement ✅
 

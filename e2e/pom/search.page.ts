@@ -19,7 +19,6 @@ export class SearchPage extends BasePage {
   // --- Locators encapsulés ---
   private title = () => this.byTestId("application-search-title");
   private table = () => this.byTestId("application-table");
-  private cardView = () => this.byTestId("application-card-container");
   private averageIqTag = () => this.byTestId("application-average-iq");
   private sidebar = () => this.byTestId("sidebar-filter");
   private totalCounter = () => this.byTestId("sidebar-total-count");
@@ -37,7 +36,7 @@ export class SearchPage extends BasePage {
   async open(query?: URLSearchParams): Promise<void> {
     await this.goto(`${SEARCH_PATH}${query?.size ? `?${query}` : ""}`);
     await expect(this.title()).toBeVisible();
-    await expect(this.table().or(this.cardView())).toBeVisible();
+    await expect(this.table()).toBeVisible();
   }
 
   /** Recharge la page et attend la liste (pour vérifier la persistance des filtres). */
@@ -75,7 +74,7 @@ export class SearchPage extends BasePage {
   }
 
   async expectResultsVisible(): Promise<void> {
-    await expect(this.table().or(this.cardView())).toBeVisible();
+    await expect(this.table()).toBeVisible();
   }
 
   /** Libellé de la première application listée (sert de donnée au protocole côté UI). */
@@ -736,15 +735,50 @@ export class SearchPage extends BasePage {
     }
   }
 
-  // --- Affichage responsive (CAT-11 : pas de toggle, c'est la largeur d'écran qui décide) ---
+  // --- Affichage responsive : les colonnes et commandes restent dans le même tableau. ---
   async expectTableViewOnDesktop(): Promise<void> {
     await this.page.setViewportSize({ width: 1280, height: 900 });
     await expect(this.table()).toBeVisible();
   }
 
-  async expectCardViewOnMobile(): Promise<void> {
-    await this.page.setViewportSize({ width: 375, height: 800 });
-    await expect(this.byTestId("application-card-container")).toBeVisible();
+  async expectTableContentAtCompactWidths(): Promise<void> {
+    const table = this.table();
+    await expect(table.locator("tbody tr a").first()).toBeVisible();
+    const columns = await table.locator("thead th").allTextContents();
+    const firstRow = table.locator("tbody tr").first().locator("td");
+    const values = await firstRow.allTextContents();
+
+    // 720 CSS px correspond aussi au repli observé lors du zoom natif à 200 %.
+    for (const width of [320, 720]) {
+      await this.page.setViewportSize({ width, height: 900 });
+      await expect(table).toBeVisible();
+      await expect(table.locator("thead th")).toHaveText(columns);
+      await expect(firstRow).toHaveText(values);
+      const scrollContainer = table.locator(
+        '[data-pc-section="tablecontainer"]',
+      );
+      await expect(scrollContainer).toHaveAttribute("tabindex", "0");
+      await expect(scrollContainer).toHaveAttribute("role", "region");
+      await scrollContainer.focus();
+      const beforeScroll = await scrollContainer.evaluate(
+        (element) => element.scrollLeft,
+      );
+      await scrollContainer.press("ArrowRight");
+      await expect
+        .poll(() => scrollContainer.evaluate((element) => element.scrollLeft))
+        .toBeGreaterThan(beforeScroll);
+      expect(
+        await this.page.evaluate(() => document.documentElement.scrollWidth),
+      ).toBeLessThanOrEqual(width + 1);
+    }
+
+    const iq = table.getByRole("button", { name: "IQ", exact: true });
+    await iq.press("Enter");
+    await waitForSearchParams(
+      this.page,
+      (params) => params.get("sortBy") === "quality",
+    );
+    await expect(iq).toBeFocused();
   }
 
   // --- État vide (CAT-14) ---

@@ -45,7 +45,14 @@ export class RelationNavigationPage extends BasePage {
     );
   }
 
+  private async selectRelationsList(): Promise<void> {
+    await this.byTestId("relations-header")
+      .getByRole("button", { name: "Liste", exact: true })
+      .click();
+  }
+
   async expectOnlyRelation(label: string): Promise<void> {
+    await this.selectRelationsList();
     const links = this.byTestId("relations-table").getByTestId(
       "relation-target-link",
     );
@@ -54,12 +61,14 @@ export class RelationNavigationPage extends BasePage {
   }
 
   async expectRelationAbsent(label: string): Promise<void> {
+    await this.selectRelationsList();
     await expect(
       this.byTestId("relations-table").getByText(label, { exact: true }),
     ).toHaveCount(0);
   }
 
   async expectEmptyWithoutActions(): Promise<void> {
+    await this.selectRelationsList();
     await expect(this.byTestId("relations-empty")).toBeVisible();
     await expect(this.byTestId("relations-table")).toHaveCount(0);
     await expect(this.byTestId("relation-edit-btn")).toHaveCount(0);

@@ -1,4 +1,4 @@
-import { mount } from "@vue/test-utils";
+import { flushPromises, mount } from "@vue/test-utils";
 import PrimeVue from "primevue/config";
 import RefAppTable from "./RefAppTable.vue";
 import DataTable from "primevue/datatable";
@@ -6,6 +6,66 @@ import { primeVueFrenchLocale } from "@/constants/primevue-locale";
 import { defineComponent, h, ref } from "vue";
 
 describe("RefAppTable", () => {
+  describe("accès clavier à la zone défilante", () => {
+    let resize: ResizeObserverCallback;
+
+    beforeEach(() => {
+      vi.stubGlobal(
+        "ResizeObserver",
+        class {
+          constructor(callback: ResizeObserverCallback) {
+            resize = callback;
+          }
+          observe = vi.fn();
+          unobserve = vi.fn();
+          disconnect = vi.fn();
+        },
+      );
+    });
+    afterEach(() => vi.unstubAllGlobals());
+
+    it.each(["horizontal", "vertical"])("rend le défilement %s accessible au clavier seulement quand nécessaire", async (axis) => {
+      const wrapper = mount(RefAppTable, {
+        attachTo: document.body,
+        props: {
+          items: [{ label: "Portail", status: "En production" }],
+          columns: [
+            { field: "label", header: "Application", sortable: true },
+            { field: "status", header: "Statut" },
+          ],
+          caption: "Applications du référentiel",
+        },
+        global: { plugins: [[PrimeVue, { unstyled: true }]] },
+      });
+      await flushPromises();
+      const container = wrapper.get<HTMLElement>('[data-pc-section="tablecontainer"]');
+      let overflows = true;
+      Object.defineProperties(container.element, {
+        clientWidth: { configurable: true, get: () => 240 },
+        scrollWidth: { configurable: true, get: () => (overflows && axis === "horizontal" ? 600 : 240) },
+        clientHeight: { configurable: true, get: () => 80 },
+        scrollHeight: { configurable: true, get: () => (overflows && axis === "vertical" ? 200 : 80) },
+      });
+      resize([], {} as ResizeObserver);
+      await flushPromises();
+      expect(container.attributes("tabindex")).toBe("0");
+      expect(container.attributes("role")).toBe("region");
+      expect(container.element).toHaveAccessibleName("Applications du référentiel — zone défilante");
+      container.element.focus();
+      expect(document.activeElement).toBe(container.element);
+
+      overflows = false;
+      resize([], {} as ResizeObserver);
+      await flushPromises();
+      expect(container.attributes("tabindex")).toBeUndefined();
+      expect(container.attributes("role")).toBeUndefined();
+      expect(container.attributes("aria-label")).toBeUndefined();
+      expect(wrapper.get("tbody").text()).toContain("Portail");
+      expect(wrapper.get(".ref-table-sort-button").element).toHaveAccessibleName("Application");
+      wrapper.unmount();
+    });
+  });
+
   it.each([false, true])("affiche un message vide statique, après retrait de la dernière ligne : %s", async (removeLastRow) => {
     const wrapper = mount(RefAppTable, {
       props: {

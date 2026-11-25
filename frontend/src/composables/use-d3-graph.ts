@@ -61,7 +61,7 @@ export function useD3Graph() {
   ) {
     const styles = getGraphStyles();
     const width = Math.max(container.clientWidth || 800, 600);
-    const height = Math.max(container.clientHeight || 600, 600);
+    const height = container.clientHeight || 600;
     const prefix = (container.id || "relations-graph").replace(/[^\w-]/g, "_");
     d3.select(container).selectAll("*").remove();
 
@@ -100,7 +100,7 @@ export function useD3Graph() {
                 `${e.sourceLabel} ${relationTypeLabels[e.type]} ${e.targetLabel}${isDirectedRelation(e.type) ? "" : " (relation réciproque)"}`,
             )
             .join(" ; ") +
-          ". Chaque application est un lien. Majuscule et les flèches déplacent le nœud sélectionné. Les commandes à côté du graphe permettent aussi de déplacer chaque nœud, de zoomer et de déplacer la vue. La liste complète avec les liens des applications est disponible après le graphe.",
+          ". Chaque application est un lien. Majuscule et les flèches déplacent le nœud sélectionné. Les boutons sous le graphe permettent de zoomer. L’aide à la navigation contient les commandes pour déplacer la vue et chaque nœud. La liste complète avec les liens des applications est disponible après le graphe.",
       );
 
     const defs = svg.append("defs");

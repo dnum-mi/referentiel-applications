@@ -192,7 +192,7 @@ test.describe("Catalogue & recherche", () => {
     search.expectParamsPresent("currentStatus__in", "organization", "search");
   });
 
-  test("CAT-11 - vue tableau (desktop) / cartes (mobile)", async ({
+  test("CAT-11 - colonnes et tri conservés sur petit écran", async ({
     page,
     data,
   }) => {
@@ -204,7 +204,7 @@ test.describe("Catalogue & recherche", () => {
     const search = new SearchPage(page);
     await search.open();
     await search.expectTableViewOnDesktop();
-    await search.expectCardViewOnMobile();
+    await search.expectTableContentAtCompactWidths();
   });
 
   test("CAT-12 - persistance des filtres après rechargement", async ({

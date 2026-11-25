@@ -112,7 +112,10 @@ for (const status of [200, 500]) {
       await expect(button).toBeFocused();
       await button.press("Enter");
       const clear = page.getByTestId("end-of-life-clear-filters");
-      if (moveFocus) await button.press("Shift+Tab");
+      if (moveFocus) {
+        await clear.focus();
+        await expect(clear).toBeFocused();
+      }
       result.release();
       await expect(button).toBeEnabled();
       await expect(moveFocus ? clear : button).toBeFocused();

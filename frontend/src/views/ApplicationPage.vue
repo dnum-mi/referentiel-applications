@@ -253,23 +253,21 @@ function formatMetadataAuthor(metadata: MetadataDto): string {
         @close="missingRightsAlertClosed = true"
       ></DsfrAlert>
 
-      <DsfrHighlight v-if="firstMetadata || lastMetadata" class="metadata-highlight" data-testid="application-metadata-highlight">
-        <template #default>
-          <div class="metadata-content">
-            <p v-if="firstMetadata" class="subtitle" data-testid="application-created-at">
-              Date de création de la fiche :
-              {{ formatDateFR(firstMetadata.createdAt) || "inconnue" }}
-              ({{ formatMetadataAuthor(firstMetadata) }})
-            </p>
+      <div v-if="firstMetadata || lastMetadata" class="fr-highlight metadata-highlight" data-testid="application-metadata-highlight">
+        <div class="metadata-content">
+          <p v-if="firstMetadata" class="subtitle" data-testid="application-created-at">
+            Date de création de la fiche :
+            {{ formatDateFR(firstMetadata.createdAt) || "inconnue" }}
+            ({{ formatMetadataAuthor(firstMetadata) }})
+          </p>
 
-            <p v-if="lastMetadata" class="subtitle" data-testid="application-updated-at">
-              Dernière modification de la fiche :
-              {{ formatDateFR(lastMetadata.createdAt) || "inconnue" }}
-              ({{ formatMetadataAuthor(lastMetadata) }})
-            </p>
-          </div>
-        </template>
-      </DsfrHighlight>
+          <p v-if="lastMetadata" class="subtitle" data-testid="application-updated-at">
+            Dernière modification de la fiche :
+            {{ formatDateFR(lastMetadata.createdAt) || "inconnue" }}
+            ({{ formatMetadataAuthor(lastMetadata) }})
+          </p>
+        </div>
+      </div>
       <DsfrButton
         ref="subscribeBtn"
         class="fr-btn--tertiary-no-outline fr-btn--icon-left"
