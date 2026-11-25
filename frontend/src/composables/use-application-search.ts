@@ -417,10 +417,20 @@ export function useApplicationSearch() {
   watch(
     () => route.query,
     (q) => {
-      filters.value = {
-        ...DEFAULT_FILTERS,
-        ...queryToFilters(q),
-      };
+      const nextFilters = queryToFilters(q);
+      const currentQuery = filtersToQuery(filters.value);
+      const nextQuery = filtersToQuery(nextFilters);
+
+      // Une navigation vers une ancre peut fournir une nouvelle query identique.
+      // Conserver le ref évite de recharger TIME et de supprimer sa cible de focus.
+      if (
+        Object.keys(currentQuery).length === Object.keys(nextQuery).length &&
+        Object.entries(currentQuery).every(([key, value]) => value === nextQuery[key])
+      ) {
+        return;
+      }
+
+      filters.value = nextFilters;
     },
   );
 

@@ -19,11 +19,11 @@ const state = await vi.hoisted(async () => {
 vi.mock("@/composables/use-application-search", () => ({ useApplicationSearch: () => state }));
 vi.mock("@/stores/statisticsStore", () => ({ useStatisticsStore: () => ({ countApplications: vi.fn() }) }));
 vi.mock("@/stores/userStore", () => ({ useUserStore: () => state.userStore }));
-vi.mock("@/components/ApplicationCardView.vue", () => ({ default: { template: "<div />" } }));
 vi.mock("@/components/ApplicationSearchActions.vue", () => ({ default: { template: "<div />" } }));
 vi.mock("@/components/ApplicationTableView.vue", () => ({ default: { template: "<div />" } }));
 vi.mock("@/components/search/SidebarFilter.vue", () => ({ default: { template: "<div />" } }));
 enableAutoUnmount(afterEach);
+afterEach(() => vi.restoreAllMocks());
 
 beforeEach(() => {
   state.searchApplications.mockClear();
@@ -74,7 +74,6 @@ it("annonce le chargement puis le nombre de résultats sans relire toute la tabl
     global: {
       stubs: {
         AppLoader: true,
-        ApplicationCardView: true,
         ApplicationSearchActions: true,
         ApplicationTableView: true,
         SidebarFilters: true,
@@ -100,4 +99,21 @@ it("annonce le chargement puis le nombre de résultats sans relire toute la tabl
   state.error.value = "La requête a été refusée";
   await nextTick();
   expect(status.text()).toBe("La recherche a échoué. Les résultats n’ont pas été actualisés.");
+});
+
+it.each([320, 720, 1280])("conserve le tableau et ses commandes à une largeur CSS de %i px", async (width) => {
+  vi.spyOn(window, "matchMedia").mockImplementation((query) => ({
+    matches: query === "(max-width: 768px)" && width <= 768,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(() => true),
+  }));
+  const wrapper = mountPage();
+  await nextTick();
+  expect(wrapper.find('[data-testid="application-table-view"]').exists()).toBe(true);
+  expect(wrapper.find('[data-testid="application-card-view"]').exists()).toBe(false);
 });
