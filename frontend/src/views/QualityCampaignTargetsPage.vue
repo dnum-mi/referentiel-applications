@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "@/api";
 import { isApiSuccess } from "@/api/api-result";
@@ -13,11 +13,14 @@ const route = useRoute();
 const router = useRouter();
 const campaign = ref<QualityCampaignDto>();
 const campaignError = ref(false);
+const campaignLoading = ref(false);
+const pageElement = ref<HTMLElement>();
 let campaignRequestId = 0;
 async function fetchCampaign() {
   const currentRequest = ++campaignRequestId;
   campaign.value = undefined;
   campaignError.value = false;
+  campaignLoading.value = true;
   try {
     const result = await api.qualityCampaignControllerFindOne({ path: { id: String(route.params.id) } });
     if (currentRequest !== campaignRequestId) return;
@@ -28,16 +31,20 @@ async function fetchCampaign() {
     campaign.value = result.data;
   } catch {
     if (currentRequest === campaignRequestId) campaignError.value = true;
+  } finally {
+    if (currentRequest === campaignRequestId) campaignLoading.value = false;
   }
 }
 const sentDate = computed(() => (campaign.value?.sentAt ? new Date(campaign.value.sentAt).toLocaleDateString("fr-FR") : undefined));
 function refresh() {
+  if (refreshing.value) return;
   fetchCampaign();
   fetchTargets();
 }
 const targets = ref<QualityCampaignTargetDto[]>([]);
 const total = ref(0);
 const loading = ref(false);
+const refreshing = computed(() => loading.value || campaignLoading.value);
 const error = ref("");
 let requestId = 0;
 function integer(value: unknown, fallback: number, min: number, max = Number.MAX_SAFE_INTEGER) {
@@ -62,10 +69,11 @@ const columns: TableColumn[] = [
   { field: "delta", header: "Progression", sortable: true },
   { field: "details", header: "Critères et interlocuteurs" },
 ];
-async function fetchTargets() {
+async function fetchTargets(keepError = false) {
   const currentRequest = ++requestId;
   loading.value = true;
-  error.value = "";
+  // Pendant un réessai, conserver la commande focalisée jusqu'au résultat.
+  if (!keepError) error.value = "";
   // Évite d'afficher les données de la campagne précédente pendant la navigation.
   targets.value = [];
   total.value = 0;
@@ -88,10 +96,35 @@ async function fetchTargets() {
     }
     targets.value = result.data.results;
     total.value = result.data.total;
+    error.value = "";
   } catch {
     if (currentRequest === requestId) error.value = "Impossible de charger les cibles.";
   } finally {
     if (currentRequest === requestId) loading.value = false;
+  }
+}
+async function retryTargets(event: MouseEvent) {
+  if (loading.value) return;
+  const origin = event.currentTarget;
+  const retryRequest = requestId + 1;
+  let focusMoved = false;
+  const onFocus = (event: FocusEvent) => {
+    if (event.target !== document.body) focusMoved = event.target !== origin;
+  };
+  document.addEventListener("focusin", onFocus);
+  try {
+    await fetchTargets(true);
+    await nextTick();
+    if (
+      retryRequest === requestId &&
+      !error.value &&
+      !focusMoved &&
+      (document.activeElement === origin || document.activeElement === document.body)
+    ) {
+      pageElement.value?.querySelector<HTMLButtonElement>('[data-testid="campaign-targets-refresh"]')?.focus();
+    }
+  } finally {
+    document.removeEventListener("focusin", onFocus);
   }
 }
 function updateQuery(values: Record<string, string | undefined>) {
@@ -107,11 +140,15 @@ function onPage(event: { page: number; rows: number }) {
   updateQuery({ page: String(event.page), pageSize: String(event.rows) });
 }
 watch(() => route.params.id, fetchCampaign, { immediate: true });
-watch(() => [route.params.id, page.value, pageSize.value, sortBy.value, order.value, progression.value], fetchTargets, { immediate: true });
+watch(
+  () => [route.params.id, page.value, pageSize.value, sortBy.value, order.value, progression.value],
+  () => fetchTargets(),
+  { immediate: true },
+);
 </script>
 
 <template>
-  <div class="fr-container fr-py-3w">
+  <div ref="pageElement" class="fr-container fr-py-3w">
     <RouterLink
       :to="{ name: routeNames.ADMINPAGE, query: { tab: 'tab-quality-campaigns' } }"
       class="fr-link fr-icon-arrow-left-line fr-link--icon-left"
@@ -147,11 +184,19 @@ watch(() => [route.params.id, page.value, pageSize.value, sortBy.value, order.va
         :disabled="!progression || loading"
         @click="updateQuery({ progression: undefined, page: '0' })"
       />
-      <DsfrButton label="Actualiser" secondary icon="fr-icon-refresh-line" :disabled="loading" @click="refresh" />
+      <DsfrButton
+        label="Actualiser"
+        secondary
+        icon="fr-icon-refresh-line"
+        :aria-disabled="refreshing"
+        :aria-busy="refreshing"
+        data-testid="campaign-targets-refresh"
+        @click="refresh"
+      />
     </div>
     <div v-if="error" role="alert" class="fr-alert fr-alert--error">
       <p>{{ error }}</p>
-      <DsfrButton label="Réessayer" secondary @click="fetchTargets" />
+      <DsfrButton label="Réessayer" secondary :aria-disabled="loading" :aria-busy="loading" @click="retryTargets" />
     </div>
     <p v-if="!error" role="status">{{ loading ? "Chargement des cibles…" : `${total} cible(s) consultable(s) pour ce filtre` }}</p>
     <RefAppTable
