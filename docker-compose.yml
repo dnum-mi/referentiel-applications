@@ -80,7 +80,7 @@ services:
       # userinfo via keycloak:8080 (émetteur du jeton : localhost:8082). Le realm place de toute
       # façon les claims sur le jeton.
       # - AUTH_LEVEL_USERINFO_FALLBACK=true
-      - ENV_LABEL=developpement
+      - ENV_LABEL=Développement
       - MAINTENANCE_MODE=${MAINTENANCE_MODE:-false}
       - MAINTENANCE_CACHE_TTL_MS=${MAINTENANCE_CACHE_TTL_MS:-30000}
       - MOCK_MAIA_SERVICE=true
