@@ -301,11 +301,11 @@ function cancelDelete() {
 
   <div v-else ref="technologyTable">
     <!-- Synthèse (#2528) : la même information que la pastille de la vue transverse. -->
-    <p v-if="summary.eol || summary['eol-soon'] || summary['eoas-passed']" class="fr-mb-2w" data-testid="technology-summary">
+    <div v-if="summary.eol || summary['eol-soon'] || summary['eoas-passed']" class="fr-mb-2w" data-testid="technology-summary">
       <DsfrBadge v-if="summary.eol" type="error" small :label="`${summary.eol} en fin de vie`" class="fr-mr-1w" />
       <DsfrBadge v-if="summary['eol-soon']" type="warning" small :label="`${summary['eol-soon']} en fin de vie proche`" class="fr-mr-1w" />
       <DsfrBadge v-if="summary['eoas-passed']" type="info" small :label="`${summary['eoas-passed']} hors support actif`" />
-    </p>
+    </div>
 
     <RefAppTable
       caption="Technologies de l’application"

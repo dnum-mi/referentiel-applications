@@ -1,5 +1,6 @@
 <script setup lang="ts" generic="T">
-import { computed, ref, nextTick, useId, watch } from "vue";
+import { computed, ref, shallowRef, nextTick, useId, watch } from "vue";
+import { useResizeObserver } from "@vueuse/core";
 import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 import Skeleton from "primevue/skeleton";
@@ -52,6 +53,22 @@ const props = withDefaults(defineProps<Props<T>>(), {
 const tableTitleId = `table-title-${useId()}`;
 const tableCaption = computed(() => props.caption ?? `Tableau : ${props.columns.map((column) => column.header).join(", ")}`);
 const tableSection = ref<HTMLElement>();
+const tableScrollContainer = shallowRef<HTMLElement>();
+const isTableScrollable = ref(false);
+
+function setTableScrollContainer(element: unknown) {
+  tableScrollContainer.value = element instanceof HTMLElement ? element : undefined;
+}
+
+function updateTableScrollability() {
+  const element = tableScrollContainer.value;
+  isTableScrollable.value = !!element && (element.scrollWidth > element.clientWidth || element.scrollHeight > element.clientHeight);
+}
+
+// Observer aussi la table : ses lignes peuvent grandir sans modifier la taille
+// de la zone de défilement bornée à 70vh.
+useResizeObserver(() => [tableScrollContainer.value, tableScrollContainer.value?.querySelector("table")], updateTableScrollability);
+watch(tableScrollContainer, () => nextTick(updateTableScrollability), { flush: "post" });
 const resizedWidths = ref<Record<string, number>>({});
 const widthInputs = ref<Record<string, string>>({});
 const widthStatus = ref("");
@@ -283,6 +300,12 @@ watch(
       :data-testid="dataTestId"
       :table-props="{ 'aria-labelledby': tableTitleId }"
       :pt="{
+        tableContainer: {
+          ref: setTableScrollContainer,
+          tabindex: isTableScrollable ? 0 : undefined,
+          role: isTableScrollable ? 'region' : undefined,
+          'aria-label': isTableScrollable ? `${tableCaption} — zone défilante` : undefined,
+        },
         column: { headerCell: { tabindex: null, scope: 'col' } },
         pcPaginator: { paginatorContainer: { 'aria-label': 'Pagination' } },
       }"
@@ -405,6 +428,11 @@ watch(
 :deep(.p-datatable-table-container) {
   max-height: 70vh;
   overflow: auto;
+}
+
+:deep(.p-datatable-table-container:focus-visible) {
+  outline: 2px solid var(--border-action-high-blue-france, #000091);
+  outline-offset: -2px;
 }
 
 :deep(.p-datatable-thead) {

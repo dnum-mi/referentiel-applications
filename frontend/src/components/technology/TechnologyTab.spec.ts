@@ -511,7 +511,7 @@ describe("technologyTab — chargement en erreur, dates et liens (#2521, #2522, 
     expect(screen.queryByTestId("technology-eol-link-t-2")).toBeNull();
   });
 
-  it("résume les statuts au-dessus du tableau", async () => {
+  it("résume les statuts au-dessus du tableau sans imbriquer les paragraphes des badges DSFR", async () => {
     renderWithTechnologies([
       makeResolvedTechnology({ id: "t-1", eolDate: new Date(Date.now() - day) }),
       makeResolvedTechnology({ id: "t-2", eolDate: new Date(Date.now() - 2 * day) }),
@@ -520,6 +520,8 @@ describe("technologyTab — chargement en erreur, dates et liens (#2521, #2522, 
     const summary = await screen.findByTestId("technology-summary");
     expect(summary).toHaveTextContent("2 en fin de vie");
     expect(summary).toHaveTextContent("1 en fin de vie proche");
+    expect(summary.querySelectorAll(".fr-badge")).toHaveLength(2);
+    expect(summary.querySelector("p p")).toBeNull();
   });
 
   it("nomme le tableau et conserve les lignes de technologies", async () => {
