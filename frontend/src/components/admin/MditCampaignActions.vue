@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { isApiSuccess } from "@/api/api-result";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import type { MditCampaignDto } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
 import api from "@/api";
@@ -26,8 +26,16 @@ const editingYear = ref<number | undefined>(undefined);
 const editingLabel = ref<string>("");
 const editingActive = ref<boolean>(true);
 const errorMessage = ref<string>("");
+const validationAttempted = ref(false);
+const yearError = computed(() => {
+  const year = Number(editingYear.value);
+  return validationAttempted.value && (!Number.isInteger(year) || year < 2000 || year > 2100)
+    ? "Le millésime doit être une année entre 2000 et 2100."
+    : undefined;
+});
 
 function openEditModal() {
+  validationAttempted.value = false;
   editingYear.value = props.campaign?.year;
   editingLabel.value = props.campaign?.label || "";
   editingActive.value = props.campaign?.isActive ?? true;
@@ -50,14 +58,12 @@ function closeDeleteModal() {
 
 async function saveCampaign() {
   if (isSaving.value) return;
+  validationAttempted.value = true;
+  errorMessage.value = "";
+  if (yearError.value) return;
   const year = Number(editingYear.value);
-  if (!Number.isInteger(year) || year < 2000 || year > 2100) {
-    errorMessage.value = "Le millésime doit être une année entre 2000 et 2100.";
-    return;
-  }
 
   isSaving.value = true;
-  errorMessage.value = "";
 
   const body = {
     year,
@@ -156,6 +162,8 @@ async function deleteCampaign() {
 
     <DsfrInputGroup
       v-model.number="editingYear"
+      :error-message="yearError"
+      :aria-invalid="yearError ? true : undefined"
       class="fr-mb-3w"
       type="number"
       label="Millésime (année)"

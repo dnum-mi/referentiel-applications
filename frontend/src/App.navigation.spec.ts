@@ -45,6 +45,7 @@ async function renderApp(renderFooter = false) {
         RouterLink: true,
         DsfrFooter: !renderFooter,
         DsfrFooterLink: !renderFooter,
+        FooterVersionLink: !renderFooter,
       },
     },
   });
@@ -68,6 +69,12 @@ it("annonce la nouvelle fenêtre du lien Tchap dans le pied de page rendu", asyn
   expect(link.attributes("title")).toBe("Contact Tchap - nouvelle fenêtre");
   expect(link.attributes("aria-label")).toBe("Contact Tchap - nouvelle fenêtre");
   expect(link.element).toHaveAccessibleName("Contact Tchap - nouvelle fenêtre");
+});
+
+it("rend le lien de version dans le pied de page de l’application", async () => {
+  const wrapper = await renderApp(true);
+  const link = wrapper.get("footer .fr-footer__content-desc a");
+  expect(link.element).toHaveAccessibleName(`Version : ${__APP_VERSION__} sur GitHub (nouvelle fenêtre)`);
 });
 
 it.each([false, true])("retire le bandeau public et son lien d'évitement, session initialisée = %s", async (initialized) => {
