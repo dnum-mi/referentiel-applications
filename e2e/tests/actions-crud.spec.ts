@@ -1,5 +1,7 @@
+import { randomUUID } from "node:crypto";
+import { createIsolatedBetaTester } from "../fixtures/beta-tester";
 import { expect, test } from "../fixtures/test";
-import { ApplicationPage, CreateApplicationPage } from "../pom";
+import { ApplicationPage, CreateApplicationPage, SearchPage } from "../pom";
 import { loginAs } from "../pom/auth";
 
 test.describe("Actions CRUD de base", () => {
@@ -124,33 +126,43 @@ test.describe("Actions CRUD de base", () => {
     }
   });
 
-  test("CRU-05 - modifier les informations générales", async ({
+  test("CRU-05 - modifier les informations générales et vérifier la répercussion", async ({
     page,
     data,
   }) => {
-    const app = await data.firstApplication();
-    expect(app, "Aucune application dans le jeu de données").toBeTruthy();
-
-    const fiche = new ApplicationPage(page);
-    await fiche.open(app!.id, "tab-infos");
-    await fiche.expectInfosTabLoaded();
-
-    const detail = await data.applicationDetail(app!.id);
-    const origLabel = (detail?.label as string) ?? app!.label;
-    const origDesc = (detail?.description as string) ?? "";
-
-    const newLabel = `E2E-CRU05-${Date.now()}`;
-    const newDesc = `Description test CRU-05 ${Date.now()}`;
-
+    const editor = await createIsolatedBetaTester(page, data, "ADMIN");
     try {
-      await fiche.editInfos(newLabel, newDesc, "R1");
-      await fiche.expectTitle(newLabel);
-      await fiche.expectDescription(newDesc);
+      await editor.setPermissions(["AppWritePriority"]);
+      const app = await data.createTestApplication(`E2E-CRU05-${randomUUID()}`);
+      try {
+        await editor.impersonate();
+        const newLabel = `${app.label}-renommee`;
+        const newDesc = "Description modifiée par CRU-05";
+        const fiche = new ApplicationPage(page);
+        await fiche.open(app.id, "tab-infos");
+        await fiche.expectInfosTabLoaded();
+        await fiche.editInfos({
+          label: newLabel,
+          description: newDesc,
+          priority: "R1",
+        });
+        await fiche.expectTitle(newLabel);
+        await fiche.expectDescription(newDesc);
+        await fiche.expectPriority(
+          "R1 – Dès que le socle technique est rétabli (H24)",
+        );
+
+        const catalogue = new SearchPage(page);
+        await catalogue.open();
+        await catalogue.searchByLabel(newLabel);
+        await catalogue.expectSearchApplied(newLabel);
+        await expect.poll(() => catalogue.totalCount()).toBe(1);
+        await expect.poll(() => catalogue.firstRowLabel()).toBe(newLabel);
+      } finally {
+        expect(await data.removeApplication(app.id)).toBe(true);
+      }
     } finally {
-      await data.modifyApplication(app!.id, {
-        label: origLabel,
-        description: origDesc,
-      });
+      await editor.dispose();
     }
   });
 

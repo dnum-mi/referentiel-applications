@@ -590,6 +590,24 @@ export class ApplicationPage extends BasePage {
     await expect(this.byTestId("modifications-table")).toBeVisible();
   }
 
+  async latestModificationPathByAuthor(author: string): Promise<string> {
+    const row = this.byTestId("modifications-table")
+      .getByRole("row")
+      .filter({
+        has: this.page.getByRole("cell", {
+          name: "Modification des informations générales",
+          exact: true,
+        }),
+      })
+      .first();
+    await expect(
+      row.getByRole("cell", { name: author, exact: true }),
+    ).toBeVisible();
+    return row
+      .getByTestId("modifications-see-more-button")
+      .evaluate((link: HTMLAnchorElement) => link.pathname);
+  }
+
   /** Nombre de boutons « Voir plus » de l'onglet Modifications (0 si aucune modification). */
   modificationsSeeMoreCount(): Promise<number> {
     return this.byTestId("modifications-see-more-button").count();
@@ -861,19 +879,27 @@ export class ApplicationPage extends BasePage {
     await expect(this.byTestId("info-edit-modal")).toBeVisible();
   }
 
-  async editInfos(
-    label: string,
-    description: string,
-    priority: string,
-  ): Promise<void> {
+  async editInfos({
+    description,
+    label,
+    priority,
+  }: {
+    description: string;
+    label?: string;
+    priority?: string;
+  }): Promise<void> {
     await this.openInfoEdit();
-    await this.byTestId("application-label").fill(label);
+    if (label !== undefined)
+      await this.byTestId("application-label").fill(label);
     await this.byTestId("application-description")
       .locator('[data-testid="markdown-textarea"]')
       .fill(description);
-    await this.byTestId("application-priority-restart").selectOption(priority);
+    if (priority !== undefined)
+      await this.byTestId("application-priority-restart").selectOption(
+        priority,
+      );
     await this.byTestId("application-submit-btn").click();
-    await this.expectToaster(/succès|enregistré|mis à jour/i);
+    await this.expectToaster("Application mise à jour avec succès");
   }
 
   async expectTitle(label: string): Promise<void> {
@@ -1507,6 +1533,13 @@ export class ApplicationPage extends BasePage {
    */
   async expectFicheMetadataVisible(): Promise<void> {
     await expect(this.byTestId("application-metadata-highlight")).toBeVisible();
+  }
+
+  async expectLastModificationAuthor(author: string): Promise<void> {
+    const updated = this.byTestId("application-metadata-highlight").getByTestId(
+      "application-updated-at",
+    );
+    await expect(updated).toContainText(`(${author})`);
   }
 
   async expectFicheMetadataAbsent(): Promise<void> {

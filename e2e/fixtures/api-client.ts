@@ -561,8 +561,12 @@ export class ApiClient {
    * `/actorTypes` (camelCase) : c'est la route réellement exposée par `ActorTypeController`,
    * et elle répond un `PaginatedResponseDto` — d'où le type paginé ici aussi.
    */
-  actorTypes(): Promise<Paginated<{ id: string; label: string }> | null> {
-    return this.get<Paginated<{ id: string; label: string }>>("/actorTypes");
+  actorTypes(): Promise<Paginated<{
+    id: string;
+    code: string;
+    label: string;
+  }> | null> {
+    return this.get("/actorTypes?pageSize=0");
   }
 
   permsMatrix(): Promise<PermsMatrixEntry[] | null> {
