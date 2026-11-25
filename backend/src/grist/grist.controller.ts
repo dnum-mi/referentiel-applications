@@ -1,23 +1,14 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Logger,
-  Post,
-  Query,
-  UseGuards,
-} from "@nestjs/common";
+import { Body, Controller, Get, Logger, Post, Query } from "@nestjs/common";
 import {
   ApiOkResponse,
   ApiOperation,
   ApiQuery,
   ApiTags,
 } from "@nestjs/swagger";
-import { Permission } from "@prisma/client";
 import { ApplicationSearchDto } from "src/applications/dto/search-application.dto";
-import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
+import { RequiresBetaFeature } from "src/common/decorators/requires-beta-feature.decorator";
+import { FeatureId } from "src/features/beta-features";
 import { User } from "src/common/decorators/user.decorator";
-import { PermissionGuard } from "src/common/guards/permission.guard";
 import { Requestor } from "src/user/entities/user.entity";
 import { GristRecordDto } from "./dto/grist-record.dto";
 import { GristDocumentTablesDto, GristSyncDto } from "./dto/grist-sync.dto";
@@ -25,13 +16,12 @@ import { GristSyncReportDto } from "./dto/grist-sync-report.dto";
 import { GristService } from "./grist.service";
 
 @ApiTags("Grist")
-@UseGuards(PermissionGuard)
 @Controller("grist")
 export class GristController {
   constructor(private readonly gristService: GristService) {}
 
   @Post("setup")
-  @RequiredPermissions([Permission.GristSync])
+  @RequiresBetaFeature(FeatureId.GristSync)
   @ApiOperation({
     summary:
       "Synchroniser avec Grist les applications correspondant aux filtres",
@@ -68,7 +58,7 @@ export class GristController {
   }
 
   @Get("tables")
-  @RequiredPermissions([Permission.GristSync])
+  @RequiresBetaFeature(FeatureId.GristSync)
   @ApiOperation({
     summary: "Lister les tables RefApp des documents Grist du profil",
     description:
@@ -80,7 +70,7 @@ export class GristController {
   }
 
   @Get("records")
-  @RequiredPermissions([Permission.GristSync])
+  @RequiresBetaFeature(FeatureId.GristSync)
   @ApiOperation({
     summary: "Lire la table RefApp d'un document Grist",
     description:

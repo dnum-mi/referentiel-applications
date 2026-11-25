@@ -91,8 +91,8 @@ describe("Notifications — résultat explicite et conservation sur refus", () =
 describe("Filtrage des notifications", () => {
   it("transmet le type et garde la cloche et son compteur indépendants", async () => {
     const store = useNotificationStore();
-    findAll.mockResolvedValueOnce({ data: { results: [notifications[0]], total: 1 } });
-    await store.fetchNotifications(1, 2, "asc", NotificationType.REPORT_CREATED);
+    findAll.mockResolvedValueOnce({ response: { ok: true }, data: { results: [notifications[0]], total: 1 } });
+    expect(await store.fetchNotifications(1, 2, "asc", NotificationType.REPORT_CREATED)).toBe(true);
     expect(findAll).toHaveBeenLastCalledWith({
       query: { page: 1, pageSize: 2, sortBy: "createdAt", order: "asc", type: NotificationType.REPORT_CREATED },
     });
@@ -115,14 +115,59 @@ describe("Filtrage des notifications", () => {
         }),
     );
     const old = store.fetchNotifications(0, 15, "desc", NotificationType.REPORT_CREATED);
-    findAll.mockResolvedValueOnce({ data: { results: notifications, total: 3 } });
-    await store.fetchNotifications();
-    finish({ data: { results: [], total: 0 } });
-    await old;
+    findAll.mockResolvedValueOnce({ response: { ok: true }, data: { results: notifications, total: 3 } });
+    expect(await store.fetchNotifications()).toBe(true);
+    finish({ response: { ok: true }, data: { results: [], total: 0 } });
+    expect(await old).toBe(false);
     expect(store.notifications).toEqual(notifications);
     expect(store.total).toBe(3);
     expect(store.isLoading).toBe(false);
     expect(findAll).toHaveBeenLastCalledWith({ query: { page: 0, pageSize: 15, sortBy: "createdAt", order: "desc", type: undefined } });
+  });
+
+  it.each([
+    { response: { ok: false }, error: "refus" },
+    { response: { ok: false }, data: { results: [], total: 0 } },
+    { response: { ok: true }, error: "décodage", data: { results: [], total: 0 } },
+    { response: { ok: true } },
+  ])("ne confirme pas un résultat HTTP invalide et conserve les notifications", async (response) => {
+    const store = useNotificationStore();
+    findAll.mockResolvedValueOnce(response);
+    expect(await store.fetchNotifications()).toBe(false);
+    expect(store.notifications).toEqual(notifications);
+    expect(store.total).toBe(3);
+    expect(store.isLoading).toBe(false);
+    expect(errorToast).toHaveBeenCalledOnce();
+  });
+
+  it("signale une erreur réseau sans rejeter la recherche ni perdre les résultats précédents", async () => {
+    const store = useNotificationStore();
+    findAll.mockRejectedValueOnce(new Error("réseau"));
+    expect(await store.fetchNotifications()).toBe(false);
+    expect(store.notifications).toEqual(notifications);
+    expect(store.total).toBe(3);
+    expect(store.isLoading).toBe(false);
+    expect(errorToast).toHaveBeenCalledOnce();
+  });
+
+  it("ignore aussi l'échec d'une recherche remplacée pendant le chargement de la suivante", async () => {
+    const store = useNotificationStore();
+    let failOld!: (reason: Error) => void;
+    let finishLatest!: (value: unknown) => void;
+    findAll
+      .mockImplementationOnce(() => new Promise((_, reject) => (failOld = reject)))
+      .mockImplementationOnce(() => new Promise((resolve) => (finishLatest = resolve)));
+    const old = store.fetchNotifications(0, 15, "desc", NotificationType.REPORT_CREATED);
+    const latest = store.fetchNotifications();
+    failOld(new Error("réseau"));
+    expect(await old).toBe(false);
+    expect(store.isLoading).toBe(true);
+    expect(errorToast).not.toHaveBeenCalled();
+    finishLatest({ response: { ok: true }, data: { results: [], total: 0 } });
+    expect(await latest).toBe(true);
+    expect(store.notifications).toEqual([]);
+    expect(store.total).toBe(0);
+    expect(store.isLoading).toBe(false);
   });
 
   it("synchronise la lecture et la suppression dans les deux listes", async () => {

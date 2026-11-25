@@ -110,6 +110,7 @@ enum Permission {
   TechnologyList
   /// Synchroniser toutes les applications vers le document Grist configuré (GRIST_DOC_ID).
   /// Jamais accordée par un rôle, même administrateur : déléguée explicitement (couche 2).
+  /// Obsolète : la synchronisation Grist utilise désormais la bêta feature.
   GristSync
 
   // --- Permissions applicatives (par app) ---

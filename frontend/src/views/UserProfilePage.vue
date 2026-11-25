@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { Permission } from "@/client/types.gen";
+import { FeatureId } from "@/client/types.gen";
+import BetaBadge from "@/components/BetaBadge.vue";
 import UserFollowTab from "@/components/users/UsrFollowTab.vue";
 import UserGristSettings from "@/components/users/UserGristSettings.vue";
 import UserInfoTab from "@/components/users/UserInfoTab.vue";
 import UserTokensTab from "@/components/users/UserTokensTab.vue";
-import { useUserStore } from "@/stores/userStore";
+import { useBetaFeatures } from "@/composables/use-beta-features";
 import { computed, nextTick, ref, useTemplateRef, watch } from "vue";
 import { useRoute } from "vue-router";
 
-const userStore = useUserStore();
+const { canAccess, isBeta } = useBetaFeatures();
 const activeTab = ref(0);
 const route = useRoute();
 watch(
@@ -22,7 +23,7 @@ const profileRoot = useTemplateRef<HTMLElement>("profileRoot");
 
 // Onglet réservé aux utilisateurs qui peuvent synchroniser avec Grist ; placé en dernier pour ne pas
 // décaler l'index des autres onglets.
-const hasGristSync = computed(() => userStore.hasPermissions([Permission.GRIST_SYNC]));
+const hasGristSync = computed(() => canAccess(FeatureId.GRIST_SYNC));
 
 const tabDefinitions = [
   {
@@ -104,6 +105,7 @@ watch(hasGristSync, async () => {
               @last="activeTab = tabs.length - 1"
             >
               {{ tab.title }}
+              <BetaBadge v-if="tab.tabId === 'grist' && isBeta(FeatureId.GRIST_SYNC)" class="fr-ml-1w" />
             </DsfrTabItem>
           </template>
           <DsfrTabContent tab-id="informations" panel-id="tab-content-informations" data-testid="user-profile-tab-informations">

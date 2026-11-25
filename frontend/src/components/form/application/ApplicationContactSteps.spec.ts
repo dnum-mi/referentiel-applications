@@ -98,9 +98,16 @@ describe.each([
     expect(button.element).toHaveAccessibleName(`Synchroniser depuis MAIA (par email) — contact ${role.toUpperCase()}`);
     await button.trigger("click");
     expect(wrapper.emitted("sync")).toEqual([[]]);
+    expect(button.find(".vicon-spin").exists()).toBe(false);
     await wrapper.setProps({ isSyncing: true });
+    expect(button.element).toHaveAttribute("aria-busy", "true");
+    expect(button.find(".vicon-spin").exists()).toBe(true);
     expect(button.element).toBeDisabled();
+    for (const control of wrapper.findAll("input, select, button")) expect(control.element).toBeDisabled();
     await wrapper.setProps({ isSyncing: false });
+    expect(button.element).toHaveAttribute("aria-busy", "false");
+    expect(button.find(".vicon-spin").exists()).toBe(false);
+    for (const control of wrapper.findAll("input, select, button")) expect(control.element).not.toBeDisabled();
     await wrapper.get(`[data-testid="application-${role}-email"]`).setValue("");
     expect(button.element).toBeDisabled();
   });

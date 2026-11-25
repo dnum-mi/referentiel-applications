@@ -445,6 +445,7 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
     @close="closeActorModal"
   >
     <ActorForm
+      :opened="actorModal.isModalOpen.value || actorModal.isCreateModalOpen.value"
       v-bind="{ application, initialData: actorModal.selectedItem.value ?? undefined }"
       :is-submitting="loading"
       :error-message="formError"

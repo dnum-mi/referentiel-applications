@@ -14,7 +14,6 @@ const permissions: AppPermsDto = {
   actorTypeId: "moa",
   AppRead: true,
   AppWrite: false,
-  AppWritePriority: false,
   ActorRead: true,
   ActorWrite: false,
   ComplianceRead: true,

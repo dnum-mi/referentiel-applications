@@ -12,6 +12,8 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import {
+  ApiBadRequestResponse,
+  ApiForbiddenResponse,
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
@@ -23,6 +25,7 @@ import { Permission } from "@prisma/client";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 import { User } from "src/common/decorators/user.decorator";
 import { PaginatedResponseDto, PaginationDto } from "src/common/dto";
+import { ApiErrorDto } from "src/common/dto/api-error.dto";
 import { PermissionGuard } from "src/common/guards/permission.guard";
 import type { Requestor } from "src/user/entities/user.entity";
 import {
@@ -34,6 +37,10 @@ import {
   QualityCampaignDto,
   QualityCampaignPreviewDto,
 } from "./dto/quality-campaign.dto";
+import {
+  QualityCampaignTargetDto,
+  QualityCampaignTargetQueryDto,
+} from "./dto/quality-campaign-target.dto";
 import { QualityCampaignService } from "./quality-campaign.service";
 
 @ApiTags("Quality Campaigns")
@@ -74,6 +81,24 @@ export class QualityCampaignController {
   @ApiNotFoundResponse({ description: "Campagne non trouvée" })
   findOne(@User() user: Requestor, @Param("id") id: string) {
     return this.service.findOne(id, user);
+  }
+
+  @Get(":id/targets")
+  @RequiredPermissions([Permission.QualityCampaignManage])
+  @ApiOperation({ summary: "Consulter les cibles figées et leur progression" })
+  @ApiOkResponse({ type: PaginatedResponseDto.of(QualityCampaignTargetDto) })
+  @ApiBadRequestResponse({
+    description: "Campagne non envoyée ou paramètres invalides",
+    type: ApiErrorDto,
+  })
+  @ApiForbiddenResponse({ description: "Gestion des campagnes non autorisée" })
+  @ApiNotFoundResponse({ description: "Campagne non trouvée" })
+  findTargets(
+    @User() user: Requestor,
+    @Param("id") id: string,
+    @Query() query: QualityCampaignTargetQueryDto,
+  ) {
+    return this.service.findTargets(id, query, user);
   }
 
   @Get(":id/preview")

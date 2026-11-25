@@ -24,6 +24,51 @@ import {
  *  - 9.1  : un seul titre de niveau 1 par page
  */
 test.describe("RGAA — accessibilité", () => {
+  for (const form of ["application", "label", "link", "dima"] as const) {
+    for (const keyboard of [false, true]) {
+      test(`RGA-17 — les erreurs nomment les champs : ${form}, ${keyboard ? "clavier" : "clic"}`, async ({
+        page,
+        data,
+      }) => {
+        const application = await data.firstApplication();
+        if (!application)
+          throw new Error(
+            "Une application est requise pour vérifier les formulaires",
+          );
+        const writes: string[] = [];
+        await page.route(
+          `**/api/v2/applications/${application.id}/**`,
+          async (route) => {
+            if (route.request().method() !== "GET") {
+              writes.push(route.request().url());
+              await route.abort();
+            } else if (route.request().url().endsWith("/compliances")) {
+              const response = await route.fetch();
+              await route.fulfill({
+                response,
+                json: { ...(await response.json()), dima_duration_hours: null },
+              });
+            } else await route.continue();
+          },
+        );
+        await page.route(
+          `**/api/v2/applications/${application.id}`,
+          async (route) => {
+            if (route.request().method() === "GET") await route.continue();
+            else {
+              writes.push(route.request().url());
+              await route.abort();
+            }
+          },
+        );
+        const app = new ApplicationPage(page);
+        await app.open(application.id);
+        await app.expectNamedValidationErrors(form, keyboard);
+        expect(writes).toEqual([]);
+      });
+    }
+  }
+
   // RGA-01 — RGAA 12.9 : Tab sans sélection quitte le champ de description
   test("RGA-01 — Tab sans sélection quitte le champ de description", async ({
     page,

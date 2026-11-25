@@ -1,3 +1,4 @@
+import type { ApplicationSearchItemDto } from "src/applications/dto/get-application.dto";
 import {
   GRIST_COLUMNS,
   GristApplication,
@@ -126,6 +127,37 @@ describe("GRIST_COLUMNS", () => {
       date_fin_homologation: "",
       statut: "",
       maturite_technique: null,
+    });
+  });
+
+  it("formate aussi une ligne du catalogue avec une date sérialisée", () => {
+    const catalogueItem: ApplicationSearchItemDto = {
+      id: "a2",
+      label: "Autre application",
+      shortName: null,
+      logo: null,
+      description: "",
+      targetPopulations: [],
+      purposes: [],
+      quality: 65,
+      hostings: [],
+      tags: [],
+      actors: [],
+      compliance: {
+        id: "c1",
+        homologation_date_end: "2027-03-31T22:30:00Z",
+      },
+      rgaaScorePercentage: null,
+      applicationViews: 0,
+    };
+    const values = Object.fromEntries(
+      GRIST_COLUMNS.map(({ colId, value }) => [colId, value(catalogueItem)]),
+    );
+
+    expect(values).toMatchObject({
+      iq: "65%",
+      direction_metier: "",
+      date_fin_homologation: "01/04/2027",
     });
   });
 

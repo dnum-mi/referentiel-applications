@@ -1,6 +1,7 @@
 import { isApiSuccess } from "@/api/api-result";
 import { fetchWithTimeout } from "@/api/fetch-with-timeout";
 import type {
+  ApplicationControllerExportExcelViewData,
   ContactAdminDto,
   GristDocumentTablesDto,
   GristSyncReportDto,
@@ -20,8 +21,9 @@ import { downloadBlob } from "@/utils/download-blob";
 /// Délai de la synchronisation Grist, bien au-delà du délai par défaut des appels d'API.
 const GRIST_SYNC_TIMEOUT_MS = 5 * 60_000;
 
-// La génération du catalogue complet peut dépasser le délai des appels API ordinaires.
+// La génération d'un export Excel peut dépasser le délai des appels API ordinaires.
 const EXCEL_EXPORT_TIMEOUT_MS = 5 * 60_000;
+const XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
 export const useApplicationStore = defineStore("applicationStore", () => {
   const applicationsById = ref<Record<string, ApplicationWithPerms>>({});
@@ -117,26 +119,24 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     toaster.addSuccessMessage("Application supprimée définitivement avec succès.");
   };
 
-  const exportToExcel = async (filters: Filters = {}): Promise<Blob> => {
-    const cleanedFilters = cleanFilters(filters);
-    cleanedFilters.pageSize = 0;
-    const response = await api.applicationControllerExportExcel({
-      query: cleanedFilters,
-      parseAs: "blob",
-      fetch: (input, init) => fetchWithTimeout(input, init, EXCEL_EXPORT_TIMEOUT_MS),
-    });
+  const downloadExcel = async (filters: Filters, view?: ApplicationControllerExportExcelViewData["body"]): Promise<void> => {
+    const fetchExcel: typeof fetch = (input, init) => fetchWithTimeout(input, init, EXCEL_EXPORT_TIMEOUT_MS);
+    const options = {
+      query: { ...cleanFilters(filters), pageSize: 0 },
+      parseAs: "blob" as const,
+      fetch: fetchExcel,
+    };
+    const response = view
+      ? await api.applicationControllerExportExcelView({ ...options, body: view })
+      : await api.applicationControllerExportExcel(options);
 
     if (!isApiSuccess(response) || !response.data) {
       throw new Error("Erreur lors de l'export Excel.", { cause: response.error });
     }
 
-    return new Blob([response.data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-  };
-
-  const downloadExcel = async (filters: Filters): Promise<void> => {
-    const blob = await exportToExcel(filters);
+    const blob = new Blob([response.data], { type: XLSX_CONTENT_TYPE });
     const date = new Date().toISOString().split("T")[0];
-    downloadBlob(blob, `applications_export_${date}.xlsx`);
+    downloadBlob(blob, view ? `applications_vue_export_${date}.xlsx` : `applications_export_${date}.xlsx`);
   };
 
   const downloadHtml = async (filters: Filters): Promise<void> => {

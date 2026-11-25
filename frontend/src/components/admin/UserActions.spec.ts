@@ -185,6 +185,26 @@ describe("UserActions", () => {
     });
   });
 
+  it("propose une délégation de priorité explicite sans la cocher pour un administrateur", async () => {
+    hasPermissionsMock.mockReturnValue(true);
+    const admin = { ...targetUser, role: Roles.ADMIN, additionalPermissions: [] };
+    updateUserMock.mockResolvedValue({
+      response: { ok: true },
+      data: { ...admin, additionalPermissions: [Permission.APP_WRITE_PRIORITY] },
+    });
+    render(UserActions, { props: { user: admin }, global: { ...global, stubs: { ...global.stubs, DsfrCheckboxSet: false } } });
+    await fireEvent.click(screen.getByTestId("admin-user-edit-btn"));
+    const capability = screen.getByRole("checkbox", { name: /Modifier la priorité de redémarrage/ });
+    expect(capability).not.toBeChecked();
+    expect(capability).toBeEnabled();
+    await fireEvent.click(capability);
+    await fireEvent.click(screen.getByTestId("admin-save-perms-btn"));
+    expect(updateUserMock).toHaveBeenCalledWith({
+      path: { id: admin.id },
+      body: { role: Roles.ADMIN, organizationId: null, scopeOrganizationId: null, additionalPermissions: [Permission.APP_WRITE_PRIORITY] },
+    });
+  });
+
   it("réserve la délégation bêta à la capacité d'administration globale", async () => {
     hasPermissionsMock.mockImplementation((permissions: Permission[]) => permissions.includes(Permission.ADMIN_PANEL_MANAGE));
     render(UserActions, { props: { user: targetUser }, global: { ...global, stubs: { ...global.stubs, DsfrCheckboxSet: false } } });
@@ -314,6 +334,48 @@ describe("UserActions", () => {
     expect(confirm).toHaveAccessibleName(name);
   });
 
+  it.each<{ role: Roles; inherited: string[] }>([
+    { role: Roles.VISITOR, inherited: [] },
+    { role: Roles.READER, inherited: ["Voir les données dette IT"] },
+    { role: Roles.CONTRIBUTOR, inherited: ["Voir les données dette IT", "Créer une application", "Créer un signalement global"] },
+    {
+      role: Roles.ADMIN,
+      inherited: [
+        "Voir les données dette IT",
+        "Créer une application",
+        "Créer un signalement global",
+        "Export les données",
+        "Consulter les technologies",
+      ],
+    },
+  ])("coche et grise les capacités héritées du rôle $role", async ({ role, inherited }) => {
+    hasPermissionsMock.mockReturnValue(true);
+    render(UserActions, {
+      props: { user: { ...targetUser, role } },
+      global: { ...global, stubs: { ...global.stubs, DsfrCheckboxSet: false } },
+    });
+    await fireEvent.click(screen.getByTestId("admin-user-edit-btn"));
+    for (const label of [
+      "Voir les données dette IT",
+      "Créer une application",
+      "Créer un signalement global",
+      "Export les données",
+      "Consulter les technologies",
+      "Accéder aux fonctionnalités bêta",
+      "Gérer les campagnes de mise en qualité",
+      "Gérer les campagnes dette IT",
+    ]) {
+      const checkbox = screen.getByRole("checkbox", { name: new RegExp(label) });
+      if (inherited.includes(label)) {
+        expect(checkbox).toBeChecked();
+        expect(checkbox).toBeDisabled();
+      } else {
+        expect(checkbox).not.toBeChecked();
+        if (role !== Roles.VISITOR || label !== "Consulter les technologies") expect(checkbox).toBeEnabled();
+      }
+    }
+  });
+
   it("permet d'attribuer explicitement la consultation des technologies à un lecteur", async () => {
     hasPermissionsMock.mockReturnValue(true);
     const reader = { ...targetUser, role: Roles.READER };
@@ -355,13 +417,18 @@ describe("UserActions", () => {
     const capability = screen.getByRole("checkbox", { name: /Consulter les technologies/ });
     expect(capability).toBeDisabled();
     expect(capability).toBeChecked();
-    expect(screen.getByText("Accès inclus dans le rôle Administrateur, dans son périmètre.")).toBeInTheDocument();
+    expect(screen.getAllByText("Accès inclus dans le rôle Administrateur, dans son périmètre.")).toHaveLength(5);
 
-    await fireEvent.click(screen.getByRole("checkbox", { name: "Créer une application" }));
+    await fireEvent.click(screen.getByRole("checkbox", { name: "Gérer les campagnes de mise en qualité" }));
     await fireEvent.click(screen.getByTestId("admin-save-perms-btn"));
     expect(updateUserMock).toHaveBeenCalledWith({
       path: { id: admin.id },
-      body: { role: Roles.ADMIN, organizationId: null, scopeOrganizationId: scope, additionalPermissions: [Permission.CREATE_APPLICATION] },
+      body: {
+        role: Roles.ADMIN,
+        organizationId: null,
+        scopeOrganizationId: scope,
+        additionalPermissions: [Permission.QUALITY_CAMPAIGN_MANAGE],
+      },
     });
   });
 

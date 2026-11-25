@@ -167,7 +167,7 @@ export async function simulatedNetwork(page: Page) {
         permissions: [
           "LinkWrite",
           "RelationWrite",
-          ...(state.gristPermission ? ["GristSync"] : []),
+          ...(state.gristPermission ? ["BetaFeatures"] : []),
         ],
         additionalPermissions: [],
         followedApplications: [],

@@ -39,7 +39,7 @@ vi.mock("@/stores/userStore", () => ({
   }),
 }));
 
-const renderTab = () => render(UserInfoTab, { global: { stubs: { UserPermissions: true, DsfrToggleSwitch: true } } });
+const renderTab = () => render(UserInfoTab, { global: { stubs: { UserPermissions: true } } });
 
 const localAdmin: ContactAdminDto = { email: "admin.local@interieur.gouv.fr", source: "local" };
 
@@ -59,6 +59,7 @@ describe("UserInfoTab — administrateur à contacter", () => {
     renderTab();
 
     const link = await screen.findByTestId("user-profile-contact-admin-link");
+    expect(screen.getByRole("rowheader", { name: "Contact de l'administrateur fonctionnel" })).toBeInTheDocument();
     expect(link).toHaveAttribute("href", "mailto:admin.local@interieur.gouv.fr");
     expect(link).toHaveTextContent("admin.local@interieur.gouv.fr");
     expect(screen.getByTestId("user-profile-contact-admin-source")).toHaveTextContent("administrateur de votre périmètre");
@@ -111,7 +112,13 @@ describe("UserInfoTab — administrateur à contacter", () => {
     consoleError.mockRestore();
   });
 
-  it("restitue la préférence enregistrée, son succès et le focus sur le vrai contrôle DSFR", async () => {
+  it("associe l'aide visible au véritable champ de notification", () => {
+    renderTab();
+    const checkbox = screen.getByRole("checkbox", { name: "Recevoir les notifications par email" });
+    expect(checkbox).toHaveAccessibleDescription("Lorsque des changements sont apportés à vos applications suivies.");
+  });
+
+  it("restitue la préférence enregistrée, son succès et le focus sur le contrôle DSFR", async () => {
     render(UserInfoTab, { global: { stubs: { UserPermissions: true } } });
     const checkbox = screen.getByRole("checkbox", { name: "Recevoir les notifications par email" });
     expect(checkbox).not.toBeChecked();

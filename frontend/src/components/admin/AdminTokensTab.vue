@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import type { DataTablePageEvent } from "primevue/datatable";
 import api from "@/api";
+import UserCapabilities from "./UserCapabilities.vue";
 import RefAppTable from "@/components/RefAppTable.vue";
 import OrganizationSearchSelect from "@/components/common/OrganizationSearchSelect.vue";
 import type { TableColumn } from "@/types/table";
@@ -66,9 +67,10 @@ function focusCreateButton() {
   tokenSection.value?.querySelector<HTMLButtonElement>("[data-testid=admin-token-create-btn]")?.focus();
 }
 
-type ServiceTokenForm = Omit<CreateServiceTokenDto, "scopeOrganizationId" | "serviceMode"> & {
+type ServiceTokenForm = Omit<CreateServiceTokenDto, "scopeOrganizationId" | "serviceMode" | "additionalPermissions"> & {
   scopeOrganizationId?: string;
   serviceMode: ServiceTokenMode;
+  additionalPermissions: NonNullable<CreateServiceTokenDto["additionalPermissions"]>;
 };
 
 const serviceTokenModeOptions = (["delegated", "machine"] satisfies ServiceTokenMode[]).map((mode) => ({
@@ -84,6 +86,7 @@ const newToken = ref<ServiceTokenForm>({
   role: "VISITOR",
   scopeOrganizationId: "",
   serviceMode: "delegated",
+  additionalPermissions: [],
 });
 
 const serviceTokens = ref<TokenDto[]>([]);
@@ -178,7 +181,15 @@ const isScopeDisabled = computed(() => newToken.value.role === "VISITOR");
 const labelScope = computed(() => RolesScopes[newToken.value.role] || "Organisation du périmètre");
 
 function resetForm() {
-  newToken.value = { name: "", description: "", expiresAt: "", role: "VISITOR", scopeOrganizationId: "", serviceMode: "delegated" };
+  newToken.value = {
+    name: "",
+    description: "",
+    expiresAt: "",
+    role: "VISITOR",
+    scopeOrganizationId: "",
+    serviceMode: "delegated",
+    additionalPermissions: [],
+  };
 }
 
 function resetMessages() {
@@ -389,6 +400,8 @@ onMounted(() => {
             required
             :options="RolesOptions.map((option) => ({ text: option.label, value: option.value }))"
           />
+
+          <UserCapabilities v-model="newToken.additionalPermissions" :role="newToken.role" :can-grant-beta="true" />
 
           <OrganizationSearchSelect
             v-show="!isScopeDisabled"

@@ -252,15 +252,20 @@ export class ApplicationsSheetProcessor {
       status: { status: DEFAULT_CREATE_STATUS },
     });
     await validateImportDto(dto);
-    await this.applicationService.createApplication(requestor.id, dto);
+    await this.applicationService.createApplication(requestor, dto);
     return { sheet: this.sheetName, row, status: "created", identifier };
   }
 
   /** Résout la priorité de redémarrage par code (« R0 ») puis par libellé d'export. */
   private resolvePriority(value: string): priorityRestart | undefined {
     if (!value) return undefined;
-    if (value in priorityRestart) return value as priorityRestart;
-    return PRIORITY_LABEL_TO_CODE[value];
+    if (Object.hasOwn(priorityRestart, value)) return value as priorityRestart;
+    if (Object.hasOwn(PRIORITY_LABEL_TO_CODE, value)) {
+      return PRIORITY_LABEL_TO_CODE[value];
+    }
+    throw new Error(
+      `Colonne « ${HEADERS.priorityRestart} » : valeur invalide « ${value} ».`,
+    );
   }
 
   /** Retire les clés `undefined` pour ne pas remonter de valeurs vides à la validation. */

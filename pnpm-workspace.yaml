@@ -5,6 +5,7 @@ overrides:
   fast-uri: 3.1.9
   flatted@3: 3.4.2
   js-yaml@4: 4.3.2
+  minimatch@10: 11.0.1
   picomatch@4: 4.0.4
   picomatch@<2.3.2: ">=2.3.2"
   yaml@>=2.0.0 <2.8.3: ">=2.8.3"

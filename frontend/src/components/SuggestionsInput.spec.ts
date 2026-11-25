@@ -19,6 +19,17 @@ function renderInput(search: (query: string) => Promise<{ id: string; label: str
 afterEach(() => vi.useRealTimers());
 
 describe("SuggestionsInput", () => {
+  it("synchronise le libellé externe sans émettre de sélection", async () => {
+    const wrapper = renderInput(() => Promise.resolve([]));
+    for (const label of ["A", "B", undefined]) {
+      await wrapper.setProps({ defaultValue: label });
+      expect(wrapper.find(".fr-tag--dismiss").exists()).toBe(Boolean(label));
+      if (label) expect(wrapper.get(".fr-tag--dismiss").text()).toBe(label);
+      expect(wrapper.emitted("update:selectedValue")).toBeUndefined();
+    }
+    wrapper.unmount();
+  });
+
   it("retire la sélection avec le vrai tag DSFR, annonce le retrait et rend le focus à la recherche", async () => {
     vi.useFakeTimers();
     const wrapper = mount(SuggestionsInput, {

@@ -34,7 +34,7 @@ defineExpose({ focusField });
 </script>
 
 <template>
-  <div ref="container">
+  <fieldset ref="container" :disabled="isSyncing" class="maia-fields" :aria-label="`Coordonnées du contact ${contactLabel}`">
     <p class="fr-text--sm fr-mb-3w">
       <span class="fr-icon-information-line fr-mr-1w" aria-hidden="true" />
       Toutes les informations du contact {{ contactLabel }} sont obligatoires.
@@ -55,6 +55,8 @@ defineExpose({ focusField });
     <DsfrButton
       type="button"
       label="Synchroniser depuis MAIA (par email)"
+      :icon="isSyncing ? { name: 'ri-refresh-line', animation: 'spin' } : undefined"
+      :aria-busy="isSyncing"
       size="sm"
       tertiary
       :disabled="isSyncing || !actor.email"
@@ -127,10 +129,16 @@ defineExpose({ focusField });
         />
       </div>
     </div>
-  </div>
+  </fieldset>
 </template>
 
 <style scoped>
+.maia-fields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
 .moa-is-group-checkbox :deep(.fr-checkbox-group input[type="checkbox"] + label::before) {
   top: 50%;
   transform: translateY(-50%);

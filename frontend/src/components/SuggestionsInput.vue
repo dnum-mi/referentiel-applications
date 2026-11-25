@@ -3,7 +3,7 @@ import type { ApplicationDto } from "@/client";
 import { useAsyncSearch } from "@/composables/use-async-search";
 import { generateId } from "@/utils/generator-utils";
 import { watchDebounced } from "@vueuse/core";
-import { computed, nextTick, ref, watch, type WatchHandle } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 
 const props = withDefaults(
   defineProps<{
@@ -94,12 +94,18 @@ watch(
 watchDebounced(input, onQuery, { debounce: 300 });
 watch(isLoading, (value) => emit("update:isLoading", value), { immediate: true });
 
-let stop: WatchHandle;
-stop = watchEffect(() => {
-  if (!props.defaultValue) return;
-  searchSuggestion.value = props.defaultValue;
-  stop?.();
-});
+watch(
+  () => props.defaultValue,
+  (value) => {
+    reset();
+    input.value = "";
+    searchSuggestion.value = value ?? "";
+    selectionAnnouncement.value = "";
+    highlightedIndex.value = -1;
+    isOpen.value = false;
+  },
+  { immediate: true },
+);
 
 const resetInput = (selectionLabel = searchSuggestion.value) => {
   reset();

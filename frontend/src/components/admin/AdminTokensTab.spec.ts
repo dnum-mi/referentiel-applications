@@ -209,6 +209,7 @@ describe("AdminTokensTab : modes des tokens applicatifs", () => {
             role: "VISITOR",
             scopeOrganizationId: null,
             serviceMode: mode,
+            additionalPermissions: [],
           },
         }),
       );
@@ -216,6 +217,29 @@ describe("AdminTokensTab : modes des tokens applicatifs", () => {
       expect(screen.getByText("new-service-token-secret")).toBeInTheDocument();
     },
   );
+
+  it("transmet les capacités choisies sans les droits hérités et réinitialise le formulaire", async () => {
+    renderTab();
+    await openCreateForm();
+    await fillRequiredFields();
+    await fireEvent.update(screen.getByRole("combobox", { name: /Rôle/ }), "ADMIN");
+    expect(screen.getByRole("checkbox", { name: /Créer une application/ })).toBeDisabled();
+    expect(screen.getByRole("checkbox", { name: /Créer une application/ })).toBeChecked();
+    await fireEvent.click(screen.getByRole("checkbox", { name: /Gérer les campagnes de mise en qualité/ }));
+    await fireEvent.update(screen.getByRole("combobox", { name: /Rôle/ }), "READER");
+    await fireEvent.click(screen.getByRole("checkbox", { name: /Export les données/ }));
+    await fireEvent.click(screen.getByRole("button", { name: "Créer le token" }));
+    expect(createMock).toHaveBeenCalledWith({
+      body: expect.objectContaining({
+        role: "READER",
+        additionalPermissions: ["QualityCampaignManage", "DataExport"],
+      }),
+    });
+    await screen.findByText("new-service-token-secret");
+    await openCreateForm();
+    expect(screen.getByRole("checkbox", { name: /Export les données/ })).not.toBeChecked();
+    expect(screen.getByRole("checkbox", { name: /Gérer les campagnes de mise en qualité/ })).not.toBeChecked();
+  });
 
   it("affiche les modes machine et délégué dans la liste des tokens applicatifs", async () => {
     listMock.mockImplementation(({ query }: { query: { kind: string } }) =>

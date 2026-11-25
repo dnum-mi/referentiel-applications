@@ -1,4 +1,4 @@
-import { shallowMount, type VueWrapper } from "@vue/test-utils";
+import { flushPromises, shallowMount, type VueWrapper } from "@vue/test-utils";
 import { effectScope, nextTick } from "vue";
 import { NEUTRAL_RELATION_FILTERS } from "@/types/relation-type-filter";
 
@@ -37,7 +37,7 @@ describe("RelationFilter — pagination de la recherche", () => {
       response: { ok: true },
       data: { results: [], total: 0, technicalDebtPoints: [], averageIq: 0 },
     });
-    findOneMock.mockReset().mockResolvedValue({ data: { label: "Application de référence" } });
+    findOneMock.mockReset().mockResolvedValue({ response: { ok: true }, data: { label: "Application de référence" } });
     replaceMock.mockReset();
     const { useApplicationSearch } = await import("@/composables/use-application-search");
     scope = effectScope();
@@ -51,6 +51,110 @@ describe("RelationFilter — pagination de la recherche", () => {
     scope?.stop();
     vi.clearAllTimers();
     vi.useRealTimers();
+  });
+
+  async function mountRealInput() {
+    wrapper.unmount();
+    const { default: RelationFilter } = await import("./RelationFilter.vue");
+    wrapper = shallowMount(RelationFilter, {
+      global: {
+        stubs: {
+          SuggestionsInput: false,
+          DsfrTag: {
+            props: ["label"],
+            emits: ["select"],
+            template: '<button class="reference-tag" @click="$emit(\'select\')">{{ label }}</button>',
+          },
+        },
+      },
+    });
+    await flushPromises();
+  }
+
+  const resolvedReference = (label: string) => ({ response: { ok: true }, data: { label } });
+
+  it("charge la référence au montage", async () => {
+    search.setFilter({ relationAppId: "a" });
+    await nextTick();
+    await mountRealInput();
+    expect(findOneMock).toHaveBeenLastCalledWith({ path: { applicationId: "a" } });
+    expect(wrapper.get(".reference-tag").text()).toBe("Application de référence");
+  });
+
+  it("suit les filtres appliqués après montage puis leur réinitialisation", async () => {
+    await mountRealInput();
+    expect(findOneMock).not.toHaveBeenCalled();
+    for (const label of ["A", "B"]) {
+      findOneMock.mockResolvedValueOnce(resolvedReference(label));
+      search.setFilter({ relationAppId: label });
+      await flushPromises();
+      expect(wrapper.get(".reference-tag").text()).toBe(label);
+    }
+    search.setFilter({ relationAppId: undefined });
+    await flushPromises();
+    expect(wrapper.find(".reference-tag").exists()).toBe(false);
+  });
+
+  it.each(["réponse", "erreur"])("ignore une %s A arrivée après B", async (outcome) => {
+    await mountRealInput();
+    let resolve!: (value: ReturnType<typeof resolvedReference>) => void;
+    let reject!: (reason: Error) => void;
+    findOneMock.mockImplementationOnce(
+      () =>
+        new Promise((res, rej) => {
+          resolve = res;
+          reject = rej;
+        }),
+    );
+    search.setFilter({ relationAppId: "a" });
+    await nextTick();
+    expect(wrapper.get(".reference-tag").text()).toBe("Chargement de la référence…");
+    findOneMock.mockResolvedValueOnce(resolvedReference("B"));
+    search.setFilter({ relationAppId: "b" });
+    await flushPromises();
+    if (outcome === "réponse") resolve(resolvedReference("A"));
+    else reject(new Error("réseau"));
+    await flushPromises();
+    expect(wrapper.get(".reference-tag").text()).toBe("B");
+    expect(wrapper.get('[data-testid="relation-reference-error"]').text()).toBe("");
+    expect(search.filters.value.relationAppId).toBe("b");
+  });
+
+  it("ignore la réponse reçue après réinitialisation", async () => {
+    await mountRealInput();
+    let resolve!: (value: ReturnType<typeof resolvedReference>) => void;
+    findOneMock.mockImplementationOnce(
+      () =>
+        new Promise((res) => {
+          resolve = res;
+        }),
+    );
+    search.setFilter({ relationAppId: "a" });
+    await nextTick();
+    search.setFilter({ relationAppId: undefined });
+    await nextTick();
+    resolve(resolvedReference("A"));
+    await flushPromises();
+    expect(wrapper.find(".reference-tag").exists()).toBe(false);
+  });
+
+  it.each(["HTTP", "réseau", "données absentes"])("conserve le filtre et permet son retrait après une erreur %s", async (kind) => {
+    await mountRealInput();
+    if (kind === "réseau") findOneMock.mockRejectedValueOnce(new Error("réseau"));
+    else findOneMock.mockResolvedValueOnce({ response: { ok: kind !== "HTTP" } });
+    search.setFilter({ relationAppId: "a", is_part_of: "INCLUDE" });
+    await flushPromises();
+    expect(search.filters.value.relationAppId).toBe("a");
+    expect(search.filters.value.is_part_of).toBe("INCLUDE");
+    expect(wrapper.get(".reference-tag").text()).toBe("Application de référence indisponible");
+    expect(wrapper.get('[data-testid="relation-reference-error"]').text()).toBe(
+      "Impossible de charger l’application de référence. Le filtre reste appliqué.",
+    );
+    await wrapper.get(".reference-tag").trigger("click");
+    await flushPromises();
+    expect(search.filters.value.relationAppId).toBeUndefined();
+    expect(wrapper.find(".reference-tag").exists()).toBe(false);
+    expect(wrapper.get('[data-testid="relation-reference-error"]').text()).toBe("");
   });
 
   function expectFirstPage() {

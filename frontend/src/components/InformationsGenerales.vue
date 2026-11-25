@@ -134,6 +134,19 @@ function tagSearchLink(tag: string) {
 }
 
 const applicationModal = useModal();
+const applicationForm = ref<InstanceType<typeof ApplicationForm> | null>(null);
+const applicationEditTrigger = ref<HTMLElement | null>(null);
+
+function openApplicationModal(event: MouseEvent) {
+  applicationEditTrigger.value = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
+  applicationModal.openModal();
+}
+
+async function closeApplicationModal() {
+  applicationModal.closeModal();
+  await nextTick();
+  applicationEditTrigger.value?.focus();
+}
 const isModalOpened = computed(() => applicationModal.isModalOpen.value);
 
 const priorityConfigOptions = [
@@ -193,7 +206,7 @@ function getPriorityBadgeType(priority?: string) {
 }
 
 async function updateApplication() {
-  applicationModal.closeModal();
+  await closeApplicationModal();
   emit("update:application");
 }
 
@@ -341,7 +354,7 @@ watch(
                   title="Modifier – Informations générales"
                   data-testid="info-edit-btn"
                   :disabled="!canEditBase"
-                  @click="() => applicationModal.openModal()"
+                  @click="openApplicationModal"
                 />
               </div>
             </div>
@@ -551,14 +564,17 @@ watch(
     :opened="isModalOpened"
     title="Modifier l'application"
     data-testid="info-edit-modal"
-    @close="applicationModal.closeModal"
+    @cancel.prevent
+    @close="applicationForm?.requestCancel()"
   >
     <ApplicationForm
+      v-if="isModalOpened"
+      ref="applicationForm"
       mode="edit"
       :initial-data="{ ...application }"
       data-testid="info-edit-form"
       @success="updateApplication"
-      @cancel="applicationModal.closeModal"
+      @cancel="closeApplicationModal"
     />
   </DsfrModal>
 

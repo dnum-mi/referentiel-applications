@@ -6,7 +6,6 @@ import { useToasterStore } from "@/stores/toasterStore";
 import api from "@/api/index";
 import type { AppPermsDto, CreateActorTypeDto } from "@/client/types.gen";
 import AppPermsMatrixHistory from "./AppPermsMatrixHistory.vue";
-import PermissionWritePriorityRestart from "../PermissionWritePriorityRestart.vue";
 import { useSubmissionFocus } from "@/composables/use-submission-focus";
 
 const props = defineProps<{
@@ -27,11 +26,9 @@ onMounted(async () => {
   await actorTypeStore.fetchAll(true);
 });
 
-// Colonnes dans l'ordre des onglets de la fiche application (#2083) — « Priorit. Redémarr. »
-// et « Héberg. » n'ont pas d'onglet propre et restent accolées à « Infos » dont elles relèvent.
+// Colonnes dans l’ordre des onglets de la fiche ; « Héberg. » reste accolée à « Infos ».
 const permissionSuffixes = {
   App: { label: "Infos", title: "Informations (la lecture est acquise à tout utilisateur authentifié)" },
-  PriorityRestart: { label: "Priorit. Redémarr.", title: "Prioritisation et redémarrage" },
   Hosting: { label: "Héberg.", title: "Hébergements" },
   Link: { label: "Liens", title: "Liens" },
   Compliance: { label: "Conformités", title: "Conformités" },
@@ -94,9 +91,6 @@ type PermissionValue = "none" | "Read" | "Write";
 function updateMatrix(actorTypeId: string, permission: keyof typeof permissionSuffixes, value: PermissionValue) {
   const actorTypeIdx = updatedMatrix.value.findIndex((at) => at.actorTypeId === actorTypeId);
   if (actorTypeIdx === -1) return;
-  if (permission === "PriorityRestart") {
-    return;
-  }
   updatedMatrix.value[actorTypeIdx][`${permission}Read`] = value === "Read" || value === "Write";
   // Seul « Metadata » n'a pas d'écriture (historique auto-généré). « Data » — et « Technology » —
   // ont bien un couple lecture/écriture : les exclure faisait que passer la colonne en RW ne
@@ -104,12 +98,6 @@ function updateMatrix(actorTypeId: string, permission: keyof typeof permissionSu
   if (permission !== "Metadata") {
     updatedMatrix.value[actorTypeIdx][`${permission}Write`] = value === "Write";
   }
-}
-
-function updateWritePriorityRestart(actorTypeId: string, value: boolean) {
-  const actorTypeIdx = updatedMatrix.value.findIndex((at) => at.actorTypeId === actorTypeId);
-  if (actorTypeIdx === -1) return;
-  updatedMatrix.value[actorTypeIdx].AppWritePriority = value;
 }
 
 type ReportPermissionValue = "Read" | "Post" | "Manage";
@@ -249,14 +237,6 @@ async function createActorType() {
           :perm-order="['Read', 'Write', 'none']"
           :data-testid="`app-perms-select-${perms.actorTypeId}-${perm}`"
           @update:model-value="(value: PermissionValue) => updateMatrix(perms.actorTypeId, perm as keyof typeof permissionSuffixes, value)"
-        />
-        <PermissionWritePriorityRestart
-          v-else-if="perm === 'PriorityRestart'"
-          :id="`${perms.actorTypeId}-${perm}`"
-          :checked="perms.AppWritePriority"
-          :actor-type-label="actorTypeStore.actorTypes.find((at) => at.id === perms.actorTypeId)?.label ?? perms.actorTypeId"
-          :data-testid="`app-perms-select-${perms.actorTypeId}-${perm}`"
-          @update:model-value="(value: boolean) => updateWritePriorityRestart(perms.actorTypeId, value)"
         />
         <PermissionSelect
           v-else

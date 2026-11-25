@@ -36,7 +36,7 @@ const isUpdating = ref(false);
 const emailNotificationsEnabled = ref(true);
 const successMessage = ref("");
 const errorMessage = ref("");
-const toggleRef = useTemplateRef<{ $el?: HTMLElement } | null>("toggleRef");
+const toggleRef = useTemplateRef<HTMLInputElement>("toggleRef");
 
 watch(
   () => userStore.user?.emailNotificationsEnabled,
@@ -72,7 +72,7 @@ async function handleToggleEmailNotifications() {
     }
     await nextTick();
     if (userId === userStore.user?.id && (document.activeElement === document.body || document.activeElement === focusOrigin)) {
-      toggleRef.value?.$el?.querySelector("input")?.focus();
+      toggleRef.value?.focus();
     }
   }
 }
@@ -105,7 +105,7 @@ onMounted(async () => {
             </td>
           </tr>
           <tr v-if="contactAdmin && !isGlobalAdmin">
-            <th scope="row">Administrateur</th>
+            <th scope="row">Contact de l'administrateur fonctionnel</th>
             <td data-testid="user-profile-contact-admin">
               <a :href="`mailto:${contactAdmin.email}`" data-testid="user-profile-contact-admin-link">{{ contactAdmin.email }}</a>
               <span class="fr-text--xs fr-ml-1w" data-testid="user-profile-contact-admin-source"
@@ -133,16 +133,31 @@ onMounted(async () => {
     </div>
     <div class="fr-mt-4w">
       <h2 class="fr-h6">Préférences de notification</h2>
-      <DsfrToggleSwitch
-        ref="toggleRef"
-        input-id="user-email-notifications"
-        v-model="emailNotificationsEnabled"
-        label="Recevoir les notifications par email"
-        hint="Lorsque des changements sont apportés à vos applications suivies."
-        data-testid="user-profile-email-notifications-checkbox"
-        :disabled="isUpdating"
-        @update:model-value="handleToggleEmailNotifications"
-      />
+      <!-- Le composant Vue DSFR associe l'input au label plutôt qu'à l'aide et ne permet pas de remplacer cette association. -->
+      <div class="fr-toggle" data-testid="user-profile-email-notifications-checkbox">
+        <input
+          id="user-email-notifications"
+          ref="toggleRef"
+          v-model="emailNotificationsEnabled"
+          type="checkbox"
+          class="fr-toggle__input"
+          aria-describedby="user-email-notifications-hint-text"
+          :disabled="isUpdating"
+          @change="handleToggleEmailNotifications"
+        />
+        <label
+          class="fr-toggle__label"
+          for="user-email-notifications"
+          data-fr-checked-label="Activé"
+          data-fr-unchecked-label="Désactivé"
+          style="--toggle-status-width: 3.55208125rem"
+        >
+          Recevoir les notifications par email
+        </label>
+        <p id="user-email-notifications-hint-text" class="fr-hint-text">
+          Lorsque des changements sont apportés à vos applications suivies.
+        </p>
+      </div>
       <output aria-live="polite" aria-atomic="true" class="fr-valid-text" data-testid="email-preferences-success">
         {{ isUpdating ? "Mise à jour de vos préférences de notification…" : successMessage }}
       </output>

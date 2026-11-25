@@ -2,35 +2,45 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/vue";
 import { flushPromises } from "@vue/test-utils";
 import { reactive, ref } from "vue";
 import { FeatureId, Permission } from "@/client";
+import type { Filters } from "@/composables/use-application-search";
+import { useColumnPreferences } from "@/composables/use-column-preferences";
 import ApplicationSearchActions from "./ApplicationSearchActions.vue";
 
 afterEach(() => cleanup());
 
-const { hasPermissions, fetchUser, getConfig, user, downloadExcel, downloadHtml, addErrorMessage } = vi.hoisted(() => ({
-  user: { gristDocIds: ["doc1"] as string[], gristUrl: "https://grist.example" as string | null, hasGristApiKey: true },
-  hasPermissions: vi.fn(),
-  fetchUser: vi.fn(),
-  getConfig: vi.fn(),
-  downloadExcel: vi.fn(),
-  downloadHtml: vi.fn(),
-  addErrorMessage: vi.fn(),
-}));
+const { hasPermissions, fetchUser, getConfig, user, downloadExcel, downloadHtml, addErrorMessage, resolve, filtersToQuery } = vi.hoisted(
+  () => ({
+    user: { gristDocIds: ["doc1"] as string[], gristUrl: "https://grist.example" as string | null, hasGristApiKey: true },
+    hasPermissions: vi.fn(),
+    fetchUser: vi.fn(),
+    getConfig: vi.fn(),
+    downloadExcel: vi.fn(),
+    downloadHtml: vi.fn(),
+    addErrorMessage: vi.fn(),
+    resolve: vi.fn(),
+    filtersToQuery: vi.fn(),
+  }),
+);
 
-vi.mock("vue-router", () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock("vue-router", () => ({ useRouter: () => ({ push: vi.fn(), resolve }) }));
 vi.mock("@/stores/toasterStore", () => ({
   useToasterStore: () => ({ addErrorMessage }),
 }));
-vi.mock("@/stores/userStore", () => ({ useUserStore: () => ({ hasPermissions, fetchUser, user }) }));
+vi.mock("@/stores/userStore", () => ({ useUserStore: () => ({ hasPermissions, fetchUser, user, authenticated: true }) }));
 vi.mock("@/services/config", () => ({ getConfig }));
 vi.mock("@/stores/applicationStore", () => ({
   useApplicationStore: () => ({ downloadExcel, downloadHtml }),
 }));
-vi.mock("@/composables/use-application-search", async () => {
-  const { ref } = await import("vue");
-  return { useApplicationSearch: () => ({ filters: ref({ shortName: "app" }) }) };
-});
+vi.mock("@/composables/use-application-search", () => ({
+  useApplicationSearch: () => ({ filters, total, isLoading, isSearchPending, error, filtersToQuery }),
+}));
 
 const grantedPermissions = ref<Permission[]>([]);
+const filters = ref<Filters>({});
+const total = ref(0);
+const isLoading = ref(false);
+const isSearchPending = ref(false);
+const error = ref<string | null>(null);
 
 async function renderWith(permissions: Permission[]) {
   grantedPermissions.value = permissions;
@@ -59,11 +69,32 @@ beforeEach(() => {
   fetchUser.mockResolvedValue(true);
   getConfig.mockResolvedValue({ betaFeatures: Object.values(FeatureId) });
   Object.assign(user, { gristDocIds: ["doc1"], gristUrl: "https://grist.example", hasGristApiKey: true });
+  filters.value = { shortName: "app" };
+  total.value = 42;
+  isLoading.value = false;
+  isSearchPending.value = false;
+  error.value = null;
+  useColumnPreferences().resetToDefaults();
 });
 
 describe("ApplicationSearchActions — synchronisation Grist", () => {
-  it("masque le bouton sans la capacité GristSync", async () => {
-    await renderWith([Permission.DATA_EXPORT]);
+  it("masque le bouton sans la capacité BetaFeatures", async () => {
+    await renderWith([Permission.DATA_EXPORT, Permission.GRIST_SYNC]);
+    expect(screen.queryByTestId("grist-sync-btn")).toBeNull();
+    expect(screen.queryByTestId("grist-sync-btn-mobile")).toBeNull();
+  });
+
+  it.each(["grist-sync-btn", "grist-sync-btn-mobile"])("affiche le badge bêta sur %s", async (testId) => {
+    await renderWith([Permission.BETA_FEATURES]);
+    const button = screen.getByTestId(testId);
+    expect(button).toHaveTextContent("Bêta");
+    expect(button).toHaveAccessibleName(/fonctionnalité bêta/);
+  });
+
+  it("retire les boutons lorsque l’accès bêta est révoqué", async () => {
+    await renderWith([Permission.BETA_FEATURES]);
+    grantedPermissions.value = [];
+    await flushPromises();
     expect(screen.queryByTestId("grist-sync-btn")).toBeNull();
     expect(screen.queryByTestId("grist-sync-btn-mobile")).toBeNull();
   });
@@ -74,7 +105,7 @@ describe("ApplicationSearchActions — synchronisation Grist", () => {
     ["sans clé d'API", { hasGristApiKey: false }],
   ])("désactive le bouton tant que le profil est %s", async (_, missing) => {
     Object.assign(user, missing);
-    await renderWith([Permission.GRIST_SYNC]);
+    await renderWith([Permission.BETA_FEATURES]);
 
     const button = screen.getByTestId("grist-sync-btn");
     expect(button).toBeDisabled();
@@ -87,7 +118,7 @@ describe("ApplicationSearchActions — synchronisation Grist", () => {
   });
 
   it("ouvre la modale de synchronisation", async () => {
-    await renderWith([Permission.GRIST_SYNC]);
+    await renderWith([Permission.BETA_FEATURES]);
     expect(screen.getByTestId("grist-sync-modal")).toHaveAttribute("opened", "false");
 
     await fireEvent.click(screen.getByTestId("grist-sync-btn"));
@@ -96,7 +127,7 @@ describe("ApplicationSearchActions — synchronisation Grist", () => {
   });
 
   it.each(["grist-sync-btn", "grist-sync-btn-mobile"])("rend le focus au bouton %s après annulation", async (testId) => {
-    await renderWith([Permission.GRIST_SYNC]);
+    await renderWith([Permission.BETA_FEATURES]);
     const button = screen.getByTestId(testId);
     button.focus();
     await fireEvent.click(button);
@@ -114,7 +145,7 @@ describe("ApplicationSearchActions — synchronisation Grist", () => {
         finishExport = resolve;
       }),
     );
-    await renderWith([Permission.DATA_EXPORT, Permission.GRIST_SYNC, Permission.BETA_FEATURES]);
+    await renderWith([Permission.DATA_EXPORT, Permission.BETA_FEATURES]);
     const htmlButton = screen.getByTestId("applications-export-html-btn");
     const excelButton = screen.getByTestId("application-export-btn");
     expect(screen.getByTestId("grist-sync-btn")).toBeEnabled();
@@ -135,7 +166,7 @@ describe("ApplicationSearchActions — synchronisation Grist", () => {
     await vi.waitFor(() => expect(htmlButton).toHaveAttribute("aria-disabled", "false"));
     expect(htmlButton).toBeEnabled();
     await fireEvent.click(excelButton);
-    await vi.waitFor(() => expect(downloadExcel).toHaveBeenCalledExactlyOnceWith({ shortName: "app" }));
+    await vi.waitFor(() => expect(downloadExcel).toHaveBeenCalledExactlyOnceWith({ iq__isNull: true }));
   });
 
   it("conserve l'erreur et le réessai de l'export HTML", async () => {
@@ -158,12 +189,13 @@ describe("ApplicationSearchActions — synchronisation Grist", () => {
 });
 
 describe("ApplicationSearchActions — accès bêta de l'export Excel", () => {
-  it.each([{ permissions: [] }, { permissions: [Permission.DATA_EXPORT] }, { permissions: [Permission.BETA_FEATURES] }])(
-    "masque Excel sans les deux capacités ($permissions)",
+  it.each([{ permissions: [] }, { permissions: [Permission.DATA_EXPORT] }])(
+    "masque les exports bêta sans la capacité BetaFeatures ($permissions)",
     async ({ permissions }) => {
       await renderWith(permissions);
       expect(screen.queryByTestId("application-export-btn")).toBeNull();
       expect(screen.queryByTestId("application-export-btn-mobile")).toBeNull();
+      expect(screen.queryByTestId("application-export-view-btn")).toBeNull();
       expect(screen.queryByTestId("applications-export-html-btn")).toBeNull();
     },
   );
@@ -172,13 +204,15 @@ describe("ApplicationSearchActions — accès bêta de l'export Excel", () => {
     await renderWith([Permission.DATA_EXPORT, Permission.BETA_FEATURES]);
     for (const testId of ["application-export-btn", "application-export-btn-mobile"]) {
       const button = screen.getByTestId(testId);
+      expect(button).toHaveTextContent("Exporter la vue complète");
+      expect(button).toHaveAccessibleName(/^Exporter la vue complète/);
       expect(button).toHaveTextContent("Bêta");
       expect(button).toHaveAccessibleName(/fonctionnalité bêta/);
       expect(button.querySelector(".fr-badge")?.tagName).toBe("SPAN");
       expect(button.querySelector(".fr-badge")).toHaveAttribute("aria-hidden", "true");
     }
     await fireEvent.click(screen.getByTestId("application-export-btn-mobile"));
-    await vi.waitFor(() => expect(downloadExcel).toHaveBeenCalledExactlyOnceWith({ shortName: "app" }));
+    await vi.waitFor(() => expect(downloadExcel).toHaveBeenCalledExactlyOnceWith({ iq__isNull: true }));
     expect(fetchUser).toHaveBeenCalledTimes(1);
     expect(getConfig).toHaveBeenLastCalledWith({ refresh: true });
   });
@@ -215,7 +249,7 @@ describe("ApplicationSearchActions — accès bêta de l'export Excel", () => {
       expect(screen.queryByTestId("applications-export-html-btn")).toBeNull();
       await fireEvent.click(button);
       await flushPromises();
-      expect(downloadExcel).toHaveBeenCalledExactlyOnceWith({ shortName: "app" });
+      expect(downloadExcel).toHaveBeenCalledExactlyOnceWith({ iq__isNull: true });
     },
   );
 
@@ -232,8 +266,8 @@ describe("ApplicationSearchActions — accès bêta de l'export Excel", () => {
       await flushPromises();
       expect(fetchUser).toHaveBeenCalledOnce();
       expect(downloadExcel).not.toHaveBeenCalled();
-      expect(screen.queryByTestId("application-export-btn")).toBeNull();
-      expect(screen.queryByTestId("application-export-btn-mobile")).toBeNull();
+      expect(screen.getByTestId("application-export-btn")).toBeDisabled();
+      expect(screen.getByTestId("application-export-btn-mobile")).toBeDisabled();
     },
   );
 
@@ -248,7 +282,161 @@ describe("ApplicationSearchActions — accès bêta de l'export Excel", () => {
       expect(screen.getByTestId(testId)).not.toHaveAccessibleName(/bêta/);
     }
     await fireEvent.click(screen.getByTestId("application-export-btn"));
-    await vi.waitFor(() => expect(downloadExcel).toHaveBeenCalledExactlyOnceWith({ shortName: "app" }));
+    await vi.waitFor(() => expect(downloadExcel).toHaveBeenCalledExactlyOnceWith({ iq__isNull: true }));
+  });
+
+  it.each(["application-export-btn", "application-export-btn-mobile"])(
+    "exporte tout le catalogue autorisé sans reprendre aucun filtre ou tri de l'écran (%s)",
+    async (testId) => {
+      filters.value = {
+        search: "retenu",
+        tag: ["exemple"],
+        myApplications: true,
+        subscribersEmail: true,
+        organization: "MI/DNUM",
+        currentStatus__in: ["deleted"],
+        iqGte: 90,
+        iqLte: 95,
+        iq__isNull: false,
+        technologyEolStatus: "eol",
+        page: 2,
+        pageSize: 1,
+        sortBy: "quality",
+        order: "desc",
+      };
+      await renderWith([Permission.DATA_EXPORT, Permission.BETA_FEATURES]);
+      fetchUser.mockImplementationOnce(async () => {
+        filters.value = { search: "modifié pendant la revalidation", myApplications: true };
+        return true;
+      });
+      const button = screen.getByTestId(testId);
+      expect(button).toHaveTextContent("Exporter la vue complète");
+      expect(button).toHaveAccessibleName(/^Exporter la vue complète en Excel.*toutes les applications autorisées/);
+      await fireEvent.click(button);
+      await vi.waitFor(() => expect(downloadExcel).toHaveBeenCalledExactlyOnceWith({ iq__isNull: true }));
+      expect(filtersToQuery).not.toHaveBeenCalled();
+      expect(fetchUser).toHaveBeenCalledOnce();
+    },
+  );
+});
+
+describe("ApplicationSearchActions — export Excel de la vue", () => {
+  it("annonce le total et envoie les filtres et les colonnes visibles dans l'ordre du tableau", async () => {
+    const selection: Filters = { search: "fiches", tag: ["exemple"], order: "desc" };
+    const fullFilters: Filters = { ...selection, page: 2, pageSize: 5 };
+    filters.value = fullFilters;
+    useColumnPreferences().setVisibleColumns(["status", "businessDivision", "moa", "label", "quality"]);
+    const query = { search: "fiches", tag: "exemple", order: "desc" };
+    const cataloguePath = "/recherche-application?search=fiches&tag=exemple&order=desc";
+    filtersToQuery.mockReturnValue(query);
+    resolve.mockReturnValue({ href: cataloguePath });
+    await renderWith([Permission.DATA_EXPORT, Permission.BETA_FEATURES, Permission.COLUMN_READ]);
+    fetchUser.mockImplementationOnce(async () => {
+      grantedPermissions.value = [Permission.DATA_EXPORT, Permission.BETA_FEATURES];
+      return true;
+    });
+
+    const viewButton = screen.getByTestId("application-export-view-btn");
+    expect(viewButton).toHaveTextContent("Exporter la vue filtrée");
+    expect(viewButton).not.toHaveTextContent("42 applications");
+    expect(viewButton).toHaveAccessibleName("Exporter la vue filtrée (42 applications) — fonctionnalité bêta");
+    await fireEvent.click(viewButton);
+    await vi.waitFor(() => {
+      expect(downloadExcel).toHaveBeenCalledExactlyOnceWith(selection, {
+        columns: ["quality", "label", "businessDivision", "status"],
+        cataloguePath,
+      });
+    });
+    expect(filtersToQuery).toHaveBeenCalledExactlyOnceWith(selection);
+    expect(resolve).toHaveBeenCalledExactlyOnceWith({ name: "recherche-application", query });
+    expect(fetchUser).toHaveBeenCalledOnce();
+    expect(filters.value).toEqual(fullFilters);
+
+    const completeButton = screen.getByTestId("application-export-btn");
+    expect(completeButton).toHaveTextContent("Exporter la vue complète");
+    expect(completeButton).toHaveAccessibleName(/^Exporter la vue complète/);
+    await fireEvent.click(completeButton);
+    await vi.waitFor(() => expect(downloadExcel).toHaveBeenLastCalledWith({ iq__isNull: true }));
+    expect(downloadExcel).toHaveBeenCalledTimes(2);
+  });
+
+  it("bloque un export si le droit est retiré lors de sa revalidation", async () => {
+    await renderWith([Permission.DATA_EXPORT, Permission.BETA_FEATURES]);
+    fetchUser.mockImplementationOnce(async () => {
+      grantedPermissions.value = [Permission.BETA_FEATURES];
+      return true;
+    });
+    await fireEvent.click(screen.getByTestId("application-export-view-btn"));
+    await flushPromises();
+    expect(downloadExcel).not.toHaveBeenCalled();
+    expect(screen.getByTestId("application-export-view-btn")).toBeDisabled();
+  });
+
+  it("garde la vue du clic si les filtres ou les colonnes changent pendant la revalidation", async () => {
+    useColumnPreferences().setVisibleColumns(["status", "label"]);
+    const cataloguePath = "/recherche-application?shortName=app";
+    filtersToQuery.mockReturnValue({ shortName: "app" });
+    resolve.mockReturnValue({ href: cataloguePath });
+    await renderWith([Permission.DATA_EXPORT, Permission.BETA_FEATURES]);
+    fetchUser.mockImplementationOnce(async () => {
+      filters.value = { shortName: "autre" };
+      useColumnPreferences().setVisibleColumns(["quality"]);
+      return true;
+    });
+
+    await fireEvent.click(screen.getByTestId("application-export-view-btn"));
+    await vi.waitFor(() =>
+      expect(downloadExcel).toHaveBeenCalledExactlyOnceWith({ shortName: "app" }, { columns: ["label", "status"], cataloguePath }),
+    );
+  });
+
+  it.each([false, true])("fige les filtres multiples modifiés sur place, y compris un tableau déjà proxifié (%s)", async (proxied) => {
+    filters.value = { tag: ["au clic"], sortBy: "label", order: "desc", page: 1, pageSize: 2 };
+    if (proxied) filters.value = { ...filters.value };
+    useColumnPreferences().setVisibleColumns(["label"]);
+    filtersToQuery.mockReturnValue({ tag: "au clic", sortBy: "label", order: "desc" });
+    const cataloguePath = "/recherche-application?tag=au%20clic&sortBy=label&order=desc";
+    resolve.mockReturnValue({ href: cataloguePath });
+    await renderWith([Permission.DATA_EXPORT, Permission.BETA_FEATURES]);
+    fetchUser.mockImplementationOnce(async () => {
+      filters.value.tag?.push("ajouté ensuite");
+      return true;
+    });
+    await fireEvent.click(screen.getByTestId("application-export-view-btn"));
+    await vi.waitFor(() =>
+      expect(downloadExcel).toHaveBeenCalledExactlyOnceWith(
+        { tag: ["au clic"], sortBy: "label", order: "desc" },
+        { columns: ["label"], cataloguePath },
+      ),
+    );
+    expect(filters.value.tag).toEqual(["au clic", "ajouté ensuite"]);
+  });
+
+  it("ne déclenche pas d’export sans colonne affichée", async () => {
+    useColumnPreferences().setVisibleColumns(["moa"]);
+    await renderWith([Permission.DATA_EXPORT, Permission.BETA_FEATURES]);
+    const button = screen.getByTestId("application-export-view-btn");
+    expect(button).toHaveAttribute("aria-disabled", "true");
+    expect(button).toHaveAttribute("title", "Sélectionnez au moins une colonne à exporter");
+    await fireEvent.click(button);
+    await flushPromises();
+    expect(fetchUser).not.toHaveBeenCalled();
+    expect(downloadExcel).not.toHaveBeenCalled();
+  });
+
+  it("n’annonce aucun ancien total pendant l’attente d’une recherche différée", async () => {
+    isSearchPending.value = true;
+    await renderWith([Permission.DATA_EXPORT, Permission.BETA_FEATURES]);
+    const button = screen.getByTestId("application-export-view-btn");
+    expect(button).toHaveAttribute("aria-disabled", "true");
+    expect(button).not.toHaveAccessibleName(/42 applications/);
+    await fireEvent.click(button);
+    expect(fetchUser).not.toHaveBeenCalled();
+    expect(downloadExcel).not.toHaveBeenCalled();
+    total.value = 3;
+    isSearchPending.value = false;
+    await vi.waitFor(() => expect(button).toHaveAccessibleName("Exporter la vue filtrée (3 applications) — fonctionnalité bêta"));
+    expect(button).toHaveAttribute("aria-disabled", "false");
   });
 });
 
@@ -276,7 +464,11 @@ describe("ApplicationSearchActions — accès bêta de l'export HTML", () => {
     await fireEvent.click(screen.getByTestId("applications-export-html-btn"));
     await flushPromises();
     expect(downloadHtml).not.toHaveBeenCalled();
-    expect(screen.queryByTestId("applications-export-html-btn")).toBeNull();
+    if (revoked === Permission.DATA_EXPORT) {
+      expect(screen.getByTestId("applications-export-html-btn")).toBeDisabled();
+    } else {
+      expect(screen.queryByTestId("applications-export-html-btn")).toBeNull();
+    }
   });
 
   it("bloque un clic capturé après révocation réactive de Bêta", async () => {
@@ -301,5 +493,37 @@ describe("ApplicationSearchActions — accès bêta de l'export HTML", () => {
     await fireEvent.click(button);
     await flushPromises();
     expect(downloadHtml).toHaveBeenCalledExactlyOnceWith({ shortName: "app" });
+  });
+});
+
+describe("ApplicationSearchActions — actions sans autorisation", () => {
+  it.each([
+    { betaFeatures: [], permissions: [] },
+    { betaFeatures: Object.values(FeatureId), permissions: [Permission.BETA_FEATURES] },
+  ])("affiche les actions accessibles mais les désactive sans leurs droits ($permissions)", async ({ betaFeatures, permissions }) => {
+    getConfig.mockResolvedValue({ betaFeatures });
+    await renderWith(permissions);
+
+    for (const testId of [
+      "create-application-btn",
+      "report-missing-app",
+      "create-quality-campaign-btn",
+      "application-export-btn",
+      "application-export-btn-mobile",
+      "application-export-view-btn",
+      "applications-export-html-btn",
+    ]) {
+      const button = screen.getByTestId(testId);
+      expect(button).toBeDisabled();
+      await fireEvent.click(button);
+    }
+    expect(downloadExcel).not.toHaveBeenCalled();
+    expect(downloadHtml).not.toHaveBeenCalled();
+    expect(fetchUser).not.toHaveBeenCalled();
+
+    grantedPermissions.value = [Permission.DATA_EXPORT, Permission.BETA_FEATURES];
+    await flushPromises();
+    expect(screen.getByTestId("application-export-btn")).toBeEnabled();
+    expect(screen.getByTestId("applications-export-html-btn")).toBeEnabled();
   });
 });

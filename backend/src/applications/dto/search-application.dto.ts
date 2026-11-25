@@ -1,10 +1,12 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
-import { priorityRestart, Status } from "@prisma/client";
+import { HomologationStatus, priorityRestart, Status } from "@prisma/client";
 import { Transform, Type } from "class-transformer";
 import {
   IsArray,
   IsBoolean,
   IsEnum,
+  IsDateString,
+  Matches,
   IsIn,
   IsNumber,
   IsOptional,
@@ -33,6 +35,43 @@ export const COMPLIANCE_CRITERIA = [
 ] as const;
 
 export class ApplicationSearchDto extends PaginationDto {
+  @ApiPropertyOptional({
+    enum: HomologationStatus,
+    description: "Statut déclaré de l’homologation",
+  })
+  @IsOptional()
+  @IsEnum(HomologationStatus)
+  homologationStatus?: HomologationStatus;
+
+  @ApiPropertyOptional({
+    enum: ["expired", "range", "missing"],
+    description:
+      "Expirée (homologuée, fin avant aujourd’hui à Paris), intervalle inclusif ou date absente",
+  })
+  @IsOptional()
+  @IsIn(["expired", "range", "missing"])
+  homologationDateMode?: "expired" | "range" | "missing";
+
+  @ApiPropertyOptional({
+    type: String,
+    example: "2026-11-09",
+    description: "Première journée incluse (Europe/Paris)",
+  })
+  @IsOptional()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  @IsDateString({ strict: true })
+  homologationDateFrom?: string;
+
+  @ApiPropertyOptional({
+    type: String,
+    example: "2026-11-09",
+    description: "Dernière journée incluse (Europe/Paris)",
+  })
+  @IsOptional()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  @IsDateString({ strict: true })
+  homologationDateTo?: string;
+
   private static toArray(value: unknown): string[] {
     if (value == null) return [];
     const raw = Array.isArray(value) ? value : [value];

@@ -17,7 +17,7 @@ const requestor = { id: "user-1" } as unknown as Requestor;
 
 function buildSheet(
   headers: string[],
-  rows: (string | number)[][],
+  rows: (string | number | boolean)[][],
 ): ExcelJS.Worksheet {
   const wb = new ExcelJS.Workbook();
   const sheet = wb.addWorksheet(sheetLabels.Compliances);
@@ -44,6 +44,105 @@ function setup() {
 }
 
 describe("CompliancesSheetProcessor", () => {
+  describe.each([
+    ["DIMA HNO", "dima_is_hno"],
+    ["DIMA Plan de reprise", "dima_recovery_plan"],
+    ["DSFR Implémenté", "dsfr_implemented"],
+    ["RGPD AIPD", "rgpd_has_aipd"],
+  ])("booléen %s", (column, key) => {
+    it.each([false, true])(
+      "refuse Nno avant écriture (existante=%s)",
+      async (existing) => {
+        const { processor, compliancesService } = setup();
+        compliancesService.findByApplicationId.mockResolvedValue(
+          existing ? { id: "c-1" } : null,
+        );
+        const report = createEmptyReport();
+        await processor.process(
+          buildSheet(["ID Application", column], [["app-1", "Nno"]]),
+          requestor,
+          report,
+        );
+        expect(report.summary).toMatchObject({
+          errors: 1,
+          created: 0,
+          updated: 0,
+        });
+        expect(report.entries[0]).toMatchObject({ status: "error", row: 2 });
+        expect(report.entries[0].message).toContain(column);
+        expect(report.entries[0].message).toContain("Nno");
+        expect(
+          compliancesService.createOrUpdateByApplicationId,
+        ).not.toHaveBeenCalled();
+      },
+    );
+
+    it.each([
+      [" Oui ", true],
+      ["oUI", true],
+      [" Non ", false],
+      ["nON", false],
+      [" TRUE ", true],
+      ["fAlSe", false],
+      [true, true],
+      [false, false],
+    ])("convertit %s", async (raw, expected) => {
+      const { processor, compliancesService } = setup();
+      const report = createEmptyReport();
+      await processor.process(
+        buildSheet(["ID Application", column], [["app-1", raw]]),
+        requestor,
+        report,
+      );
+      expect(report.summary).toMatchObject({ errors: 0, created: 1 });
+      expect(
+        compliancesService.createOrUpdateByApplicationId.mock.calls[0][1],
+      ).toHaveProperty(key, expected);
+    });
+
+    it.each([null, "", "   "])(
+      "omet une cellule absente ou vide (%s)",
+      async (raw) => {
+        const { processor, compliancesService } = setup();
+        const report = createEmptyReport();
+        await processor.process(
+          buildSheet(
+            raw === null ? ["ID Application"] : ["ID Application", column],
+            [["app-1", raw ?? ""]],
+          ),
+          requestor,
+          report,
+        );
+        expect(report.summary.errors).toBe(0);
+        expect(
+          compliancesService.createOrUpdateByApplicationId.mock.calls[0][1],
+        ).not.toHaveProperty(key);
+      },
+    );
+  });
+
+  it("poursuit après un booléen invalide et ignore une ligne vide", async () => {
+    const { processor, compliancesService } = setup();
+    const report = createEmptyReport();
+    await processor.process(
+      buildSheet(
+        ["ID Application", "DSFR Implémenté"],
+        [
+          ["app-1", "Nno"],
+          ["", "   "],
+          ["app-1", "Non"],
+        ],
+      ),
+      requestor,
+      report,
+    );
+    expect(report.summary).toMatchObject({ errors: 1, created: 1, updated: 0 });
+    expect(report.entries.map((entry) => entry.row)).toEqual([2, 4]);
+    expect(
+      compliancesService.createOrUpdateByApplicationId,
+    ).toHaveBeenCalledTimes(1);
+  });
+
   it("crée une conformité (aucune existante) avec coercion des types", async () => {
     const { processor, compliancesService } = setup();
     const report = createEmptyReport();

@@ -1,4 +1,5 @@
 import type { UserFakerReturnType } from "./fakers/user.faker";
+import { randomUUID } from "node:crypto";
 import { Permission, Roles } from "@prisma/client";
 import request from "supertest";
 import { BusinessDivisionFaker } from "./fakers/business-division.faker";
@@ -35,6 +36,26 @@ describe("Organizations", () => {
       .get("/organizations")
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
+  });
+
+  it("/GET organizations - retrouve une organisation par son chemin MAIA", async () => {
+    const organization = await OrganizationFaker.create({
+      path: "/MI/Immigration",
+    });
+    await getPrismaClient().organizationMaiaReference.create({
+      data: { maiaRef: "MININT/DGEF", organizationId: organization.id },
+    });
+
+    const { body } = await request(app().getHttpServer())
+      .get("/organizations")
+      .query({ search: "minint/dgef", pageSize: 0 })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(200);
+
+    expect(body.total).toBe(1);
+    expect(body.results).toEqual([
+      expect.objectContaining({ id: organization.id, path: organization.path }),
+    ]);
   });
 
   it("/GET organizations/:id", async () => {
@@ -87,6 +108,106 @@ describe("Organizations", () => {
       .set("Authorization", `Bearer ${TOKEN}`)
       .send({ businessDivisionId: "00000000-0000-0000-0000-000000000000" })
       .expect(404);
+  });
+});
+
+describe("Organizations - tri avant pagination", () => {
+  const app = setupTestSuite();
+  const fixturePath = `/E2E-Sort-Organizations/${randomUUID()}`;
+  const organizations = [
+    { path: `${fixturePath}/Bravo`, sigle: "ZZZ" },
+    { path: `${fixturePath}/Alpha`, sigle: "AAA" },
+    { path: `${fixturePath}/Alpha`, sigle: "MMM" },
+    { path: `${fixturePath}/Echo`, sigle: "AAA" },
+    { path: `${fixturePath}/Delta`, sigle: null },
+    { path: `${fixturePath}/Charlie`, sigle: null },
+  ].map((organization) => ({ ...organization, id: randomUUID() }));
+  const ids = organizations.map(({ id }) => id).join(",");
+  const byId = (...indices: number[]) =>
+    indices.map((index) => organizations[index].id).sort();
+  let TOKEN: string;
+
+  beforeAll(async () => {
+    const user = await UserFaker.create({ role: Roles.ADMIN });
+    TOKEN = await getToken(user);
+    await getPrismaClient().organization.createMany({ data: organizations });
+  });
+
+  const cases = [
+    {
+      sortBy: "path",
+      order: "asc",
+      expected: [
+        ...byId(1, 2),
+        organizations[0].id,
+        organizations[5].id,
+        organizations[4].id,
+        organizations[3].id,
+      ],
+    },
+    {
+      sortBy: "path",
+      order: "desc",
+      expected: [
+        organizations[3].id,
+        organizations[4].id,
+        organizations[5].id,
+        organizations[0].id,
+        ...byId(1, 2),
+      ],
+    },
+    {
+      sortBy: "sigle",
+      order: "asc",
+      expected: [
+        ...byId(1, 3),
+        organizations[2].id,
+        organizations[0].id,
+        ...byId(4, 5),
+      ],
+    },
+    {
+      sortBy: "sigle",
+      order: "desc",
+      expected: [
+        ...byId(4, 5),
+        organizations[0].id,
+        organizations[2].id,
+        ...byId(1, 3),
+      ],
+    },
+  ];
+
+  it.each(cases)(
+    "trie par $sortBy $order sur l'ensemble des pages, y compris les valeurs égales ou absentes",
+    async ({ sortBy, order, expected }) => {
+      const received: string[] = [];
+      for (let page = 0; page < 3; page++) {
+        const { body } = await request(app().getHttpServer())
+          .get("/organizations")
+          .query({ ids, sortBy, order, page, pageSize: 2 })
+          .set("Authorization", `Bearer ${TOKEN}`)
+          .expect(200);
+
+        expect(body.total).toBe(organizations.length);
+        expect(body.results).toHaveLength(2);
+        received.push(...body.results.map(({ id }: { id: string }) => id));
+      }
+      expect(received).toEqual(expected);
+    },
+  );
+
+  it("trie par chemin par défaut et conserve les appels sans pagination", async () => {
+    const { body } = await request(app().getHttpServer())
+      .get("/organizations")
+      .query({ ids, pageSize: 0 })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(200);
+
+    expect(body.total).toBe(organizations.length);
+    expect(body.results.map(({ id }: { id: string }) => id)).toEqual(
+      cases[0].expected,
+    );
   });
 });
 

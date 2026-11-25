@@ -16,10 +16,6 @@ export class AppPermsDto {
 
   @ApiProperty()
   @IsBoolean()
-  AppWritePriority: boolean;
-
-  @ApiProperty()
-  @IsBoolean()
   ActorRead: boolean;
 
   @ApiProperty()

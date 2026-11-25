@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/vue";
 import { ref } from "vue";
+import PrimeVue from "primevue/config";
 import type { ApplicationWithPerms } from "@/models/Application";
 import ApplicationReportsTab from "./ApplicationReportsTab.vue";
 
@@ -14,11 +15,14 @@ vi.mock("@/stores/toasterStore", () => ({ useToasterStore: () => ({ addSuccessMe
 vi.mock("@/composables/use-app-permission", () => ({ useAppPermission: () => ref(true) }));
 const failed = () => ({ error: { message: "Indisponible" }, response: { ok: false } });
 const success = () => ({ response: { ok: true } });
-function renderTab() {
+function renderTab(stubTable = true) {
   return render(ApplicationReportsTab, {
     // Seuls l'identifiant et les permissions de l'application sont utilisés dans cet onglet.
     props: { application: { id: "app-1", myPerms: new Set() } as ApplicationWithPerms },
-    global: { stubs: { RefAppTable: { template: "<table />" }, AppLoader: true } },
+    global: {
+      plugins: [[PrimeVue, { unstyled: true }]],
+      stubs: { RefAppTable: stubTable ? { template: "<table />" } : false, AppLoader: true },
+    },
   });
 }
 beforeEach(() => {
@@ -33,6 +37,13 @@ afterEach(() => {
 });
 
 describe("ApplicationReportsTab — signalement et retour de focus", () => {
+  it("présente l'absence de signalement sans région d'annonce", async () => {
+    renderTab(false);
+    const message = await screen.findByText("Aucun signalement proposé.");
+    expect(message.tagName).toBe("P");
+    expect(message.closest('output, [role="status"], [aria-live]')).toBeNull();
+  });
+
   it("conserve la saisie et le focus après une réponse refusée, avec une erreur locale et aucun faux succès", async () => {
     create.mockResolvedValue(failed());
     renderTab();

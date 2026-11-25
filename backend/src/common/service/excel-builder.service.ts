@@ -4,7 +4,12 @@ import { exportCellText, safeExportLink } from "src/utils/export.util";
 
 export interface ExcelSheetConfig {
   name: string;
-  columns: { header: string; key: string; width?: number }[];
+  columns: {
+    header: string;
+    key: string;
+    width?: number;
+    hyperlink?: boolean;
+  }[];
   rows: Record<string, unknown>[];
 }
 
@@ -34,11 +39,11 @@ export class ExcelBuilderService {
           filterButton: true,
         })),
         rows: rows.map((row) =>
-          columns.map(({ key }) => {
+          columns.map(({ key, hyperlink: linkColumn }) => {
             const value = row[key];
             const text = exportCellText(value);
             const hyperlink =
-              key === "logo" || key === "externalRessource.link"
+              linkColumn || key === "logo" || key === "externalRessource.link"
                 ? safeExportLink(text)
                 : undefined;
             if (hyperlink) return { text, hyperlink };

@@ -97,9 +97,14 @@ export class ApplicationService {
   ) {}
 
   public async createApplication(
-    requestorId: string,
+    requestor: Requestor,
     createApplicationDto: CreateApplicationDto,
   ) {
+    const requestorId = requestor.id;
+    const canWritePriority = await this.checkPermissions.can(
+      [Permission.AppWritePriority],
+      requestor,
+    );
     const existingTags = await this.tagsService.findByNames(
       createApplicationDto.tags,
     );
@@ -118,7 +123,9 @@ export class ApplicationService {
             tags: {
               connect: existingTags,
             },
-            priorityRestart: createApplicationDto.priorityRestart ?? null,
+            priorityRestart: canWritePriority
+              ? (createApplicationDto.priorityRestart ?? null)
+              : null,
             quality: 0,
             businessDivisions: {
               connect: (createApplicationDto.businessDivisionIds ?? []).map(

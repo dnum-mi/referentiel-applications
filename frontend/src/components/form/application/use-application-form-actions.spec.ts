@@ -293,6 +293,13 @@ describe("enregistrement d'une application", () => {
     expect(mocks.createActor).toHaveBeenCalledTimes(2);
   });
 
+  it("transmet explicitement null pour effacer la priorité", async () => {
+    const state = setup("edit");
+    state.data.value.application.priorityRestart = null;
+    await state.save();
+    expect(mocks.patchApplication).toHaveBeenCalledWith(expect.objectContaining({ priorityRestart: null }));
+  });
+
   it("retourne et met en cache la réponse réelle de l'édition sans recréer les contacts", async () => {
     const state = setup("edit");
     const updated: ApplicationWithPerms = {
@@ -453,5 +460,56 @@ describe("chargements indépendants des contacts", () => {
     expect(state.initialMoeOrganization.value?.id).toBe("maia-moe");
     expect(mocks.addErrorMessage).toHaveBeenCalledOnce();
     expect(mocks.addSuccessMessage).toHaveBeenCalledExactlyOnceWith("Organisation MOE synchronisée depuis MAIA");
+  });
+});
+
+describe.each(["moa", "moe"] as const)("réponses MAIA obsolètes : %s", (role) => {
+  it("ignore un email changé même s'il retrouve ensuite sa valeur initiale", async () => {
+    const state = setup();
+    const pending = deferred<MaiaResponse>();
+    mocks.syncMaia.mockReturnValueOnce(pending.promise);
+    const original = { ...state.data.value[role] };
+    const sync = state.syncContact(role);
+    state.data.value[role].email = "autre@example.fr";
+    state.data.value[role].email = original.email;
+    pending.resolve(success(maiaSuggestion()));
+    await sync;
+    expect(state.data.value[role]).toEqual(original);
+    expect(mocks.getOrganization).not.toHaveBeenCalled();
+    expect(mocks.addSuccessMessage).not.toHaveBeenCalled();
+  });
+
+  it("reste verrouillé pendant le chargement de l'organisation et ignore un contact remplacé", async () => {
+    const state = setup();
+    const pending = deferred<OrganizationDto>();
+    mocks.getOrganization.mockReturnValueOnce(pending.promise);
+    const sync = state.syncContact(role);
+    await Promise.resolve();
+    expect((role === "moa" ? state.moaSyncing : state.moeSyncing).value).toBe(true);
+    await state.save();
+    expect(mocks.createApplication).not.toHaveBeenCalled();
+    const replacement = { ...state.data.value[role], firstname: "Autre" };
+    state.data.value[role] = replacement;
+    pending.resolve(organization());
+    await sync;
+    expect(state.data.value[role]).toEqual(replacement);
+    expect((role === "moa" ? state.initialMoaOrganization : state.initialMoeOrganization).value).toBeNull();
+  });
+
+  it("ignore une ancienne erreur sans déverrouiller la nouvelle recherche", async () => {
+    const state = setup();
+    const old = deferred<MaiaResponse>();
+    const current = deferred<MaiaResponse>();
+    mocks.syncMaia.mockReturnValueOnce(old.promise).mockReturnValueOnce(current.promise);
+    const first = state.syncContact(role);
+    state.cancelMaia();
+    const second = state.syncContact(role);
+    old.reject(new Error("Ancienne requête"));
+    await first;
+    expect((role === "moa" ? state.moaSyncing : state.moeSyncing).value).toBe(true);
+    expect(mocks.addErrorMessage).not.toHaveBeenCalled();
+    current.resolve(success(maiaSuggestion()));
+    await second;
+    expect((role === "moa" ? state.moaSyncing : state.moeSyncing).value).toBe(false);
   });
 });

@@ -58,12 +58,18 @@ export function makeCellReader(
   };
 }
 
-/** « Oui »/« Non » (insensible à la casse) → booléen ; vide ou inconnu → undefined. */
-export function coerceOuiNon(value: string): boolean | undefined {
+/** « Oui »/« Non » (insensible à la casse) → booléen ; vide → undefined ; inconnu → erreur. */
+export function coerceOuiNon(
+  value: string,
+  column: string,
+): boolean | undefined {
   const normalized = value.trim().toLowerCase();
+  if (normalized === "") return undefined;
   if (normalized === "oui" || normalized === "true") return true;
   if (normalized === "non" || normalized === "false") return false;
-  return undefined;
+  throw new Error(
+    `Colonne « ${column} » : valeur invalide « ${value} » (attendu : Oui/Non/true/false).`,
+  );
 }
 
 /** Chaîne numérique → nombre ; vide → undefined (NaN laissé pour échec de validation). */

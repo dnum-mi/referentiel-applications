@@ -89,11 +89,13 @@
 - **Résultat attendu** : message « Aucune donnée ne correspond à votre recherche. » ;
   `sidebar-total-count` = 0.
 
-### CAT-15 — Export Excel (admin) ✅
+### CAT-15 — Export Excel de la vue complète (admin) ✅
 
 - **Datafeature** : utilisateur `admin`.
-- **Action** : cliquer `application-export-btn`.
-- **Résultat attendu** : un fichier `.xlsx` est téléchargé, cohérent avec les filtres actifs.
+- **Action** : appliquer un filtre puis cliquer « Exporter la vue complète » (`application-export-btn`).
+- **Résultat attendu** : un fichier `.xlsx` est téléchargé avec toutes les applications autorisées,
+  y compris celles hors filtre et sans IQ. Les filtres, le tri et la pagination de l’écran ne
+  limitent pas ce classeur. « Exporter la vue filtrée » conserve les filtres et les colonnes affichées.
 
 ### CAT-16 — Bascule « Mes abonnements » ✅
 

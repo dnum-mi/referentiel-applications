@@ -1,5 +1,59 @@
 # Changelog
 
+## [1.106.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.105.0...v1.106.0) (2026-11-18)
+
+
+### Features
+
+* add functionality to retrieve and display quality campaign targets ([#3259](https://github.com/dnum-mi/referentiel-applications/issues/3259)) ([ff63857](https://github.com/dnum-mi/referentiel-applications/commit/ff638576a36ebddae225f4b7c34bedb38f8c88dd))
+* implement named validation errors for application forms ([#3277](https://github.com/dnum-mi/referentiel-applications/issues/3277)) ([42431db](https://github.com/dnum-mi/referentiel-applications/commit/42431dbba3aa49356e0d693e8631327281defcec))
+* update application export buttons to disable instead of hide based on permissions ([#3281](https://github.com/dnum-mi/referentiel-applications/issues/3281)) ([5cbd48a](https://github.com/dnum-mi/referentiel-applications/commit/5cbd48a61d5483b775c61dfb96515102768e8146))
+
+
+### Bug Fixes
+
+* **a11y:** corriger les quatre écarts RGAA restants ([#3278](https://github.com/dnum-mi/referentiel-applications/issues/3278)) ([91421c6](https://github.com/dnum-mi/referentiel-applications/commit/91421c691ece64fd6035c012cb9574c022c0fb4d))
+* add "Contact Tchap" link in footer with accessibility attributes and tests ([#3274](https://github.com/dnum-mi/referentiel-applications/issues/3274)) ([ee75307](https://github.com/dnum-mi/referentiel-applications/commit/ee75307dc452a5c8d966e0364dca1e8e4a649e35))
+* enhance email service with role and permission translations in notifications ([#3262](https://github.com/dnum-mi/referentiel-applications/issues/3262)) ([eb9cc35](https://github.com/dnum-mi/referentiel-applications/commit/eb9cc3566ce5ff3e6493eba4392570bc46c73f89))
+* sort organizations and clarify catalogue exports ([#3280](https://github.com/dnum-mi/referentiel-applications/issues/3280)) ([bb7d5eb](https://github.com/dnum-mi/referentiel-applications/commit/bb7d5ebde7e832febb7e9ef1aa0e8cd8a37dca0e))
+* update empty message display in RefAppTable component for better accessibility ([#3279](https://github.com/dnum-mi/referentiel-applications/issues/3279)) ([36c0222](https://github.com/dnum-mi/referentiel-applications/commit/36c022219d25bfd6cad8195452d2b150d6cb5ead))
+
+## [1.105.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.104.0...v1.105.0) (2026-11-12)
+
+
+### Features
+
+* add homologation filters and update search functionality ([#3235](https://github.com/dnum-mi/referentiel-applications/issues/3235)) ([d195a54](https://github.com/dnum-mi/referentiel-applications/commit/d195a54acf7de0f59516c27f941f2d53c44a2983))
+* enhance MAIA synchronization handling in Actor and Application forms ([#3234](https://github.com/dnum-mi/referentiel-applications/issues/3234)) ([92f5e8c](https://github.com/dnum-mi/referentiel-applications/commit/92f5e8c0ac0526921a97fcd8f09bf06c0abec44e))
+* export the filtered catalogue view to Excel ([#3238](https://github.com/dnum-mi/referentiel-applications/issues/3238)) ([d4faa4f](https://github.com/dnum-mi/referentiel-applications/commit/d4faa4f6bdff379f1c58032bb2c50993f09b538b))
+
+
+### Bug Fixes
+
+* sort organizations and match MAIA aliases ([#3236](https://github.com/dnum-mi/referentiel-applications/issues/3236)) ([c5edb18](https://github.com/dnum-mi/referentiel-applications/commit/c5edb18c973f2ce4e794d48e3e98917ab5d389fe))
+
+## [1.104.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.103.0...v1.104.0) (2026-11-06)
+
+
+### Features
+
+* add event type filtering to notifications and update related components ([#3188](https://github.com/dnum-mi/referentiel-applications/issues/3188)) ([bd5cac5](https://github.com/dnum-mi/referentiel-applications/commit/bd5cac57c0d35493735f0fb8ab2a28f0b537b6b7))
+* add token expiration reminder notifications and related database schema ([#3177](https://github.com/dnum-mi/referentiel-applications/issues/3177)) ([a257a5d](https://github.com/dnum-mi/referentiel-applications/commit/a257a5dbdad4a97b5c64f8dc879c37f5d61386fa))
+* enhance compliance and application processing with priority validation and boolean handling ([#3196](https://github.com/dnum-mi/referentiel-applications/issues/3196)) ([8ad50ac](https://github.com/dnum-mi/referentiel-applications/commit/8ad50acebd75d0246206bba29da09911f3dda2a6))
+* enhance RelationFilter with error handling and improve SuggestionsInput tests ([#3197](https://github.com/dnum-mi/referentiel-applications/issues/3197)) ([f48f6c9](https://github.com/dnum-mi/referentiel-applications/commit/f48f6c996ef856b95f67ba1c4c27bd3440f3a645))
+* implement unsaved changes protection and modal confirmation for form navigation ([#3195](https://github.com/dnum-mi/referentiel-applications/issues/3195)) ([2691d9f](https://github.com/dnum-mi/referentiel-applications/commit/2691d9f36d033cac45b4c36cc48e0b0a92ea258e))
+* token applicatif doesnt has any capabilities shows locked default capabilities for any seletcted roles ([#3199](https://github.com/dnum-mi/referentiel-applications/issues/3199)) ([511c491](https://github.com/dnum-mi/referentiel-applications/commit/511c491cc4e0a6857ffb5120f24da6ba0e02ceb3))
+* transition GristSync to beta feature and update related permissions ([#3190](https://github.com/dnum-mi/referentiel-applications/issues/3190)) ([e97d77d](https://github.com/dnum-mi/referentiel-applications/commit/e97d77d3bcf4fd77ab6fbfcb0d33f5ccff5d9327))
+
+
+### Bug Fixes
+
+* allow contributors to manage reports ([#3192](https://github.com/dnum-mi/referentiel-applications/issues/3192)) ([57fc8a8](https://github.com/dnum-mi/referentiel-applications/commit/57fc8a8c215175a1b64bb89883fa975742f2bb08))
+* clarify functional admin contact label ([#3191](https://github.com/dnum-mi/referentiel-applications/issues/3191)) ([ed4ebeb](https://github.com/dnum-mi/referentiel-applications/commit/ed4ebeb2f83603ba35c2f150fda0906ac7debc44))
+* respect selected TIME campaign year ([#3178](https://github.com/dnum-mi/referentiel-applications/issues/3178)) ([07636bb](https://github.com/dnum-mi/referentiel-applications/commit/07636bbbd9c81ea6a330bf7194e4105133f31a3c))
+* update minimatch dependency to version 11.0.1 in lock files ([#3220](https://github.com/dnum-mi/referentiel-applications/issues/3220)) ([7a00307](https://github.com/dnum-mi/referentiel-applications/commit/7a00307876131d708d1cab2376a937323d6471e8))
+* update minimatch dependency to version 11.0.1 in lock files and documentation ([#3222](https://github.com/dnum-mi/referentiel-applications/issues/3222)) ([e533d1c](https://github.com/dnum-mi/referentiel-applications/commit/e533d1cab858b36b12f331e16cb8796151051921))
+
 ## [1.103.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.102.2...v1.103.0) (2026-10-30)
 
 

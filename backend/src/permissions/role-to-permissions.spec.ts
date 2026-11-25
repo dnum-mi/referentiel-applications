@@ -179,7 +179,27 @@ describe("roleToPermissions — GristSync non accordée par défaut", () => {
     }
   });
 
-  it("GristSync reste déléguable explicitement (additionalPermissions)", () => {
-    expect(DELEGABLE_PERMISSIONS).toContain(Permission.GristSync);
+  it("GristSync ne peut plus être déléguée", () => {
+    expect(DELEGABLE_PERMISSIONS).not.toContain(Permission.GristSync);
+  });
+});
+
+describe("AppWritePriority — attribution explicite (#3260)", () => {
+  it.each(Object.values(Roles))(
+    "%s ne reçoit pas la priorité par son rôle",
+    (role) => {
+      expect(roleToAppPermissions(role)).not.toContain(
+        Permission.AppWritePriority,
+      );
+      for (const scoped of [false, true]) {
+        expect(roleToPermissions(role, { scoped })).not.toContain(
+          Permission.AppWritePriority,
+        );
+      }
+    },
+  );
+
+  it("permet la délégation individuelle", () => {
+    expect(DELEGABLE_PERMISSIONS).toContain(Permission.AppWritePriority);
   });
 });

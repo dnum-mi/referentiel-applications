@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import api from "@/api";
+import { isApiSuccess } from "@/api/api-result";
 import { RelationType, type ApplicationDto } from "@/client";
 import { useApplicationSearch } from "@/composables/use-application-search";
 import {
@@ -16,8 +17,8 @@ import { watch } from "vue";
 
 const { searchApplications, setFilter, filters } = useApplicationSearch();
 const isLoading = ref(false);
-const componentKey = ref(0);
 const defaultValue = ref<undefined | string>(undefined);
+const referenceError = ref("");
 
 async function performSearch(query: string) {
   const response = await searchApplications(
@@ -33,13 +34,6 @@ const updateSelectedValue = (application?: Pick<ApplicationDto, "label" | "id">)
     relationAppId: application?.id,
   });
 };
-
-watch([() => filters.value.relationAppId], ([relationAppId]) => {
-  if (!relationAppId) {
-    componentKey.value++;
-    defaultValue.value = undefined;
-  }
-});
 
 type RelationField = FilterableRelationField | MediationServiceField;
 
@@ -118,23 +112,34 @@ const updateFilter = (filterKey: RelationField, value: string | number) => {
 
 watch(
   () => filters.value.relationAppId,
-  async (relationAppId) => {
-    if (!relationAppId) return;
-    const response = await api.applicationControllerFindOne({
-      path: { applicationId: relationAppId },
+  async (relationAppId, _previousId, onCleanup) => {
+    let active = true;
+    onCleanup(() => {
+      active = false;
     });
-    if (response.data) {
+    referenceError.value = "";
+    defaultValue.value = relationAppId ? "Chargement de la référence…" : undefined;
+    if (!relationAppId) return;
+    try {
+      const response = await api.applicationControllerFindOne({
+        path: { applicationId: relationAppId },
+      });
+      if (!active) return;
+      if (!isApiSuccess(response) || !response.data) throw new Error("Référence indisponible");
       defaultValue.value = response.data.label;
+    } catch {
+      if (!active) return;
+      defaultValue.value = "Application de référence indisponible";
+      referenceError.value = "Impossible de charger l’application de référence. Le filtre reste appliqué.";
     }
   },
-  { once: true, immediate: true },
+  { immediate: true },
 );
 </script>
 
 <template>
   <div class="relation-filters">
     <SuggestionsInput
-      :key="componentKey"
       @update:selected-value="updateSelectedValue"
       :default-value="defaultValue"
       :search-data-function="performSearch"
@@ -145,6 +150,7 @@ watch(
       placeholder="Tapez au moins 3 caractères"
       data-testid="relation-suggestions-input"
     />
+    <p role="alert" class="fr-error-text" data-testid="relation-reference-error">{{ referenceError }}</p>
     <DsfrSelect
       v-for="{ field, testId, label, tooltip } in relationFields"
       :key="field"

@@ -42,7 +42,15 @@ vi.mock("@/stores/applicationStore", () => ({
 }));
 vi.mock("@/composables/use-application-search", async () => {
   const { ref } = await import("vue");
-  return { useApplicationSearch: () => ({ filters: ref({ shortName: "app" }) }) };
+  return {
+    useApplicationSearch: () => ({
+      filters: ref({ shortName: "app" }),
+      total: ref(0),
+      isLoading: ref(false),
+      isSearchPending: ref(false),
+      error: ref(null),
+    }),
+  };
 });
 
 const allPermissions = [Permission.DATA_EXPORT, Permission.BETA_FEATURES, Permission.APP_READ];
@@ -173,7 +181,7 @@ it.each([
   {
     label: "DataExport",
     permissions: [Permission.APP_READ, Permission.BETA_FEATURES],
-    hidden: "application-export-btn",
+    disabled: "application-export-btn",
     visible: "application-export-html-btn",
   },
   {
@@ -182,7 +190,7 @@ it.each([
     hidden: "application-export-powerpoint-btn",
     visible: "application-export-btn",
   },
-])("respecte la révocation de $label pendant le renouvellement", async ({ permissions, hidden, visible }) => {
+])("respecte la révocation de $label pendant le renouvellement", async ({ permissions, hidden, disabled, visible }) => {
   await mountExports();
   const stale = deferred<ReturnType<typeof accepted>>();
   const fresh = deferred<ReturnType<typeof accepted>>();
@@ -193,7 +201,8 @@ it.each([
   await flushPromises();
   stale.resolve(accepted());
   await flushPromises();
-  expect(screen.queryByTestId(hidden)).toBeNull();
+  if (hidden) expect(screen.queryByTestId(hidden)).toBeNull();
+  if (disabled) expect(screen.getByTestId(disabled)).toBeDisabled();
   expect(screen.getByTestId(visible)).toBeInTheDocument();
   expect(downloads.excel).not.toHaveBeenCalled();
 });

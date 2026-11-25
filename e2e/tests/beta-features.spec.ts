@@ -91,7 +91,7 @@ test.describe("Fonctionnalités bêta — délégation explicite", () => {
       // Retirer le seul droit métier doit bloquer Excel, même si Bêta est conservé.
       await tester.setPermissions(["BetaFeatures"]);
       await search.expectExcelRevocationBeforeDownload();
-      await search.expectHtmlBetaExport(false);
+      await search.expectHtmlBetaExport(true, false);
     } finally {
       await tester.dispose();
     }
@@ -144,7 +144,7 @@ test.describe("Fonctionnalités bêta — délégation explicite", () => {
       await search.expectExcelExport(true, true);
       await tester.setPermissions(["BetaFeatures"]);
       await search.expectExcelRevocationBeforeDownload(true);
-      await search.expectHtmlBetaExport(false);
+      await search.expectHtmlBetaExport(true, false);
     } finally {
       await tester.dispose();
     }

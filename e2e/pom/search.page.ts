@@ -162,15 +162,19 @@ export class SearchPage extends BasePage {
 
   /** Active une colonne via sa case dans la boîte de personnalisation. */
   async enableColumn(label: string): Promise<void> {
+    await this.setColumnSelection(label, true);
+  }
+
+  async setColumnSelection(label: string, selected: boolean): Promise<void> {
     // Case DSFR : l'<input> est masqué et piloté par v-model → on clique le <label> interactif.
     const box = this.columnsDialog().getByRole("checkbox", {
       name: label,
       exact: true,
     });
-    if (!(await box.isChecked())) {
+    if ((await box.isChecked()) !== selected) {
       await this.columnsDialog().getByText(label, { exact: true }).click();
-      await expect(box).toBeChecked();
     }
+    await expect(box).toBeChecked({ checked: selected });
   }
 
   /** L'en-tête de colonne est visible dans le tableau. */
@@ -770,14 +774,19 @@ export class SearchPage extends BasePage {
     return download;
   }
 
+  async exportExcelView() {
+    const [download] = await Promise.all([
+      this.page.waitForEvent("download"),
+      this.byTestId("application-export-view-btn").click(),
+    ]);
+    return download;
+  }
+
   async expectExcelExport(available: boolean, mobile = false): Promise<void> {
     const desktopButton = this.byTestId("application-export-btn");
     const mobileButton = this.byTestId("application-export-btn-mobile");
-    if (!available) {
-      await expect(desktopButton).toHaveCount(0);
-      await expect(mobileButton).toHaveCount(0);
-      return;
-    }
+    await expect(desktopButton).toBeEnabled({ enabled: available });
+    await expect(mobileButton).toBeEnabled({ enabled: available });
     const button = mobile ? mobileButton : desktopButton;
     await expect(button).toBeVisible();
     await expect(mobile ? desktopButton : mobileButton).toBeHidden();
@@ -793,13 +802,17 @@ export class SearchPage extends BasePage {
     return download;
   }
 
-  async expectHtmlBetaExport(available: boolean): Promise<void> {
+  async expectHtmlBetaExport(
+    available: boolean,
+    enabled = true,
+  ): Promise<void> {
     const button = this.byTestId("applications-export-html-btn");
     if (!available) {
       await expect(button).toHaveCount(0);
       return;
     }
     await expect(button).toBeVisible();
+    await expect(button).toBeEnabled({ enabled });
     await expect(button.getByText("Bêta", { exact: true })).toBeVisible();
     await expect(button).toHaveAccessibleName(/fonctionnalité bêta/i);
   }
@@ -850,7 +863,7 @@ export class SearchPage extends BasePage {
       expect(response.ok()).toBe(true);
       // Retirer BetaFeatures bloque HTML ; Excel reste autorisé avec DataExport.
       await this.expectExcelExport(format === "html", mobile);
-      await this.expectHtmlBetaExport(false);
+      await this.expectHtmlBetaExport(format === "excel", false);
       expect(exportRequests).toBe(0);
       expect(downloads).toBe(0);
     } finally {

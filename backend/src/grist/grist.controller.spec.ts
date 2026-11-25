@@ -1,5 +1,5 @@
-import { Permission } from "@prisma/client";
-import { REQUIRED_PERMISSIONS } from "src/common/decorators/required-permissions.decorator";
+import { FeatureId } from "src/features/beta-features";
+import { REQUIRED_BETA_FEATURE } from "src/common/decorators/requires-beta-feature.decorator";
 import type { ApplicationSearchDto } from "src/applications/dto/search-application.dto";
 import type { Requestor } from "src/user/entities/user.entity";
 import { GristController } from "./grist.controller";
@@ -7,14 +7,14 @@ import type { GristService } from "./grist.service";
 
 describe("GristController", () => {
   it.each(["setup", "tables", "records"] as const)(
-    "exige la capacité GristSync sur %s",
+    "exige la bêta feature GristSync sur %s",
     (method) => {
       expect(
         Reflect.getMetadata(
-          REQUIRED_PERMISSIONS,
+          REQUIRED_BETA_FEATURE,
           GristController.prototype[method],
         ),
-      ).toEqual([Permission.GristSync]);
+      ).toEqual(FeatureId.GristSync);
     },
   );
 

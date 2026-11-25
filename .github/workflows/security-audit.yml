@@ -7,6 +7,7 @@ on:
       - "**/package.json"
       - "**/pnpm-lock.yaml"
       - "**/pnpm-workspace.yaml"
+      - ".github/scripts/audit-dependencies*"
       - ".nvmrc"
       - ".github/workflows/security-audit.yml"
   push:
@@ -15,6 +16,7 @@ on:
       - "**/package.json"
       - "**/pnpm-lock.yaml"
       - "**/pnpm-workspace.yaml"
+      - ".github/scripts/audit-dependencies*"
       - ".nvmrc"
       - ".github/workflows/security-audit.yml"
 
@@ -38,9 +40,24 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .nvmrc
+      - name: Test the fail-closed audit guard
+        run: node --test .github/scripts/audit-dependencies.test.mjs
       - name: Install locked dependencies without lifecycle scripts
         working-directory: ${{ matrix.directory }}
         run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Check all dependency advisories
         working-directory: ${{ matrix.directory }}
-        run: pnpm audit --audit-level=low
+        env:
+          AUDIT_REPORT_PATH: ${{ runner.temp }}/dependency-audit.json
+          AUDIT_OFFICIAL_REPORT_PATH: ${{ runner.temp }}/dependency-audit-github.json
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node "$GITHUB_WORKSPACE/.github/scripts/audit-dependencies.mjs"
+      - name: Preserve the unmodified registry report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dependency-audit-${{ strategy.job-index }}
+          path: |
+            ${{ runner.temp }}/dependency-audit.json
+            ${{ runner.temp }}/dependency-audit-github.json
+          retention-days: 7

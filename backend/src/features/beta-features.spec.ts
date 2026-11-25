@@ -3,6 +3,7 @@ import { BETA_FEATURES, FeatureId, isBetaFeature } from "./beta-features";
 describe("Registre des fonctionnalités bêta", () => {
   it("déclare les fonctionnalités attendues sans doublon", () => {
     expect(BETA_FEATURES).toEqual([
+      FeatureId.GristSync,
       FeatureId.CatalogueHtmlExport,
       FeatureId.ImportReportHtmlExport,
       FeatureId.ProductHtmlExport,

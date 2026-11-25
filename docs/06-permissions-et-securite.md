@@ -181,7 +181,7 @@ Un utilisateur peut être déclaré **acteur** d'une application via son `ActorT
 - **Canal email** : un `Actor` de l'application dont l'`email` est celui de l'utilisateur **sans tenir compte de la casse** (#2501 : e-mails d'acteurs et d'utilisateurs stockés en minuscules, comparaison `mode: "insensitive"`, migration de rattrapage `20260904090000_lowercase_emails`) et `isGroup = false` (`check-permissions.service.ts:51-55`).
 - **Canal organisation de groupe** : si l'utilisateur a une organisation (`user.organization.path`), une requête SQL (`QueryBuilderGroupActor.buildByApplication`) retrouve les acteurs **de groupe** (`isGroup = true`) dont l'organisation est un **ancêtre** de celle de l'utilisateur, via une comparaison de chemins matérialisés : `lower('<path utilisateur>') LIKE lower(o.path) || '%'` (`backend/src/common/service/prisma-query-builder.service.ts`).
 
-Pour chaque type d'acteur retenu, la matrice `AppPermissions` est convertie en liste de permissions par `transformAppPermissionsObjectToArray` (`backend/src/common/utils/types.ts:38-47`), qui ne conserve que les champs booléens à `true` correspondant à une valeur de l'énumération `Permission`.
+Pour chaque type d'acteur retenu, la matrice `AppPermissions` est convertie en liste de permissions par `transformAppPermissionsObjectToArray` (`backend/src/common/utils/types.ts:38-47`), qui ne conserve que les champs booléens à `true` correspondant à une valeur de l’énumération `Permission`, à l’exception de `AppWritePriority`, réservée à la capacité individuelle.
 
 S'ajoute à cette couche le **rôle projeté sur l'application** (`getUserRolePermissions`, `check-permissions.service.ts:85-126`) : sans scope, l'utilisateur dispose de toutes les permissions applicatives de son rôle (`roleToAppPermissions(user.role)`) ; avec un scope, ces permissions ne sont accordées que si l'application relève bien de ce périmètre (voir [section 6](#6-scope-administratif-périmètre-organisationnel)).
 
@@ -217,7 +217,7 @@ Symétriquement, `roleToAppPermissions(role)` projette un rôle en **permissions
 
 - **VISITOR** : aucune permission applicative (`[]`).
 - **READER** : `ActorRead`, `ComplianceRead`, `HostingRead`, `RelationRead`, `LinkRead`, `MetadataRead`.
-- **CONTRIBUTOR** : les lectures READER + `AppWrite`, `ActorWrite`, `ComplianceWrite`, `HostingWrite`, `RelationWrite`, `LinkWrite`, **et** `AppWritePriority`.
+- **CONTRIBUTOR** : les lectures READER + `AppWrite`, `ActorWrite`, `ComplianceWrite`, `HostingWrite`, `RelationWrite`, `LinkWrite`.
 - **ADMIN** : identique à CONTRIBUTOR au niveau applicatif (`ADMIN_APP_PERMISSIONS = WRITE_APP_PERMISSIONS`).
 
 > **Deux niveaux d'administration.** Le rôle `ADMIN` ci-dessus est le niveau _global_ (sans
@@ -293,10 +293,15 @@ Permissions applicatives **autonomes** (sans couple lecture/écriture) et signal
 
 ### 4.3. Cas particulier : `AppWritePriority` dissociée de `AppWrite`
 
-La permission `AppWritePriority` gouverne la **priorité de redémarrage** (R0–R3) et est **dissociée** de `AppWrite` : elle peut être accordée séparément. Cette dissociation se lit à deux endroits :
+La permission `AppWritePriority` permet de définir ou d’effacer la priorité de redémarrage. Aucun rôle ne l’accorde automatiquement, même administrateur (#3260). Elle est attribuable uniquement dans les capacités individuelles de l’utilisateur, selon les règles habituelles de délégation. Elle ne figure plus dans la matrice ni dans son API. Les anciennes valeurs de matrice sont ignorées, y compris pour les acteurs par groupe et le type d’acteur par défaut. La lecture reste couverte par `AppRead`, sans changement.
 
-- Dans le schéma, `AppWritePriority` est un booléen propre de `AppPermissions`, avec `@default(false)` (`permissions.prisma:11-12`).
-- Au niveau d'un handler, les deux permissions sont acceptées en alternative (sémantique OU). Par exemple la mise à jour d'une application requiert `[Permission.AppWrite, Permission.AppWritePriority]` (`backend/src/applications/application.controller.ts:338`) : posséder l'une _ou_ l'autre suffit pour l'opération concernée.
+À la création, `CreateApplication` reste nécessaire. Sans capacité individuelle `AppWritePriority`, la priorité envoyée est ignorée et enregistrée à `null`, y compris lors d’un import. Les droits du type d’acteur Créateur ne sont pas utilisés pour autoriser la priorité initiale.
+
+En modification, `AppWrite` ou `AppWritePriority` permet d’accéder au PATCH. `AppWrite` seul ne permet pas de changer la priorité ; `AppWritePriority` seul ne permet pas de modifier les autres champs. Sans droit sur la priorité, sa valeur envoyée est ignorée.
+
+Le formulaire propose « Non renseignée ». Dans l’API, `priorityRestart: null` efface la valeur ; omettre le champ conserve la valeur existante. Les valeurs R0, R1, R1_STAR, R2 et R3 restent inchangées ; les autres valeurs sont refusées.
+
+Aucune migration de données n’est nécessaire. Au déploiement, les utilisateurs autorisés uniquement par leur rôle ou leur type d’acteur perdent ce droit : attribuer explicitement les capacités nécessaires. Les priorités déjà enregistrées sont conservées. La colonne historique en base est conservée pour éviter une migration destructive, mais elle n’accorde plus aucun droit.
 
 ### 4.4. Politique de lecture globale (état des lieux)
 
@@ -332,7 +337,7 @@ Cette première version ne prend pas en charge la vue pour les utilisateurs stan
 
 ## 5. Permissions par type d'acteur
 
-La matrice `AppPermissions` (`backend/prisma/schema/permissions.prisma:5-52`) est en relation **1:1** avec `ActorType` (champ `actorTypeId @unique`, `onDelete: Cascade`). Chaque type d'acteur (MOA, MOE, RSSI, Architecte applicatif/technique, TMA, Exploitation, RSIMM, CPD, ProductOwner, ProductManager, Hébergement, Autre…) porte ainsi son propre jeu de booléens : `AppRead`, `AppWrite`, `AppWritePriority`, `ActorRead`/`ActorWrite`, `ComplianceRead`/`ComplianceWrite`, `HostingRead`/`HostingWrite`, `MetadataRead`, `RelationRead`/`RelationWrite`, `LinkRead`/`LinkWrite`, `ReportRead`/`ReportPost`/`ReportManage`.
+La matrice `AppPermissions` (`backend/prisma/schema/permissions.prisma:5-52`) est en relation **1:1** avec `ActorType` (champ `actorTypeId @unique`, `onDelete: Cascade`). Chaque type d'acteur (MOA, MOE, RSSI, Architecte applicatif/technique, TMA, Exploitation, RSIMM, CPD, ProductOwner, ProductManager, Hébergement, Autre…) porte ainsi son propre jeu de booléens : `AppRead`, `AppWrite`, `ActorRead`/`ActorWrite`, `ComplianceRead`/`ComplianceWrite`, `HostingRead`/`HostingWrite`, `MetadataRead`, `RelationRead`/`RelationWrite`, `LinkRead`/`LinkWrite`, `ReportRead`/`ReportPost`/`ReportManage`.
 
 La suppression d'un type d'acteur encore utilisé est refusée avec `409 Conflict`, même pour
 un acteur de groupe ou sans application. Il faut d'abord réaffecter ou retirer les acteurs
@@ -521,25 +526,25 @@ La migration ajoute uniquement la valeur à l'énumération : aucun compte exist
 
 ### Récapitulatif des mécanismes confirmés
 
-| Mécanisme                                                        | Emplacement vérifié                                                                                 |
-| :--------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------- |
-| Fusion des 3 couches + décision OU (`Set` + `.some()`)           | `backend/src/common/service/check-permissions.service.ts:36-44`                                     |
-| Calcul couche 3 conditionné à `applicationId`                    | `check-permissions.service.ts:25-35`                                                                |
-| Canaux email / organisation de groupe                            | `check-permissions.service.ts:47-83` + `backend/src/common/service/prisma-query-builder.service.ts` |
-| Rôle projeté + effet du scope sur l'app                          | `check-permissions.service.ts:85-126`                                                               |
-| Mapping rôle → permissions (cumulatif)                           | `backend/src/permissions/role-to-permissions.ts`                                                    |
-| Enum `Roles` (VISITOR<READER<CONTRIBUTOR<ADMIN)                  | `backend/prisma/schema/users.prisma:46-52`                                                          |
-| `User.additionalPermissions` + scope                             | `backend/prisma/schema/users.prisma:16-18,41`                                                       |
-| Audit permissions / connexions                                   | `backend/prisma/schema/user-log.prisma:2-21`                                                        |
-| Enum `Permission` (globales + applicatives)                      | `backend/prisma/schema/permissions.prisma:59-105`                                                   |
-| Matrice `AppPermissions` (1:1 ActorType)                         | `backend/prisma/schema/permissions.prisma:5-52`                                                     |
-| `AppWritePriority` dissociée (`@default(false)`, OU sur handler) | `permissions.prisma:11-12` + `application.controller.ts:338`                                        |
-| Transformation matrice → permissions                             | `backend/src/common/utils/types.ts:38-47`                                                           |
-| Garde + décorateur, param `applicationId`                        | `backend/src/common/guards/permission.guard.ts:28-29` + `required-permissions.decorator.ts`         |
-| Endpoint `my-perms`                                              | `backend/src/applications/application.controller.ts:151-176` + `application.service.ts:361-369`     |
-| Endpoint `contact-admin` (#2593)                                 | `application.controller.ts:179-201` + `common/service/contact-admin.service.ts`                     |
-| Front `userStore.hasPermissions`                                 | `frontend/src/stores/userStore.ts:79-87`                                                            |
-| Auth backend (JWKS, modes token/JWT, pivot email)                | `backend/src/middlewares/auth.middleware.ts:37-68`                                                  |
-| Config OIDC obligatoire (générique, sans fournisseur en dur)     | `backend/src/config/configs/oidc.config.ts`                                                         |
-| Front OIDC (oidc-client-ts, config dynamique)                    | `frontend/src/services/authentication.ts`                                                           |
-| Scope administratif utilisateurs                                 | `backend/src/user/scope-permission/scoped-permission.service.ts`                                    |
+| Mécanisme                                                    | Emplacement vérifié                                                                                 |
+| :----------------------------------------------------------- | :-------------------------------------------------------------------------------------------------- |
+| Fusion des 3 couches + décision OU (`Set` + `.some()`)       | `backend/src/common/service/check-permissions.service.ts:36-44`                                     |
+| Calcul couche 3 conditionné à `applicationId`                | `check-permissions.service.ts:25-35`                                                                |
+| Canaux email / organisation de groupe                        | `check-permissions.service.ts:47-83` + `backend/src/common/service/prisma-query-builder.service.ts` |
+| Rôle projeté + effet du scope sur l'app                      | `check-permissions.service.ts:85-126`                                                               |
+| Mapping rôle → permissions (cumulatif)                       | `backend/src/permissions/role-to-permissions.ts`                                                    |
+| Enum `Roles` (VISITOR<READER<CONTRIBUTOR<ADMIN)              | `backend/prisma/schema/users.prisma:46-52`                                                          |
+| `User.additionalPermissions` + scope                         | `backend/prisma/schema/users.prisma:16-18,41`                                                       |
+| Audit permissions / connexions                               | `backend/prisma/schema/user-log.prisma:2-21`                                                        |
+| Enum `Permission` (globales + applicatives)                  | `backend/prisma/schema/permissions.prisma:59-105`                                                   |
+| Matrice `AppPermissions` (1:1 ActorType)                     | `backend/prisma/schema/permissions.prisma:5-52`                                                     |
+| `AppWritePriority` individuelle uniquement (OU sur handler)  | `permissions.prisma:11-12` + `application.controller.ts:338`                                        |
+| Transformation matrice → permissions                         | `backend/src/common/utils/types.ts:38-47`                                                           |
+| Garde + décorateur, param `applicationId`                    | `backend/src/common/guards/permission.guard.ts:28-29` + `required-permissions.decorator.ts`         |
+| Endpoint `my-perms`                                          | `backend/src/applications/application.controller.ts:151-176` + `application.service.ts:361-369`     |
+| Endpoint `contact-admin` (#2593)                             | `application.controller.ts:179-201` + `common/service/contact-admin.service.ts`                     |
+| Front `userStore.hasPermissions`                             | `frontend/src/stores/userStore.ts:79-87`                                                            |
+| Auth backend (JWKS, modes token/JWT, pivot email)            | `backend/src/middlewares/auth.middleware.ts:37-68`                                                  |
+| Config OIDC obligatoire (générique, sans fournisseur en dur) | `backend/src/config/configs/oidc.config.ts`                                                         |
+| Front OIDC (oidc-client-ts, config dynamique)                | `frontend/src/services/authentication.ts`                                                           |
+| Scope administratif utilisateurs                             | `backend/src/user/scope-permission/scoped-permission.service.ts`                                    |

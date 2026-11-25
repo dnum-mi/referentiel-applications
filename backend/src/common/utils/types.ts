@@ -43,6 +43,8 @@ export const transformAppPermissionsObjectToArray = (
   appPermissions: AppPermissions,
 ) => {
   return Object.keys(appPermissions).filter((value) => {
+    // #3260 : les anciennes valeurs de matrice ne doivent plus accorder cette capacité.
+    if (value === PermissionsRecord.AppWritePriority) return false;
     if (typeguardIncludes(value, Object.values(PermissionsRecord))) {
       return appPermissions[value];
     }

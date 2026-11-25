@@ -30,6 +30,10 @@ export const DEFAULT_FILTERS: Filters = {
   currentStatus__isNull: true,
   subscribersEmail: false,
   myApplications: false,
+  homologationStatus: undefined,
+  homologationDateMode: undefined,
+  homologationDateFrom: undefined,
+  homologationDateTo: undefined,
   compliancePresent__in: undefined,
   complianceAbsent__in: undefined,
   complianceUnset__in: undefined,
@@ -108,11 +112,14 @@ const DEBOUNCED_FILTER_KEYS = new Set<string>([
 // Une seule attente VueUse pour toutes les instances. Le watch regroupe les
 // changements d'un même tick, y compris ceux dont le délai est nul.
 const pendingSearch = shallowRef<{ run: () => Promise<unknown>; delay: number }>();
+const isSearchPending = computed(() => pendingSearch.value !== undefined);
 watchDebounced(
   pendingSearch,
   (search) => {
+    if (!search || search !== pendingSearch.value) return;
+    pendingSearch.value = undefined;
     // Les erreurs sont déjà capturées dans `error` par searchApplications.
-    search?.run().catch(() => {});
+    search.run().catch(() => {});
   },
   { debounce: () => pendingSearch.value?.delay ?? 0 },
 );
@@ -191,6 +198,10 @@ function sameStringArray(a: readonly string[], b: readonly string[]): boolean {
 
 function filtersToQuery(filters: Filters): Record<string, string> {
   const query: Record<string, string> = {};
+  // Une sélection vide doit être distinguée des statuts par défaut au rechargement.
+  if (Object.hasOwn(filters, "currentStatus__in") && !filters.currentStatus__in?.length) {
+    query.currentStatus__in = "";
+  }
 
   for (const [key, value] of Object.entries(filters)) {
     if (value === undefined || value === null || value === "") continue;
@@ -218,10 +229,17 @@ function queryToFilters(query: Record<string, LocationQueryValue | LocationQuery
     tag: parseQueryParamArray(query.tag) ?? [],
     link: parseQueryParam(query.link),
     priorityRestart: parseQueryParamArray(query.priorityRestart) as Filters["priorityRestart"],
-    currentStatus__in: (parseQueryParamArray(query.currentStatus__in) ?? DEFAULT_FILTERS.currentStatus__in) as Filters["currentStatus__in"],
+    currentStatus__in:
+      query.currentStatus__in === undefined
+        ? DEFAULT_FILTERS.currentStatus__in
+        : (parseQueryParamArray(query.currentStatus__in) as Filters["currentStatus__in"]),
     currentStatus__isNull: parseQueryParamBoolean(query.currentStatus__isNull) ?? DEFAULT_FILTERS.currentStatus__isNull,
     subscribersEmail: parseQueryParamBoolean(query.subscribersEmail) ?? DEFAULT_FILTERS.subscribersEmail,
     myApplications: parseQueryParamBoolean(query.myApplications) ?? DEFAULT_FILTERS.myApplications,
+    homologationStatus: parseQueryParamsEnum(query.homologationStatus),
+    homologationDateMode: parseQueryParamsEnum(query.homologationDateMode),
+    homologationDateFrom: parseQueryParam(query.homologationDateFrom),
+    homologationDateTo: parseQueryParam(query.homologationDateTo),
     compliancePresent__in: parseQueryParamArray(query.compliancePresent__in) as Filters["compliancePresent__in"],
     complianceAbsent__in: parseQueryParamArray(query.complianceAbsent__in) as Filters["complianceAbsent__in"],
     complianceUnset__in: parseQueryParamArray(query.complianceUnset__in) as Filters["complianceUnset__in"],
@@ -415,10 +433,12 @@ export function useApplicationSearch() {
     page,
     pageSize,
     isLoading,
+    isSearchPending,
     error,
     DEFAULT_FILTERS,
     TIME_DEFAULT_FILTERS,
     searchApplications,
+    filtersToQuery,
     fetchTechnicalDebtPoints,
     setFilter,
     setOrder,
