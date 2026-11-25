@@ -340,3 +340,59 @@ it("conserve la garde des sponsors invalides lors de la réouverture d'une modal
   expect(updateCampaign).not.toHaveBeenCalled();
   expect(wrapper.get('[data-testid="quality-campaign-sponsor-email-0"]').element).toHaveFocus();
 });
+
+describe("QualityCampaignActions — erreurs associées aux champs (#3322)", () => {
+  it.each([
+    { testid: "quality-campaign-name", invalid: "   ", valid: "Campagne corrigée", message: "Le nom de la campagne est requis." },
+    { testid: "quality-campaign-start-date", invalid: "", valid: "2026-11-24", message: "La date de début est requise." },
+  ])("associe l’erreur de $testid puis la retire après correction", async ({ testid, invalid, valid, message }) => {
+    const wrapper = renderActions();
+    await wrapper.get('[data-testid="admin-quality-campaign-edit-btn"]').trigger("click");
+    expect(wrapper.text()).toContain("* = champs obligatoires");
+    const input = wrapper.get<HTMLInputElement>(`input[data-testid="${testid}"]`);
+    expect(input.element).not.toHaveAttribute("aria-invalid");
+    await input.setValue(invalid);
+    await wrapper.get('[data-testid="admin-quality-campaign-save-btn"]').trigger("click");
+    expect(updateCampaign).not.toHaveBeenCalled();
+    expect(input.element).toHaveValue(invalid);
+    expect(input.element).toHaveAttribute("aria-invalid", "true");
+    expect(input.element).toHaveAccessibleDescription(message);
+    expect(document.getElementById(input.attributes("aria-describedby") ?? "")).toHaveTextContent(message);
+    if (testid.endsWith("start-date")) expect(input.element).toHaveAccessibleName(expect.stringContaining("Déclenche l'envoi automatique"));
+    await input.setValue(valid);
+    expect(input.element).not.toHaveAttribute("aria-invalid");
+    expect(input.element).not.toHaveAccessibleDescription(message);
+    await wrapper.get('[data-testid="admin-quality-campaign-save-btn"]').trigger("click");
+    await flushPromises();
+    expect(updateCampaign).toHaveBeenCalledOnce();
+  });
+
+  it("conserve les erreurs locales des sponsors et permet de corriger sans nouvelle règle", async () => {
+    const wrapper = renderActions();
+    await wrapper.get('[data-testid="admin-quality-campaign-edit-btn"]').trigger("click");
+    const email = wrapper.get<HTMLInputElement>('input[data-testid="quality-campaign-sponsor-email-0"]');
+    await email.setValue("invalide");
+    await wrapper.get('[data-testid="admin-quality-campaign-save-btn"]').trigger("click");
+    expect(updateCampaign).not.toHaveBeenCalled();
+    expect(email.element).toHaveValue("invalide");
+    expect(email.element).toHaveAttribute("aria-invalid", "true");
+    expect(email.element).toHaveAccessibleDescription("Email invalide. Format attendu – ex : exemple@mail.fr");
+    await email.setValue(campaign.sponsorEmails[0]);
+    expect(email.element).not.toHaveAttribute("aria-invalid");
+    expect(wrapper.text()).not.toContain("Email invalide");
+    await wrapper.get('[data-testid="admin-quality-campaign-save-btn"]').trigger("click");
+    await flushPromises();
+    expect(updateCampaign).toHaveBeenCalledOnce();
+  });
+
+  it("réinitialise la validation à la réouverture", async () => {
+    const wrapper = renderActions();
+    await wrapper.get('[data-testid="admin-quality-campaign-edit-btn"]').trigger("click");
+    await wrapper.get('[data-testid="quality-campaign-name"]').setValue("");
+    await wrapper.get('[data-testid="admin-quality-campaign-save-btn"]').trigger("click");
+    await wrapper.get('[data-testid="admin-quality-campaign-cancel-btn"]').trigger("click");
+    await wrapper.get('[data-testid="admin-quality-campaign-edit-btn"]').trigger("click");
+    expect(wrapper.get('input[data-testid="quality-campaign-name"]').element).not.toHaveAttribute("aria-invalid");
+    expect(wrapper.get('input[data-testid="quality-campaign-name"]').element).toHaveValue(campaign.name);
+  });
+});

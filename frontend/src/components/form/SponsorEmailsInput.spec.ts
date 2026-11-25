@@ -59,3 +59,22 @@ it("associe l'erreur de format au vrai champ sponsor puis la retire après corre
   expect(wrapper.emitted("update:valid")?.at(-1)).toEqual([true]);
   expect(wrapper.text()).not.toContain("Email invalide.");
 });
+
+describe("SponsorEmailsInput — état invalide (#3322)", () => {
+  it.each(["", "sponsor@example.test"])("retire l’erreur pour une adresse corrigée ou optionnelle : %s", async (corrected) => {
+    const wrapper = mount(SponsorEmailsInput, {
+      attachTo: document.body,
+      props: { modelValue: ["invalide", "autre@example.test"] },
+      global: { stubs: { VIcon: true } },
+    });
+    const fields = wrapper.findAll("input");
+    expect(fields[0].element).toHaveAttribute("aria-invalid", "true");
+    expect(fields[0].element).toHaveAccessibleDescription("Email invalide. Format attendu – ex : exemple@mail.fr");
+    expect(fields[1].element).not.toHaveAttribute("aria-invalid");
+    expect(wrapper.emitted("update:valid")?.at(-1)).toEqual([false]);
+    await wrapper.setProps({ modelValue: [corrected, "autre@example.test"] });
+    expect(fields[0].element).not.toHaveAttribute("aria-invalid");
+    expect(fields[0].element).not.toHaveAttribute("aria-describedby");
+    expect(wrapper.emitted("update:valid")?.at(-1)).toEqual([true]);
+  });
+});

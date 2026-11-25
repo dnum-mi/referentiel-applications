@@ -39,9 +39,11 @@ const editingMessage = ref("");
 const editingStartDate = ref("");
 const editingEndDate = ref("");
 const editFields = ref<HTMLDivElement | null>(null);
-const hasAttemptedSave = ref(false);
-const nameError = computed(() => (hasAttemptedSave.value && !editingName.value.trim() ? "Le nom de la campagne est requis." : undefined));
-const startDateError = computed(() => (hasAttemptedSave.value && !editingStartDate.value ? "La date de début est requise." : undefined));
+const validationAttempted = ref(false);
+const nameError = computed(() =>
+  validationAttempted.value && !editingName.value.trim() ? "Le nom de la campagne est requis." : undefined,
+);
+const startDateError = computed(() => (validationAttempted.value && !editingStartDate.value ? "La date de début est requise." : undefined));
 
 function toDateInputValue(value?: Date | string | null) {
   if (!value) return "";
@@ -55,7 +57,7 @@ function openEditModal() {
   editingStartDate.value = toDateInputValue(props.campaign.startDate);
   editingEndDate.value = toDateInputValue(props.campaign.endDate);
   errorMessage.value = "";
-  hasAttemptedSave.value = false;
+  validationAttempted.value = false;
   isEditModalOpen.value = true;
 }
 
@@ -77,7 +79,7 @@ function closeDeleteModal() {
 async function saveCampaign(event: MouseEvent) {
   if (isSaving.value) return;
   errorMessage.value = "";
-  hasAttemptedSave.value = true;
+  validationAttempted.value = true;
   if (nameError.value || startDateError.value || !areSponsorEmailsValid.value) {
     await nextTick();
     editFields.value?.querySelector<HTMLInputElement>('input[aria-invalid="true"]')?.focus();

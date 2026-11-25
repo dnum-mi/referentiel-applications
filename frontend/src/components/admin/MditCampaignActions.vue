@@ -27,10 +27,10 @@ const editingLabel = ref<string>("");
 const editingActive = ref<boolean>(true);
 const errorMessage = ref<string>("");
 const editFields = ref<HTMLDivElement | null>(null);
-const hasAttemptedSave = ref(false);
+const validationAttempted = ref(false);
 const yearError = computed(() => {
   const year = Number(editingYear.value);
-  return hasAttemptedSave.value && (!Number.isInteger(year) || year < 2000 || year > 2100)
+  return validationAttempted.value && (!Number.isInteger(year) || year < 2000 || year > 2100)
     ? "Le millésime doit être une année entre 2000 et 2100."
     : undefined;
 });
@@ -40,7 +40,7 @@ function openEditModal() {
   editingLabel.value = props.campaign?.label || "";
   editingActive.value = props.campaign?.isActive ?? true;
   errorMessage.value = "";
-  hasAttemptedSave.value = false;
+  validationAttempted.value = false;
   isEditModalOpen.value = true;
 }
 
@@ -60,7 +60,7 @@ function closeDeleteModal() {
 async function saveCampaign() {
   if (isSaving.value) return;
   errorMessage.value = "";
-  hasAttemptedSave.value = true;
+  validationAttempted.value = true;
   if (yearError.value) {
     await nextTick();
     editFields.value?.querySelector<HTMLInputElement>('input[aria-invalid="true"]')?.focus();
