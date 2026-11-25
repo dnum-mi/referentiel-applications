@@ -16,6 +16,6 @@ const href = computed(() => {
     <span
       >Version : <span :lang="versionLanguage">{{ version }}</span> sur GitHub</span
     >
-    <span class="fr-sr-only">(nouvelle fenêtre)</span>
+    <span class="fr-sr-only">&nbsp;(nouvelle fenêtre)</span>
   </a>
 </template>
