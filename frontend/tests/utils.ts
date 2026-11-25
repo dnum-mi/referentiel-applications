@@ -4,6 +4,28 @@ export const BASE_URL = "http://localhost:5173";
 export const APPLICATION_SEARCH_PATH = "/recherche-application";
 export const APPLICATION_SEARCH_TITLE_TEST_ID = "application-search-title";
 
+export const authority = "https://sso.example.test";
+
+export async function prepareSession(page: Page, profile: Record<string, string> = {}) {
+  await page.addInitScript(
+    ({ storageKey, profile }) => {
+      if (!sessionStorage.getItem(storageKey)) {
+        sessionStorage.setItem(
+          storageKey,
+          JSON.stringify({
+            access_token: "test-session",
+            token_type: "Bearer",
+            scope: "openid profile email",
+            profile: { sub: "test-user", ...profile },
+            expires_at: Math.floor(Date.now() / 1000) + 3600,
+          }),
+        );
+      }
+    },
+    { storageKey: `oidc.user:${authority}:refapp-test`, profile },
+  );
+}
+
 export const keycloakData = {
   user: "user",
   pass: "pass",
