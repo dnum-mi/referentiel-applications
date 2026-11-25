@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import AppLoader from "@/components/AppLoader.vue";
-import ApplicationCardView from "@/components/ApplicationCardView.vue";
 import ApplicationSearchActions from "@/components/ApplicationSearchActions.vue";
 import ApplicationTableView from "@/components/ApplicationTableView.vue";
 import SidebarFilters from "@/components/search/SidebarFilter.vue";
@@ -8,15 +7,12 @@ import { useApplicationSearch } from "@/composables/use-application-search";
 import { useSearchAccessContext } from "@/composables/use-search-access-context";
 import { useStatisticsStore } from "@/stores/statisticsStore";
 import { useUserStore } from "@/stores/userStore";
-import { useMediaQuery } from "@vueuse/core";
 import { computed, onMounted, watch } from "vue";
 
 const statsStore = useStatisticsStore();
 const { isLoading, searchApplications, averageIq, total, page, pageSize, error } = useApplicationSearch();
 const userStore = useUserStore();
 const accessContext = useSearchAccessContext();
-
-const isMobile = useMediaQuery("(max-width: 768px)");
 
 onMounted(() => {
   statsStore.countApplications();
@@ -32,8 +28,6 @@ watch(
   },
   { flush: "post" },
 );
-
-const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
 
 const resultsStatus = computed(() => {
   if (isLoading.value) return "Chargement des résultats…";
@@ -75,8 +69,8 @@ const averageIqDisplay = computed(() => {
       </p>
 
       <section id="application-results" class="application-results" :aria-busy="isLoading" tabindex="-1">
-        <ApplicationTableView v-if="displayMode === 'table'" data-testid="application-table-view" />
-        <ApplicationCardView v-else data-testid="application-card-view" />
+        <p class="table-scroll-hint fr-hint-text">Le tableau défile horizontalement pour consulter toutes les colonnes.</p>
+        <ApplicationTableView data-testid="application-table-view" />
       </section>
     </section>
   </div>
@@ -118,6 +112,7 @@ const averageIqDisplay = computed(() => {
 
 .main-content {
   flex: 1;
+  min-width: 0;
   padding: 1rem 2rem;
   overflow-x: auto;
 }
@@ -160,6 +155,20 @@ const averageIqDisplay = computed(() => {
 
 .application-results {
   margin-top: 0.5rem;
+}
+
+.table-scroll-hint {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding-inline: 1rem;
+  }
+
+  .table-scroll-hint {
+    display: block;
+  }
 }
 
 .sr-only {

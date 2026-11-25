@@ -25,7 +25,14 @@ const close = (id: string) => emit("closeMessage", id);
         aria-relevant="additions text"
       >
         <template v-for="message in statusMessages" :key="message.id">
-          <DsfrAlert class="app-alert" v-bind="message" :data-testid="`app-toaster-message-${message.id}`" @close="close(message.id)" />
+          <DsfrAlert
+            class="app-alert"
+            v-bind="message"
+            :title="message.title?.trim()"
+            :small="!message.title?.trim()"
+            :data-testid="`app-toaster-message-${message.id}`"
+            @close="close(message.id)"
+          />
         </template>
       </TransitionGroup>
       <TransitionGroup
@@ -42,6 +49,8 @@ const close = (id: string) => emit("closeMessage", id);
           :key="message.id"
           class="app-alert"
           v-bind="message"
+          :title="message.title?.trim()"
+          :small="!message.title?.trim()"
           :data-testid="`app-toaster-message-${message.id}`"
           @close="close(message.id)"
         />
