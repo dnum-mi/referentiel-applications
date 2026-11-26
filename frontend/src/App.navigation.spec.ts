@@ -3,6 +3,8 @@ import { defineComponent } from "vue";
 import { createMemoryHistory, createRouter } from "vue-router";
 import App from "./App.vue";
 import { routeNames } from "./router/route-names";
+import { getConfig } from "./services/config";
+import { accessibilityDeclaration } from "./constants/accessibility-declaration";
 
 const { session } = vi.hoisted(() => ({
   session: {
@@ -30,6 +32,15 @@ vi.mock("@/composables/use-maintenance-mode", () => ({ useMaintenanceMode: () =>
 
 enableAutoUnmount(afterEach);
 
+const baseConfig = {
+  betaFeatures: [],
+  oidcConfigUrl: "https://idp.example.invalid/.well-known/openid-configuration",
+  oidcClientId: "refapp",
+  oidcScope: "openid profile email niveau",
+  version: "test",
+  footerLinks: [],
+};
+
 async function renderApp(renderFooter = false) {
   const router = createRouter({
     history: createMemoryHistory(),
@@ -42,7 +53,7 @@ async function renderApp(renderFooter = false) {
       stubs: {
         DsfrHeader: defineComponent({ template: '<header><slot name="mainnav" /></header>' }),
         RouterView: false,
-        RouterLink: true,
+        RouterLink: renderFooter ? { template: "<a><slot /></a>" } : true,
         DsfrFooter: !renderFooter,
         DsfrFooterLink: !renderFooter,
         FooterVersionLink: !renderFooter,
@@ -55,19 +66,20 @@ async function renderApp(renderFooter = false) {
 
 beforeEach(() => {
   Object.assign(session, { authenticated: false, sessionInitialized: true, hasApplicationAccess: false, canListTechnologies: false });
+  vi.mocked(getConfig).mockResolvedValue(baseConfig);
 });
 
 it("annonce la nouvelle fenêtre du lien Tchap dans le pied de page rendu", async () => {
   const wrapper = await renderApp(true);
   const link = wrapper.get('footer a[href^="https://www.tchap.gouv.fr/"]');
 
-  expect(link.text()).toBe("Contact Tchap");
   expect(link.attributes("href")).toBe(
     "https://www.tchap.gouv.fr/#/room/!ydoKqFOXRAQPQYFvqa:agent.interieur.tchap.gouv.fr?via=agent.interieur.tchap.gouv.fr",
   );
   expect(link.attributes("target")).toBe("_blank");
   expect(link.attributes("title")).toBe("Contact Tchap - nouvelle fenêtre");
-  expect(link.attributes("aria-label")).toBe("Contact Tchap - nouvelle fenêtre");
+  expect(link.attributes("aria-label")).toBeUndefined();
+  expect(link.get(".fr-sr-only").text()).toBe("- nouvelle fenêtre");
   expect(link.element).toHaveAccessibleName("Contact Tchap - nouvelle fenêtre");
 });
 
@@ -75,6 +87,17 @@ it("rend le lien de version dans le pied de page de l’application", async () =
   const wrapper = await renderApp(true);
   const link = wrapper.get("footer .fr-footer__content-desc a");
   expect(link.element).toHaveAccessibleName(`Version : ${__APP_VERSION__} sur GitHub (nouvelle fenêtre)`);
+});
+
+it("décrit le contact par e-mail sans annoncer une nouvelle fenêtre", async () => {
+  const wrapper = await renderApp(true);
+  const link = wrapper.get('footer a[href="mailto:support-referentiel-applications@interieur.gouv.fr"]');
+
+  expect(link.attributes("target")).toBeUndefined();
+  expect(link.attributes("rel")).toBeUndefined();
+  expect(link.attributes("title")).toBe("Contacter l'équipe par e-mail");
+  expect(link.element).toHaveAccessibleName("Contacter l'équipe");
+  expect(link.element).not.toHaveAccessibleDescription(/nouvelle fenêtre/);
 });
 
 it.each([false, true])("retire le bandeau public et son lien d'évitement, session initialisée = %s", async (initialized) => {
@@ -105,4 +128,35 @@ it("n'affiche pas le menu métier d'une session authentifiée sans accès à l'a
   session.authenticated = true;
   const wrapper = await renderApp();
   expect(wrapper.find('[data-testid="main-navigation"]').exists()).toBe(false);
+});
+
+it("supprime les titres redondants et décrit l'accueil par le nom du logo", async () => {
+  const wrapper = await renderApp(true);
+  const brandLink = wrapper.get("footer .fr-footer__brand-link");
+  const logoName = brandLink.get("img").attributes("alt");
+  expect(brandLink.attributes("title")).toBe(`${logoName} - Retour à l'accueil`);
+
+  for (const label of [accessibilityDeclaration.complianceMention, "Plan du site"]) {
+    const link = wrapper.findAll("footer .fr-footer__bottom-link").find((item) => item.text() === label);
+    expect(link).toBeDefined();
+    expect(link?.attributes("title")).toBeUndefined();
+  }
+});
+
+it("commence le titre de chaque lien externe par son intitulé, y compris les liens configurés", async () => {
+  vi.mocked(getConfig).mockResolvedValue({
+    ...baseConfig,
+    footerLinks: [
+      { label: "Documentation", title: "Guide du service", href: "https://example.invalid/docs" },
+      { label: "Assistance", title: "Assistance - nouvelle fenêtre", href: "https://example.invalid/support" },
+    ],
+  });
+  const wrapper = await renderApp(true);
+  const links = wrapper.findAll("footer .fr-footer__content-link");
+  expect(links).toHaveLength(5);
+  for (const link of links) {
+    expect(link.attributes("title")?.startsWith(link.text())).toBe(true);
+  }
+  expect(links[3]?.attributes("title")).toBe("Documentation - nouvelle fenêtre - Guide du service");
+  expect(links[4]?.attributes("title")).toBe("Assistance - nouvelle fenêtre");
 });

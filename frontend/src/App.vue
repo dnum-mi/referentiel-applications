@@ -176,29 +176,31 @@ const ecosystemLinks = computed(() => {
   return links
     .map((link) => ({ ...link, href: link.href.trim() }))
     .filter((link) => link.href && link.href !== "#")
-    .map((link) => ({
-      ...link,
-      // DSFR ouvre ces liens dans une nouvelle fenêtre.
-      title: link.title?.includes("nouvelle fenêtre") ? link.title : `${link.title ?? link.label} - nouvelle fenêtre`,
-    }));
+    .map((link) => {
+      // Reprendre aussi l'annonce ajoutée au contenu par DsfrFooter, avant tout complément.
+      const name = `${link.label} - nouvelle fenêtre`;
+      const detail = link.title?.replace(/ - nouvelle fenêtre$/, "").trim();
+      return {
+        ...link,
+        title: detail && detail !== link.label ? `${name} - ${detail}` : name,
+      };
+    });
 });
 const mandatoryLinks = [
-  { label: accessibilityDeclaration.complianceMention, title: "Aller à la page d'accessibilité", to: { name: routeNames.ACCESSIBILITE } },
-  { label: "Plan du site", title: "Aller au plan du site", to: { name: routeNames.SITEMAP } },
+  { label: accessibilityDeclaration.complianceMention, to: { name: routeNames.ACCESSIBILITE } },
+  { label: "Plan du site", to: { name: routeNames.SITEMAP } },
   {
-    // RGAA-015 : ouverture dans un nouvel onglet mentionnée dans l'intitulé.
+    // L'annonce de nouvelle fenêtre est ajoutée dans le contenu par DsfrFooterLink.
     label: "Contact Tchap",
     title: "Contact Tchap - nouvelle fenêtre",
-    "aria-label": "Contact Tchap - nouvelle fenêtre",
     href: "https://www.tchap.gouv.fr/#/room/!ydoKqFOXRAQPQYFvqa:agent.interieur.tchap.gouv.fr?via=agent.interieur.tchap.gouv.fr",
     target: "_blank",
     to: undefined,
   },
   {
     label: "Contacter l'équipe",
-    title: "Contacter l'équipe par email - nouvelle fenêtre",
+    title: "Contacter l'équipe par e-mail",
     href: "mailto:support-referentiel-applications@interieur.gouv.fr",
-    target: "_blank",
     icon: "fr-icon-mail-line",
     to: undefined,
   },
@@ -298,6 +300,7 @@ const { needRefresh, updateServiceWorker } = useAppUpdate();
     :operator-img-alt="operatorImgAlt"
     :operator-img-style="operatorImgStyle"
     :home-link="homeLink"
+    :home-title="`${operatorImgAlt} - Retour à l'accueil`"
     :ecosystem-links="ecosystemLinks"
     :mandatory-links="mandatoryLinks"
     :after-mandatory-links="afterMandatoryLinks"
