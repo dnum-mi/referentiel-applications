@@ -6,48 +6,48 @@ const { filters, setFilter } = useApplicationSearch();
 
 <template>
   <div class="filter-section">
-    <DsfrInput
-      :model-value="filters.search"
-      label-visible
-      description-id="search-tooltip-desc"
-      data-testid="application-filter-label"
-      @update:model-value="setFilter({ search: $event?.toString(), page: 0 })"
-    >
-      <template #label>
-        <span style="display: inline-flex; align-items: center; gap: 0.25rem">
-          Nom de l’application
-          <DsfrTooltip
-            aria-label="Afficher l’aide sur le filtre Nom de l’application"
-            id="search-tooltip-desc"
-            content="Recherche les applications dont le nom contient le texte saisi."
-          />
-        </span>
+    <FilterWithHelp>
+      <DsfrInput
+        :model-value="filters.search"
+        label-visible
+        description-id="search-tooltip-desc"
+        data-testid="application-filter-label"
+        @update:model-value="setFilter({ search: $event?.toString(), page: 0 })"
+      >
+        <template #label>Nom de l’application</template>
+      </DsfrInput>
+      <template #help>
+        <DsfrTooltip
+          aria-label="Afficher l’aide sur le filtre Nom de l’application"
+          id="search-tooltip-desc"
+          content="Recherche les applications dont le nom contient le texte saisi."
+        />
       </template>
-    </DsfrInput>
+    </FilterWithHelp>
     <TagSearchSelect
       :tags="filters.tag"
       tooltip-content="Recherche les applications associées à un ou plusieurs tags sélectionnés."
       data-testid="application-filter-tag"
       @update:tags="setFilter({ tag: $event, page: 0 })"
     />
-    <DsfrInput
-      :model-value="filters.link"
-      label-visible
-      description-id="link-tooltip-desc"
-      data-testid="application-filter-link"
-      @update:model-value="setFilter({ link: $event?.toString(), page: 0 })"
-    >
-      <template #label>
-        <span style="display: inline-flex; align-items: center; gap: 0.25rem">
-          Lien externe
-          <DsfrTooltip
-            aria-label="Afficher l’aide sur le filtre Lien externe"
-            id="link-tooltip-desc"
-            content="Recherche les applications par URL d’une ressource externe associée (documentation, service, supervision…)."
-          />
-        </span>
+    <FilterWithHelp>
+      <DsfrInput
+        :model-value="filters.link"
+        label-visible
+        description-id="link-tooltip-desc"
+        data-testid="application-filter-link"
+        @update:model-value="setFilter({ link: $event?.toString(), page: 0 })"
+      >
+        <template #label>Lien externe</template>
+      </DsfrInput>
+      <template #help>
+        <DsfrTooltip
+          aria-label="Afficher l’aide sur le filtre Lien externe"
+          id="link-tooltip-desc"
+          content="Recherche les applications par URL d’une ressource externe associée (documentation, service, supervision…)."
+        />
       </template>
-    </DsfrInput>
+    </FilterWithHelp>
   </div>
 </template>
 

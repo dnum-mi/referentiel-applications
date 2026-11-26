@@ -34,59 +34,80 @@ const includeNullIq = computed({
 </script>
 
 <template>
-  <fieldset class="fr-fieldset quality-filter" data-testid="quality-filter">
-    <legend class="fr-fieldset__legend fr-label fr-mb-2w">
-      <span style="display: inline-flex; align-items: center; gap: 0.25rem">
-        Indice de qualité
-        <DsfrTooltip
-          aria-label="Afficher l’aide sur le filtre Indice de qualité"
-          id="quality-legend-tooltip-desc"
-          content="Filtre les applications selon leur indice de qualité (IQ), un score global de 0 à 100 %. Les applications sans IQ calculé (décommissionnées ou supprimées) peuvent être incluses en plus de cette plage grâce à l'option ci-dessous."
-        />
-      </span>
-      <br />
-      <small data-testid="quality-filter-summary">
+  <div class="quality-filter-group">
+    <fieldset
+      class="fr-fieldset quality-filter"
+      data-testid="quality-filter"
+      aria-describedby="quality-legend-tooltip-desc quality-filter-summary"
+    >
+      <legend class="fr-fieldset__legend fr-label fr-mb-2w">Indice de qualité</legend>
+      <DsfrTooltip
+        class="fieldset-help"
+        aria-label="Afficher l’aide sur le filtre Indice de qualité"
+        id="quality-legend-tooltip-desc"
+        content="Filtre les applications selon leur indice de qualité (IQ), un score global de 0 à 100 %. Les applications sans IQ calculé (décommissionnées ou supprimées) peuvent être incluses en plus de cette plage grâce à l'option ci-dessous."
+      />
+      <small id="quality-filter-summary" data-testid="quality-filter-summary">
         entre {{ filters.iqGte ?? 0 }}% et {{ filters.iqLte ?? 100 }}%<template v-if="filters.iq__isNull">
           · applications sans IQ incluses</template
         >
       </small>
-    </legend>
-    <DsfrInputGroup class="quality-filter-range">
-      <DsfrInput
-        :model-value="filters.iqGte"
-        label-visible
-        type="number"
-        pattern="\d*"
-        min="0"
-        :max="(filters.iqLte ?? 100) + 1"
-        data-testid="quality-filter-min"
-        @update:model-value="updateMin"
-      >
-        <template #label>IQ minimum</template>
-      </DsfrInput>
-      <span class="quality-filter-range-separator" aria-hidden="true">—</span>
-      <DsfrInput
-        :model-value="filters.iqLte"
-        label-visible
-        type="number"
-        pattern="\d*"
-        :min="(filters.iqGte ?? 0) - 1"
-        max="100"
-        data-testid="quality-filter-max"
-        @update:model-value="updateMax"
-      >
-        <template #label>IQ maximum</template>
-      </DsfrInput>
-    </DsfrInputGroup>
-    <div class="quality-filter-null-option">
-      <DsfrCheckbox v-model="includeNullIq" name="quality-option-include-null" :value="true" data-testid="quality-filter-include-null">
-        <template #label>Inclure les applications sans IQ</template>
-      </DsfrCheckbox>
-    </div>
-  </fieldset>
+
+      <DsfrInputGroup class="quality-filter-range">
+        <DsfrInput
+          :model-value="filters.iqGte"
+          label-visible
+          type="number"
+          pattern="\d*"
+          min="0"
+          :max="(filters.iqLte ?? 100) + 1"
+          data-testid="quality-filter-min"
+          @update:model-value="updateMin"
+        >
+          <template #label>IQ minimum</template>
+        </DsfrInput>
+        <span class="quality-filter-range-separator" aria-hidden="true">—</span>
+        <DsfrInput
+          :model-value="filters.iqLte"
+          label-visible
+          type="number"
+          pattern="\d*"
+          :min="(filters.iqGte ?? 0) - 1"
+          max="100"
+          data-testid="quality-filter-max"
+          @update:model-value="updateMax"
+        >
+          <template #label>IQ maximum</template>
+        </DsfrInput>
+      </DsfrInputGroup>
+      <div class="quality-filter-null-option">
+        <DsfrCheckbox v-model="includeNullIq" name="quality-option-include-null" :value="true" data-testid="quality-filter-include-null">
+          <template #label>Inclure les applications sans IQ</template>
+        </DsfrCheckbox>
+      </div>
+    </fieldset>
+  </div>
 </template>
 
 <style scoped>
+.quality-filter-group {
+  position: relative;
+}
+
+fieldset {
+  position: static;
+}
+
+legend {
+  padding-inline-end: 2rem;
+}
+
+.quality-filter :deep(.fieldset-help) {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+}
+
 .quality-filter-range {
   align-items: flex-end;
   gap: 0.5rem;

@@ -1,4 +1,4 @@
-import { DsfrHeader } from "@gouvminint/vue-dsfr";
+import { DsfrFooter, DsfrHeader } from "@gouvminint/vue-dsfr";
 import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils";
 import { defineComponent, nextTick } from "vue";
 import { useRgaaGlobalA11y } from "./use-rgaa-a11y";
@@ -8,13 +8,14 @@ enableAutoUnmount(afterEach);
 function render() {
   return mount(
     defineComponent({
-      components: { DsfrHeader },
+      components: { DsfrFooter, DsfrHeader },
       setup() {
         useRgaaGlobalA11y();
       },
       template: `
         <DsfrHeader service-title="Référentiel des Applications" :logo-text="['Ministère', 'de l\\'intérieur']" />
         <main><h1>Recherche d'applications</h1></main>
+        <DsfrFooter :logo-text="['Ministère', 'de l’intérieur']" />
       `,
     }),
     {
@@ -36,10 +37,26 @@ describe("useRgaaGlobalA11y", () => {
     expect(document.querySelectorAll('h1, [role="heading"][aria-level="1"]')).toHaveLength(1);
   });
 
-  it("restitue la devise du logo aux lecteurs d'écran", async () => {
+  it("sépare la devise du nom du ministère dans les deux blocs-marque", async () => {
     const wrapper = render();
     await nextTick();
 
-    expect(wrapper.get(".fr-logo [data-rgaa-devise]").text()).toBe("Liberté, égalité, fraternité");
+    const logos = wrapper.findAll(".fr-logo");
+    expect(logos).toHaveLength(2);
+    for (const logo of logos) {
+      expect(logo.get("[data-rgaa-devise]").element.textContent).toBe(" Liberté, égalité, fraternité");
+      expect(logo.element.textContent).toMatch(/de l['’]intérieur Liberté, égalité, fraternité$/);
+    }
+  });
+
+  it("conserve les coupures visuelles des logos sans leur donner de rôle sémantique", async () => {
+    const wrapper = render();
+    await nextTick();
+
+    const lineBreaks = wrapper.findAll(".fr-logo br");
+    expect(lineBreaks).toHaveLength(2);
+    for (const lineBreak of lineBreaks) {
+      expect(lineBreak.attributes("role")).toBe("presentation");
+    }
   });
 });
