@@ -99,7 +99,6 @@ async function removeTag(index: number) {
       />
     </fieldset>
   </div>
-
 </template>
 
 <style scoped>
