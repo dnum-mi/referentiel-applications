@@ -94,6 +94,25 @@ pnpm type-check          # tsc --noEmit (vérifie le typage du POM)
 pnpm test:unit           # contrat des prérequis QA, sans stack ni navigateur
 ```
 
+### Contrats d'accessibilité sans lecteur d'écran
+
+`pnpm --dir e2e test:accessibility` exécute les parcours principaux dans l'application complète
+(front, API, base et Keycloak), sous Chromium, Firefox et WebKit. Les états bureau et mobile
+sont exercés dans les scénarios. Appliquer auparavant les seeds principal et QA.
+
+Les cas RGA-18 à RGA-31 de [`protocoles/rgaa.md`](protocoles/rgaa.md) vérifient les noms et
+descriptions accessibles attendus, les références ARIA, les états et les interactions au clavier.
+Les snapshots ARIA sont courts et écrits à partir des attentes fonctionnelles. Les messages
+dynamiques sont vérifiés dans leurs zones d'annonce, déjà montées avant l'action.
+
+La configuration dédiée vérifie les fixtures sans nettoyage global. Chaque scénario supprime
+les éventuelles données qu'il crée. Elle ne remplace aucune réponse de l'API et ne désactive
+aucun parcours quand une fixture manque. Les traces, vidéos d'échec et captures permettent de
+diagnostiquer le résultat. Le job CI `Accessibility Contracts E2E` exécute cette suite sans retry.
+
+Ces contrôles établissent le contrat technique de la page ; ils ne prouvent ni la parole émise
+ni son ordre ou son rythme dans NVDA/VoiceOver. Les essais vocaux réels restent complémentaires.
+
 ### Fixtures manquantes et tests ignorés
 
 Avant toute spec, le setup vérifie via l'API authentifiée que les cinq applications `QA-*`,

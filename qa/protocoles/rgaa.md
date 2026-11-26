@@ -165,3 +165,97 @@ n’est nécessaire.
 
 Les assertions DOM, les essais au clavier et l’analyse automatique de ces états ne remplacent
 pas leur restitution par les lecteurs d’écran de la base RGAA.
+
+## Contrats E2E principaux sans lecteur d'écran
+
+Commande : `pnpm --dir e2e test:accessibility`, avec les seeds principal et QA dans une base de
+recette. Ces cas parcourent l'application réelle et son API authentifiée par Keycloak. Ils
+n'interceptent aucune réponse métier. Le setup vérifie les fixtures ; leur absence est un échec.
+
+Les scénarios s'exécutent dans Chromium, Firefox et WebKit sans retry. Les cas qui dépendent de
+la présentation exercent le bureau et le mobile. La navigation utilise Tab (Option+Tab sur WebKit
+pour inclure les liens), Maj+Tab, les flèches, Début, Fin, Entrée et Échap selon le composant.
+
+### RGA-17 — Les erreurs de modification nomment les champs
+
+- **Automatisation existante** : `e2e/tests/rgaa.spec.ts`, application, nom alternatif, lien et DIMA, par clic et au clavier.
+- **Résultat attendu** : le champ invalide conserve son nom, expose son invalidité et sa description d'erreur ; la validation n'envoie aucune écriture invalide.
+
+### RGA-18 — Structure accessible du gabarit public et connecté
+
+- **Action** : ouvrir l'accueil public, puis se connecter avec le compte de recette.
+- **Résultat attendu** : un seul titre de niveau 1, les repères de page attendus et leur ordre ; noms et descriptions sans références cassées. Les petits snapshots ARIA expriment la structure voulue, sans enregistrer aveuglément toute la page.
+
+### RGA-19 — Liens du pied de page
+
+- **Action** : parcourir le pied de page sur ordinateur et mobile.
+- **Résultat attendu** : les liens externes ont un nom accessible contenant leur intitulé et l'annonce de nouvelle fenêtre ; le contact par e-mail n'ouvre pas de nouvel onglet. Les titres conservés reprennent l'intitulé et le niveau d'accessibilité est préservé.
+
+### RGA-20 — Accès rapide et navigation SPA au clavier
+
+- **Action** : atteindre l'accès au contenu par la tabulation, l'activer puis suivre un lien interne au clavier ; exercer aussi le menu mobile ouvert.
+- **Résultat attendu** : la cible utile reçoit le focus, la navigation change le titre et l'annonceur, sans ajouter de titre de niveau 1 ; le menu ouvert est relié à son déclencheur.
+
+### RGA-21 — Onglets du profil
+
+- **Action** : parcourir les onglets avec les flèches, Début, Fin et Tab, sur ordinateur et mobile.
+- **Résultat attendu** : un onglet sélectionné, une association unique à son panneau, un nom compréhensible et l'onglet focalisé visible. Tab rejoint le panneau après la fin de sa transition.
+
+### RGA-22 — Noms et aides des filtres
+
+- **Action** : ouvrir les groupes de filtres et leurs aides au clavier.
+- **Résultat attendu** : noms courts attendus, descriptions pertinentes, boutons d'aide hors des labels et légendes, aides utilisables au clavier sans changer la sélection du champ.
+
+### RGA-23 — Suggestions et consignes de saisie
+
+- **Datafeature** : application `QA-GROUP-PARENT`, direction métier issue de l'API, tag créé pour le test puis supprimé.
+- **Action** : saisir sous le seuil puis au-dessus dans les trois champs à suggestions ; sélectionner une option aux flèches et avec Entrée.
+- **Résultat attendu** : consigne visible et décrite, statut des caractères restants, aucune requête sous le seuil après expiration du debounce, liste nommée et descendant actif valide lors de la navigation.
+
+### RGA-24 — Recherche sans résultat et reprise
+
+- **Action** : rechercher un nom absent, puis une application de recette existante.
+- **Résultat attendu** : zéro résultat annoncé dans une zone persistante, champ toujours focalisé, puis résultats et compteur cohérents lors de la reprise.
+
+### RGA-25 — Tableau, tri et pagination
+
+- **Datafeature** : six applications créées pour ce test et supprimées dans son nettoyage.
+- **Action** : filtrer ce jeu, trier au clavier puis parcourir la pagination.
+- **Résultat attendu** : en-têtes explicites, état de tri correct, ordre des lignes et compteur cohérents, page courante annoncée et focus conservé sur la commande.
+
+### RGA-26 — Recherche mobile dans un dialogue
+
+- **Action** : atteindre la commande par Tab, ouvrir le dialogue, chercher une application et naviguer dans les suggestions ; fermer au clavier.
+- **Résultat attendu** : le focus progresse entre les commandes en restant dans le dialogue ; Échap ferme d'abord la liste, puis le dialogue et restitue le focus au déclencheur.
+
+### RGA-27 — Création : obligations, erreurs et étapes
+
+- **Action** : demander l'étape suivante sans remplir les champs, corriger le nom et la description, avancer puis revenir.
+- **Résultat attendu** : obligations et erreurs associées aux champs, premier champ invalide focalisé ; titre d'étape focalisé après validation, saisie conservée et invalidité retirée. Aucune application n'est enregistrée.
+
+### RGA-28 — Annulation d'un brouillon
+
+- **Action** : commencer une saisie, demander l'annulation, parcourir le dialogue dans les deux sens, fermer avec Échap puis avec Reprendre.
+- **Résultat attendu** : dialogue nommé, toutes ses commandes effectivement parcourues sans sortie du focus, retour au bouton Annuler et brouillon préservé.
+
+### RGA-29 — Configuration Grist invalide
+
+- **Action** : saisir une URL HTTP, laisser la clé vide, puis corriger seulement l'URL ; saisir un identifiant de document trop court.
+- **Résultat attendu** : noms, obligations, invalidité et descriptions de chaque erreur cohérents ; focus sur le premier champ à corriger. Aucune clé ni requête à un service Grist externe n'est nécessaire.
+
+### RGA-30 — Historique sans résultat
+
+- **Action** : filtrer les dates sur une période future vide, puis effacer les filtres.
+- **Résultat attendu** : la même zone d'annonce montée avant l'action indique zéro, puis le nouveau nombre de résultats ; la cible de focus du tableau reste présente même lorsqu'il est vide et reçoit le focus.
+
+### RGA-31 — Dialogue de signalement et annonce d'erreur
+
+- **Action** : ouvrir le signalement au clavier, parcourir ses commandes avec Tab/Maj+Tab et envoyer une description vide ; fermer avec Échap.
+- **Résultat attendu** : dialogue et champ nommés, contrôle obligatoire, progression du clavier dans les deux sens, erreur dans la zone d'alerte préexistante ; retour au déclencheur avec état fermé. Aucun signalement n'est créé.
+
+### Lecture des résultats
+
+Une réussite signifie que les informations accessibles et les interactions testées respectent le
+contrat attendu. Elle ne valide pas la phrase réellement prononcée, sa fréquence ou sa temporalité
+dans NVDA/VoiceOver et ne constitue pas une qualification RGAA complète. Conserver quelques
+parcours vocaux de référence pour les composants complexes et les annonces dynamiques.
