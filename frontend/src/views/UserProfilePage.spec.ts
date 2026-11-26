@@ -22,6 +22,28 @@ const renderPage = () =>
   });
 
 describe("UserProfilePage — onglet Synchronisation Grist", () => {
+  it("ouvre directement les réglages Grist depuis le lien d'aide, y compris après navigation", async () => {
+    hasPermissions.mockImplementation((permissions: Permission[]) => permissions.includes(Permission.BETA_FEATURES));
+    route.query.tab = "grist";
+    renderPage();
+    const grist = await screen.findByRole("tab", { name: /Synchronisation Grist/ });
+    await waitFor(() => expect(grist).toHaveAttribute("aria-selected", "true"));
+    await fireEvent.click(screen.getByRole("tab", { name: "Mes informations" }));
+    route.query.tab = "";
+    await nextTick();
+    route.query.tab = "grist";
+    await waitFor(() => expect(grist).toHaveAttribute("aria-selected", "true"));
+  });
+
+  it("ignore le lien direct Grist quand cet onglet n'est pas autorisé", async () => {
+    hasPermissions.mockReturnValue(false);
+    route.query.tab = "grist";
+    renderPage();
+    await flushPromises();
+    expect(screen.getByRole("tab", { name: "Mes informations" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.queryByRole("tab", { name: /Synchronisation Grist/ })).toBeNull();
+  });
+
   it("ouvre les jetons depuis le lien de rappel, y compris après navigation", async () => {
     route.query.tab = "tokens";
     renderPage();
@@ -160,6 +182,7 @@ describe("UserProfilePage — retrait de la permission Grist", () => {
   });
 
   it("conserve l'onglet actif quand il reste disponible", async () => {
+    route.query.tab = "tokens";
     const allowed = renderProfile();
     const follow = screen.getByRole("tab", { name: "Mes abonnements" });
     await fireEvent.click(follow);

@@ -26,7 +26,7 @@ vi.mock("vue-router", () => ({ useRouter: () => ({ push: vi.fn(), resolve }) }))
 vi.mock("@/stores/toasterStore", () => ({
   useToasterStore: () => ({ addErrorMessage }),
 }));
-vi.mock("@/stores/userStore", () => ({ useUserStore: () => ({ hasPermissions, fetchUser, user, authenticated: true }) }));
+vi.mock("@/stores/userStore", () => ({ useUserStore: () => ({ hasPermissions, fetchUser, user: reactive(user), authenticated: true }) }));
 vi.mock("@/services/config", () => ({ getConfig }));
 vi.mock("@/stores/applicationStore", () => ({
   useApplicationStore: () => ({ downloadExcel, downloadHtml }),
@@ -51,6 +51,7 @@ async function renderWith(permissions: Permission[]) {
         ReportModal: true,
         CreateQualityCampaignModal: true,
         ColumnCustomization: true,
+        RouterLink: { props: ["to"], template: '<a role="link"><slot /></a>' },
         GristSyncModal: {
           props: ["opened"],
           emits: ["close"],
@@ -88,7 +89,7 @@ describe("ApplicationSearchActions — synchronisation Grist", () => {
     await renderWith([Permission.BETA_FEATURES]);
     const button = screen.getByTestId(testId);
     expect(button).toHaveTextContent("Bêta");
-    expect(button).toHaveAccessibleName(/fonctionnalité bêta/);
+    expect(button).toHaveAccessibleName("Synchroniser avec Grist Bêta");
   });
 
   it("retire les boutons lorsque l’accès bêta est révoqué", async () => {
@@ -109,21 +110,49 @@ describe("ApplicationSearchActions — synchronisation Grist", () => {
 
     const button = screen.getByTestId("grist-sync-btn");
     expect(button).toBeDisabled();
-    expect(button).toHaveAccessibleName(/^Synchroniser avec Grist/);
-    expect(screen.getByTestId("grist-sync-btn-mobile")).toHaveAccessibleName(/^Synchroniser avec Grist/);
-    expect(button).toHaveAttribute(
-      "title",
-      "Renseignez votre connexion et vos documents Grist dans l'onglet « Synchronisation Grist » de votre profil pour synchroniser",
-    );
+    for (const testId of ["grist-sync-btn", "grist-sync-btn-mobile"]) {
+      const gristButton = screen.getByTestId(testId);
+      expect(gristButton).toHaveAccessibleName("Synchroniser avec Grist Bêta");
+      expect(gristButton).not.toHaveAttribute("title");
+      expect(gristButton).not.toHaveAttribute("aria-label");
+      expect(gristButton).toHaveAccessibleDescription(
+        "Pour synchroniser, renseignez votre connexion et vos documents Grist dans l'onglet « Synchronisation Grist » de votre profil.",
+      );
+    }
+    expect(screen.getByRole("link", { name: "Synchronisation Grist" })).toBeVisible();
   });
 
   it("ouvre la modale de synchronisation", async () => {
     await renderWith([Permission.BETA_FEATURES]);
     expect(screen.getByTestId("grist-sync-modal")).toHaveAttribute("opened", "false");
+    expect(screen.getByTestId("grist-sync-btn")).toBeEnabled();
+    expect(screen.getByTestId("grist-sync-btn")).not.toHaveAttribute("aria-describedby");
+    expect(screen.queryByRole("link", { name: "Synchronisation Grist" })).toBeNull();
 
     await fireEvent.click(screen.getByTestId("grist-sync-btn"));
 
     expect(screen.getByTestId("grist-sync-modal")).toHaveAttribute("opened", "true");
+  });
+
+  it("retire et rétablit l'aide avec la configuration du profil", async () => {
+    user.hasGristApiKey = false;
+    await renderWith([Permission.BETA_FEATURES]);
+    expect(screen.getByTestId("grist-sync-btn")).toBeDisabled();
+    expect(screen.getByRole("link", { name: "Synchronisation Grist" })).toBeVisible();
+
+    reactive(user).hasGristApiKey = true;
+    await flushPromises();
+    for (const testId of ["grist-sync-btn", "grist-sync-btn-mobile"]) {
+      expect(screen.getByTestId(testId)).toBeEnabled();
+      expect(screen.getByTestId(testId)).not.toHaveAttribute("aria-describedby");
+      expect(screen.getByTestId(testId)).toHaveAccessibleName("Synchroniser avec Grist Bêta");
+    }
+    expect(screen.queryByRole("link", { name: "Synchronisation Grist" })).toBeNull();
+
+    reactive(user).gristDocIds = [];
+    await flushPromises();
+    expect(screen.getByTestId("grist-sync-btn")).toBeDisabled();
+    expect(screen.getByRole("link", { name: "Synchronisation Grist" })).toBeVisible();
   });
 
   it.each(["grist-sync-btn", "grist-sync-btn-mobile"])("rend le focus au bouton %s après annulation", async (testId) => {
