@@ -34,41 +34,57 @@ const selectedStatuses = computed({
 <template>
   <div data-testid="status-filter">
     <div class="without-status-option">
-      <DsfrCheckbox
-        v-model="withoutStatus"
-        name="status-option-none"
-        :value="true"
-        hint="Filtrer les applications sans statut"
-        aria-describedby="status-none-tooltip-desc"
-        data-testid="status-option-none"
-      >
-        <template #label>
-          <span style="display: inline-flex; align-items: center; gap: 0.25rem">
-            Sans statut
-            <DsfrTooltip
-              aria-label="Afficher l’aide sur le filtre Sans statut"
-              id="status-none-tooltip-desc"
-              content="Affiche uniquement les applications sans statut renseigné."
-            />
-          </span>
-        </template>
-      </DsfrCheckbox>
-    </div>
-    <DsfrCheckboxSet v-model="selectedStatuses" :options="statusCheckboxOptions">
-      <template #legend>
-        <span style="display: inline-flex; align-items: center; gap: 0.25rem">
-          Statut de l'application
+      <FilterWithHelp>
+        <DsfrCheckbox
+          v-model="withoutStatus"
+          name="status-option-none"
+          :value="true"
+          aria-describedby="status-none-tooltip-desc"
+          data-testid="status-option-none"
+        >
+          <template #label>Sans statut</template>
+        </DsfrCheckbox>
+        <template #help>
           <DsfrTooltip
-            aria-label="Afficher l’aide sur les filtres de statut de l’application"
-            content="Filtre les applications selon leur statut de cycle de vie (en construction, en production, décommissionnée…)."
+            aria-label="Afficher l’aide sur le filtre Sans statut"
+            id="status-none-tooltip-desc"
+            content="Affiche uniquement les applications sans statut renseigné."
           />
-        </span>
-      </template>
+        </template>
+      </FilterWithHelp>
+    </div>
+    <DsfrCheckboxSet class="filter-checkbox-set" v-model="selectedStatuses" :options="statusCheckboxOptions">
+      <template #legend>Statut de l'application</template>
+      <DsfrTooltip
+        class="fieldset-help"
+        id="status-legend-tooltip-desc"
+        aria-label="Afficher l’aide sur les filtres de statut de l’application"
+        content="Filtre les applications selon leur statut de cycle de vie (en construction, en production, décommissionnée…)."
+      />
+      <DsfrCheckbox v-for="option in statusCheckboxOptions" :key="option.id" v-model="selectedStatuses" v-bind="option" />
     </DsfrCheckboxSet>
   </div>
 </template>
 
 <style scoped>
+.filter-checkbox-set {
+  position: relative;
+}
+
+.filter-checkbox-set :deep(fieldset) {
+  position: static;
+}
+
+.filter-checkbox-set :deep(legend) {
+  padding-inline-end: 2rem;
+}
+
+.filter-checkbox-set :deep(.fieldset-help) {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+}
+
 .without-status-option {
   margin-bottom: 1rem;
   border-bottom: 1px solid #e5e7eb;

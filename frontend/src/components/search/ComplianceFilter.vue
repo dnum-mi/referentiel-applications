@@ -59,43 +59,59 @@ function setState(criterion: ComplianceFilterCriterion, state: string | number) 
 </script>
 
 <template>
-  <fieldset data-testid="compliance-filter" class="fr-fieldset compliance-filters">
-    <legend class="fr-fieldset__legend fr-label">
-      <span style="display: inline-flex; align-items: center; gap: 0.25rem">
-        Conformité
-        <DsfrTooltip
-          aria-label="Afficher l’aide sur les filtres de conformité"
-          id="compliance-legend-tooltip-desc"
-          content="Filtre les applications selon leurs critères de conformité (continuité d'activité, sécurité, accessibilité, protection des données…)."
-        />
-      </span>
-    </legend>
-    <DsfrSelect
-      v-for="criterion in complianceFilterCriteria"
-      :key="criterion"
-      :model-value="stateOf(criterion)"
-      :options="optionsFor(criterion)"
-      :name="`compliance-${criterion}`"
-      :aria-describedby="`compliance-${criterion}-tooltip-desc`"
-      :data-testid="`compliance-option-${criterion}`"
-      @update:model-value="(state: string | number) => setState(criterion, state)"
-    >
-      <template #label>
-        <span style="display: inline-flex; align-items: center; gap: 0.25rem">
-          {{ complianceFilterLabels[criterion] }}
+  <div class="compliance-filter-group">
+    <fieldset data-testid="compliance-filter" class="fr-fieldset compliance-filters" aria-describedby="compliance-legend-tooltip-desc">
+      <legend class="fr-fieldset__legend fr-label">Conformité</legend>
+      <DsfrTooltip
+        class="fieldset-help"
+        aria-label="Afficher l’aide sur les filtres de conformité"
+        id="compliance-legend-tooltip-desc"
+        content="Filtre les applications selon leurs critères de conformité (continuité d'activité, sécurité, accessibilité, protection des données…)."
+      />
+
+      <FilterWithHelp v-for="criterion in complianceFilterCriteria" :key="criterion">
+        <DsfrSelect
+          :model-value="stateOf(criterion)"
+          :options="optionsFor(criterion)"
+          :name="`compliance-${criterion}`"
+          :aria-describedby="`compliance-${criterion}-tooltip-desc`"
+          :data-testid="`compliance-option-${criterion}`"
+          @update:model-value="(state: string | number) => setState(criterion, state)"
+        >
+          <template #label>{{ complianceFilterLabels[criterion] }}</template>
+        </DsfrSelect>
+        <template #help>
           <DsfrTooltip
             :aria-label="`Afficher l’aide sur le filtre ${complianceFilterLabels[criterion]}`"
             :id="`compliance-${criterion}-tooltip-desc`"
             :content="complianceFilterTooltips[criterion]"
           />
-        </span>
-      </template>
-    </DsfrSelect>
-    <HomologationFilter />
-  </fieldset>
+        </template>
+      </FilterWithHelp>
+      <HomologationFilter />
+    </fieldset>
+  </div>
 </template>
 
 <style scoped>
+.compliance-filter-group {
+  position: relative;
+}
+
+fieldset {
+  position: static;
+}
+
+legend {
+  padding-inline-end: 2rem;
+}
+
+.compliance-filters :deep(.fieldset-help) {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+}
+
 .compliance-filters {
   display: flex;
   flex-direction: column;

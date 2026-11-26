@@ -151,23 +151,21 @@ watch(
       data-testid="relation-suggestions-input"
     />
     <p role="alert" class="fr-error-text" data-testid="relation-reference-error">{{ referenceError }}</p>
-    <DsfrSelect
-      v-for="{ field, testId, label, tooltip } in relationFields"
-      :key="field"
-      :model-value="filters[field] || RELATION_TYPE_FILTERS.neutral"
-      :options="optionsMap"
-      :disabled="isLoading"
-      :aria-describedby="`relation-${field}-tooltip-desc`"
-      :data-testid="testId"
-      @update:model-value="updateFilter(field, $event)"
-    >
-      <template #label>
-        <span style="display: inline-flex; align-items: center; gap: 0.25rem">
-          {{ label }}
-          <DsfrTooltip :aria-label="`Afficher l’aide sur le filtre ${label}`" :id="`relation-${field}-tooltip-desc`" :content="tooltip" />
-        </span>
+    <FilterWithHelp v-for="{ field, testId, label, tooltip } in relationFields" :key="field">
+      <DsfrSelect
+        :model-value="filters[field] || RELATION_TYPE_FILTERS.neutral"
+        :options="optionsMap"
+        :disabled="isLoading"
+        :aria-describedby="`relation-${field}-tooltip-desc`"
+        :data-testid="testId"
+        @update:model-value="updateFilter(field, $event)"
+      >
+        <template #label>{{ label }}</template>
+      </DsfrSelect>
+      <template #help>
+        <DsfrTooltip :aria-label="`Afficher l’aide sur le filtre ${label}`" :id="`relation-${field}-tooltip-desc`" :content="tooltip" />
       </template>
-    </DsfrSelect>
+    </FilterWithHelp>
   </div>
 </template>
 
