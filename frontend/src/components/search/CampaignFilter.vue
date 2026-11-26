@@ -29,24 +29,24 @@ onMounted(loadActiveCampaigns);
 
 <template>
   <div v-if="options.length" class="campaign-filter" data-testid="time-millesime">
-    <DsfrSelect
-      :model-value="selected"
-      :options="options"
-      aria-describedby="campaign-millesime-tooltip-desc"
-      data-testid="time-millesime-select"
-      @update:model-value="onSelect($event)"
-    >
-      <template #label>
-        <span style="display: inline-flex; align-items: center; gap: 0.25rem">
-          Campagne dette IT (millésime)
-          <DsfrTooltip
-            aria-label="Afficher l’aide sur le filtre Campagne dette IT"
-            id="campaign-millesime-tooltip-desc"
-            content="Sélectionne l’année (millésime) de la campagne de collecte de la dette technique à afficher."
-          />
-        </span>
+    <FilterWithHelp>
+      <DsfrSelect
+        :model-value="selected"
+        :options="options"
+        aria-describedby="campaign-millesime-tooltip-desc"
+        data-testid="time-millesime-select"
+        @update:model-value="onSelect($event)"
+      >
+        <template #label>Campagne dette IT (millésime)</template>
+      </DsfrSelect>
+      <template #help>
+        <DsfrTooltip
+          aria-label="Afficher l’aide sur le filtre Campagne dette IT"
+          id="campaign-millesime-tooltip-desc"
+          content="Sélectionne l’année (millésime) de la campagne de collecte de la dette technique à afficher."
+        />
       </template>
-    </DsfrSelect>
+    </FilterWithHelp>
   </div>
 </template>
 

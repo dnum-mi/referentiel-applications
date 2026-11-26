@@ -41,7 +41,7 @@ describe("StatusFilter — pagination de la recherche", () => {
     scope = effectScope();
     search = scope.run(() => useApplicationSearch())!;
     const { default: StatusFilter } = await import("./StatusFilter.vue");
-    wrapper = shallowMount(StatusFilter);
+    wrapper = shallowMount(StatusFilter, { global: { stubs: { FilterWithHelp: false } } });
   });
 
   afterEach(() => {
