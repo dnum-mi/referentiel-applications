@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.107.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.107.0...v1.107.1) (2026-11-26)
+
+
+### Bug Fixes
+
+* align footer titles with link names ([#3375](https://github.com/dnum-mi/referentiel-applications/issues/3375)) ([e51c929](https://github.com/dnum-mi/referentiel-applications/commit/e51c92956cd35c567ac38fde7861839c7273ce1e))
+* announce external links in their content ([#3376](https://github.com/dnum-mi/referentiel-applications/issues/3376)) ([9f380fe](https://github.com/dnum-mi/referentiel-applications/commit/9f380fe17c9df3eaa713dcf7d868c1a81b2ffc11))
+* describe footer email contact accurately ([#3373](https://github.com/dnum-mi/referentiel-applications/issues/3373)) ([1ee464a](https://github.com/dnum-mi/referentiel-applications/commit/1ee464aad756cb7b2727fda868e1d5e723999b82))
+* explain disabled Grist sync actions ([#3378](https://github.com/dnum-mi/referentiel-applications/issues/3378)) ([d18d471](https://github.com/dnum-mi/referentiel-applications/commit/d18d471281e1063abd63b5805802d135d11956f8))
+* expose combobox search requirements ([#3372](https://github.com/dnum-mi/referentiel-applications/issues/3372)) ([71122b7](https://github.com/dnum-mi/referentiel-applications/commit/71122b769757c77058d1998246aada57db06c922))
+* improve brand text accessibility ([#3374](https://github.com/dnum-mi/referentiel-applications/issues/3374)) ([a482e6b](https://github.com/dnum-mi/referentiel-applications/commit/a482e6b237af7c78b65fa820e8cb2b2c5c67c550))
+* separate filter help from labels ([#3377](https://github.com/dnum-mi/referentiel-applications/issues/3377)) ([495608a](https://github.com/dnum-mi/referentiel-applications/commit/495608a5ae50978f8fd40465c34433575457afd4))
+
 ## [1.107.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.106.0...v1.107.0) (2026-11-25)
 
 
