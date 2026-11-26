@@ -60,65 +60,65 @@ watchDebounced(
 </script>
 
 <template>
-  <DsfrSelect
-    v-model="selectedActorTypeId"
-    :options="actorTypeOptions"
-    aria-describedby="actor-type-tooltip-desc"
-    data-testid="actor-filter-select"
-  >
-    <template #label>
-      <span style="display: inline-flex; align-items: center; gap: 0.25rem">
-        Type d'acteur
-        <DsfrTooltip
-          aria-label="Afficher l’aide sur le filtre Type d’acteur"
-          id="actor-type-tooltip-desc"
-          content="Filtre les applications selon le type d'acteur associé (maîtrise d'ouvrage, maîtrise d'œuvre…), ou selon l'absence de MOA ou de MOE."
-        />
-      </span>
+  <FilterWithHelp>
+    <DsfrSelect
+      v-model="selectedActorTypeId"
+      :options="actorTypeOptions"
+      aria-describedby="actor-type-tooltip-desc"
+      data-testid="actor-filter-select"
+    >
+      <template #label>Type d'acteur</template>
+    </DsfrSelect>
+    <template #help>
+      <DsfrTooltip
+        aria-label="Afficher l’aide sur le filtre Type d’acteur"
+        id="actor-type-tooltip-desc"
+        content="Filtre les applications selon le type d'acteur associé (maîtrise d'ouvrage, maîtrise d'œuvre…), ou selon l'absence de MOA ou de MOE."
+      />
     </template>
-  </DsfrSelect>
+  </FilterWithHelp>
 
-  <DsfrInput
-    :model-value="filters.actorEmail || ''"
-    label-visible
-    type="email"
-    description-id="actor-email-tooltip-desc"
-    data-testid="actor-email-filter-input"
-    class="fr-mb-2w"
-    @update:model-value="setFilter({ actorEmail: $event ? String($event) : undefined, page: 0 })"
-  >
-    <template #label>
-      <span style="display: inline-flex; align-items: center; gap: 0.25rem">
-        Email
-        <DsfrTooltip
-          aria-label="Afficher l’aide sur le filtre Email"
-          id="actor-email-tooltip-desc"
-          content="Recherche les applications ayant un acteur dont l'adresse email contient le texte saisi."
-        />
-      </span>
+  <FilterWithHelp>
+    <DsfrInput
+      :model-value="filters.actorEmail || ''"
+      label-visible
+      type="email"
+      description-id="actor-email-tooltip-desc"
+      data-testid="actor-email-filter-input"
+      class="fr-mb-2w"
+      @update:model-value="setFilter({ actorEmail: $event ? String($event) : undefined, page: 0 })"
+    >
+      <template #label>Email</template>
+    </DsfrInput>
+    <template #help>
+      <DsfrTooltip
+        aria-label="Afficher l’aide sur le filtre Email"
+        id="actor-email-tooltip-desc"
+        content="Recherche les applications ayant un acteur dont l'adresse email contient le texte saisi."
+      />
     </template>
-  </DsfrInput>
+  </FilterWithHelp>
 
-  <DsfrInput
-    :model-value="filters.organization || ''"
-    label-visible
-    list="organizationSuggestionsList"
-    placeholder="Rechercher une organisation"
-    description-id="actor-organization-tooltip-desc"
-    data-testid="organization-filter-input"
-    @update:model-value="setFilter({ organization: $event ? String($event) : undefined, page: 0 })"
-  >
-    <template #label>
-      <span style="display: inline-flex; align-items: center; gap: 0.25rem">
-        Nom de l'organisation
-        <DsfrTooltip
-          aria-label="Afficher l’aide sur le filtre Organisation"
-          id="actor-organization-tooltip-desc"
-          content="Recherche les applications rattachées à une organisation dont le nom contient le texte saisi."
-        />
-      </span>
+  <FilterWithHelp>
+    <DsfrInput
+      :model-value="filters.organization || ''"
+      label-visible
+      list="organizationSuggestionsList"
+      placeholder="Rechercher une organisation"
+      description-id="actor-organization-tooltip-desc"
+      data-testid="organization-filter-input"
+      @update:model-value="setFilter({ organization: $event ? String($event) : undefined, page: 0 })"
+    >
+      <template #label>Nom de l'organisation</template>
+    </DsfrInput>
+    <template #help>
+      <DsfrTooltip
+        aria-label="Afficher l’aide sur le filtre Organisation"
+        id="actor-organization-tooltip-desc"
+        content="Recherche les applications rattachées à une organisation dont le nom contient le texte saisi."
+      />
     </template>
-  </DsfrInput>
+  </FilterWithHelp>
   <datalist id="organizationSuggestionsList" data-testid="organization-suggestions-list">
     <option v-for="organization in organizations" :key="organization.id" :data-testid="`organization-option-${organization.id}`">
       {{ organization.path }}
