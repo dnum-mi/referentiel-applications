@@ -92,6 +92,7 @@ async function removeTag(index: number) {
         display-menu="overlay"
         placeholder="Rechercher un tag"
         :min-length="2"
+        :description-id="tooltipContent ? tooltipId : undefined"
         :on-change="addTag"
         :display-no-result="true"
         :display-label="(item) => item.name"

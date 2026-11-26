@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import type { ApplicationDto } from "@/client";
 import { useAsyncSearch } from "@/composables/use-async-search";
+import { MIN_CHAR_FOR_SEARCH } from "@/constants/min-char-for-search";
 import { generateId } from "@/utils/generator-utils";
 import { watchDebounced } from "@vueuse/core";
 import { computed, nextTick, ref, watch } from "vue";
@@ -31,6 +32,7 @@ const inputId = generateId("suggestions-input");
 const inputElement = ref<HTMLInputElement>();
 const listId = `${inputId}-list`;
 const statusId = `${inputId}-status`;
+const hintId = `${inputId}-hint`;
 const highlightedIndex = ref(-1);
 const isOpen = ref(false);
 const searchSuggestion = ref("");
@@ -62,6 +64,8 @@ const activeDescendant = computed(() =>
 const statusText = computed(() => {
   if (selectionAnnouncement.value) return selectionAnnouncement.value;
   if (!isOpen.value) return "";
+  const remaining = MIN_CHAR_FOR_SEARCH - input.value.length;
+  if (input.value && remaining > 0) return `Saisissez encore ${remaining} caractère${remaining > 1 ? "s" : ""}.`;
   if (isLoading.value) return "Recherche en cours…";
   if (!hasSearched.value || error.value) return "";
   const count = suggestions.value.length;
@@ -158,6 +162,7 @@ async function onKeydown(event: KeyboardEvent) {
         :content="props.tooltipContent"
       />
     </div>
+    <span :id="hintId" class="fr-hint-text">Saisissez au moins {{ MIN_CHAR_FOR_SEARCH }} caractères</span>
     <input
       :id="inputId"
       ref="inputElement"
@@ -171,7 +176,7 @@ async function onKeydown(event: KeyboardEvent) {
       :aria-controls="isListOpen ? listId : undefined"
       :aria-activedescendant="activeDescendant"
       :placeholder="props.placeholder"
-      :aria-describedby="props.tooltipContent ? `${inputId}-tooltip` : undefined"
+      :aria-describedby="[hintId, props.tooltipContent ? `${inputId}-tooltip` : undefined].filter(Boolean).join(' ')"
       @keydown="onKeydown"
       @focus="isOpen = true"
       @blur="isOpen = false"
