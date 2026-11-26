@@ -107,7 +107,11 @@ describe("Aides et champs de filtres", () => {
     const wrapper = mount(component, { attachTo: document.body, props: { tooltipContent: "Aide à la recherche" } });
     await flushPromises();
     const fieldset = wrapper.findAll("fieldset").find((group) => group.find("legend").text() === name);
-    expect(fieldset?.element).toHaveAccessibleName(name);
+    if (!fieldset) throw new Error(`Groupe de filtres introuvable : ${name}`);
+    expect(fieldset.element).toHaveAccessibleName(name);
+    const help = fieldset.get(".fr-btn--tooltip");
+    expect(fieldset.attributes("aria-describedby")?.split(/\s+/)).toContain(help.attributes("aria-describedby"));
+    expect(fieldset.element).toHaveAccessibleDescription(/.+/);
     for (const help of wrapper.findAll(".fr-btn--tooltip")) expect(help.element.closest("label, legend")).toBeNull();
   });
 
@@ -118,7 +122,7 @@ describe("Aides et champs de filtres", () => {
     });
     const input = wrapper.get('[role="combobox"]');
     expect(input.element).toHaveAccessibleName("Direction métier");
-    expect(input.element).toHaveAccessibleDescription("Recherche les directions métier.");
+    expect(input.element).toHaveAccessibleDescription(/Recherche les directions métier\./);
     expect(wrapper.get(".fr-btn--tooltip").element.closest("label")).toBeNull();
   });
 

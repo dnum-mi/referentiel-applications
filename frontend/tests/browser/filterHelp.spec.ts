@@ -34,8 +34,11 @@ for (const viewport of [
       "Affiche uniquement les applications sans hébergement renseigné.",
     );
     await expect(sidebar.getByRole("combobox", { name: "Direction métier", exact: true })).toBeVisible();
-    for (const name of ["Tags", "Conformité", "Indice de qualité", "Statut de l'application", "Priorité de redémarrage"])
-      await expect(sidebar.getByRole("group", { name, exact: true })).toBeVisible();
+    for (const name of ["Tags", "Conformité", "Indice de qualité", "Statut de l'application", "Priorité de redémarrage"]) {
+      const group = sidebar.getByRole("group", { name, exact: true });
+      await expect(group).toBeVisible();
+      await expect(group).toHaveAccessibleDescription(/.+/);
+    }
     const helps = sidebar.locator(".fr-btn--tooltip");
     expect(await helps.count()).toBeGreaterThanOrEqual(33);
     for (const help of await helps.all()) {

@@ -25,6 +25,7 @@ const selectedPriorities = computed({
     v-model="selectedPriorities"
     :options="priorityCheckboxOptions"
     data-testid="priority-restart-filter"
+    aria-describedby="priority-legend-tooltip-desc"
   >
     <template #legend>Priorité de redémarrage</template>
     <DsfrTooltip

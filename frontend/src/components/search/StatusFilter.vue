@@ -53,7 +53,12 @@ const selectedStatuses = computed({
         </template>
       </FilterWithHelp>
     </div>
-    <DsfrCheckboxSet class="filter-checkbox-set" v-model="selectedStatuses" :options="statusCheckboxOptions">
+    <DsfrCheckboxSet
+      class="filter-checkbox-set"
+      v-model="selectedStatuses"
+      :options="statusCheckboxOptions"
+      aria-describedby="status-legend-tooltip-desc"
+    >
       <template #legend>Statut de l'application</template>
       <DsfrTooltip
         class="fieldset-help"

@@ -1,5 +1,5 @@
 diff --git a/dist/vue-dsfr.js b/dist/vue-dsfr.js
-index a437ecea2645779b318954776838c39739b1610c..7cabb74518e12d80b8722d1b280440a56f27e6db 100644
+index a437ecea2645779b318954776838c39739b1610c..c99491c112bc7018aa263140e5d22cfc3b9435b0 100644
 --- a/dist/vue-dsfr.js
 +++ b/dist/vue-dsfr.js
 @@ -717,7 +717,7 @@ var _hoisted_1$70 = { class: "fr-accordion" }, _hoisted_2$54 = ["aria-expanded",
@@ -11,7 +11,23 @@ index a437ecea2645779b318954776838c39739b1610c..7cabb74518e12d80b8722d1b280440a5
  			}), null, 16, _hoisted_1$61), [[vModelCheckbox, s.value]]),
  			createElementVNode("label", {
  				for: e.id,
-@@ -1588,6 +1588,7 @@ var _hoisted_1$70 = { class: "fr-accordion" }, _hoisted_2$54 = ["aria-expanded",
+@@ -735,6 +735,7 @@ var _hoisted_1$70 = { class: "fr-accordion" }, _hoisted_2$54 = ["aria-expanded",
+ }), [["__scopeId", "data-v-a88dd297"]]), _hoisted_1$60 = { class: "fr-form-group" }, _hoisted_2$47 = [
+ 	"disabled",
+ 	"aria-labelledby",
++	"aria-describedby",
+ 	"aria-invalid",
+ 	"role"
+ ], _hoisted_3$40 = ["id"], _hoisted_4$33 = {
+@@ -768,6 +769,7 @@ var _hoisted_1$70 = { class: "fr-accordion" }, _hoisted_2$54 = ["aria-expanded",
+ 			}]),
+ 			disabled: e.disabled,
+ 			"aria-labelledby": f.value,
++			"aria-describedby": r.$attrs["aria-describedby"],
+ 			"aria-invalid": e.ariaInvalid,
+ 			role: e.errorMessage || e.validMessage ? "group" : void 0
+ 		}, [
+@@ -1588,6 +1590,7 @@ var _hoisted_1$70 = { class: "fr-accordion" }, _hoisted_2$54 = ["aria-expanded",
  			[String(e.icon)]: p.value
  		}] }, f.value, {
  			target: e.target,
@@ -19,7 +35,7 @@ index a437ecea2645779b318954776838c39739b1610c..7cabb74518e12d80b8722d1b280440a5
  			onClick: withModifiers(e.onClick, ["stop"])
  		}), {
  			default: withCtx(() => [
-@@ -1605,6 +1606,7 @@ var _hoisted_1$70 = { class: "fr-accordion" }, _hoisted_2$54 = ["aria-expanded",
+@@ -1605,6 +1608,7 @@ var _hoisted_1$70 = { class: "fr-accordion" }, _hoisted_2$54 = ["aria-expanded",
  		}, 16, [
  			"class",
  			"target",
@@ -27,7 +43,7 @@ index a437ecea2645779b318954776838c39739b1610c..7cabb74518e12d80b8722d1b280440a5
  			"onClick"
  		]));
  	}
-@@ -2990,7 +2992,7 @@ var FocusTrapProps = defineFocusTrapProps({
+@@ -2990,7 +2994,7 @@ var FocusTrapProps = defineFocusTrapProps({
  		let r = e, i = n, a = useSlots(), p = toRef(r, "languageSelector"), m = ref(!1), h = ref(!1), g = ref(!1), _ = () => {
  			g.value = !1, m.value = !1, h.value = !1, document.getElementById("button-menu")?.focus();
  		}, y = (e) => {
@@ -36,7 +52,7 @@ index a437ecea2645779b318954776838c39739b1610c..7cabb74518e12d80b8722d1b280440a5
  		};
  		onMounted(() => {
  			document.addEventListener("keydown", y);
-@@ -3280,11 +3282,11 @@ var FocusTrapProps = defineFocusTrapProps({
+@@ -3280,11 +3284,11 @@ var FocusTrapProps = defineFocusTrapProps({
  	emits: ["close"],
  	setup(e, { emit: n }) {
  		let r = e, i = n, a = (e) => {
@@ -50,7 +66,7 @@ index a437ecea2645779b318954776838c39739b1610c..7cabb74518e12d80b8722d1b280440a5
  			}, 100)) : m.value?.close(), h(e);
  		});
  		function h(e) {
-@@ -4762,11 +4764,22 @@ var _hoisted_1$24 = [
+@@ -4762,11 +4766,22 @@ var _hoisted_1$24 = [
  		};
  		function s(e) {
  			let n = o[e?.key];
