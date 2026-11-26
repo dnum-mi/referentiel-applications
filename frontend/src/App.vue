@@ -196,9 +196,8 @@ const mandatoryLinks = [
   },
   {
     label: "Contacter l'équipe",
-    title: "Contacter l'équipe par email - nouvelle fenêtre",
+    title: "Contacter l'équipe par e-mail",
     href: "mailto:support-referentiel-applications@interieur.gouv.fr",
-    target: "_blank",
     icon: "fr-icon-mail-line",
     to: undefined,
   },
