@@ -176,15 +176,19 @@ const ecosystemLinks = computed(() => {
   return links
     .map((link) => ({ ...link, href: link.href.trim() }))
     .filter((link) => link.href && link.href !== "#")
-    .map((link) => ({
-      ...link,
-      // DSFR ouvre ces liens dans une nouvelle fenêtre.
-      title: link.title?.includes("nouvelle fenêtre") ? link.title : `${link.title ?? link.label} - nouvelle fenêtre`,
-    }));
+    .map((link) => {
+      // Reprendre aussi l'annonce ajoutée au contenu par DsfrFooter, avant tout complément.
+      const name = `${link.label} - nouvelle fenêtre`;
+      const detail = link.title?.replace(/ - nouvelle fenêtre$/, "").trim();
+      return {
+        ...link,
+        title: detail && detail !== link.label ? `${name} - ${detail}` : name,
+      };
+    });
 });
 const mandatoryLinks = [
-  { label: accessibilityDeclaration.complianceMention, title: "Aller à la page d'accessibilité", to: { name: routeNames.ACCESSIBILITE } },
-  { label: "Plan du site", title: "Aller au plan du site", to: { name: routeNames.SITEMAP } },
+  { label: accessibilityDeclaration.complianceMention, to: { name: routeNames.ACCESSIBILITE } },
+  { label: "Plan du site", to: { name: routeNames.SITEMAP } },
   {
     // L'annonce de nouvelle fenêtre est ajoutée dans le contenu par DsfrFooterLink.
     label: "Contact Tchap",
@@ -296,6 +300,7 @@ const { needRefresh, updateServiceWorker } = useAppUpdate();
     :operator-img-alt="operatorImgAlt"
     :operator-img-style="operatorImgStyle"
     :home-link="homeLink"
+    :home-title="`${operatorImgAlt} - Retour à l'accueil`"
     :ecosystem-links="ecosystemLinks"
     :mandatory-links="mandatoryLinks"
     :after-mandatory-links="afterMandatoryLinks"
