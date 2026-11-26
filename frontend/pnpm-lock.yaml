@@ -35,7 +35,7 @@ overrides:
 
 patchedDependencies:
   '@gouvminint/vue-dsfr@8.15.0':
-    hash: 847cd343790f053ffa6fec264b2026130b4a87969d3244bc85f637aabfe27787
+    hash: 870c21e3fa9e067f6b36921556e4e3c5569580e7ffb5654b56c7da8b2f121f94
     path: patches/@gouvminint__vue-dsfr@8.15.0.patch
 
 importers:
@@ -47,7 +47,7 @@ importers:
         version: 1.14.4
       '@gouvminint/vue-dsfr':
         specifier: ~8.15.0
-        version: 8.15.0(patch_hash=847cd343790f053ffa6fec264b2026130b4a87969d3244bc85f637aabfe27787)(@iconify/vue@4.3.0(vue@3.5.43(typescript@5.8.3)))(vue-router@4.6.4(vue@3.5.43(typescript@5.8.3)))(vue@3.5.43(typescript@5.8.3))
+        version: 8.15.0(patch_hash=870c21e3fa9e067f6b36921556e4e3c5569580e7ffb5654b56c7da8b2f121f94)(@iconify/vue@4.3.0(vue@3.5.43(typescript@5.8.3)))(vue-router@4.6.4(vue@3.5.43(typescript@5.8.3)))(vue@3.5.43(typescript@5.8.3))
       '@primevue/themes':
         specifier: ^4.5.4
         version: 4.5.4
@@ -4293,7 +4293,7 @@ snapshots:
 
   '@gouvfr/dsfr@1.14.4': {}
 
-  '@gouvminint/vue-dsfr@8.15.0(patch_hash=847cd343790f053ffa6fec264b2026130b4a87969d3244bc85f637aabfe27787)(@iconify/vue@4.3.0(vue@3.5.43(typescript@5.8.3)))(vue-router@4.6.4(vue@3.5.43(typescript@5.8.3)))(vue@3.5.43(typescript@5.8.3))':
+  '@gouvminint/vue-dsfr@8.15.0(patch_hash=870c21e3fa9e067f6b36921556e4e3c5569580e7ffb5654b56c7da8b2f121f94)(@iconify/vue@4.3.0(vue@3.5.43(typescript@5.8.3)))(vue-router@4.6.4(vue@3.5.43(typescript@5.8.3)))(vue@3.5.43(typescript@5.8.3))':
     dependencies:
       '@gouvfr/dsfr': 1.14.4
       '@iconify/vue': 4.3.0(vue@3.5.43(typescript@5.8.3))

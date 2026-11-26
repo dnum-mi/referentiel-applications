@@ -1,8 +1,33 @@
 diff --git a/dist/vue-dsfr.js b/dist/vue-dsfr.js
-index a437ecea2645779b318954776838c39739b1610c..b641ea17f234c4398d380510e6159462d94a152d 100644
+index a437ecea2645779b318954776838c39739b1610c..c99491c112bc7018aa263140e5d22cfc3b9435b0 100644
 --- a/dist/vue-dsfr.js
 +++ b/dist/vue-dsfr.js
-@@ -1588,6 +1588,8 @@ var _hoisted_1$70 = { class: "fr-accordion" }, _hoisted_2$54 = ["aria-expanded",
+@@ -717,7 +717,7 @@ var _hoisted_1$70 = { class: "fr-accordion" }, _hoisted_2$54 = ["aria-expanded",
+ 				"data-testid": `input-checkbox-${e.id}`,
+ 				"data-test": `input-checkbox-${e.id}`,
+ 				tabindex: e.readonly ? -1 : void 0,
+-				"aria-describedby": i.value
++				"aria-describedby": [n.$attrs["aria-describedby"], i.value].filter(Boolean).join(" ") || void 0
+ 			}), null, 16, _hoisted_1$61), [[vModelCheckbox, s.value]]),
+ 			createElementVNode("label", {
+ 				for: e.id,
+@@ -735,6 +735,7 @@ var _hoisted_1$70 = { class: "fr-accordion" }, _hoisted_2$54 = ["aria-expanded",
+ }), [["__scopeId", "data-v-a88dd297"]]), _hoisted_1$60 = { class: "fr-form-group" }, _hoisted_2$47 = [
+ 	"disabled",
+ 	"aria-labelledby",
++	"aria-describedby",
+ 	"aria-invalid",
+ 	"role"
+ ], _hoisted_3$40 = ["id"], _hoisted_4$33 = {
+@@ -768,6 +769,7 @@ var _hoisted_1$70 = { class: "fr-accordion" }, _hoisted_2$54 = ["aria-expanded",
+ 			}]),
+ 			disabled: e.disabled,
+ 			"aria-labelledby": f.value,
++			"aria-describedby": r.$attrs["aria-describedby"],
+ 			"aria-invalid": e.ariaInvalid,
+ 			role: e.errorMessage || e.validMessage ? "group" : void 0
+ 		}, [
+@@ -1588,6 +1590,8 @@ var _hoisted_1$70 = { class: "fr-accordion" }, _hoisted_2$54 = ["aria-expanded",
  			[String(e.icon)]: p.value
  		}] }, f.value, {
  			target: e.target,
@@ -11,7 +36,7 @@ index a437ecea2645779b318954776838c39739b1610c..b641ea17f234c4398d380510e6159462
  			onClick: withModifiers(e.onClick, ["stop"])
  		}), {
  			default: withCtx(() => [
-@@ -1596,6 +1598,7 @@ var _hoisted_1$70 = { class: "fr-accordion" }, _hoisted_2$54 = ["aria-expanded",
+@@ -1596,6 +1600,7 @@ var _hoisted_1$70 = { class: "fr-accordion" }, _hoisted_2$54 = ["aria-expanded",
  					class: "fr-mr-1w"
  				}, m.value), null, 16)) : createCommentVNode("", !0),
  				createTextVNode(" " + toDisplayString(e.label) + " ", 1),
@@ -19,7 +44,7 @@ index a437ecea2645779b318954776838c39739b1610c..b641ea17f234c4398d380510e6159462
  				!p.value && (e.icon || e.iconAttrs?.name) && e.iconRight ? (openBlock(), createBlock(VIcon_default, mergeProps({
  					key: 1,
  					class: "fr-ml-1w"
-@@ -1605,6 +1608,7 @@ var _hoisted_1$70 = { class: "fr-accordion" }, _hoisted_2$54 = ["aria-expanded",
+@@ -1605,6 +1610,7 @@ var _hoisted_1$70 = { class: "fr-accordion" }, _hoisted_2$54 = ["aria-expanded",
  		}, 16, [
  			"class",
  			"target",
@@ -27,7 +52,7 @@ index a437ecea2645779b318954776838c39739b1610c..b641ea17f234c4398d380510e6159462
  			"onClick"
  		]));
  	}
-@@ -1825,20 +1829,20 @@ var _hoisted_1$70 = { class: "fr-accordion" }, _hoisted_2$54 = ["aria-expanded",
+@@ -1825,20 +1831,20 @@ var _hoisted_1$70 = { class: "fr-accordion" }, _hoisted_2$54 = ["aria-expanded",
  					target: "_blank",
  					rel: "noopener noreferrer",
  					title: r
@@ -52,7 +77,7 @@ index a437ecea2645779b318954776838c39739b1610c..b641ea17f234c4398d380510e6159462
  					_: 1
  				}, 16, [
  					"to",
-@@ -2990,7 +2994,7 @@ var FocusTrapProps = defineFocusTrapProps({
+@@ -2990,7 +2996,7 @@ var FocusTrapProps = defineFocusTrapProps({
  		let r = e, i = n, a = useSlots(), p = toRef(r, "languageSelector"), m = ref(!1), h = ref(!1), g = ref(!1), _ = () => {
  			g.value = !1, m.value = !1, h.value = !1, document.getElementById("button-menu")?.focus();
  		}, y = (e) => {
@@ -61,7 +86,7 @@ index a437ecea2645779b318954776838c39739b1610c..b641ea17f234c4398d380510e6159462
  		};
  		onMounted(() => {
  			document.addEventListener("keydown", y);
-@@ -3280,11 +3284,11 @@ var FocusTrapProps = defineFocusTrapProps({
+@@ -3280,11 +3286,11 @@ var FocusTrapProps = defineFocusTrapProps({
  	emits: ["close"],
  	setup(e, { emit: n }) {
  		let r = e, i = n, a = (e) => {
@@ -75,7 +100,7 @@ index a437ecea2645779b318954776838c39739b1610c..b641ea17f234c4398d380510e6159462
  			}, 100)) : m.value?.close(), h(e);
  		});
  		function h(e) {
-@@ -4762,11 +4766,22 @@ var _hoisted_1$24 = [
+@@ -4762,11 +4768,22 @@ var _hoisted_1$24 = [
  		};
  		function s(e) {
  			let n = o[e?.key];
