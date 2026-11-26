@@ -77,6 +77,17 @@ it("rend le lien de version dans le pied de page de l’application", async () =
   expect(link.element).toHaveAccessibleName(`Version : ${__APP_VERSION__} sur GitHub (nouvelle fenêtre)`);
 });
 
+it("décrit le contact par e-mail sans annoncer une nouvelle fenêtre", async () => {
+  const wrapper = await renderApp(true);
+  const link = wrapper.get('footer a[href="mailto:support-referentiel-applications@interieur.gouv.fr"]');
+
+  expect(link.attributes("target")).toBeUndefined();
+  expect(link.attributes("rel")).toBeUndefined();
+  expect(link.attributes("title")).toBe("Contacter l'équipe par e-mail");
+  expect(link.element).toHaveAccessibleName("Contacter l'équipe");
+  expect(link.element).not.toHaveAccessibleDescription(/nouvelle fenêtre/);
+});
+
 it.each([false, true])("retire le bandeau public et son lien d'évitement, session initialisée = %s", async (initialized) => {
   session.sessionInitialized = initialized;
   const wrapper = await renderApp();

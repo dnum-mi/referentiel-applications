@@ -17,11 +17,13 @@ function applyRgaaEnhancements() {
   // RGAA-008 / RGAA-013 — restituer la devise « Liberté, égalité, fraternité »,
   // rendue par DSFR via des pseudo-éléments CSS et donc muette pour les lecteurs d'écran.
   document.querySelectorAll<HTMLElement>(".fr-logo").forEach((logo) => {
+    // La coupure du bloc-marque est visuelle et ne porte pas d'information.
+    logo.querySelectorAll("br").forEach((lineBreak) => lineBreak.setAttribute("role", "presentation"));
     if (logo.querySelector("[data-rgaa-devise]")) return;
     const span = document.createElement("span");
     span.className = "fr-sr-only";
     span.dataset.rgaaDevise = "";
-    span.textContent = DEVISE;
+    span.textContent = ` ${DEVISE}`;
     logo.appendChild(span);
   });
 

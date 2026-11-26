@@ -12,6 +12,32 @@ function renderAutocomplete(search: (query: string) => Promise<string[]>) {
 afterEach(() => vi.useRealTimers());
 
 describe("AccessibleAutocomplete", () => {
+  it("décrit le minimum visible et conserve les aides, sans rechercher avant le seuil", async () => {
+    vi.useFakeTimers();
+    const search = vi.fn(() => Promise.resolve(["Alpha"]));
+    const wrapper = mount(AccessibleAutocomplete<string>, {
+      props: { search, displayLabel: (item: string) => item, minLength: 2, descriptionId: "tag-tooltip" },
+    });
+    const input = wrapper.get("input");
+    const hint = wrapper.get(".fr-hint-text");
+    expect(hint.text()).toBe("Saisissez au moins 2 caractères");
+    expect(input.attributes("aria-describedby")?.split(" ")).toEqual([
+      hint.attributes("id"),
+      "tag-tooltip",
+      `${input.attributes("id")}-helptext`,
+    ]);
+    await input.setValue("a");
+    await vi.advanceTimersByTimeAsync(300);
+    expect(search).not.toHaveBeenCalled();
+    expect(wrapper.get("output").text()).toBe("Saisissez encore 1 caractère.");
+    expect(hint.isVisible()).toBe(true);
+    await input.setValue("al");
+    await vi.advanceTimersByTimeAsync(300);
+    expect(search).toHaveBeenCalledExactlyOnceWith("al");
+    expect(wrapper.get("output").text()).toContain("1 suggestion disponible");
+    wrapper.unmount();
+  });
+
   it("présente un résultat vide comme statut sans ouvrir une liste sans option", async () => {
     vi.useFakeTimers();
     const wrapper = mount(AccessibleAutocomplete<string>, {
