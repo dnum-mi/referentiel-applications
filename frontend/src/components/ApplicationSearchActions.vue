@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, useId } from "vue";
 import type { Ref } from "vue";
 import { useRouter } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
@@ -126,15 +126,7 @@ const hasGristSyncPermissions = computed(() => {
 const isGristConfigured = computed(
   () => !!userStore.user?.gristUrl && !!userStore.user?.hasGristApiKey && (userStore.user?.gristDocIds?.length ?? 0) > 0,
 );
-const gristSyncTitle = computed(() =>
-  isGristConfigured.value
-    ? "Synchroniser avec Grist les applications correspondant aux filtres actuels, dans les tables de votre choix"
-    : "Renseignez votre connexion et vos documents Grist dans l'onglet « Synchronisation Grist » de votre profil pour synchroniser",
-);
-const gristSyncLabel = computed(
-  () =>
-    `${isGristConfigured.value ? gristSyncTitle.value : `Synchroniser avec Grist. ${gristSyncTitle.value}`}${isBeta(FeatureId.GRIST_SYNC) ? " — fonctionnalité bêta" : ""}`,
-);
+const gristSyncHintId = `grist-sync-${useId()}-hint`;
 
 const hasCreateApplicationsPermissions = computed(() => {
   return userStore.hasPermissions([Permission.CREATE_APPLICATION]);
@@ -270,11 +262,10 @@ const hasQualityCampaignPermissions = computed(() => {
         class="action-btn icon-left hide-on-mobile"
         aria-haspopup="dialog"
         @click="openGristSync"
-        :aria-label="gristSyncLabel"
-        :title="gristSyncTitle"
+        :aria-describedby="!isGristConfigured ? gristSyncHintId : undefined"
       >
         Synchroniser avec Grist
-        <BetaBadge v-if="isBeta(FeatureId.GRIST_SYNC)" aria-hidden="true" />
+        <BetaBadge v-if="isBeta(FeatureId.GRIST_SYNC)" />
       </DsfrButton>
 
       <DsfrButton
@@ -286,11 +277,10 @@ const hasQualityCampaignPermissions = computed(() => {
         class="action-btn icon-left show-on-mobile"
         aria-haspopup="dialog"
         @click="openGristSync"
-        :aria-label="gristSyncLabel"
-        :title="gristSyncTitle"
+        :aria-describedby="!isGristConfigured ? gristSyncHintId : undefined"
       >
         Synchroniser avec Grist
-        <BetaBadge v-if="isBeta(FeatureId.GRIST_SYNC)" aria-hidden="true" />
+        <BetaBadge v-if="isBeta(FeatureId.GRIST_SYNC)" />
       </DsfrButton>
 
       <DsfrButton
@@ -307,6 +297,11 @@ const hasQualityCampaignPermissions = computed(() => {
 
       <ColumnCustomization data-testid="column-customization" />
     </div>
+    <p v-if="hasGristSyncPermissions && !isGristConfigured" :id="gristSyncHintId" class="fr-hint-text fr-mt-2v fr-mb-0">
+      Pour synchroniser, renseignez votre connexion et vos documents Grist dans l'onglet «
+      <RouterLink :to="{ name: routeNames.PROFILE, query: { tab: 'grist' } }">Synchronisation Grist</RouterLink>
+      » de votre profil.
+    </p>
   </div>
 
   <ReportModal

@@ -12,13 +12,6 @@ import { useRoute } from "vue-router";
 const { canAccess, isBeta } = useBetaFeatures();
 const activeTab = ref(0);
 const route = useRoute();
-watch(
-  () => route.query.tab,
-  (tab) => {
-    if (tab === "tokens") activeTab.value = 1;
-  },
-  { immediate: true },
-);
 const profileRoot = useTemplateRef<HTMLElement>("profileRoot");
 
 // Onglet réservé aux utilisateurs qui peuvent synchroniser avec Grist ; placé en dernier pour ne pas
@@ -48,6 +41,21 @@ const tabDefinitions = [
   },
 ];
 const tabs = computed(() => tabDefinitions.filter((tab) => hasGristSync.value || tab.tabId !== "grist"));
+
+let tabLinkHandled = false;
+watch(
+  [() => route.query.tab, hasGristSync],
+  ([tab], [previousTab]) => {
+    if (tab !== previousTab) tabLinkHandled = false;
+    if (tabLinkHandled || (tab !== "tokens" && tab !== "grist")) return;
+    const index = tabs.value.findIndex(({ tabId }) => tabId === tab);
+    if (index >= 0) {
+      activeTab.value = index;
+      tabLinkHandled = true;
+    }
+  },
+  { immediate: true },
+);
 
 watch(hasGristSync, async () => {
   if (activeTab.value < tabs.value.length) return;
