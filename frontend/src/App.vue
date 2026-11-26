@@ -190,19 +190,17 @@ const mandatoryLinks = [
   { label: accessibilityDeclaration.complianceMention, to: { name: routeNames.ACCESSIBILITE } },
   { label: "Plan du site", to: { name: routeNames.SITEMAP } },
   {
-    // RGAA-015 : ouverture dans un nouvel onglet mentionnée dans l'intitulé.
+    // L'annonce de nouvelle fenêtre est ajoutée dans le contenu par DsfrFooterLink.
     label: "Contact Tchap",
     title: "Contact Tchap - nouvelle fenêtre",
-    "aria-label": "Contact Tchap - nouvelle fenêtre",
     href: "https://www.tchap.gouv.fr/#/room/!ydoKqFOXRAQPQYFvqa:agent.interieur.tchap.gouv.fr?via=agent.interieur.tchap.gouv.fr",
     target: "_blank",
     to: undefined,
   },
   {
     label: "Contacter l'équipe",
-    title: "Contacter l'équipe par email - nouvelle fenêtre",
+    title: "Contacter l'équipe par e-mail",
     href: "mailto:support-referentiel-applications@interieur.gouv.fr",
-    target: "_blank",
     icon: "fr-icon-mail-line",
     to: undefined,
   },

@@ -73,13 +73,13 @@ it("annonce la nouvelle fenêtre du lien Tchap dans le pied de page rendu", asyn
   const wrapper = await renderApp(true);
   const link = wrapper.get('footer a[href^="https://www.tchap.gouv.fr/"]');
 
-  expect(link.text()).toBe("Contact Tchap");
   expect(link.attributes("href")).toBe(
     "https://www.tchap.gouv.fr/#/room/!ydoKqFOXRAQPQYFvqa:agent.interieur.tchap.gouv.fr?via=agent.interieur.tchap.gouv.fr",
   );
   expect(link.attributes("target")).toBe("_blank");
   expect(link.attributes("title")).toBe("Contact Tchap - nouvelle fenêtre");
-  expect(link.attributes("aria-label")).toBe("Contact Tchap - nouvelle fenêtre");
+  expect(link.attributes("aria-label")).toBeUndefined();
+  expect(link.get(".fr-sr-only").text()).toBe("- nouvelle fenêtre");
   expect(link.element).toHaveAccessibleName("Contact Tchap - nouvelle fenêtre");
 });
 
@@ -87,6 +87,17 @@ it("rend le lien de version dans le pied de page de l’application", async () =
   const wrapper = await renderApp(true);
   const link = wrapper.get("footer .fr-footer__content-desc a");
   expect(link.element).toHaveAccessibleName(`Version : ${__APP_VERSION__} sur GitHub (nouvelle fenêtre)`);
+});
+
+it("décrit le contact par e-mail sans annoncer une nouvelle fenêtre", async () => {
+  const wrapper = await renderApp(true);
+  const link = wrapper.get('footer a[href="mailto:support-referentiel-applications@interieur.gouv.fr"]');
+
+  expect(link.attributes("target")).toBeUndefined();
+  expect(link.attributes("rel")).toBeUndefined();
+  expect(link.attributes("title")).toBe("Contacter l'équipe par e-mail");
+  expect(link.element).toHaveAccessibleName("Contacter l'équipe");
+  expect(link.element).not.toHaveAccessibleDescription(/nouvelle fenêtre/);
 });
 
 it.each([false, true])("retire le bandeau public et son lien d'évitement, session initialisée = %s", async (initialized) => {

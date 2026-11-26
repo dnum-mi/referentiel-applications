@@ -6,24 +6,24 @@ const { filters, setFilter } = useApplicationSearch();
 
 <template>
   <div class="filter-section">
-    <DsfrInput
-      :model-value="filters.dataSourceName"
-      label-visible
-      description-id="data-source-name-tooltip-desc"
-      data-testid="application-filter-data-source-name"
-      @update:model-value="setFilter({ dataSourceName: $event?.toString(), page: 0 })"
-    >
-      <template #label>
-        <span style="display: inline-flex; align-items: center; gap: 0.25rem">
-          Source de données
-          <DsfrTooltip
-            aria-label="Afficher l’aide sur le filtre Source de données"
-            id="data-source-name-tooltip-desc"
-            content="Recherche les applications utilisant une donnée dont le nom contient le texte saisi."
-          />
-        </span>
+    <FilterWithHelp>
+      <DsfrInput
+        :model-value="filters.dataSourceName"
+        label-visible
+        description-id="data-source-name-tooltip-desc"
+        data-testid="application-filter-data-source-name"
+        @update:model-value="setFilter({ dataSourceName: $event?.toString(), page: 0 })"
+      >
+        <template #label>Source de données</template>
+      </DsfrInput>
+      <template #help>
+        <DsfrTooltip
+          aria-label="Afficher l’aide sur le filtre Source de données"
+          id="data-source-name-tooltip-desc"
+          content="Recherche les applications utilisant une donnée dont le nom contient le texte saisi."
+        />
       </template>
-    </DsfrInput>
+    </FilterWithHelp>
   </div>
 </template>
 
