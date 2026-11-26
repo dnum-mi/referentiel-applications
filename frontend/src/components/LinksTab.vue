@@ -261,7 +261,7 @@ onMounted(async () => {
               rel="noopener noreferrer"
               :title="`${data.lien.label} - nouvelle fenêtre`"
               data-testid="link-item"
-              >{{ data.lien.label }}</a
+              >{{ data.lien.label }}<span class="fr-sr-only"> - nouvelle fenêtre</span></a
             >
           </template>
 

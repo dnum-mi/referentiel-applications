@@ -186,10 +186,9 @@ const mandatoryLinks = [
   { label: accessibilityDeclaration.complianceMention, title: "Aller à la page d'accessibilité", to: { name: routeNames.ACCESSIBILITE } },
   { label: "Plan du site", title: "Aller au plan du site", to: { name: routeNames.SITEMAP } },
   {
-    // RGAA-015 : ouverture dans un nouvel onglet mentionnée dans l'intitulé.
+    // L'annonce de nouvelle fenêtre est ajoutée dans le contenu par DsfrFooterLink.
     label: "Contact Tchap",
     title: "Contact Tchap - nouvelle fenêtre",
-    "aria-label": "Contact Tchap - nouvelle fenêtre",
     href: "https://www.tchap.gouv.fr/#/room/!ydoKqFOXRAQPQYFvqa:agent.interieur.tchap.gouv.fr?via=agent.interieur.tchap.gouv.fr",
     target: "_blank",
     to: undefined,

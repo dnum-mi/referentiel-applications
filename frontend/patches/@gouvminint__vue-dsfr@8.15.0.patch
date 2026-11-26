@@ -1,16 +1,25 @@
 diff --git a/dist/vue-dsfr.js b/dist/vue-dsfr.js
-index a437ecea2645779b318954776838c39739b1610c..c7732f253ac6c5bfbe8ef91e19ac54c1e64ef3b0 100644
+index a437ecea2645779b318954776838c39739b1610c..b641ea17f234c4398d380510e6159462d94a152d 100644
 --- a/dist/vue-dsfr.js
 +++ b/dist/vue-dsfr.js
-@@ -1588,6 +1588,7 @@
+@@ -1588,6 +1588,8 @@ var _hoisted_1$70 = { class: "fr-accordion" }, _hoisted_2$54 = ["aria-expanded",
  			[String(e.icon)]: p.value
  		}] }, f.value, {
  			target: e.target,
++			rel: e.target === "_blank" ? "noopener noreferrer" : void 0,
 +			title: e.title,
  			onClick: withModifiers(e.onClick, ["stop"])
  		}), {
  			default: withCtx(() => [
-@@ -1606,6 +1607,7 @@
+@@ -1596,6 +1598,7 @@ var _hoisted_1$70 = { class: "fr-accordion" }, _hoisted_2$54 = ["aria-expanded",
+ 					class: "fr-mr-1w"
+ 				}, m.value), null, 16)) : createCommentVNode("", !0),
+ 				createTextVNode(" " + toDisplayString(e.label) + " ", 1),
++				e.target === "_blank" && !i.value ? createElementVNode("span", { class: "fr-sr-only" }, " - nouvelle fenêtre") : createCommentVNode("", !0),
+ 				!p.value && (e.icon || e.iconAttrs?.name) && e.iconRight ? (openBlock(), createBlock(VIcon_default, mergeProps({
+ 					key: 1,
+ 					class: "fr-ml-1w"
+@@ -1605,6 +1608,7 @@ var _hoisted_1$70 = { class: "fr-accordion" }, _hoisted_2$54 = ["aria-expanded",
  		}, 16, [
  			"class",
  			"target",
@@ -18,7 +27,32 @@ index a437ecea2645779b318954776838c39739b1610c..c7732f253ac6c5bfbe8ef91e19ac54c1
  			"onClick"
  		]));
  	}
-@@ -2990,7 +2990,7 @@ var FocusTrapProps = defineFocusTrapProps({
+@@ -1825,20 +1829,20 @@ var _hoisted_1$70 = { class: "fr-accordion" }, _hoisted_2$54 = ["aria-expanded",
+ 					target: "_blank",
+ 					rel: "noopener noreferrer",
+ 					title: r
+-				}, { ref_for: !0 }, i), toDisplayString(n), 17, _hoisted_15$2)]))), 128))])])]),
++				}, { ref_for: !0 }, i), [createTextVNode(toDisplayString(n), 1), (i.target ?? "_blank") === "_blank" ? createElementVNode("span", { class: "fr-sr-only" }, " - nouvelle fenêtre") : createCommentVNode("", !0)], 16, _hoisted_15$2)]))), 128))])])]),
+ 				renderSlot(r.$slots, "footer-partners", {}, () => [e.partners ? (openBlock(), createBlock(DsfrFooterPartners_default, normalizeProps(mergeProps({ key: 0 }, e.partners)), null, 16)) : createCommentVNode("", !0)], !0),
+ 				createElementVNode("div", _hoisted_16$1, [createElementVNode("ul", _hoisted_17$1, [(openBlock(!0), createElementBlock(Fragment, null, renderList(a.value, (e, n) => (openBlock(), createElementBlock("li", {
+ 					key: n,
+ 					class: "fr-footer__bottom-item"
+ 				}, [createVNode(DsfrFooterLink_default, mergeProps({ ref_for: !0 }, e), null, 16)]))), 128))]), e.licenceText ? (openBlock(), createElementBlock("div", _hoisted_18$1, [createElementVNode("p", null, [createTextVNode(toDisplayString(e.licenceText) + " ", 1), (openBlock(), createBlock(resolveDynamicComponent(h.value ? "a" : "RouterLink"), mergeProps({
+-					class: "fr-link-licence no-content-after",
++					class: "fr-link-licence",
+ 					to: h.value ? void 0 : _.value,
+ 					href: h.value ? y.value : void 0,
+ 					target: h.value ? "_blank" : void 0,
+-					title: h.value ? `${e.licenceName} (nouvelle fenêtre)` : e.licenceName,
++					title: (g.value.target ?? (h.value ? "_blank" : void 0)) === "_blank" ? `${e.licenceName} - nouvelle fenêtre` : e.licenceName,
+ 					rel: "noopener noreferrer"
+ 				}, g.value), {
+-					default: withCtx(() => [createTextVNode(toDisplayString(e.licenceName), 1)]),
++					default: withCtx(() => [createTextVNode(toDisplayString(e.licenceName), 1), (g.value.target ?? (h.value ? "_blank" : void 0)) === "_blank" ? createElementVNode("span", { class: "fr-sr-only" }, " - nouvelle fenêtre") : createCommentVNode("", !0)]),
+ 					_: 1
+ 				}, 16, [
+ 					"to",
+@@ -2990,7 +2994,7 @@ var FocusTrapProps = defineFocusTrapProps({
  		let r = e, i = n, a = useSlots(), p = toRef(r, "languageSelector"), m = ref(!1), h = ref(!1), g = ref(!1), _ = () => {
  			g.value = !1, m.value = !1, h.value = !1, document.getElementById("button-menu")?.focus();
  		}, y = (e) => {
@@ -27,7 +61,8 @@ index a437ecea2645779b318954776838c39739b1610c..c7732f253ac6c5bfbe8ef91e19ac54c1
  		};
  		onMounted(() => {
  			document.addEventListener("keydown", y);
-@@ -3280,11 +3280,11 @@ var FocusTrapProps = defineFocusTrapProps({
+@@ -3280,11 +3284,11 @@ var FocusTrapProps = defineFocusTrapProps({
+ 	emits: ["close"],
  	setup(e, { emit: n }) {
  		let r = e, i = n, a = (e) => {
 -			e.key === "Escape" && S();
@@ -40,8 +75,7 @@ index a437ecea2645779b318954776838c39739b1610c..c7732f253ac6c5bfbe8ef91e19ac54c1
  			}, 100)) : m.value?.close(), h(e);
  		});
  		function h(e) {
- 			typeof window < "u" && document.body.classList.toggle("modal-open", e);
-@@ -4762,9 +4762,20 @@ var FocusTrapProps = defineFocusTrapProps({
+@@ -4762,11 +4766,22 @@ var _hoisted_1$24 = [
  		};
  		function s(e) {
  			let n = o[e?.key];
@@ -64,3 +98,5 @@ index a437ecea2645779b318954776838c39739b1610c..c7732f253ac6c5bfbe8ef91e19ac54c1
 +			if (left < 0) list.scrollLeft += narrower ? left : right;
 +			else if (right > 0) list.scrollLeft += narrower ? right : left;
  		}), (n, r) => (openBlock(), createElementBlock("li", _hoisted_1$11, [createElementVNode("button", mergeProps(n.$attrs, {
+ 			id: e.tabId,
+ 			ref_key: "button",
