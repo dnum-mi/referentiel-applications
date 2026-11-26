@@ -153,15 +153,15 @@ async function onKeydown(event: KeyboardEvent) {
 
 <template>
   <div data-testid="suggestions-input">
-    <label class="fr-label suggestions-input-label" :for="inputId">
-      {{ props.label }}
+    <div class="suggestions-input-label">
+      <label class="fr-label" :for="inputId">{{ props.label }}</label>
       <DsfrTooltip
         v-if="props.tooltipContent"
         :id="`${inputId}-tooltip`"
         :aria-label="`Afficher l’aide sur ${props.label}`"
         :content="props.tooltipContent"
       />
-    </label>
+    </div>
     <span :id="hintId" class="fr-hint-text">Saisissez au moins {{ MIN_CHAR_FOR_SEARCH }} caractères</span>
     <input
       :id="inputId"
@@ -228,6 +228,11 @@ async function onKeydown(event: KeyboardEvent) {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.suggestions-input-label .fr-label {
+  margin-bottom: 0;
 }
 
 .suggestions-list {

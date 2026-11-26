@@ -61,50 +61,65 @@ async function removeTag(index: number) {
 }
 </script>
 <template>
-  <fieldset ref="fieldset" class="tag-search-fieldset" v-bind="$attrs">
-    <legend class="fr-label tag-search-legend">
-      Tags
-      <DsfrTooltip v-if="tooltipContent" :id="tooltipId" aria-label="Afficher l’aide sur le filtre Tags" :content="tooltipContent" />
-    </legend>
-    <ul class="fr-tags-group" data-testid="info-tags">
-      <li v-for="(tag, index) in props.tags" :key="tag" class="tag-item">
-        <DsfrTag
-          :label="tag"
-          tag-name="button"
-          class="fr-tag--dismiss"
-          :aria-label="`Retirer le tag : ${tag}`"
-          @click.stop.prevent="removeTag(index)"
-        />
-      </li>
-    </ul>
-    <label for="tag-search" class="fr-sr-only">Rechercher un tag à ajouter</label>
-    <AccessibleAutocomplete
-      id="tag-search"
-      data-testid="search-tags"
-      title="Rechercher un tag à ajouter"
-      list-label="Tags proposés"
-      :search="getTagsOptions"
-      display-menu="overlay"
-      placeholder="Rechercher un tag"
-      :min-length="2"
-      :description-id="tooltipContent ? tooltipId : undefined"
-      :on-change="addTag"
-      :display-no-result="true"
-      :display-label="(item) => item.name"
-    />
-  </fieldset>
+  <div class="tag-search-group">
+    <fieldset ref="fieldset" class="tag-search-fieldset" :aria-describedby="tooltipContent ? tooltipId : undefined" v-bind="$attrs">
+      <legend class="fr-label tag-search-legend">Tags</legend>
+      <DsfrTooltip
+        v-if="tooltipContent"
+        class="tag-search-help"
+        :id="tooltipId"
+        aria-label="Afficher l’aide sur le filtre Tags"
+        :content="tooltipContent"
+      />
+      <ul class="fr-tags-group" data-testid="info-tags">
+        <li v-for="(tag, index) in props.tags" :key="tag" class="tag-item">
+          <DsfrTag
+            :label="tag"
+            tag-name="button"
+            class="fr-tag--dismiss"
+            :aria-label="`Retirer le tag : ${tag}`"
+            @click.stop.prevent="removeTag(index)"
+          />
+        </li>
+      </ul>
+      <label for="tag-search" class="fr-sr-only">Rechercher un tag à ajouter</label>
+      <AccessibleAutocomplete
+        id="tag-search"
+        data-testid="search-tags"
+        title="Rechercher un tag à ajouter"
+        list-label="Tags proposés"
+        :search="getTagsOptions"
+        display-menu="overlay"
+        placeholder="Rechercher un tag"
+        :min-length="2"
+        :description-id="tooltipContent ? tooltipId : undefined"
+        :on-change="addTag"
+        :display-no-result="true"
+        :display-label="(item) => item.name"
+      />
+    </fieldset>
+  </div>
+
 </template>
 
 <style scoped>
+.tag-search-group {
+  position: relative;
+}
+
 .tag-search-fieldset {
+  position: static;
   border: none;
   margin: 0;
   padding: 0;
 }
 
 .tag-search-legend {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
+  padding-inline-end: 2rem;
+}
+.tag-search-fieldset :deep(.tag-search-help) {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
 }
 </style>
