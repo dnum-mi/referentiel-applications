@@ -61,13 +61,13 @@ it("annonce la nouvelle fenêtre du lien Tchap dans le pied de page rendu", asyn
   const wrapper = await renderApp(true);
   const link = wrapper.get('footer a[href^="https://www.tchap.gouv.fr/"]');
 
-  expect(link.text()).toBe("Contact Tchap");
   expect(link.attributes("href")).toBe(
     "https://www.tchap.gouv.fr/#/room/!ydoKqFOXRAQPQYFvqa:agent.interieur.tchap.gouv.fr?via=agent.interieur.tchap.gouv.fr",
   );
   expect(link.attributes("target")).toBe("_blank");
   expect(link.attributes("title")).toBe("Contact Tchap - nouvelle fenêtre");
-  expect(link.attributes("aria-label")).toBe("Contact Tchap - nouvelle fenêtre");
+  expect(link.attributes("aria-label")).toBeUndefined();
+  expect(link.get(".fr-sr-only").text()).toBe("- nouvelle fenêtre");
   expect(link.element).toHaveAccessibleName("Contact Tchap - nouvelle fenêtre");
 });
 
