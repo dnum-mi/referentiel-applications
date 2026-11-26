@@ -2,7 +2,7 @@
 import { isApiSuccess } from "@/api/api-result";
 import type { TagDto } from "@/client";
 import api from "@/api";
-import { nextTick, ref } from "vue";
+import { nextTick, ref, useId } from "vue";
 
 defineOptions({ inheritAttrs: false });
 
@@ -21,6 +21,7 @@ const emit = defineEmits<{
   "update:tags": [value: string[]];
 }>();
 const fieldset = ref<HTMLFieldSetElement>();
+const tooltipId = `tag-search-${useId()}-tooltip`;
 
 async function getTagsOptions(query: string) {
   const response = await api.tagsControllerFindAll({
@@ -63,7 +64,7 @@ async function removeTag(index: number) {
   <fieldset ref="fieldset" class="tag-search-fieldset" v-bind="$attrs">
     <legend class="fr-label tag-search-legend">
       Tags
-      <DsfrTooltip v-if="tooltipContent" aria-label="Afficher l’aide sur le filtre Tags" :content="tooltipContent" />
+      <DsfrTooltip v-if="tooltipContent" :id="tooltipId" aria-label="Afficher l’aide sur le filtre Tags" :content="tooltipContent" />
     </legend>
     <ul class="fr-tags-group" data-testid="info-tags">
       <li v-for="(tag, index) in props.tags" :key="tag" class="tag-item">
@@ -86,6 +87,7 @@ async function removeTag(index: number) {
       display-menu="overlay"
       placeholder="Rechercher un tag"
       :min-length="2"
+      :description-id="tooltipContent ? tooltipId : undefined"
       :on-change="addTag"
       :display-no-result="true"
       :display-label="(item) => item.name"

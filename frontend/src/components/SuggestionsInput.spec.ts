@@ -19,6 +19,33 @@ function renderInput(search: (query: string) => Promise<{ id: string; label: str
 afterEach(() => vi.useRealTimers());
 
 describe("SuggestionsInput", () => {
+  it("garde la consigne visible et décrite pendant la saisie, puis recherche au seuil annoncé", async () => {
+    vi.useFakeTimers();
+    const search = vi.fn(() => Promise.resolve([{ id: "a", label: "Application Alpha" }]));
+    const wrapper = renderInput(search);
+    await wrapper.setProps({ tooltipContent: "Recherche les applications associées." });
+    const input = wrapper.get("input");
+    const hint = wrapper.get(".fr-hint-text");
+    expect(hint.text()).toBe("Saisissez au moins 3 caractères");
+    expect(input.attributes("aria-describedby")?.split(" ")).toEqual([hint.attributes("id"), `${input.attributes("id")}-tooltip`]);
+    for (const [query, remaining] of [
+      ["a", 2],
+      ["ap", 1],
+    ] as const) {
+      await input.setValue(query);
+      await vi.advanceTimersByTimeAsync(300);
+      expect(hint.isVisible()).toBe(true);
+      expect(wrapper.get("output").text()).toBe(`Saisissez encore ${remaining} caractère${remaining > 1 ? "s" : ""}.`);
+      expect(search).not.toHaveBeenCalled();
+    }
+    await input.setValue("app");
+    await vi.advanceTimersByTimeAsync(300);
+    expect(search).toHaveBeenCalledExactlyOnceWith("app");
+    expect(wrapper.get("output").text()).toContain("1 suggestion disponible");
+    expect(hint.isVisible()).toBe(true);
+    wrapper.unmount();
+  });
+
   it("synchronise le libellé externe sans émettre de sélection", async () => {
     const wrapper = renderInput(() => Promise.resolve([]));
     for (const label of ["A", "B", undefined]) {
