@@ -52,7 +52,7 @@ export class TechnicalDebtController {
     type: Number,
     isArray: true,
   })
-  async getMillesimes(): Promise<number[]> {
-    return this.applicationService.getTechnicalDebtMillesimes();
+  async getMillesimes(@User() requestor: Requestor): Promise<number[]> {
+    return this.applicationService.getTechnicalDebtMillesimes(requestor);
   }
 }

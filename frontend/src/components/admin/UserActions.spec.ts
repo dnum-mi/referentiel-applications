@@ -336,12 +336,12 @@ describe("UserActions", () => {
 
   it.each<{ role: Roles; inherited: string[] }>([
     { role: Roles.VISITOR, inherited: [] },
-    { role: Roles.READER, inherited: ["Voir les données MDIT"] },
-    { role: Roles.CONTRIBUTOR, inherited: ["Voir les données MDIT", "Créer une application", "Créer un signalement global"] },
+    { role: Roles.READER, inherited: ["Voir les données dette IT"] },
+    { role: Roles.CONTRIBUTOR, inherited: ["Voir les données dette IT", "Créer une application", "Créer un signalement global"] },
     {
       role: Roles.ADMIN,
       inherited: [
-        "Voir les données MDIT",
+        "Voir les données dette IT",
         "Créer une application",
         "Créer un signalement global",
         "Export les données",
@@ -356,7 +356,7 @@ describe("UserActions", () => {
     });
     await fireEvent.click(screen.getByTestId("admin-user-edit-btn"));
     for (const label of [
-      "Voir les données MDIT",
+      "Voir les données dette IT",
       "Créer une application",
       "Créer un signalement global",
       "Export les données",

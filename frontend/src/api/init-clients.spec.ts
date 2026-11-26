@@ -83,6 +83,29 @@ describe("init-clients — 403 liés au niveau d'authentification (#1985)", () =
     expect(toaster.addErrorMessage).toHaveBeenCalledWith("Permission refusée : Vous n'avez pas la permission d'effectuer cette action.");
   });
 
+  it("laisse la fiche gérer le refus de lecture de dette IT sans notification", async () => {
+    const response = forbidden({ statusCode: 403, message: "Données de dette IT hors périmètre." });
+    const result = await interceptor(response, new Request("https://refapp.test/api/applications/app-1/technical-debt-info?pageSize=1"));
+    expect(result).toBe(response);
+    expect(toaster.addErrorMessage).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["POST", "/applications/app-1/technical-debt-info"],
+    ["GET", "/applications/app-1/actors"],
+  ])("conserve la notification pour %s %s", async (method, path) => {
+    await interceptor(forbidden({ statusCode: 403, message: "Forbidden" }), new Request(`https://refapp.test${path}`, { method }));
+    expect(toaster.addErrorMessage).toHaveBeenCalledWith("Permission refusée : Vous n'avez pas la permission d'effectuer cette action.");
+  });
+
+  it("conserve le traitement d'authentification sur la lecture de dette IT", async () => {
+    await interceptor(
+      forbidden({ statusCode: 403, stepDown: true, reason: "personal-token" }),
+      new Request("https://refapp.test/applications/app-1/technical-debt-info"),
+    );
+    expect(toaster.addErrorMessage).toHaveBeenCalledWith(expect.stringContaining("jeton personnel"));
+  });
+
   it.each(["current", "expired"])("ne bloque que la session concernée par le refus (%s)", async (token) => {
     const authLevel = { level: "weak", downgraded: true, reason: "weak-method" };
     vi.mocked(USER_MANAGER.getUser).mockResolvedValue({ access_token: "current" } as Awaited<ReturnType<typeof USER_MANAGER.getUser>>);

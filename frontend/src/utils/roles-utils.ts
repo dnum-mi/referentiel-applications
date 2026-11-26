@@ -44,7 +44,7 @@ export const PERMISSIONS_LABELS: Record<Permission, string> = {
   DeleteApplication: "Supprimer une application",
   CreateGlobalReport: "Créer des signalements globaux",
   AppList: "Voir la liste des applications",
-  MDITList: "Voir la liste des MDIT",
+  MDITList: "Voir les données Dette IT",
   DataExport: "Exporter les données",
   BetaFeatures: "Accéder aux fonctionnalités bêta",
   AdminPanelManage: "Gérer le panneau d'administration",

@@ -5,6 +5,7 @@ import type { HostingDto, LabelDto } from "@/client/types.gen";
 import InformationsGenerales from "./InformationsGenerales.vue";
 
 const mocks = vi.hoisted(() => ({
+  fetchDebt: vi.fn(),
   requestCancel: vi.fn(),
   fetchHostings: vi.fn(),
   resetHostings: vi.fn(),
@@ -33,7 +34,7 @@ vi.mock("@/api/index.js", () => ({
   default: {
     labelsControllerFindAllSorted: mocks.findLabels,
     labelsControllerDelete: mocks.deleteLabel,
-    applicationTechnicalDebtInfoControllerFind: async () => ({ response: { ok: true }, data: { results: [], total: 0 } }),
+    applicationTechnicalDebtInfoControllerFind: mocks.fetchDebt,
   },
 }));
 vi.mock("@/composables/use-app-permission", () => ({ useAppPermission: () => computed(() => true) }));
@@ -46,6 +47,7 @@ vi.mock("@/router", () => ({ default: { push: vi.fn(), resolve: () => ({ fullPat
 enableAutoUnmount(afterEach);
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.fetchDebt.mockResolvedValue({ response: { ok: true }, data: { results: [], total: 0 } });
   hostingState.hostings = [hosting];
   mocks.fetchHostings.mockResolvedValue(undefined);
   mocks.findLabels.mockResolvedValue({ response: { ok: true }, data: [] });
@@ -193,6 +195,14 @@ it.each(["hosting", "label"] as const)("respecte le focus déplacé pendant la s
   await flushPromises();
   expect(outside).toHaveFocus();
   outside.remove();
+});
+
+it("masque la dette et ses actions lorsque le serveur refuse le périmètre", async () => {
+  mocks.fetchDebt.mockResolvedValue({ response: { status: 403, ok: false } });
+  const wrapper = await renderInfo();
+  expect(wrapper.get('[data-testid="technical-debt-restricted"]').text()).toContain("Vous n’avez pas accès");
+  expect(wrapper.find('[data-testid="info-technical-debt"]').exists()).toBe(false);
+  expect(mocks.addErrorMessage).not.toHaveBeenCalled();
 });
 
 it("délègue la fermeture au formulaire et ne démonte que sur annulation confirmée", async () => {

@@ -17,6 +17,7 @@ export interface IApplicationRepository {
     filters: ApplicationSearchFilters,
     where: Prisma.ApplicationWhereInput,
     orderBy: Prisma.ApplicationOrderByWithRelationInput,
+    debtScope?: Prisma.ApplicationWhereInput,
   ) => Promise<ApplicationSearchResultDto>;
   findMatchingApplicationsPage: (
     filters: ApplicationSearchFilters,
@@ -24,12 +25,17 @@ export interface IApplicationRepository {
     computeOrderedIds: (
       matching: { id: string; quality: number | null }[],
     ) => Promise<string[]> | string[],
+    debtScope?: Prisma.ApplicationWhereInput,
   ) => Promise<ApplicationSearchResultDto>;
   findTechnicalDebtPoints: (
     where: Prisma.ApplicationWhereInput,
     orderBy: Prisma.ApplicationOrderByWithRelationInput,
     millesime?: number,
   ) => Promise<TechnicalDebtPointDto[]>;
-  findLatestMillesime: () => Promise<number | null>;
-  findDistinctMillesimes: () => Promise<number[]>;
+  findLatestMillesime: (
+    debtScope?: Prisma.ApplicationWhereInput,
+  ) => Promise<number | null>;
+  findDistinctMillesimes: (
+    debtScope?: Prisma.ApplicationWhereInput,
+  ) => Promise<number[]>;
 }

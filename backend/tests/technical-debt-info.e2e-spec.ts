@@ -182,11 +182,11 @@ describe("TechnicalDebtInfo - application guard", () => {
 
     // remove all permission
     await actorType.update([], { reset: true });
-    // Should succeed to get the technical debt info because AppRead is granted to all authenticated users
+    // AppRead et le statut d’acteur ne remplacent pas MDIT et le rattachement autorisé.
     await request(app().getHttpServer())
       .get(`/applications/${application.id}/technical-debt-info`)
       .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(200);
+      .expect(403);
   });
 });
 
