@@ -8,6 +8,8 @@ export interface Props<T> {
   search: (query: string) => Promise<T[]>;
   displayLabel: (item: T) => string;
   placeholder?: string;
+  minLength?: number;
+  descriptionId?: string;
   displayNoResult?: boolean;
   /** Étiquette visible du champ (rendue en `title` — RGAA 11.1). */
   title?: string;
@@ -16,7 +18,7 @@ export interface Props<T> {
   onChange?: (item: T) => void;
 }
 
-const props = defineProps<Props<T>>();
+const props = withDefaults(defineProps<Props<T>>(), { minLength: 1 });
 const emit = defineEmits(["onChange", "onInputValueChange", "close"]);
 
 const inputValue = ref("");
@@ -27,7 +29,7 @@ const {
   hasSearched,
   onQuery,
   reset,
-} = useAsyncSearch<T>((query) => props.search(query), { minLength: 1 });
+} = useAsyncSearch<T>((query) => props.search(query), { minLength: props.minLength });
 const highlightedIndex = ref(-1);
 const showList = ref(false);
 const inputEl = ref<HTMLInputElement | null>(null);
@@ -38,6 +40,7 @@ const containerEl = ref<HTMLElement | null>(null);
 const generatedId = `autocomplete-${useId()}`;
 const optionIdPrefix = computed(() => props.id ?? generatedId);
 const listId = computed(() => `${optionIdPrefix.value}-list`);
+const hintId = computed(() => `${optionIdPrefix.value}-hint`);
 const optionId = (index: number) => `${optionIdPrefix.value}-item-${index}`;
 
 function onInput(event: Event) {
@@ -147,9 +150,14 @@ const ariaActiveDescendant = computed(() => {
 });
 
 const ariaDescribedById = computed(() => `${optionIdPrefix.value}-helptext`);
+const ariaDescribedBy = computed(() =>
+  [props.minLength > 1 ? hintId.value : undefined, props.descriptionId, ariaDescribedById.value].filter(Boolean).join(" "),
+);
 
 const liveRegionText = computed(() => {
   if (!showList.value) return "";
+  const remaining = props.minLength - inputValue.value.length;
+  if (inputValue.value && remaining > 0) return `Saisissez encore ${remaining} caractère${remaining > 1 ? "s" : ""}.`;
   if (loading.value) return "Recherche en cours…";
   if (error.value) return "";
   if (!hasSearched.value) return "";
@@ -165,6 +173,7 @@ onClickOutside(containerEl, () => {
 
 <template>
   <div ref="containerEl" class="autocomplete" @keydown="onKeydown">
+    <span v-if="minLength > 1" :id="hintId" class="fr-hint-text">Saisissez au moins {{ minLength }} caractères</span>
     <input
       :id="optionIdPrefix"
       ref="inputEl"
@@ -181,7 +190,7 @@ onClickOutside(containerEl, () => {
       :aria-controls="isListRendered ? listId : undefined"
       :aria-activedescendant="ariaActiveDescendant"
       :aria-expanded="isListRendered"
-      :aria-describedby="ariaDescribedById"
+      :aria-describedby="ariaDescribedBy"
     />
     <div :id="ariaDescribedById" class="visually-hidden">
       Utilisez les flèches haut et bas pour naviguer dans la liste, Entrée pour sélectionner.

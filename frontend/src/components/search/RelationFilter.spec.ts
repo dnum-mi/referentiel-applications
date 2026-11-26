@@ -43,7 +43,7 @@ describe("RelationFilter — pagination de la recherche", () => {
     scope = effectScope();
     search = scope.run(() => useApplicationSearch())!;
     const { default: RelationFilter } = await import("./RelationFilter.vue");
-    wrapper = shallowMount(RelationFilter);
+    wrapper = shallowMount(RelationFilter, { global: { stubs: { FilterWithHelp: false } } });
   });
 
   afterEach(() => {
