@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, inject, nextTick, onBeforeUnmount, ref, watch } from "vue";
-import { routerKey } from "vue-router";
+import { routerKey, RouterLink } from "vue-router";
+import { routeNames } from "@/router/route-names";
 import { type ApplicationDto, Permission } from "@/client/types.gen";
 import { useAppPermission } from "@/composables/use-app-permission";
 import type { ApplicationFormInitialData } from "@/models/Application";
@@ -24,17 +25,28 @@ const props = withDefaults(defineProps<{ mode?: ApplicationFormMode; initialData
 const emit = defineEmits<{ success: [application: ApplicationDto]; cancel: [] }>();
 const { form, moa, moe, isFormDirty, markSaved, getData } = useApplicationFormState(props.initialData, () => props.mode);
 const { errors, validateStep, validateAll } = useApplicationFormValidation(getData, () => props.mode);
-const { cancelMaia, save, isSubmitting, saveError, syncContact, moaSyncing, moeSyncing, initialMoaOrganization, initialMoeOrganization } =
-  useApplicationFormActions(
-    getData,
-    () => props.mode,
-    () => props.initialData.id,
-    () => {
-      const element = formElement.value;
-      const dialog = element?.closest('dialog, [role="dialog"]');
-      return !!element?.isConnected && !dialog?.matches('dialog:not([open]), [aria-hidden="true"]');
-    },
-  );
+const {
+  cancelMaia,
+  save,
+  isSubmitting,
+  saveError,
+  createdApplication,
+  savedContacts,
+  syncContact,
+  moaSyncing,
+  moeSyncing,
+  initialMoaOrganization,
+  initialMoeOrganization,
+} = useApplicationFormActions(
+  getData,
+  () => props.mode,
+  () => props.initialData.id,
+  () => {
+    const element = formElement.value;
+    const dialog = element?.closest('dialog, [role="dialog"]');
+    return !!element?.isConnected && !dialog?.matches('dialog:not([open]), [aria-hidden="true"]');
+  },
+);
 useSubmissionFocus(isSubmitting);
 const isCreateMode = computed(() => props.mode === "create");
 const hasAppWrite = useAppPermission(() => props.initialData.myPerms, [Permission.APP_WRITE]);
@@ -42,6 +54,7 @@ const hasAppWritePriority = useAppPermission(() => props.initialData.myPerms, [P
 const canEditBase = computed(() => isCreateMode.value || hasAppWrite.value);
 const canEditPriorityRestart = hasAppWritePriority;
 const currentStep = ref<ApplicationFormStep>(1);
+const firstEditableStep = computed(() => (createdApplication.value ? (savedContacts.value.has("moa") ? 4 : 3) : 1));
 const formElement = ref<HTMLFormElement | null>(null);
 const mainStep = ref<ApplicationStepHandle | null>(null);
 const moaStep = ref<ApplicationStepHandle | null>(null);
@@ -82,6 +95,8 @@ async function handleSubmit() {
   if (application) {
     markSaved();
     emit("success", application);
+  } else if (createdApplication.value) {
+    await changeStep(firstEditableStep.value);
   }
 }
 
@@ -163,41 +178,51 @@ onBeforeUnmount(() => {
       <p v-if="saveError" class="fr-error-text">{{ saveError }}</p>
     </div>
     <p class="fr-text--sm fr-mb-3w" data-testid="required-fields-hint">Tous les champs avec un * sont obligatoires</p>
-    <ApplicationMainStep
-      v-if="!isCreateMode || currentStep === 1"
-      ref="mainStep"
-      v-model="form"
-      :errors="errors"
-      :is-create-mode="isCreateMode"
-      :can-edit-base="canEditBase"
-    />
-    <ApplicationDetailsStep
-      v-if="!isCreateMode || currentStep === 2"
-      v-model="form"
-      :is-create-mode="isCreateMode"
-      :can-edit-base="canEditBase"
-      :can-edit-priority-restart="canEditPriorityRestart"
-    />
-    <ApplicationMoaStep
-      v-if="isCreateMode && currentStep === 3"
-      ref="moaStep"
-      v-model="moa"
-      :errors="errors"
-      :initial-organization="initialMoaOrganization"
-      :is-syncing="moaSyncing"
-      @sync="syncContact('moa')"
-    />
-    <ApplicationMoeStep
-      v-if="isCreateMode && currentStep === 4"
-      ref="moeStep"
-      v-model="moe"
-      :errors="errors"
-      :initial-organization="initialMoeOrganization"
-      :is-syncing="moeSyncing"
-      @sync="syncContact('moe')"
-    />
+    <div :inert="isCreateMode && isSubmitting">
+      <ApplicationMainStep
+        v-if="!isCreateMode || currentStep === 1"
+        ref="mainStep"
+        v-model="form"
+        :errors="errors"
+        :is-create-mode="isCreateMode"
+        :can-edit-base="canEditBase"
+      />
+      <ApplicationDetailsStep
+        v-if="!isCreateMode || currentStep === 2"
+        v-model="form"
+        :is-create-mode="isCreateMode"
+        :can-edit-base="canEditBase"
+        :can-edit-priority-restart="canEditPriorityRestart"
+      />
+      <ApplicationMoaStep
+        v-if="isCreateMode && currentStep === 3"
+        ref="moaStep"
+        v-model="moa"
+        :errors="errors"
+        :initial-organization="initialMoaOrganization"
+        :is-syncing="moaSyncing"
+        @sync="syncContact('moa')"
+      />
+      <ApplicationMoeStep
+        v-if="isCreateMode && currentStep === 4"
+        ref="moeStep"
+        v-model="moe"
+        :errors="errors"
+        :initial-organization="initialMoeOrganization"
+        :is-syncing="moeSyncing"
+        @sync="syncContact('moe')"
+      />
+    </div>
     <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
+      <RouterLink
+        v-if="createdApplication && !isSubmitting"
+        :to="{ name: routeNames.PROFILEAPP, params: { id: createdApplication.id } }"
+        class="fr-btn fr-btn--secondary"
+      >
+        Ouvrir la fiche créée
+      </RouterLink>
       <DsfrButton
+        v-else
         type="button"
         secondary
         :disabled="isSubmitting"
@@ -206,9 +231,10 @@ onBeforeUnmount(() => {
         @click="handleCancel"
       />
       <DsfrButton
-        v-if="isCreateMode && currentStep > 1"
+        v-if="isCreateMode && currentStep > firstEditableStep"
         type="button"
         label="Précédent"
+        :disabled="isSubmitting"
         icon="ri-arrow-left-line"
         data-testid="application-previous-btn"
         @click="previousStep"
@@ -217,6 +243,7 @@ onBeforeUnmount(() => {
         v-if="isCreateMode && currentStep < 4"
         type="button"
         label="Suivant"
+        :disabled="isSubmitting"
         icon="ri-arrow-right-line"
         icon-right
         data-testid="application-next-btn"
@@ -226,7 +253,7 @@ onBeforeUnmount(() => {
         v-else
         type="submit"
         :disabled="isSubmitting || moaSyncing || moeSyncing"
-        :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'"
+        :label="isSubmitting ? 'Enregistrement...' : createdApplication ? 'Réessayer l’ajout des contacts' : 'Enregistrer'"
         data-testid="application-submit-btn"
       />
     </div>
@@ -234,14 +261,23 @@ onBeforeUnmount(() => {
   <DsfrModal
     :opened="cancelModalOpen"
     :origin="cancelOrigin ?? undefined"
-    :title="isCreateMode ? 'Annuler la création de l’application' : 'Abandonner les modifications'"
+    :title="
+      createdApplication
+        ? 'Quitter l’ajout des contacts'
+        : isCreateMode
+          ? 'Annuler la création de l’application'
+          : 'Abandonner les modifications'
+    "
     size="sm"
     data-testid="application-cancel-modal"
     @keydown.esc.stop.prevent="closeCancelModal"
     @cancel.prevent="closeCancelModal"
     @close="closeCancelModal"
   >
-    <p>Vous avez commencé à remplir le formulaire. Voulez-vous vraiment annuler et perdre les modifications en cours ?</p>
+    <p v-if="createdApplication">
+      La fiche est enregistrée. Voulez-vous quitter le formulaire et abandonner la saisie des contacts restants ?
+    </p>
+    <p v-else>Vous avez commencé à remplir le formulaire. Voulez-vous vraiment annuler et perdre les modifications en cours ?</p>
     <div class="actions">
       <DsfrButton type="button" tertiary data-testid="application-cancel-modal-close" @click="closeCancelModal">Reprendre</DsfrButton>
       <DsfrButton type="button" primary data-testid="application-cancel-modal-confirm" @click="confirmCancel">Confirmer</DsfrButton>

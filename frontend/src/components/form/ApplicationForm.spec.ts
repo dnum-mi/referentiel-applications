@@ -2,10 +2,16 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-li
 import { ref } from "vue";
 import { createMemoryHistory, createRouter, type Router } from "vue-router";
 import type { ApplicationFormInitialData } from "@/models/Application";
+import { routeNames } from "@/router/route-names";
 import ApplicationForm from "./ApplicationForm.vue";
 
 const mocks = vi.hoisted(() => ({ save: vi.fn(), syncContact: vi.fn(), fetchActorTypes: vi.fn() }));
-const submission = { isSubmitting: ref(false), saveError: ref("") };
+const submission = {
+  isSubmitting: ref(false),
+  saveError: ref(""),
+  createdApplication: ref<{ id: string }>(),
+  savedContacts: ref(new Set<string>()),
+};
 vi.mock("@/stores/actorTypeStore", () => ({
   useActorTypeStore: () => ({
     actorTypes: [
@@ -21,15 +27,18 @@ vi.mock("@/stores/userStore", () => ({
   }),
 }));
 vi.mock("@/stores/organizationStore", () => ({
-  useOrganizationStore: () => ({ organizations: {}, find: vi.fn().mockResolvedValue([]), getById: vi.fn() }),
+  useOrganizationStore: () => ({
+    organizations: {},
+    find: vi.fn().mockResolvedValue([{ id: "org", path: "Organisation" }]),
+    getById: vi.fn(),
+  }),
 }));
 vi.mock("./application/use-application-form-actions", () => ({
   useApplicationFormActions: () => ({
     cancelMaia: vi.fn(),
     save: mocks.save,
     syncContact: mocks.syncContact,
-    isSubmitting: submission.isSubmitting,
-    saveError: submission.saveError,
+    ...submission,
     moaSyncing: ref(false),
     moeSyncing: ref(false),
     initialMoaOrganization: ref(null),
@@ -64,6 +73,8 @@ beforeEach(() => {
   mocks.save.mockReset();
   submission.isSubmitting.value = false;
   submission.saveError.value = "";
+  submission.createdApplication.value = undefined;
+  submission.savedContacts.value.clear();
 });
 afterEach(() => cleanup());
 
@@ -240,6 +251,49 @@ describe("applicationForm — édition et annulation", () => {
     expect(initialData.purposes).toEqual(["Objectif initial"]);
     expect(initialData.targetPopulations).toEqual(["Population initiale"]);
   });
+
+  it.each(["moa", "moe"] as const)(
+    "revient au contact %s refusé et permet de quitter la reprise vers la fiche créée",
+    async (failedRole) => {
+      const router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          { path: "/creation", component: { template: "<div />" } },
+          { path: "/applications/:id", name: routeNames.PROFILEAPP, component: { template: "<div />" } },
+        ],
+      });
+      await router.push("/creation");
+      const scene = renderForm("create", {}, undefined, router);
+      await fillMainStep();
+      await next();
+      await next();
+      for (const role of ["moa", "moe"]) {
+        await fireEvent.update(screen.getByTestId(`application-${role}-email`), `${role}@example.fr`);
+        await fireEvent.update(screen.getByTestId(`application-${role}-firstname`), "Camille");
+        await fireEvent.update(screen.getByTestId(`application-${role}-lastname`), "Martin");
+        const organization = within(screen.getByTestId(`application-${role}-organization`));
+        await fireEvent.update(organization.getByRole("textbox"), "Organisation");
+        await organization.findByRole("option", { name: "Organisation" });
+        await fireEvent.update(organization.getByRole("combobox"), "org");
+        if (role === "moa") await next();
+      }
+
+      mocks.save.mockImplementationOnce(async () => {
+        submission.createdApplication.value = { id: "fiche-creee" };
+        if (failedRole === "moe") submission.savedContacts.value.add("moa");
+        submission.saveError.value = `L’ajout du contact ${failedRole.toUpperCase()} a échoué.`;
+      });
+      await fireEvent.submit(screen.getByTestId("application-form"));
+      const link = await screen.findByRole("link", { name: "Ouvrir la fiche créée" });
+      expect(screen.queryByTestId("application-previous-btn")).not.toBeInTheDocument();
+      expect(screen.getByTestId(`application-step-title-${failedRole === "moa" ? 3 : 4}`)).toHaveFocus();
+      await fireEvent.click(link);
+      await fireEvent.click(await screen.findByTestId("application-cancel-modal-confirm"));
+      await waitFor(() => expect(router.currentRoute.value.path).toBe("/applications/fiche-creee"));
+      expect(mocks.save).toHaveBeenCalledOnce();
+      expect(scene.emitted().success).toBeUndefined();
+    },
+  );
 
   it("annule immédiatement une création vide", async () => {
     const { emitted } = renderForm();
