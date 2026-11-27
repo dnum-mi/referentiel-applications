@@ -1,6 +1,6 @@
 import { useMaiaRequest } from "@/composables/use-maia-request";
 import { isApiSuccess } from "@/api/api-result";
-import { ref } from "vue";
+import { ref, shallowRef } from "vue";
 import api from "@/api";
 import { withLoading } from "@/api/call-api";
 import type { ApplicationDto, CreateActorDto, OrganizationDto } from "@/client/types.gen";
@@ -21,6 +21,8 @@ export function useApplicationFormActions(
   const organizationStore = useOrganizationStore();
   const isSubmitting = ref(false);
   const saveError = ref("");
+  const createdApplication = shallowRef<ApplicationDto>();
+  const savedContacts = ref(new Set<ContactRole>());
   const moaRequest = useMaiaRequest([() => getData().moa, () => getData().moa.email, getId]);
   const moeRequest = useMaiaRequest([() => getData().moe, () => getData().moe.email, getId]);
   const moaSyncing = moaRequest.isSyncing;
@@ -53,7 +55,8 @@ export function useApplicationFormActions(
     if (isSubmitting.value || moaSyncing.value || moeSyncing.value) return;
     saveError.value = "";
     return withLoading(isSubmitting, async () => {
-      const { application, moa, moe } = getData();
+      const data = getData();
+      const { application } = data;
       const body = {
         ...application,
         purposes: application.purposes.filter((value) => value.trim()),
@@ -69,18 +72,26 @@ export function useApplicationFormActions(
           return updated;
         }
 
-        const response = await api.applicationControllerCreate({ body });
-        if (!isApiSuccess(response) || !response.data) throw response.error;
-        const created = response.data;
-        try {
-          await createActor(created.id, moa);
-          await createActor(created.id, moe);
-        } catch {
-          reportSaveError("Application créée mais erreur lors de l'ajout des acteurs MOA/MOE. Vous pouvez les ajouter manuellement.");
-          return;
+        if (!createdApplication.value) {
+          const response = await api.applicationControllerCreate({ body });
+          if (!isApiSuccess(response) || !response.data) throw response.error;
+          createdApplication.value = response.data;
+        }
+
+        for (const role of ["moa", "moe"] as const) {
+          if (savedContacts.value.has(role)) continue;
+          try {
+            await createActor(createdApplication.value.id, data[role]);
+            savedContacts.value.add(role);
+          } catch {
+            reportSaveError(
+              `La fiche a été créée. L’ajout du contact ${role.toUpperCase()} a échoué. Vous pouvez réessayer ou ouvrir la fiche créée.`,
+            );
+            return;
+          }
         }
         toaster.addSuccessMessage("Application créée avec succès !");
-        return created;
+        return createdApplication.value;
       } catch (error) {
         reportSaveError(backendErrorMessage(error) ?? "Une erreur est survenue");
       }
@@ -128,5 +139,17 @@ export function useApplicationFormActions(
     moeRequest.invalidate();
   }
 
-  return { cancelMaia, save, isSubmitting, saveError, syncContact, moaSyncing, moeSyncing, initialMoaOrganization, initialMoeOrganization };
+  return {
+    cancelMaia,
+    save,
+    isSubmitting,
+    saveError,
+    createdApplication,
+    savedContacts,
+    syncContact,
+    moaSyncing,
+    moeSyncing,
+    initialMoaOrganization,
+    initialMoeOrganization,
+  };
 }

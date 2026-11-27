@@ -243,19 +243,31 @@ describe("enregistrement d'une application", () => {
     expect(isSubmitting.value).toBe(false);
   });
 
-  it.each([1, 2])("signale une création partielle lorsque le contact %i est refusé par HTTP", async (failedContact) => {
-    const { save, isSubmitting } = setup();
-    if (failedContact === 2) mocks.createActor.mockResolvedValueOnce(success(createdActor, 201));
+  it.each(["moa", "moe"] as const)("reprend après un refus du contact %s sur la fiche déjà créée", async (role) => {
+    const { data, save, saveError, createdApplication, isSubmitting } = setup();
+    if (role === "moe") mocks.createActor.mockResolvedValueOnce(success(createdActor, 201));
     mocks.createActor.mockResolvedValueOnce(httpError({ message: "Contact refusé" }, 403));
 
     expect(await save()).toBeUndefined();
-    expect(mocks.createApplication).toHaveBeenCalledOnce();
-    expect(mocks.createActor).toHaveBeenCalledTimes(failedContact);
+    expect(createdApplication.value?.id).toBe("app-created");
+    expect(saveError.value).toContain(`L’ajout du contact ${role.toUpperCase()} a échoué`);
     expect(mocks.addSuccessMessage).not.toHaveBeenCalled();
-    expect(mocks.addErrorMessage).toHaveBeenCalledExactlyOnceWith(
-      "Application créée mais erreur lors de l'ajout des acteurs MOA/MOE. Vous pouvez les ajouter manuellement.",
-    );
     expect(isSubmitting.value).toBe(false);
+
+    data.value[role].email = "corrige@example.fr";
+    expect(await save()).toEqual(application());
+    expect(saveError.value).toBe("");
+    expect(mocks.createApplication).toHaveBeenCalledOnce();
+    const emails = mocks.createActor.mock.calls.map(([request]) => {
+      expect(request.path.applicationId).toBe("app-created");
+      return request.body.email;
+    });
+    expect(emails).toEqual(
+      role === "moa"
+        ? ["moa@example.fr", "corrige@example.fr", "moe@example.fr"]
+        : ["moa@example.fr", "moe@example.fr", "corrige@example.fr"],
+    );
+    expect(mocks.addSuccessMessage).toHaveBeenCalledOnce();
   });
 
   it("signale aussi une création partielle en cas d'erreur réseau d'un contact", async () => {
